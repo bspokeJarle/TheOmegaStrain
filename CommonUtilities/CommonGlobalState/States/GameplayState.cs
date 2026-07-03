@@ -81,7 +81,7 @@ namespace Domain
             long Score, int Lives, float Health, int PowerUpsCollected, int SpeedPowerUpLevel,
             int SeedersRemaining, int DronesRemaining, int MotherShipsRemaining,
             int TotalShotsFired, int TotalKills, int TotalDeaths,
-            float InfectionLevel, int WaveNumber,
+            float InfectionLevel, int WaveNumber, int SceneIndex, int SimulationRound, SceneBiomeTypes SceneBiome,
             int InitialSeeders, int InitialDrones, int InitialMotherShips,
             int PlanetStyleBonusScore, int PlanetStyleBonusSceneIndex);
 
@@ -99,6 +99,9 @@ namespace Domain
         public int CheckpointTotalDeaths { get; set; } = 0;
         public float CheckpointInfectionLevel { get; set; } = 0f;
         public int CheckpointWaveNumber { get; set; } = 1;
+        public int CheckpointSceneIndex { get; set; } = 0;
+        public int CheckpointSimulationRound { get; set; } = 0;
+        public SceneBiomeTypes CheckpointSceneBiome { get; set; } = SceneBiomeTypes.HillsWoods;
         public int CheckpointInitialSeeders { get; set; } = 0;
         public int CheckpointInitialDrones { get; set; } = 0;
         public int CheckpointInitialMotherShips { get; set; } = 0;
@@ -120,6 +123,8 @@ namespace Domain
         public int PlanetStartTotalDeaths { get; set; } = 0;
         public float PlanetStartInfectionLevel { get; set; } = 0f;
         public int PlanetStartWaveNumber { get; set; } = 1;
+        public int PlanetStartSimulationRound { get; set; } = 0;
+        public SceneBiomeTypes PlanetStartSceneBiome { get; set; } = SceneBiomeTypes.HillsWoods;
         public int PlanetStartInitialSeeders { get; set; } = 0;
         public int PlanetStartInitialDrones { get; set; } = 0;
         public int PlanetStartInitialMotherShips { get; set; } = 0;
@@ -134,7 +139,7 @@ namespace Domain
             CheckpointScore, CheckpointLives, CheckpointHealth, CheckpointPowerUpsCollected, CheckpointSpeedPowerUpLevel,
             CheckpointSeedersRemaining, CheckpointDronesRemaining, CheckpointMotherShipsRemaining,
             CheckpointTotalShotsFired, CheckpointTotalKills, CheckpointTotalDeaths,
-            CheckpointInfectionLevel, CheckpointWaveNumber,
+            CheckpointInfectionLevel, CheckpointWaveNumber, CheckpointSceneIndex > 0 ? CheckpointSceneIndex : SceneIndex, CheckpointSimulationRound, CheckpointSceneBiome,
             CheckpointInitialSeeders, CheckpointInitialDrones, CheckpointInitialMotherShips,
             CheckpointPlanetStyleBonusScore, CheckpointPlanetStyleBonusSceneIndex);
 
@@ -142,7 +147,7 @@ namespace Domain
             PlanetStartScore, PlanetStartLives, PlanetStartHealth, PlanetStartPowerUpsCollected, PlanetStartSpeedPowerUpLevel,
             PlanetStartSeedersRemaining, PlanetStartDronesRemaining, PlanetStartMotherShipsRemaining,
             PlanetStartTotalShotsFired, PlanetStartTotalKills, PlanetStartTotalDeaths,
-            PlanetStartInfectionLevel, PlanetStartWaveNumber,
+            PlanetStartInfectionLevel, PlanetStartWaveNumber, PlanetStartSceneIndex, PlanetStartSimulationRound, PlanetStartSceneBiome,
             PlanetStartInitialSeeders, PlanetStartInitialDrones, PlanetStartInitialMotherShips,
             PlanetStartPlanetStyleBonusScore, PlanetStartPlanetStyleBonusSceneIndex);
 
@@ -165,6 +170,9 @@ namespace Domain
             TotalDeaths = cp.TotalDeaths + 1;
             InfectionLevel = cp.InfectionLevel;
             WaveNumber = cp.WaveNumber;
+            SceneIndex = cp.SceneIndex;
+            SimulationRound = cp.SimulationRound;
+            CurrentSceneBiome = cp.SceneBiome;
             InitialSeeders = cp.InitialSeeders;
             InitialDrones = cp.InitialDrones;
             InitialMotherShips = cp.InitialMotherShips;
@@ -185,6 +193,9 @@ namespace Domain
             CheckpointTotalDeaths = cp.TotalDeaths;
             CheckpointInfectionLevel = cp.InfectionLevel;
             CheckpointWaveNumber = cp.WaveNumber;
+            CheckpointSceneIndex = cp.SceneIndex;
+            CheckpointSimulationRound = cp.SimulationRound;
+            CheckpointSceneBiome = cp.SceneBiome;
             CheckpointInitialSeeders = cp.InitialSeeders;
             CheckpointInitialDrones = cp.InitialDrones;
             CheckpointInitialMotherShips = cp.InitialMotherShips;
@@ -211,6 +222,8 @@ namespace Domain
             PlanetStartTotalDeaths = TotalDeaths;
             PlanetStartInfectionLevel = InfectionLevel;
             PlanetStartWaveNumber = WaveNumber;
+            PlanetStartSimulationRound = SimulationRound;
+            PlanetStartSceneBiome = CurrentSceneBiome;
             PlanetStartInitialSeeders = InitialSeeders;
             PlanetStartInitialDrones = InitialDrones;
             PlanetStartInitialMotherShips = InitialMotherShips;
@@ -235,6 +248,8 @@ namespace Domain
             PlanetStartTotalDeaths = snapshot.TotalDeaths;
             PlanetStartInfectionLevel = snapshot.InfectionLevel;
             PlanetStartWaveNumber = snapshot.WaveNumber;
+            PlanetStartSimulationRound = snapshot.SimulationRound;
+            PlanetStartSceneBiome = snapshot.SceneBiome;
             PlanetStartInitialSeeders = snapshot.InitialSeeders;
             PlanetStartInitialDrones = snapshot.InitialDrones;
             PlanetStartInitialMotherShips = snapshot.InitialMotherShips;
@@ -260,6 +275,9 @@ namespace Domain
             TotalDeaths = PlanetStartTotalDeaths;
             InfectionLevel = PlanetStartInfectionLevel;
             WaveNumber = PlanetStartWaveNumber;
+            SceneIndex = PlanetStartSceneIndex;
+            SimulationRound = PlanetStartSimulationRound;
+            CurrentSceneBiome = PlanetStartSceneBiome;
             InitialSeeders = PlanetStartInitialSeeders;
             InitialDrones = PlanetStartInitialDrones;
             InitialMotherShips = PlanetStartInitialMotherShips;
@@ -284,6 +302,9 @@ namespace Domain
             CheckpointTotalDeaths = 0;
             CheckpointInfectionLevel = 0f;
             CheckpointWaveNumber = 1;
+            CheckpointSceneIndex = 0;
+            CheckpointSimulationRound = 0;
+            CheckpointSceneBiome = SceneBiomeTypes.HillsWoods;
             CheckpointInitialSeeders = 0;
             CheckpointInitialDrones = 0;
             CheckpointInitialMotherShips = 0;
@@ -308,6 +329,8 @@ namespace Domain
             PlanetStartTotalDeaths = 0;
             PlanetStartInfectionLevel = 0f;
             PlanetStartWaveNumber = 1;
+            PlanetStartSimulationRound = 0;
+            PlanetStartSceneBiome = SceneBiomeTypes.HillsWoods;
             PlanetStartInitialSeeders = 0;
             PlanetStartInitialDrones = 0;
             PlanetStartInitialMotherShips = 0;
@@ -719,6 +742,9 @@ namespace Domain
             CheckpointTotalDeaths = TotalDeaths;
             CheckpointInfectionLevel = InfectionLevel;
             CheckpointWaveNumber = WaveNumber;
+            CheckpointSceneIndex = SceneIndex;
+            CheckpointSimulationRound = SimulationRound;
+            CheckpointSceneBiome = CurrentSceneBiome;
             CheckpointInitialSeeders = InitialSeeders;
             CheckpointInitialDrones = InitialDrones;
             CheckpointInitialMotherShips = InitialMotherShips;
@@ -746,6 +772,9 @@ namespace Domain
             TotalKills = CheckpointTotalKills;
             InfectionLevel = CheckpointInfectionLevel;
             WaveNumber = CheckpointWaveNumber;
+            SceneIndex = CheckpointSceneIndex > 0 ? CheckpointSceneIndex : SceneIndex;
+            SimulationRound = CheckpointSimulationRound;
+            CurrentSceneBiome = CheckpointSceneBiome;
             PlanetStyleBonusScore = CheckpointPlanetStyleBonusScore;
             PlanetStyleBonusSceneIndex = CheckpointPlanetStyleBonusSceneIndex;
         }

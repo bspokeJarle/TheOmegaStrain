@@ -51,6 +51,9 @@ namespace CommonUtilities.Persistence
         public int CheckpointTotalDeaths { get; set; }
         public float CheckpointInfectionLevel { get; set; }
         public int CheckpointWaveNumber { get; set; }
+        public int CheckpointSceneIndex { get; set; }
+        public int CheckpointSimulationRound { get; set; }
+        public SceneBiomeTypes CheckpointSceneBiome { get; set; } = SceneBiomeTypes.HillsWoods;
         public int CheckpointInitialSeeders { get; set; }
         public int CheckpointInitialDrones { get; set; }
         public int CheckpointInitialMotherShips { get; set; }
@@ -73,6 +76,8 @@ namespace CommonUtilities.Persistence
         public int PlanetStartTotalDeaths { get; set; }
         public float PlanetStartInfectionLevel { get; set; }
         public int PlanetStartWaveNumber { get; set; }
+        public int PlanetStartSimulationRound { get; set; }
+        public SceneBiomeTypes PlanetStartSceneBiome { get; set; } = SceneBiomeTypes.HillsWoods;
         public int PlanetStartInitialSeeders { get; set; }
         public int PlanetStartInitialDrones { get; set; }
         public int PlanetStartInitialMotherShips { get; set; }

@@ -201,6 +201,7 @@ public class SceneSimulationTests
         gps.PlayerName = "Pilot";
         gps.SceneIndex = 10;
         gps.SimulationRound = 2;
+        gps.CurrentSceneBiome = SceneBiomeTypes.Rainforrest;
         gps.Score = 12345;
         gps.TotalKills = 7;
         gps.TotalShotsFired = 21;
@@ -227,16 +228,53 @@ public class SceneSimulationTests
         Assert.IsTrue(gps.HasCheckpoint, "MotherShip activation should capture a checkpoint.");
         Assert.AreEqual(12345, gps.CheckpointScore);
         Assert.AreEqual(1, gps.CheckpointMotherShipsRemaining);
+        Assert.AreEqual(10, gps.CheckpointSceneIndex);
+        Assert.AreEqual(2, gps.CheckpointSimulationRound);
+        Assert.AreEqual(SceneBiomeTypes.Rainforrest, gps.CheckpointSceneBiome);
 
         var saved = GameStatePersistence.LoadGameState("Pilot");
         Assert.IsNotNull(saved);
         Assert.IsTrue(saved!.HasCheckpoint);
+        Assert.AreEqual(10, saved.SceneIndex);
         Assert.AreEqual(12345, saved.Score);
         Assert.AreEqual(1, saved.MotherShipsRemaining);
+        Assert.AreEqual(10, saved.CheckpointSceneIndex);
+        Assert.AreEqual(2, saved.CheckpointSimulationRound);
+        Assert.AreEqual(SceneBiomeTypes.Rainforrest, saved.CheckpointSceneBiome);
 
         var highscores = HighscoreService.LoadLocalHighscores();
         Assert.AreEqual(1, highscores.Entries.Count);
         Assert.AreEqual(12345, highscores.Entries[0].Score);
+    }
+
+    [TestMethod]
+    public void GameStatePersistence_WhenCheckpointExists_UsesCheckpointSimulationIdentity()
+    {
+        var gps = GameState.GamePlayState;
+        gps.PlayerName = "Pilot";
+        gps.SceneIndex = 1;
+        gps.SimulationRound = 3;
+        gps.CurrentSceneBiome = SceneBiomeTypes.Desert;
+        gps.Score = 50000;
+        gps.HasCheckpoint = true;
+        gps.CheckpointScore = 42000;
+        gps.CheckpointLives = 2;
+        gps.CheckpointHealth = 72f;
+        gps.CheckpointSceneIndex = 10;
+        gps.CheckpointSimulationRound = 2;
+        gps.CheckpointSceneBiome = SceneBiomeTypes.Rainforrest;
+
+        GameStatePersistence.SaveGameState();
+
+        var saved = GameStatePersistence.LoadGameState("Pilot");
+        Assert.IsNotNull(saved);
+        Assert.AreEqual(10, saved!.SceneIndex);
+        Assert.AreEqual(2, saved.SimulationRound);
+        Assert.AreEqual(SceneBiomeTypes.Rainforrest, saved.SceneBiome);
+        Assert.AreEqual(10, saved.CheckpointSceneIndex);
+        Assert.AreEqual(2, saved.CheckpointSimulationRound);
+        Assert.AreEqual(SceneBiomeTypes.Rainforrest, saved.CheckpointSceneBiome);
+        Assert.AreEqual(42000, saved.Score);
     }
 
     [TestMethod]
@@ -256,6 +294,55 @@ public class SceneSimulationTests
 
         var result = (bool)method!.Invoke(handler, new object[] { saved })!;
         Assert.IsTrue(result, "Saved simulation progress should target the simulation scene on login.");
+    }
+
+    [TestMethod]
+    public void SceneHandler_LegacySimulationCheckpointSavedAsScene1_TargetsSimulation()
+    {
+        var handler = new SceneHandler();
+        var world = new _3dWorld();
+        world.SceneHandler = handler;
+        world.WorldInhabitants.Clear();
+
+        var saved = new SavedGameState
+        {
+            PlayerName = "Pilot",
+            SceneIndex = 1,
+            SimulationRound = 2,
+            SceneBiome = SceneBiomeTypes.Rainforrest,
+            Score = 45000,
+            HasCheckpoint = true,
+            CheckpointScore = 45000,
+            CheckpointLives = 2,
+            CheckpointHealth = 80f,
+            CheckpointSceneIndex = 0,
+            CheckpointSimulationRound = 2,
+            CheckpointSceneBiome = SceneBiomeTypes.Rainforrest,
+            CheckpointSeedersRemaining = 0,
+            CheckpointDronesRemaining = 0,
+            CheckpointMotherShipsRemaining = 1,
+            CheckpointInitialSeeders = 0,
+            CheckpointInitialDrones = 0,
+            CheckpointInitialMotherShips = 1
+        };
+
+        var canTargetMethod = typeof(SceneHandler).GetMethod("CanTargetSavedScene", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.IsNotNull(canTargetMethod);
+        Assert.IsTrue((bool)canTargetMethod!.Invoke(handler, new object[] { saved })!,
+            "Legacy simulation checkpoints previously written as Scene1 should still target the simulation slot.");
+
+        SetPrivateField(handler, "_pendingSavedState", saved);
+        SetPrivateField(handler, "_targetSceneIndex", 10);
+        SetPrivateField(handler, "_pendingSceneAdvance", true);
+        SetPrivateField(handler, "_pendingSceneAdvanceFramesLeft", 0);
+
+        handler.UpdateFrame(world);
+
+        Assert.AreEqual(SceneTypes.Simulation, handler.GetActiveScene().SceneType);
+        Assert.AreEqual(10, GameState.GamePlayState.SceneIndex);
+        Assert.AreEqual(2, GameState.GamePlayState.SimulationRound);
+        Assert.AreEqual(SceneBiomeTypes.Rainforrest, GameState.GamePlayState.CurrentSceneBiome);
+        Assert.AreEqual(1, world.WorldInhabitants.Count(o => o.ObjectName == "Ship"));
     }
 
     [TestMethod]
@@ -292,6 +379,10 @@ public class SceneSimulationTests
         Assert.AreEqual(SceneBiomeTypes.Rainforrest, GameState.GamePlayState.CurrentSceneBiome);
         Assert.AreEqual(45000, GameState.GamePlayState.Score);
         Assert.IsTrue(world.WorldInhabitants.Any(o => o.ObjectName == "RainEmitter"));
+        Assert.AreEqual(1, world.WorldInhabitants.Count(o => o.ObjectName == "Ship"),
+            "Loading saved simulation progress must build the scene exactly once.");
+        Assert.AreEqual(1, world.WorldInhabitants.Count(o => o.ObjectName == "RainEmitter"),
+            "Loading saved simulation progress must not leave weather from a duplicate setup.");
     }
 
     private static void AssertSimulationRound(int round, SceneBiomeTypes expectedBiome, string expectedMusic)

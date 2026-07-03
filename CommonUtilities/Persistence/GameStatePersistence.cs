@@ -35,12 +35,16 @@ namespace CommonUtilities.Persistence
             if (!allowScoreRollback)
                 ProtectScoreAgainstExistingSave(state, useCheckpoint);
 
+            int checkpointSceneIndex = ResolveCheckpointSceneIndexForSave(state);
+            int checkpointSimulationRound = ResolveCheckpointSimulationRoundForSave(state);
+            SceneBiomeTypes checkpointSceneBiome = ResolveCheckpointSceneBiomeForSave(state);
+
             var saved = new SavedGameState
             {
                 PlayerName = state.PlayerName,
-                SceneIndex = state.SceneIndex,
-                SimulationRound = state.SimulationRound,
-                SceneBiome = state.CurrentSceneBiome,
+                SceneIndex = useCheckpoint ? checkpointSceneIndex : state.SceneIndex,
+                SimulationRound = useCheckpoint ? checkpointSimulationRound : state.SimulationRound,
+                SceneBiome = useCheckpoint ? checkpointSceneBiome : state.CurrentSceneBiome,
                 Score = useCheckpoint ? state.CheckpointScore : state.Score,
                 PlanetStyleBonusScore = useCheckpoint ? state.CheckpointPlanetStyleBonusScore : state.PlanetStyleBonusScore,
                 PlanetStyleBonusSceneIndex = useCheckpoint ? state.CheckpointPlanetStyleBonusSceneIndex : state.PlanetStyleBonusSceneIndex,
@@ -75,6 +79,9 @@ namespace CommonUtilities.Persistence
                 CheckpointTotalDeaths = state.CheckpointTotalDeaths,
                 CheckpointInfectionLevel = state.CheckpointInfectionLevel,
                 CheckpointWaveNumber = state.CheckpointWaveNumber,
+                CheckpointSceneIndex = useCheckpoint ? checkpointSceneIndex : state.CheckpointSceneIndex,
+                CheckpointSimulationRound = useCheckpoint ? checkpointSimulationRound : state.CheckpointSimulationRound,
+                CheckpointSceneBiome = useCheckpoint ? checkpointSceneBiome : state.CheckpointSceneBiome,
                 CheckpointInitialSeeders = state.CheckpointInitialSeeders,
                 CheckpointInitialDrones = state.CheckpointInitialDrones,
                 CheckpointInitialMotherShips = state.CheckpointInitialMotherShips,
@@ -95,6 +102,8 @@ namespace CommonUtilities.Persistence
                 PlanetStartTotalDeaths = state.PlanetStartTotalDeaths,
                 PlanetStartInfectionLevel = state.PlanetStartInfectionLevel,
                 PlanetStartWaveNumber = state.PlanetStartWaveNumber,
+                PlanetStartSimulationRound = state.PlanetStartSimulationRound,
+                PlanetStartSceneBiome = state.PlanetStartSceneBiome,
                 PlanetStartInitialSeeders = state.PlanetStartInitialSeeders,
                 PlanetStartInitialDrones = state.PlanetStartInitialDrones,
                 PlanetStartInitialMotherShips = state.PlanetStartInitialMotherShips,
@@ -115,6 +124,43 @@ namespace CommonUtilities.Persistence
                 PersistenceSetup.LocalKeyFilePath);
 
             try { HighscoreService.SubmitFromGamePlay(state); } catch { }
+        }
+
+        private static int ResolveCheckpointSceneIndexForSave(GamePlayState state)
+        {
+            if (!state.HasCheckpoint)
+                return state.SceneIndex;
+
+            return state.CheckpointSceneIndex > 0
+                ? state.CheckpointSceneIndex
+                : state.SceneIndex;
+        }
+
+        private static int ResolveCheckpointSimulationRoundForSave(GamePlayState state)
+        {
+            if (!state.HasCheckpoint)
+                return state.SimulationRound;
+
+            return state.CheckpointSimulationRound != 0 || state.SimulationRound == 0
+                ? state.CheckpointSimulationRound
+                : state.SimulationRound;
+        }
+
+        private static SceneBiomeTypes ResolveCheckpointSceneBiomeForSave(GamePlayState state)
+        {
+            if (!state.HasCheckpoint)
+                return state.CurrentSceneBiome;
+
+            // Legacy checkpoints did not store biome. If the checkpoint still has the
+            // default biome while the active scene has a concrete biome, keep the save coherent.
+            if (state.CheckpointSimulationRound == 0 &&
+                state.CheckpointSceneBiome == SceneBiomeTypes.HillsWoods &&
+                state.CurrentSceneBiome != SceneBiomeTypes.HillsWoods)
+            {
+                return state.CurrentSceneBiome;
+            }
+
+            return state.CheckpointSceneBiome;
         }
 
         private static void ProtectScoreAgainstExistingSave(GamePlayState state, bool useCheckpoint)
@@ -193,7 +239,9 @@ namespace CommonUtilities.Persistence
             state.Score = saved.Score;
             state.PlanetStyleBonusScore = saved.PlanetStyleBonusScore;
             state.PlanetStyleBonusSceneIndex = saved.PlanetStyleBonusSceneIndex;
-            state.SceneIndex = saved.SceneIndex;
+            state.SceneIndex = saved.HasCheckpoint && saved.CheckpointSceneIndex > 0
+                ? saved.CheckpointSceneIndex
+                : saved.SceneIndex;
             state.SimulationRound = saved.SimulationRound;
             state.CurrentSceneBiome = saved.SceneBiome;
             state.Lives = saved.Lives;
@@ -227,6 +275,9 @@ namespace CommonUtilities.Persistence
             state.CheckpointTotalDeaths = saved.CheckpointTotalDeaths;
             state.CheckpointInfectionLevel = saved.CheckpointInfectionLevel;
             state.CheckpointWaveNumber = saved.CheckpointWaveNumber;
+            state.CheckpointSceneIndex = saved.CheckpointSceneIndex;
+            state.CheckpointSimulationRound = saved.CheckpointSimulationRound;
+            state.CheckpointSceneBiome = saved.CheckpointSceneBiome;
             state.CheckpointInitialSeeders = saved.CheckpointInitialSeeders;
             state.CheckpointInitialDrones = saved.CheckpointInitialDrones;
             state.CheckpointInitialMotherShips = saved.CheckpointInitialMotherShips;
@@ -247,6 +298,8 @@ namespace CommonUtilities.Persistence
             state.PlanetStartTotalDeaths = saved.PlanetStartTotalDeaths;
             state.PlanetStartInfectionLevel = saved.PlanetStartInfectionLevel;
             state.PlanetStartWaveNumber = saved.PlanetStartWaveNumber;
+            state.PlanetStartSimulationRound = saved.PlanetStartSimulationRound;
+            state.PlanetStartSceneBiome = saved.PlanetStartSceneBiome;
             state.PlanetStartInitialSeeders = saved.PlanetStartInitialSeeders;
             state.PlanetStartInitialDrones = saved.PlanetStartInitialDrones;
             state.PlanetStartInitialMotherShips = saved.PlanetStartInitialMotherShips;
@@ -325,6 +378,7 @@ namespace CommonUtilities.Persistence
             saved.CheckpointTotalDeaths = 0;
             saved.CheckpointInfectionLevel = 0f;
             saved.CheckpointWaveNumber = 1;
+            saved.CheckpointSceneIndex = 0;
             saved.CheckpointInitialSeeders = 0;
             saved.CheckpointInitialDrones = 0;
             saved.CheckpointInitialMotherShips = 0;
