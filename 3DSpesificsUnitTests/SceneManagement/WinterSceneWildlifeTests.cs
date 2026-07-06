@@ -2,6 +2,7 @@ using _3dRotations.Scene.Scene7;
 using _3dRotations.Scenes.SceneSimulation;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
+using CommonUtilities.CommonSetup;
 using CommonUtilities.Events;
 using Domain;
 using System.Linq;
@@ -31,6 +32,7 @@ public class WinterSceneWildlifeTests
         Assert.AreEqual(Scene7.TargetPatrolPolarBearCount + 1,
             world.WorldInhabitants.Count(o => o.ObjectName == "PolarBear"),
             "Scene7 should spawn one guaranteed polar bear plus the configured patrol target.");
+        AssertPolarBearsAreAtLeastOneScreenApart(scene.PolarBearPlacements);
         Assert.IsTrue(world.WorldInhabitants.Any(o => o.ObjectName == "Seal"),
             "Scene7 is a winter scene and should use seals as water wildlife.");
         Assert.IsFalse(world.WorldInhabitants.Any(o => o.ObjectName == "JumpingFish"),
@@ -57,6 +59,23 @@ public class WinterSceneWildlifeTests
             "Winter simulation scenes should include snow.");
         Assert.IsFalse(world.WorldInhabitants.Any(o => o.ObjectName == "JumpingFish"),
             "Winter simulation scenes should not use jumping fish.");
+    }
+
+    private static void AssertPolarBearsAreAtLeastOneScreenApart(
+        IReadOnlyList<PolarBearPlacementInfo> placements)
+    {
+        for (int i = 0; i < placements.Count; i++)
+        {
+            for (int j = i + 1; j < placements.Count; j++)
+            {
+                int dx = placements[i].TileX - placements[j].TileX;
+                int dz = placements[i].TileZ - placements[j].TileZ;
+                double distanceWorld = System.Math.Sqrt((dx * dx) + (dz * dz)) * SurfaceSetup.tileSize;
+                Assert.IsTrue(
+                    distanceWorld >= ScreenSetup.screenSizeX,
+                    $"Polar bears should be at least one screen apart. Pair {i}/{j} was {distanceWorld:0.##} world units.");
+            }
+        }
     }
 
     private sealed class TestWorld : I3dWorld

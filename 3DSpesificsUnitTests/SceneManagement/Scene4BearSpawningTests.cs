@@ -1,6 +1,7 @@
 using _3dRotations.Scene.Scene4;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
+using CommonUtilities.CommonSetup;
 using CommonUtilities.Events;
 using Domain;
 using System.Linq;
@@ -41,6 +42,7 @@ public class Scene4BearSpawningTests
         Assert.AreEqual(1, scene.PolarBearPlacements.Count(p => p.Source == "Guaranteed"), "Scene4 should report one guaranteed bear placement.");
         Assert.AreEqual(Scene4.TargetPatrolPolarBearCount, scene.PolarBearPlacements.Count(p => p.Source == "Patrol"), "Scene4 should report all patrol bear placements.");
         Assert.IsTrue(worldBears.All(b => (b.SurfaceBasedId ?? 0) > 0), "Polar bears should be surface-based placements.");
+        AssertPolarBearsAreAtLeastOneScreenApart(scene.PolarBearPlacements);
 
         var map = GameState.SurfaceState.Global2DMap!;
         int sizeX = map.GetLength(1);
@@ -76,6 +78,23 @@ public class Scene4BearSpawningTests
             }
 
             Assert.IsTrue(found, "Each spawned bear SurfaceBasedId should map to a tile on the surface map.");
+        }
+    }
+
+    private static void AssertPolarBearsAreAtLeastOneScreenApart(
+        IReadOnlyList<Scene4.PolarBearPlacementInfo> placements)
+    {
+        for (int i = 0; i < placements.Count; i++)
+        {
+            for (int j = i + 1; j < placements.Count; j++)
+            {
+                int dx = placements[i].TileX - placements[j].TileX;
+                int dz = placements[i].TileZ - placements[j].TileZ;
+                double distanceWorld = System.Math.Sqrt((dx * dx) + (dz * dz)) * SurfaceSetup.tileSize;
+                Assert.IsTrue(
+                    distanceWorld >= ScreenSetup.screenSizeX,
+                    $"Polar bears should be at least one screen apart. Pair {i}/{j} was {distanceWorld:0.##} world units.");
+            }
         }
     }
 

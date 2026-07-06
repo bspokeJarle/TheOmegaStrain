@@ -455,8 +455,9 @@ namespace _3dRotations.Scene.Scene7
 
             int tileSize = Surface.TileSize();
             float baseOffsetX = 75 * ScreenSetup.ScreenScaleX;
+            var placedBearTiles = new List<(int tileX, int tileZ)>();
 
-            SpawnGuaranteedBear(world, map, sizeX, sizeZ, mapCenterX, mapCenterZ, guaranteedCenterX, guaranteedCenterZ, baseOffsetX, tileSize, patrolWidthTiles, maxHeight);
+            SpawnGuaranteedBear(world, map, sizeX, sizeZ, mapCenterX, mapCenterZ, guaranteedCenterX, guaranteedCenterZ, baseOffsetX, tileSize, patrolWidthTiles, maxHeight, placedBearTiles);
 
             int patrolBearsPlaced = 0;
             for (int i = 0; i < patrolAreas.Count && patrolBearsPlaced < TargetPatrolPolarBearCount; i++)
@@ -477,6 +478,9 @@ namespace _3dRotations.Scene.Scene7
 
                 tileX = resolvedTileX;
                 tileZ = resolvedTileZ;
+
+                if (!PolarBearPlacementHelpers.IsAtLeastOneScreenFromExisting(tileX, tileZ, tileSize, placedBearTiles))
+                    continue;
 
                 int tileDeltaX = tileX - area.centerX;
                 float centerOffsetX = baseOffsetX + (tileDeltaX * tileSize);
@@ -502,6 +506,7 @@ namespace _3dRotations.Scene.Scene7
                 world.WorldInhabitants.Add(polarBear);
                 GameState.SurfaceState.AiObjects.Add(polarBear);
                 map[tileZ, tileX].hasLandbasedObject = true;
+                placedBearTiles.Add((tileX, tileZ));
                 patrolBearsPlaced++;
                 _polarBearPlacements.Add(new PolarBearPlacementInfo(
                     "Patrol", tileX, tileZ, fallbackMapId, minPathOffsetX, maxPathOffsetX));
@@ -520,7 +525,8 @@ namespace _3dRotations.Scene.Scene7
             float baseOffsetX,
             int tileSize,
             int patrolWidthTiles,
-            int maxHeight)
+            int maxHeight,
+            List<(int tileX, int tileZ)> placedBearTiles)
         {
             int startX = Math.Max(1, guaranteedCenterX - (patrolWidthTiles / 2));
             int endX = Math.Min(sizeX - 2, startX + patrolWidthTiles - 1);
@@ -554,6 +560,7 @@ namespace _3dRotations.Scene.Scene7
             world.WorldInhabitants.Add(guaranteedBear);
             GameState.SurfaceState.AiObjects.Add(guaranteedBear);
             map[tileZ, tileX].hasLandbasedObject = true;
+            placedBearTiles.Add((tileX, tileZ));
             _polarBearPlacements.Add(new PolarBearPlacementInfo(
                 "Guaranteed", tileX, tileZ, mapId, minPathOffsetX, maxPathOffsetX));
         }

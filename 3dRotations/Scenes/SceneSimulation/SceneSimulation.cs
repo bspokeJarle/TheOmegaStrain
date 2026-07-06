@@ -751,6 +751,7 @@ namespace _3dRotations.Scenes.SceneSimulation
                 return ((adx * adx) + (adz * adz)).CompareTo((bdx * bdx) + (bdz * bdz));
             });
 
+            var placedBearTiles = new List<(int tileX, int tileZ)>();
             int bearsPlaced = 0;
             for (int i = 0; i < patrolTiles.Count && bearsPlaced < TargetWinterPolarBearCount; i++)
             {
@@ -763,6 +764,9 @@ namespace _3dRotations.Scenes.SceneSimulation
 
                 int mapId = map[tileZ, tileX].mapId;
                 if (mapId <= 0)
+                    continue;
+
+                if (!PolarBearPlacementHelpers.IsAtLeastOneScreenFromExisting(tileX, tileZ, tileSize, placedBearTiles))
                     continue;
 
                 int centerX = (placement.startX + placement.endX) / 2;
@@ -786,6 +790,7 @@ namespace _3dRotations.Scenes.SceneSimulation
                 world.WorldInhabitants.Add(polarBear);
                 GameState.SurfaceState.AiObjects.Add(polarBear);
                 map[tileZ, tileX].hasLandbasedObject = true;
+                placedBearTiles.Add((tileX, tileZ));
                 bearsPlaced++;
             }
         }
