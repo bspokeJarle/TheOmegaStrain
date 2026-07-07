@@ -4,10 +4,12 @@ using _3dTesting.MainWindowClasses.Loops;
 using _3dTesting.MainWindowClasses.Overlays;
 using _3dTesting.Rendering;
 using CommonUtilities.CommonGlobalState;
+using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
 using CommonUtilities.Persistence;
 using Domain;
 using GameAiAndControls.Controls;
+using GameAiAndControls.Input;
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -78,6 +80,8 @@ namespace _3dTesting
         private string? _currentVideoClipPath;
         private bool _videoOverlayIsPlaying;
         private bool _videoEntrancePlayed;
+        private bool _xboxOverlayButtonWasDown = false;
+        private HwndSource? _rawMouseSource;
 
         // MotherShip health bar (in-world overlay)
         private readonly Canvas _motherShipHealthBarCanvas;
@@ -127,7 +131,12 @@ namespace _3dTesting
 
             InitializeComponent();
             this.PreviewKeyDown += new KeyEventHandler(HandleKeys);
-            SourceInitialized += (_, _) => ConfigureRuntimeFpsForCurrentMonitor("SourceInitialized");
+            this.PreviewMouseDown += HandleMouseInputForOverlay;
+            SourceInitialized += (_, _) =>
+            {
+                ConfigureRuntimeFpsForCurrentMonitor("SourceInitialized");
+                InitializeRawMouseInput();
+            };
             LocationChanged += (_, _) => ConfigureRuntimeFpsForCurrentMonitor("LocationChanged");
             Closing += MainWindow_Closing;
             Loaded += Window_Loaded;
@@ -277,6 +286,7 @@ namespace _3dTesting
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
+            ShutdownRawMouseInput();
             // Closing the window is not a checkpoint. Progress and highscores
             // are persisted by checkpoint flows: powerups and motherships.
         }
@@ -289,6 +299,54 @@ namespace _3dTesting
             int h = (int)ActualHeight;
             if (w > 0 && h > 0)
                 ScreenSetup.Initialize(w, h);
+        }
+
+        private void InitializeRawMouseInput()
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            if (hwnd == IntPtr.Zero)
+                return;
+
+            _rawMouseSource = HwndSource.FromHwnd(hwnd);
+            if (_rawMouseSource == null)
+                return;
+
+            _rawMouseSource.AddHook(RawMouseWndProc);
+            if (!RawMouseInput.RegisterMouse(hwnd))
+            {
+                _rawMouseSource.RemoveHook(RawMouseWndProc);
+                _rawMouseSource = null;
+            }
+        }
+
+        private void ShutdownRawMouseInput()
+        {
+            _rawMouseSource?.RemoveHook(RawMouseWndProc);
+            _rawMouseSource = null;
+            RawMouseInput.ClearRegistration();
+        }
+
+        private IntPtr RawMouseWndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == RawMouseInput.WmInput &&
+                RawMouseInput.TryReadMouseDelta(lParam, out int deltaX, out int deltaY))
+            {
+                DispatchRawMouseDelta(deltaX, deltaY);
+            }
+
+            return IntPtr.Zero;
+        }
+
+        private void DispatchRawMouseDelta(int deltaX, int deltaY)
+        {
+            var settings = GameState.SettingsState;
+            settings.Normalize();
+
+            if (settings.ActiveControlScheme != ControlInputMode.Mouse)
+                return;
+
+            if (TryGetActiveShipControls(out var shipControls, out _))
+                shipControls.HandleRawMouseDelta(deltaX, deltaY);
         }
 
         private void HandleKeys(object sender, KeyEventArgs e)
@@ -325,6 +383,66 @@ namespace _3dTesting
 
             if (overlayWasShowing || GameState.ScreenOverlayState.BlocksGameplayInput)
                 e.Handled = true;
+        }
+
+        private void HandleMouseInputForOverlay(object sender, MouseButtonEventArgs e)
+        {
+            var settings = GameState.SettingsState;
+            settings.Normalize();
+
+            if (settings.ActiveControlScheme != ControlInputMode.Mouse)
+                return;
+
+            if (!CanNonKeyboardInputActivateOverlay())
+                return;
+
+            HandleNonKeyboardOverlayActivation();
+            e.Handled = true;
+        }
+
+        private void UpdateXboxOverlayActivation()
+        {
+            var settings = GameState.SettingsState;
+            settings.Normalize();
+
+            if (settings.ActiveControlScheme != ControlInputMode.XboxController ||
+                !CanNonKeyboardInputActivateOverlay())
+            {
+                _xboxOverlayButtonWasDown = false;
+                return;
+            }
+
+            bool buttonIsDown =
+                XboxControllerInput.TryGetState(controllerIndex: 0, out var controllerState) &&
+                XboxControllerInput.HasButtonInput(controllerState);
+
+            if (buttonIsDown && !_xboxOverlayButtonWasDown)
+                HandleNonKeyboardOverlayActivation();
+
+            _xboxOverlayButtonWasDown = buttonIsDown;
+        }
+
+        private bool CanNonKeyboardInputActivateOverlay()
+        {
+            var overlay = GameState.ScreenOverlayState;
+            if (overlay == null || !overlay.ShowOverlay)
+                return false;
+
+            if (overlay.Type == ScreenOverlayType.NameEntry)
+                return false;
+
+            if (overlay.ChoiceAction != ScreenOverlayChoiceAction.None)
+                return false;
+
+            return true;
+        }
+
+        private void HandleNonKeyboardOverlayActivation()
+        {
+            var sceneTypeBeforeMenuExit = world?.SceneHandler?.GetActiveScene().SceneType;
+            world.SceneHandler.HandleOverlayActivation(world);
+            StopNonMusicAudioIfReturnedToIntro(sceneTypeBeforeMenuExit);
+            SyncLocalPauseFromWorld();
         }
 
         private void StopNonMusicAudioIfReturnedToIntro(SceneTypes? previousSceneType)
@@ -402,18 +520,30 @@ namespace _3dTesting
 
         private void ResumeShipAfterGameplayPause()
         {
+            if (TryGetActiveShipControls(out var shipControls, out var ship))
+                shipControls.ResumeFromGameplayPause(ship);
+        }
+
+        private bool TryGetActiveShipControls(out ShipControls shipControls, out I3dObject ship)
+        {
+            shipControls = null!;
+            ship = null!;
+
             if (world?.WorldInhabitants == null)
-                return;
+                return false;
 
             for (int i = 0; i < world.WorldInhabitants.Count; i++)
             {
                 var obj = world.WorldInhabitants[i];
-                if (obj.ObjectName == "Ship" && obj.Movement is ShipControls shipControls)
+                if (obj.ObjectName == "Ship" && obj.Movement is ShipControls controls)
                 {
-                    shipControls.ResumeFromGameplayPause(obj);
-                    return;
+                    shipControls = controls;
+                    ship = obj;
+                    return true;
                 }
             }
+
+            return false;
         }
 
         private static bool HasActiveSurfaceMapForMinimap()
@@ -617,6 +747,7 @@ namespace _3dTesting
 
             float dt = (float)dtSeconds;
             SynchronizeTutorialOverlayPause();
+            UpdateXboxOverlayActivation();
 
             if (GameState.ScreenOverlayState.ShowDebugOverlay == false)
                 FpsText.Visibility = Visibility.Collapsed;

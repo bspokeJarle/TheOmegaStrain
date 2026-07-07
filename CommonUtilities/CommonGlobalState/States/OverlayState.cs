@@ -19,7 +19,8 @@ namespace Domain
     {
         None = 0,
         Audio = 1,
-        Graphics = 2
+        Graphics = 2,
+        Controls = 3
     }
 
     public enum ScreenOverlayAnchor
@@ -651,9 +652,12 @@ namespace Domain
             CurrentPage = 0;
             ClearChoiceOptions();
 
-            Header = panel == ScreenOverlaySettingsPanel.Audio
-                ? "RETROMESH // AUDIO CONFIG"
-                : "RETROMESH // GRAPHICS CONFIG";
+            Header = panel switch
+            {
+                ScreenOverlaySettingsPanel.Audio => "RETROMESH // AUDIO CONFIG",
+                ScreenOverlaySettingsPanel.Controls => "RETROMESH // CONTROL CONFIG",
+                _ => "RETROMESH // GRAPHICS CONFIG"
+            };
             Title = title ?? "";
             Body = body ?? "";
             Footer = footer ?? "";
@@ -662,7 +666,7 @@ namespace Domain
             PanelFillStrength = 0.78f;
             BorderStrength = 0.90f;
             PanelWidthRatio = 0.68f;
-            PanelHeightRatio = 0.38f;
+            PanelHeightRatio = panel == ScreenOverlaySettingsPanel.Controls ? 0.52f : 0.38f;
             PanelYOffsetRatio = 0.00f;
             CenterText = false;
 

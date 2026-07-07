@@ -14,7 +14,7 @@ namespace _3dRotations.Scenes.Intro
 {
     public class Intro : IScene
     {
-        private const string StartFooter = "PRESS ANY KEY TO INITIATE PROTOCOL  //  [T] TRAINING  //  [S] SOUND  //  [G] GRAPHICS";
+        private const string StartFooter = "PRESS ANY KEY TO INITIATE PROTOCOL  //  [T] TRAINING  //  [S] SOUND  //  [G] GRAPHICS  //  [C] CONTROLS";
 
         public bool SkipLogoCube { get; set; } = false;
 
@@ -79,16 +79,19 @@ namespace _3dRotations.Scenes.Intro
                 "  [2] DECOY   - Lures Kamikaze Drones away from your ship\n" +
                 "  [3] LAZER   - Powerful beam, cuts through targets\n\n" +
                 "MOUSE:\n" +
-                "  LEFT BUTTON   THRUST\n" +
-                "  RIGHT BUTTON  FIRE CURRENT WEAPON\n\n" +
+                "  LEFT BUTTON   FIRE CURRENT WEAPON\n" +
+                "  RIGHT BUTTON  THRUST\n" +
+                "  MOVE MOUSE    PITCH / TURN\n\n" +
+                "XBOX CONTROLLER:\n" +
+                "  LEFT STICK    PITCH / TURN\n" +
+                "  [RT]          THRUST\n" +
+                "  [LT]          FIRE CURRENT WEAPON\n" +
+                "  [X]/[Y]/[B]   1 BULLET / 2 DECOY / 3 LAZER\n" +
+                "  [A]           POWERUP 4 RESERVED\n\n" +
                 "NAVIGATION:\n" +
-                "  - Arrow keys or WASD to move\n" +
-                "  - Follow the guidance arrow to find Seeders\n" +
-                "  - Press [X] at any time during a mission to return to this screen\n" +
-                "  - [T] START TUTORIAL from this screen\n\n" +
+                "  KEYBOARD [X] MENU  //  [T] TUTORIAL  //  [C] CONTROLS\n\n" +
                 "NOTE:\n" +
-                "  Controller support is coming.\n" +
-                "  Custom key mapping will be supported.",
+                "  Input type and mappings can be changed in CONTROLS.",
                 StartFooter);
 
             // Page 3: Gameplay tips

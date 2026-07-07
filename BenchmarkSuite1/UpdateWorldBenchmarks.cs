@@ -74,6 +74,10 @@ public class UpdateWorldBenchmarks
         {
         }
 
+        public void HandleOverlayActivation(I3dWorld world)
+        {
+        }
+
         public void UpdateFrame(I3dWorld world)
         {
         }

@@ -111,7 +111,7 @@ public class SceneInfectionTuningTests
     }
 
     [TestMethod]
-    public void IntroControls_DescribeKeyboardMouseAndFutureMappingSupport()
+    public void IntroControls_DescribeKeyboardMouseXboxAndMappingSupport()
     {
         var intro = new Intro();
 
@@ -123,10 +123,14 @@ public class SceneInfectionTuningTests
         Assert.IsTrue(controls.Contains("[1] BULLET", StringComparison.Ordinal));
         Assert.IsTrue(controls.Contains("[2] DECOY", StringComparison.Ordinal));
         Assert.IsTrue(controls.Contains("[3] LAZER", StringComparison.Ordinal));
-        Assert.IsTrue(controls.Contains("LEFT BUTTON   THRUST", StringComparison.Ordinal));
-        Assert.IsTrue(controls.Contains("RIGHT BUTTON  FIRE CURRENT WEAPON", StringComparison.Ordinal));
-        Assert.IsTrue(controls.Contains("Controller support is coming.", StringComparison.Ordinal));
-        Assert.IsTrue(controls.Contains("Custom key mapping will be supported.", StringComparison.Ordinal));
+        Assert.IsTrue(controls.Contains("LEFT BUTTON   FIRE CURRENT WEAPON", StringComparison.Ordinal));
+        Assert.IsTrue(controls.Contains("RIGHT BUTTON  THRUST", StringComparison.Ordinal));
+        Assert.IsTrue(controls.Contains("LEFT STICK    PITCH / TURN", StringComparison.Ordinal));
+        Assert.IsTrue(controls.Contains("[RT]          THRUST", StringComparison.Ordinal));
+        Assert.IsTrue(controls.Contains("[LT]          FIRE CURRENT WEAPON", StringComparison.Ordinal));
+        Assert.IsTrue(controls.Contains("[X]/[Y]/[B]   1 BULLET / 2 DECOY / 3 LAZER", StringComparison.Ordinal));
+        Assert.IsTrue(controls.Contains("[A]           POWERUP 4 RESERVED", StringComparison.Ordinal));
+        Assert.IsTrue(controls.Contains("Input type and mappings can be changed in CONTROLS.", StringComparison.Ordinal));
     }
 
     private static string Format(float value) => value.ToString("0.###", CultureInfo.InvariantCulture);

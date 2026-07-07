@@ -631,6 +631,67 @@ namespace _3DWorld.Scene
             }
         }
 
+        public void HandleOverlayActivation(I3dWorld world)
+        {
+            var scene = GetActiveScene();
+            var overlay = GameState.ScreenOverlayState;
+
+            if (!overlay.ShowOverlay)
+            {
+                if (scene.SceneType == SceneTypes.Intro)
+                    SkipLogoCube(world, scene);
+                return;
+            }
+
+            if (overlay.Type == ScreenOverlayType.NameEntry ||
+                overlay.ChoiceAction == ScreenOverlayChoiceAction.PlanetLostRecovery)
+            {
+                return;
+            }
+
+            if (overlay.Type == ScreenOverlayType.Settings)
+            {
+                CloseSettingsOverlay(scene, overlay);
+                return;
+            }
+
+            if (scene.SceneType == SceneTypes.Tutorial &&
+                GameState.TutorialState.InstructionOverlayPauseActive)
+            {
+                if (!GameState.TutorialState.CanCloseInstructionOverlay(DateTime.UtcNow))
+                    return;
+
+                CloseTutorialOverlayAndResume(scene, world);
+                return;
+            }
+
+            if (scene.SceneType == SceneTypes.Tutorial)
+            {
+                CloseTutorialOverlayAndResume(scene, world);
+                return;
+            }
+
+            if (scene.SceneType == SceneTypes.Intro)
+            {
+                ShowNameEntryOverlay(overlay);
+                return;
+            }
+
+            if (scene.SceneType == SceneTypes.Outro && overlay.Type == ScreenOverlayType.Outro)
+            {
+                overlay.HardHide();
+                _pendingNextScene = true;
+                _pendingSceneAdvance = true;
+                _pendingSceneAdvanceFramesLeft = SceneAdvanceDelayFrames;
+                return;
+            }
+
+            if (scene.SceneType == SceneTypes.Game || scene.SceneType == SceneTypes.Simulation)
+            {
+                scene.SetupGameOverlay();
+            }
+        }
+
         private void HandleNameEntryKey(KeyEventArgs k, IScene scene, ScreenOverlayState overlay)
         {
             if (k.Key == Key.Escape)
@@ -783,6 +844,12 @@ namespace _3DWorld.Scene
                 return true;
             }
 
+            if (key == Key.C)
+            {
+                ShowSettingsOverlay(scene, overlay, ScreenOverlaySettingsPanel.Controls);
+                return true;
+            }
+
             return false;
         }
 
@@ -794,7 +861,7 @@ namespace _3DWorld.Scene
             GameState.SettingsState.Normalize();
             overlay.SetSettingsPreset(
                 panel,
-                panel == ScreenOverlaySettingsPanel.Audio ? "SOUND SETTINGS" : "GRAPHICS SETTINGS",
+                GetSettingsTitle(panel),
                 BuildSettingsOverlayBody(panel, selectedIndex: 0),
                 GameSettingsOverlayFormatter.Footer);
         }
@@ -827,6 +894,10 @@ namespace _3DWorld.Scene
             {
                 GameState.SettingsState.AdjustGraphics((GraphicsSettingsField)overlay.SelectedSettingsIndex, direction);
             }
+            else if (overlay.SettingsPanel == ScreenOverlaySettingsPanel.Controls)
+            {
+                GameState.SettingsState.AdjustControls(overlay.SelectedSettingsIndex, direction);
+            }
 
             GameSettingsPersistence.SaveSettings(GameState.SettingsState);
             RefreshSettingsOverlayBody(overlay);
@@ -839,17 +910,31 @@ namespace _3DWorld.Scene
 
         private static string BuildSettingsOverlayBody(ScreenOverlaySettingsPanel panel, int selectedIndex)
         {
-            return panel == ScreenOverlaySettingsPanel.Audio
-                ? GameSettingsOverlayFormatter.BuildAudioBody(GameState.SettingsState, selectedIndex)
-                : GameSettingsOverlayFormatter.BuildGraphicsBody(GameState.SettingsState, selectedIndex);
+            return panel switch
+            {
+                ScreenOverlaySettingsPanel.Audio => GameSettingsOverlayFormatter.BuildAudioBody(GameState.SettingsState, selectedIndex),
+                ScreenOverlaySettingsPanel.Controls => GameSettingsOverlayFormatter.BuildControlsBody(GameState.SettingsState, selectedIndex),
+                _ => GameSettingsOverlayFormatter.BuildGraphicsBody(GameState.SettingsState, selectedIndex)
+            };
         }
 
         private static int GetSettingsOptionCount(ScreenOverlaySettingsPanel panel)
         {
-            return panel == ScreenOverlaySettingsPanel.Audio
-                ? Enum.GetValues<AudioSettingsField>().Length
-                : Enum.GetValues<GraphicsSettingsField>().Length;
+            return panel switch
+            {
+                ScreenOverlaySettingsPanel.Audio => Enum.GetValues<AudioSettingsField>().Length,
+                ScreenOverlaySettingsPanel.Controls => GameState.SettingsState.GetControlsOptionCount(),
+                _ => Enum.GetValues<GraphicsSettingsField>().Length
+            };
         }
+
+        private static string GetSettingsTitle(ScreenOverlaySettingsPanel panel) =>
+            panel switch
+            {
+                ScreenOverlaySettingsPanel.Audio => "SOUND SETTINGS",
+                ScreenOverlaySettingsPanel.Controls => "CONTROL SETTINGS",
+                _ => "GRAPHICS SETTINGS"
+            };
 
         private static void StartPlanetLostRecoveryFade(I3dWorld world, bool resetToPlanetStart)
         {

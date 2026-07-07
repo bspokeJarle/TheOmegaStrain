@@ -7,11 +7,13 @@ using CommonUtilities.Persistence;
 using Domain;
 using GameAiAndControls.Audio.Services;
 using GameAiAndControls.Input;
+using Gma.System.MouseKeyHook;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using static CommonUtilities.WeaponHelpers.WeaponHelpers;
 using static Domain._3dSpecificsImplementations;
@@ -39,6 +41,12 @@ namespace GameAiAndControls.Controls
         private const double OverlayResumeCrashDetectionSuppressionSeconds = 2.0;
         private const double OverlayResumeGravityPauseSeconds = 2.0;
         private static float ShipRestingScreenY => ScreenSetup.screenSizeY * 0.195f;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
         // Engine glow colors: idle (dark red) when no thrust, active (yellow) at full thrust.
         private static readonly (int r, int g, int b) EngineActiveRgb = (0xFF, 0xFF, 0x00);
@@ -157,8 +165,10 @@ namespace GameAiAndControls.Controls
             hook.KeyDown += GlobalHookKeyDown;
             hook.KeyUp += GlobalHookKeyUp;
             hook.MouseMove += GlobalHookMouseMovement;
-            hook.MouseDown += GlobalHookMouseDown;
-            hook.MouseUp += GlobalHookMouseUp;
+            hook.MouseDownExt += GlobalHookMouseDownExt;
+            hook.MouseUpExt += GlobalHookMouseUpExt;
+            hook.MouseWheelExt += GlobalHookMouseWheel;
+            hook.MouseHWheelExt += GlobalHookMouseWheel;
         }
 
         public void ConfigureAudio(IAudioPlayer? audioPlayer, ISoundRegistry? soundRegistry)
@@ -202,106 +212,22 @@ namespace GameAiAndControls.Controls
                 return;
             }
 
-            if (e.KeyCode == Keys.Left) _leftHeld = true;
-            if (e.KeyCode == Keys.Right) _rightHeld = true;
-            if (e.KeyCode == Keys.Up) _upHeld = true;
-            if (e.KeyCode == Keys.Down) _downHeld = true;
+            if (TryHandleKeyboardWeaponSelection(e.KeyCode))
+                return;
 
-            if (e.KeyCode == Keys.D1 || e.KeyCode == Keys.NumPad1)
-            {
-                bool weaponChanged = GameState.GamePlayState.SelectedWeapon != WeaponType.Bullet ||
-                    !string.Equals(GameState.GamePlayState.ActivePowerup, "BULLET", StringComparison.OrdinalIgnoreCase);
+            var settings = GetNormalizedSettings();
+            if (settings.ActiveControlScheme != ControlInputMode.Keyboard)
+                return;
 
-                GameState.GamePlayState.SelectedWeapon = WeaponType.Bullet;
-                GameState.GamePlayState.ActivePowerup = "BULLET";
+            if (IsConfiguredKey(e.KeyCode, settings.KeyboardTurnLeftKey)) _leftHeld = true;
+            if (IsConfiguredKey(e.KeyCode, settings.KeyboardTurnRightKey)) _rightHeld = true;
+            if (IsConfiguredKey(e.KeyCode, settings.KeyboardPitchUpKey)) _upHeld = true;
+            if (IsConfiguredKey(e.KeyCode, settings.KeyboardPitchDownKey)) _downHeld = true;
 
-                if (weaponChanged && _audio != null && _changeWeaponSound != null)
-                {
-                    var audioPosition = ((_3dObject)ParentObject).GetAudioPosition();
-                    _audio.Play(
-                        _changeWeaponSound,
-                        AudioPlayMode.OneShot,
-                        new AudioPlayOptions
-                        {
-                            WorldPosition = new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z)
-                        });
-                }
-            }
+            if (IsConfiguredKey(e.KeyCode, settings.KeyboardThrustKey))
+                BeginThrust();
 
-            if (e.KeyCode == Keys.D2 || e.KeyCode == Keys.NumPad2)
-            {
-                if (!GameState.GamePlayState.IsDecoyUnlocked)
-                    return;
-                bool weaponChanged = !string.Equals(GameState.GamePlayState.ActivePowerup, "DECOY", StringComparison.OrdinalIgnoreCase);
-
-                GameState.GamePlayState.ActivePowerup = "DECOY";
-
-                if (weaponChanged && _audio != null && _changeWeaponSound != null)
-                {
-                    var audioPosition = ((_3dObject)ParentObject).GetAudioPosition();
-                    _audio.Play(
-                        _changeWeaponSound,
-                        AudioPlayMode.OneShot,
-                        new AudioPlayOptions
-                        {
-                            WorldPosition = new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z)
-                        });
-                }
-            }
-
-            if (e.KeyCode == Keys.D3 || e.KeyCode == Keys.NumPad3)
-            {
-                if (!GameState.GamePlayState.IsLazerUnlocked)
-                    return;
-
-                bool weaponChanged = GameState.GamePlayState.SelectedWeapon != WeaponType.Lazer ||
-                    !string.Equals(GameState.GamePlayState.ActivePowerup, "LAZER", StringComparison.OrdinalIgnoreCase);
-
-                GameState.GamePlayState.SelectedWeapon = WeaponType.Lazer;
-                GameState.GamePlayState.ActivePowerup = "LAZER";
-
-                if (weaponChanged && _audio != null && _changeWeaponSound != null)
-                {
-                    var audioPosition = ((_3dObject)ParentObject).GetAudioPosition();
-                    _audio.Play(
-                        _changeWeaponSound,
-                        AudioPlayMode.OneShot,
-                        new AudioPlayOptions
-                        {
-                            WorldPosition = new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z)
-                        });
-                }
-            }
-
-            if (e.KeyCode == Keys.Space)
-            {
-                if (ThrustOn == false)
-                {
-                    // If an older rocket instance is still finishing its tail, stop it before starting a new one.
-                    if (_rocketInstance != null)
-                    {
-                        if (Logger.ShouldLog(logging)) Logger.Log("Audio: Force-stopping previous rocket instance before starting new.");
-                        _rocketInstance.Stop(playEndSegment: false); // Hard cut the previous tail.
-                        _rocketInstance = null;
-                    }
-
-                    if (_audio != null && _rocketSound != null)
-                    {
-                        var audioPosition = ((_3dObject)ParentObject).GetAudioPosition();
-                        if (Logger.ShouldLog(logging)) Logger.Log("Audio: Starting new rocket segmented loop.");
-                        _rocketInstance = _audio.Play(
-                                       _rocketSound,
-                            AudioPlayMode.SegmentedLoop,
-                            new AudioPlayOptions
-                            {
-                                WorldPosition = new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z)
-                            });
-                    }
-                }
-                ThrustOn = true;
-            }
-
-            if (e.KeyCode == Keys.RShiftKey)
+            if (IsConfiguredKey(e.KeyCode, settings.KeyboardFireKey))
             {
                 _fireKeyHeld = true;
                 FireWeapon();
@@ -314,44 +240,44 @@ namespace GameAiAndControls.Controls
 
         private void GlobalHookKeyUp(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.RShiftKey)
+            if (IsGameplayInputBlocked())
             {
+                ClearBlockedGameplayInputState();
+                return;
+            }
+
+            var settings = GetNormalizedSettings();
+            if (settings.ActiveControlScheme != ControlInputMode.Keyboard)
+                return;
+
+            if (IsConfiguredKey(e.KeyCode, settings.KeyboardFireKey))
                 _fireKeyHeld = false;
-            }
 
-            if (e.KeyCode == Keys.Left) _leftHeld = false;
-            if (e.KeyCode == Keys.Right) _rightHeld = false;
-            if (e.KeyCode == Keys.Up) _upHeld = false;
-            if (e.KeyCode == Keys.Down) _downHeld = false;
+            if (IsConfiguredKey(e.KeyCode, settings.KeyboardTurnLeftKey)) _leftHeld = false;
+            if (IsConfiguredKey(e.KeyCode, settings.KeyboardTurnRightKey)) _rightHeld = false;
+            if (IsConfiguredKey(e.KeyCode, settings.KeyboardPitchUpKey)) _upHeld = false;
+            if (IsConfiguredKey(e.KeyCode, settings.KeyboardPitchDownKey)) _downHeld = false;
 
-            if (e.KeyCode == Keys.Space)
-            {
-                ThrustOn = false;
-                Thrust = 0;
-                Physics.ThrustEffect = 0f;
-                Physics.VerticalLiftFactor = 0f;
-                ResetThrustParticleStyle();
-                ResetThrustBurstBoost();
-
-                // Stop the rocket loop if it is still playing.
-                if (_rocketInstance != null)
-                {
-                    _rocketInstance.Stop(playEndSegment: true);
-                }
-            }
+            if (IsConfiguredKey(e.KeyCode, settings.KeyboardThrustKey))
+                EndThrust();
         }
 
-        // Delta-based mouse input: each MouseMove event accumulates raw pixel deltas.
-        // MoveObject drains the accumulator each frame into the yaw/pitch velocity,
-        // so the ship only turns while the mouse is actually moving and stops (with
-        // inertia from RotationDrag) as soon as it does.
+        // Delta-based mouse input: each mouse movement accumulates pixel deltas.
+        // Raw input is preferred because it is not clamped by monitor edges; the
+        // global mouse hook path remains as a fallback if raw input is unavailable.
         private bool _mouseActive = false;
         private int _lastMouseX;
         private int _lastMouseY;
         private const float MouseSensitivity = 0.06f;
         private const float MouseDeadZonePixels = 2f;
+        private static readonly TimeSpan RawMouseFallbackWindow = TimeSpan.FromMilliseconds(250);
 
         public void GlobalHookMouseMovement(object sender, MouseEventArgs e)
+        {
+            HandleGlobalHookMouseMovement(e, requireForeground: true);
+        }
+
+        public void HandleRawMouseDelta(int deltaX, int deltaY)
         {
             if (IsGameplayInputBlocked())
             {
@@ -359,11 +285,47 @@ namespace GameAiAndControls.Controls
                 return;
             }
 
+            var settings = GetNormalizedSettings();
+            if (settings.ActiveControlScheme != ControlInputMode.Mouse)
+            {
+                ResetMouseControlState();
+                return;
+            }
+
+            _mouseActive = true;
+            ApplyMouseDelta(deltaX, deltaY, applyDeadZone: false);
+        }
+
+        private void HandleGlobalHookMouseMovement(MouseEventArgs e, bool requireForeground)
+        {
+            if (IsGameplayInputBlocked())
+            {
+                ClearBlockedGameplayInputState();
+                return;
+            }
+
+            var settings = GetNormalizedSettings();
+            if (settings.ActiveControlScheme != ControlInputMode.Mouse)
+            {
+                ResetMouseControlState();
+                return;
+            }
+
+            if (requireForeground && !IsGameProcessForeground())
+            {
+                ClearBlockedGameplayInputState();
+                return;
+            }
+
+            if (RawMouseInput.HasRecentMouseDelta(RawMouseFallbackWindow))
+            {
+                _mouseActive = true;
+                return;
+            }
+
             if (!_mouseActive)
             {
-                _lastMouseX = e.X;
-                _lastMouseY = e.Y;
-                _mouseActive = true;
+                BeginMouseControl(e.X, e.Y);
                 return;
             }
 
@@ -372,76 +334,376 @@ namespace GameAiAndControls.Controls
             _lastMouseX = e.X;
             _lastMouseY = e.Y;
 
-            if (MathF.Abs(dx) < MouseDeadZonePixels) dx = 0f;
-            if (MathF.Abs(dy) < MouseDeadZonePixels) dy = 0f;
+            ApplyMouseDelta(dx, dy, applyDeadZone: true);
+        }
 
-            _mouseYawInput += dx * MouseSensitivity;
-            _mousePitchInput += dy * MouseSensitivity;
+        private void BeginMouseControl(int x, int y)
+        {
+            _lastMouseX = x;
+            _lastMouseY = y;
+            _mouseYawInput = 0f;
+            _mousePitchInput = 0f;
+            _mouseActive = true;
+        }
+
+        private void ResetMouseControlState()
+        {
+            _mouseActive = false;
+            _mouseYawInput = 0f;
+            _mousePitchInput = 0f;
+        }
+
+        private void ApplyMouseDelta(float deltaX, float deltaY, bool applyDeadZone)
+        {
+            if (applyDeadZone)
+            {
+                if (MathF.Abs(deltaX) < MouseDeadZonePixels) deltaX = 0f;
+                if (MathF.Abs(deltaY) < MouseDeadZonePixels) deltaY = 0f;
+            }
+
+            _mouseYawInput += deltaX * MouseSensitivity;
+            _mousePitchInput += deltaY * MouseSensitivity;
         }
 
         private float _mouseYawInput = 0f;
         private float _mousePitchInput = 0f;
+        private float _xboxYawInput = 0f;
+        private float _xboxPitchInput = 0f;
+        private bool _xboxBulletWasPressed = false;
+        private bool _xboxDecoyWasPressed = false;
+        private bool _xboxLazerWasPressed = false;
+        private bool _xboxPowerup4WasPressed = false;
+        private const int XboxControllerIndex = 0;
 
         private void GlobalHookMouseDown(object sender, MouseEventArgs e)
+        {
+            HandleGlobalHookMouseDown(e, requireForeground: false);
+        }
+
+        private void GlobalHookMouseDownExt(object sender, MouseEventExtArgs e)
+        {
+            if (HandleGlobalHookMouseDown(e, requireForeground: true))
+                e.Handled = true;
+        }
+
+        private bool HandleGlobalHookMouseDown(MouseEventArgs e, bool requireForeground)
         {
             if (IsGameplayInputBlocked())
             {
                 ClearBlockedGameplayInputState();
-                return;
+                return false;
             }
 
-            if (e.Button == MouseButtons.Left)
+            var settings = GetNormalizedSettings();
+            if (settings.ActiveControlScheme != ControlInputMode.Mouse)
+                return false;
+
+            if (requireForeground && !IsGameProcessForeground())
             {
-                if (!ThrustOn)
-                {
-                    if (_rocketInstance != null)
-                    {
-                        _rocketInstance.Stop(playEndSegment: false);
-                        _rocketInstance = null;
-                    }
-
-                    if (_audio != null && _rocketSound != null)
-                    {
-                        var audioPosition = ((_3dObject)ParentObject).GetAudioPosition();
-                        _rocketInstance = _audio.Play(
-                            _rocketSound,
-                            AudioPlayMode.SegmentedLoop,
-                            new AudioPlayOptions
-                            {
-                                WorldPosition = new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z)
-                            });
-                    }
-                }
-                ThrustOn = true;
+                ClearBlockedGameplayInputState();
+                return false;
             }
-            else if (e.Button == MouseButtons.Right)
+
+            if (e.Button == ToMouseButton(settings.MouseThrustButton))
+                BeginThrust();
+
+            if (e.Button == ToMouseButton(settings.MouseFireButton))
             {
                 _fireKeyHeld = true;
                 FireWeapon();
             }
+
+            return true;
         }
 
         private void GlobalHookMouseUp(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
-            {
-                ThrustOn = false;
-                Thrust = 0;
-                Physics.ThrustEffect = 0f;
-                Physics.VerticalLiftFactor = 0f;
-                ResetThrustParticleStyle();
-                ResetThrustBurstBoost();
+            HandleGlobalHookMouseUp(e, requireForeground: false);
+        }
 
+        private void GlobalHookMouseUpExt(object sender, MouseEventExtArgs e)
+        {
+            if (HandleGlobalHookMouseUp(e, requireForeground: true))
+                e.Handled = true;
+        }
+
+        private bool HandleGlobalHookMouseUp(MouseEventArgs e, bool requireForeground)
+        {
+            if (IsGameplayInputBlocked())
+            {
+                ClearBlockedGameplayInputState();
+                return false;
+            }
+
+            var settings = GetNormalizedSettings();
+            if (settings.ActiveControlScheme != ControlInputMode.Mouse)
+                return false;
+
+            if (requireForeground && !IsGameProcessForeground())
+            {
+                ClearBlockedGameplayInputState();
+                return false;
+            }
+
+            if (e.Button == ToMouseButton(settings.MouseThrustButton))
+                EndThrust();
+
+            if (e.Button == ToMouseButton(settings.MouseFireButton))
+                _fireKeyHeld = false;
+
+            return true;
+        }
+
+        private void GlobalHookMouseWheel(object? sender, MouseEventExtArgs e)
+        {
+            if (ShouldSwallowGameplayMouseEvent())
+                e.Handled = true;
+        }
+
+        private bool TryHandleKeyboardWeaponSelection(Keys keyCode)
+        {
+            if (keyCode == Keys.D1 || keyCode == Keys.NumPad1)
+            {
+                bool weaponChanged = GameState.GamePlayState.SelectedWeapon != WeaponType.Bullet ||
+                    !string.Equals(GameState.GamePlayState.ActivePowerup, "BULLET", StringComparison.OrdinalIgnoreCase);
+
+                GameState.GamePlayState.SelectedWeapon = WeaponType.Bullet;
+                GameState.GamePlayState.ActivePowerup = "BULLET";
+                PlayWeaponChangedSound(weaponChanged);
+                return true;
+            }
+
+            if (keyCode == Keys.D2 || keyCode == Keys.NumPad2)
+            {
+                if (!GameState.GamePlayState.IsDecoyUnlocked)
+                    return true;
+
+                bool weaponChanged = !string.Equals(GameState.GamePlayState.ActivePowerup, "DECOY", StringComparison.OrdinalIgnoreCase);
+
+                GameState.GamePlayState.ActivePowerup = "DECOY";
+                PlayWeaponChangedSound(weaponChanged);
+                return true;
+            }
+
+            if (keyCode == Keys.D3 || keyCode == Keys.NumPad3)
+            {
+                if (!GameState.GamePlayState.IsLazerUnlocked)
+                    return true;
+
+                bool weaponChanged = GameState.GamePlayState.SelectedWeapon != WeaponType.Lazer ||
+                    !string.Equals(GameState.GamePlayState.ActivePowerup, "LAZER", StringComparison.OrdinalIgnoreCase);
+
+                GameState.GamePlayState.SelectedWeapon = WeaponType.Lazer;
+                GameState.GamePlayState.ActivePowerup = "LAZER";
+                PlayWeaponChangedSound(weaponChanged);
+                return true;
+            }
+
+            if (keyCode == Keys.D4 || keyCode == Keys.NumPad4)
+                return true;
+
+            return false;
+        }
+
+        private void PlayWeaponChangedSound(bool weaponChanged)
+        {
+            if (!weaponChanged || _audio == null || _changeWeaponSound == null || ParentObject == null)
+                return;
+
+            var audioPosition = ((_3dObject)ParentObject).GetAudioPosition();
+            _audio.Play(
+                _changeWeaponSound,
+                AudioPlayMode.OneShot,
+                new AudioPlayOptions
+                {
+                    WorldPosition = new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z)
+                });
+        }
+
+        private void BeginThrust()
+        {
+            if (ThrustOn == false)
+            {
                 if (_rocketInstance != null)
                 {
-                    _rocketInstance.Stop(playEndSegment: true);
+                    if (Logger.ShouldLog(logging)) Logger.Log("Audio: Force-stopping previous rocket instance before starting new.");
+                    _rocketInstance.Stop(playEndSegment: false);
                     _rocketInstance = null;
                 }
+
+                if (_audio != null && _rocketSound != null && ParentObject != null)
+                {
+                    var audioPosition = ((_3dObject)ParentObject).GetAudioPosition();
+                    if (Logger.ShouldLog(logging)) Logger.Log("Audio: Starting new rocket segmented loop.");
+                    _rocketInstance = _audio.Play(
+                        _rocketSound,
+                        AudioPlayMode.SegmentedLoop,
+                        new AudioPlayOptions
+                        {
+                            WorldPosition = new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z)
+                        });
+                }
             }
-            else if (e.Button == MouseButtons.Right)
+
+            ThrustOn = true;
+        }
+
+        private void EndThrust()
+        {
+            ThrustOn = false;
+            Thrust = 0;
+            Physics.ThrustEffect = 0f;
+            Physics.VerticalLiftFactor = 0f;
+            ResetThrustParticleStyle();
+            ResetThrustBurstBoost();
+
+            if (_rocketInstance != null)
             {
-                _fireKeyHeld = false;
+                _rocketInstance.Stop(playEndSegment: true);
+                _rocketInstance = null;
             }
+        }
+
+        private static GameSettingsState GetNormalizedSettings()
+        {
+            GameState.SettingsState ??= new GameSettingsState();
+            GameState.SettingsState.Normalize();
+            return GameState.SettingsState;
+        }
+
+        private static bool IsConfiguredKey(Keys keyCode, string configuredKey)
+        {
+            return !string.IsNullOrWhiteSpace(configuredKey) &&
+                   Enum.TryParse(configuredKey, ignoreCase: true, out Keys configuredKeyCode) &&
+                   keyCode == configuredKeyCode;
+        }
+
+        private static MouseButtons ToMouseButton(MouseControlButton button) =>
+            button switch
+            {
+                MouseControlButton.Right => MouseButtons.Right,
+                MouseControlButton.Middle => MouseButtons.Middle,
+                _ => MouseButtons.Left
+            };
+
+        private static bool ShouldSwallowGameplayMouseEvent()
+        {
+            var settings = GetNormalizedSettings();
+            return settings.ActiveControlScheme == ControlInputMode.Mouse &&
+                   !IsGameplayInputBlocked() &&
+                   IsGameProcessForeground();
+        }
+
+        private static bool IsGameProcessForeground()
+        {
+            IntPtr foregroundWindow = GetForegroundWindow();
+            if (foregroundWindow == IntPtr.Zero)
+                return false;
+
+            GetWindowThreadProcessId(foregroundWindow, out uint foregroundProcessId);
+            return foregroundProcessId == (uint)Environment.ProcessId;
+        }
+
+        private void ApplyActiveControlSchemeInputGuards(GameSettingsState settings)
+        {
+            if (settings.ActiveControlScheme != ControlInputMode.Keyboard)
+            {
+                _leftHeld = false;
+                _rightHeld = false;
+                _upHeld = false;
+                _downHeld = false;
+            }
+
+            if (settings.ActiveControlScheme != ControlInputMode.Mouse)
+            {
+                ResetMouseControlState();
+            }
+
+            if (settings.ActiveControlScheme != ControlInputMode.XboxController)
+            {
+                _xboxYawInput = 0f;
+                _xboxPitchInput = 0f;
+            }
+        }
+
+        private void ApplyXboxControllerInput(GameSettingsState settings)
+        {
+            if (settings.ActiveControlScheme != ControlInputMode.XboxController)
+            {
+                _xboxYawInput = 0f;
+                _xboxPitchInput = 0f;
+                ResetXboxButtonEdges();
+                return;
+            }
+
+            if (!XboxControllerInput.TryGetState(XboxControllerIndex, out var controllerState))
+            {
+                ClearXboxControllerInputState();
+                return;
+            }
+
+            float turnLeft = XboxControllerInput.GetControlStrength(controllerState, settings.XboxTurnLeftButton);
+            float turnRight = XboxControllerInput.GetControlStrength(controllerState, settings.XboxTurnRightButton);
+            float pitchUp = XboxControllerInput.GetControlStrength(controllerState, settings.XboxPitchUpButton);
+            float pitchDown = XboxControllerInput.GetControlStrength(controllerState, settings.XboxPitchDownButton);
+
+            _xboxYawInput = turnRight - turnLeft;
+            _xboxPitchInput = pitchUp - pitchDown;
+
+            if (XboxControllerInput.IsControlPressed(controllerState, settings.XboxThrustButton))
+                BeginThrust();
+            else if (ThrustOn)
+                EndThrust();
+
+            _fireKeyHeld = XboxControllerInput.IsControlPressed(controllerState, settings.XboxFireButton);
+
+            UpdateXboxWeaponSelection(
+                XboxControllerInput.IsControlPressed(controllerState, settings.XboxBulletButton),
+                ref _xboxBulletWasPressed,
+                Keys.D1);
+            UpdateXboxWeaponSelection(
+                XboxControllerInput.IsControlPressed(controllerState, settings.XboxDecoyButton),
+                ref _xboxDecoyWasPressed,
+                Keys.D2);
+            UpdateXboxWeaponSelection(
+                XboxControllerInput.IsControlPressed(controllerState, settings.XboxLazerButton),
+                ref _xboxLazerWasPressed,
+                Keys.D3);
+            UpdateXboxWeaponSelection(
+                XboxControllerInput.IsControlPressed(controllerState, settings.XboxPowerup4Button),
+                ref _xboxPowerup4WasPressed,
+                Keys.D4);
+        }
+
+        private void UpdateXboxWeaponSelection(bool isPressed, ref bool wasPressed, Keys keyboardEquivalent)
+        {
+            if (isPressed && !wasPressed)
+                TryHandleKeyboardWeaponSelection(keyboardEquivalent);
+
+            wasPressed = isPressed;
+        }
+
+        private void ClearXboxControllerInputState()
+        {
+            _leftHeld = false;
+            _rightHeld = false;
+            _upHeld = false;
+            _downHeld = false;
+            _xboxYawInput = 0f;
+            _xboxPitchInput = 0f;
+            _fireKeyHeld = false;
+            ResetXboxButtonEdges();
+
+            if (ThrustOn)
+                EndThrust();
+        }
+
+        private void ResetXboxButtonEdges()
+        {
+            _xboxBulletWasPressed = false;
+            _xboxDecoyWasPressed = false;
+            _xboxLazerWasPressed = false;
+            _xboxPowerup4WasPressed = false;
         }
 
         private static bool IsGameplayInputBlocked()
@@ -531,9 +793,9 @@ namespace GameAiAndControls.Controls
             _upHeld = false;
             _downHeld = false;
             _fireKeyHeld = false;
-            _mouseActive = false;
-            _mouseYawInput = 0f;
-            _mousePitchInput = 0f;
+            ResetMouseControlState();
+            _xboxYawInput = 0f;
+            _xboxPitchInput = 0f;
             _yawVelocity = 0f;
             _pitchVelocity = 0f;
             _yawAccumulator = 0f;
@@ -562,9 +824,9 @@ namespace GameAiAndControls.Controls
             _upHeld = false;
             _downHeld = false;
             _fireKeyHeld = false;
-            _mouseActive = false;
-            _mouseYawInput = 0f;
-            _mousePitchInput = 0f;
+            ResetMouseControlState();
+            _xboxYawInput = 0f;
+            _xboxPitchInput = 0f;
             ThrustOn = false;
             Thrust = 0f;
             Physics.ThrustEffect = 0f;
@@ -609,9 +871,9 @@ namespace GameAiAndControls.Controls
             _upHeld = false;
             _downHeld = false;
             _fireKeyHeld = false;
-            _mouseActive = false;
-            _mouseYawInput = 0f;
-            _mousePitchInput = 0f;
+            ResetMouseControlState();
+            _xboxYawInput = 0f;
+            _xboxPitchInput = 0f;
             _yawVelocity = 0f;
             _pitchVelocity = 0f;
             _yawAccumulator = 0f;
@@ -641,9 +903,9 @@ namespace GameAiAndControls.Controls
         {
             if (string.Equals(GameState.GamePlayState.ActivePowerup, "DECOY", StringComparison.OrdinalIgnoreCase))
             {
-                DeployDecoy();
+                bool decoyDeployed = DeployDecoy();
                 _fireKeyHeld = false;
-                return true;
+                return decoyDeployed;
             }
 
             if (!CanDispatchWeapon())
@@ -714,11 +976,11 @@ namespace GameAiAndControls.Controls
                 });
         }
 
-        private void DeployDecoy()
+        private bool DeployDecoy()
         {
             if (ParentObject?.ParentSurface == null)
             {
-                return;
+                return false;
             }
 
             int activeDecoyCount = GameState.SurfaceState.AiObjects.Count(obj =>
@@ -728,13 +990,13 @@ namespace GameAiAndControls.Controls
 
             if (activeDecoyCount >= GameSetup.MaxActiveDecoys)
             {
-                return;
+                return false;
             }
 
             var decoy = CreateDecoyBeaconObject(ParentObject.ParentSurface);
             if (decoy == null)
             {
-                return;
+                return false;
             }
 
             var mapPosition = GameState.SurfaceState.GlobalMapPosition;
@@ -779,6 +1041,8 @@ namespace GameAiAndControls.Controls
                         WorldPosition = new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z)
                     });
             }
+
+            return true;
         }
 
         private static _3dObject? CreateDecoyBeaconObject(ISurface parentSurface)
@@ -1010,22 +1274,30 @@ namespace GameAiAndControls.Controls
             if (isExploding)
                 return UpdateExplodingShip(theObject);
 
+            var inputSettings = GetNormalizedSettings();
+            ApplyActiveControlSchemeInputGuards(inputSettings);
+            ApplyXboxControllerInput(inputSettings);
+
             if (_leftHeld) _yawVelocity -= RotationAcceleration * deltaTime;
             if (_rightHeld) _yawVelocity += RotationAcceleration * deltaTime;
             if (_upHeld) _pitchVelocity += RotationAcceleration * deltaTime;
             if (_downHeld) _pitchVelocity -= RotationAcceleration * deltaTime;
+            if (_xboxYawInput != 0f) _yawVelocity += _xboxYawInput * RotationAcceleration * deltaTime;
+            if (_xboxPitchInput != 0f) _pitchVelocity += _xboxPitchInput * RotationAcceleration * deltaTime;
 
-            // Mouse delta input: accumulated pixel deltas are applied as velocity impulses
-            // then cleared — the ship only turns while the mouse is moving.
-            if (_mouseYawInput != 0f)
+            if (inputSettings.ActiveControlScheme == ControlInputMode.Mouse)
             {
-                _yawVelocity += _mouseYawInput * RotationAcceleration;
-                _mouseYawInput = 0f;
-            }
-            if (_mousePitchInput != 0f)
-            {
-                _pitchVelocity += _mousePitchInput * RotationAcceleration;
-                _mousePitchInput = 0f;
+                if (_mouseYawInput != 0f)
+                {
+                    _yawVelocity += _mouseYawInput * RotationAcceleration;
+                    _mouseYawInput = 0f;
+                }
+
+                if (_mousePitchInput != 0f)
+                {
+                    _pitchVelocity += _mousePitchInput * RotationAcceleration;
+                    _mousePitchInput = 0f;
+                }
             }
 
             float rotationDrag = GameState.ScaleDampingPer90Frame(RotationDrag);
@@ -1841,8 +2113,10 @@ namespace GameAiAndControls.Controls
             hook.KeyDown -= GlobalHookKeyDown;
             hook.KeyUp -= GlobalHookKeyUp;
             hook.MouseMove -= GlobalHookMouseMovement;
-            hook.MouseDown -= GlobalHookMouseDown;
-            hook.MouseUp -= GlobalHookMouseUp;
+            hook.MouseDownExt -= GlobalHookMouseDownExt;
+            hook.MouseUpExt -= GlobalHookMouseUpExt;
+            hook.MouseWheelExt -= GlobalHookMouseWheel;
+            hook.MouseHWheelExt -= GlobalHookMouseWheel;
 
             //When disposing, reset the global map position to default
             GameState.SurfaceState.GlobalMapPosition = new Vector3 { x = SurfaceSetup.DefaultMapPosition.x, y = SurfaceSetup.DefaultMapPosition.y, z = SurfaceSetup.DefaultMapPosition.z };

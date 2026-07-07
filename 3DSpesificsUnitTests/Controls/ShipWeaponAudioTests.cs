@@ -30,6 +30,7 @@ public class ShipWeaponAudioTests
         };
         GameState.ShipState = new ShipState();
         GameState.SettingsState = new GameSettingsState();
+        GameState.DeltaTime = GameState.GameplayBaselineDeltaTime;
     }
 
     [TestMethod]
@@ -209,6 +210,142 @@ public class ShipWeaponAudioTests
         Assert.AreEqual(0, GameState.GamePlayState.TotalShotsFired);
         Assert.IsFalse(fixture.Controls.ThrustOn);
         Assert.AreEqual(0f, fixture.Controls.Thrust, 0.001f);
+    }
+
+    [TestMethod]
+    public void MouseDown_WhenKeyboardControlIsActive_DoesNotAffectGameplayInput()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+
+        InvokeMouseDown(fixture.Controls, MouseButtons.Left);
+        InvokeMouseDown(fixture.Controls, MouseButtons.Right);
+
+        Assert.AreEqual(ControlInputMode.Keyboard, GameState.SettingsState.ActiveControlScheme);
+        Assert.AreEqual(0, fixture.Audio.PlayCount);
+        Assert.AreEqual(0, fixture.Weapons.ActiveWeapons.Count);
+        Assert.IsFalse(fixture.Controls.ThrustOn);
+    }
+
+    [TestMethod]
+    public void MouseDown_WhenMouseControlIsActive_UsesMouseMappings()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+
+        InvokeMouseDown(fixture.Controls, MouseButtons.Left);
+
+        Assert.IsFalse(fixture.Controls.ThrustOn);
+        Assert.AreEqual(1, fixture.Weapons.ActiveWeapons.Count);
+        Assert.AreEqual(1, GameState.GamePlayState.TotalShotsFired);
+
+        InvokeMouseDown(fixture.Controls, MouseButtons.Right);
+
+        Assert.IsTrue(fixture.Controls.ThrustOn);
+        Assert.AreEqual(1, fixture.Weapons.ActiveWeapons.Count);
+        Assert.AreEqual(1, GameState.GamePlayState.TotalShotsFired);
+    }
+
+    [TestMethod]
+    public void MouseMove_WhenMouseControlIsActive_AllowsForwardPitch()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        InvokeMouseMovement(fixture.Controls, 100, 100);
+        InvokeMouseMovement(fixture.Controls, 100, 40);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsTrue(fixture.Controls.tilt < 0,
+            "Mouse movement upward must rotate the ship forward with the original Virus-style mapping.");
+    }
+
+    [TestMethod]
+    public void MouseMove_WhenMouseControlIsActive_AllowsBackwardPitch()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        InvokeMouseMovement(fixture.Controls, 100, 100);
+        InvokeMouseMovement(fixture.Controls, 100, 160);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsTrue(fixture.Controls.tilt > 0,
+            "Mouse movement downward must still rotate the ship backward with the original Virus-style mapping.");
+    }
+
+    [TestMethod]
+    public void RawMouseDelta_WhenMouseControlIsActive_AllowsForwardPitch()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.HandleRawMouseDelta(0, -60);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsTrue(fixture.Controls.tilt < 0,
+            "Raw mouse delta upward must rotate the ship forward without relying on screen position.");
+    }
+
+    [TestMethod]
+    public void RawMouseDelta_WhenMouseControlIsActive_AllowsBackwardPitch()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.HandleRawMouseDelta(0, 60);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsTrue(fixture.Controls.tilt > 0,
+            "Raw mouse delta downward must rotate the ship backward without relying on screen position.");
+    }
+
+    [TestMethod]
+    public void KeyDown_WhenMouseControlIsActive_StillAllowsKeyboardWeaponSelection()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.GamePlayState.PowerUpsCollected = 1;
+
+        InvokeKeyDown(fixture.Controls, Keys.D2);
+
+        Assert.AreEqual("DECOY", GameState.GamePlayState.ActivePowerup);
+        Assert.IsFalse(fixture.Controls.ThrustOn);
+    }
+
+    [TestMethod]
+    public void KeyDown_WhenPowerupSlot4IsPressed_DoesNotChangeCurrentPowerupYet()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.GamePlayState.PowerUpsCollected = 3;
+        GameState.GamePlayState.SelectedWeapon = WeaponType.Lazer;
+        GameState.GamePlayState.ActivePowerup = "LAZER";
+
+        InvokeKeyDown(fixture.Controls, Keys.D4);
+
+        Assert.AreEqual(WeaponType.Lazer, GameState.GamePlayState.SelectedWeapon);
+        Assert.AreEqual("LAZER", GameState.GamePlayState.ActivePowerup);
+        Assert.AreEqual(0, fixture.Audio.PlayCount);
+    }
+
+    [TestMethod]
+    public void KeyDown_WhenKeyboardMappingChanges_UsesConfiguredKey()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.KeyboardThrustKey = "W";
+
+        InvokeKeyDown(fixture.Controls, Keys.Space);
+        Assert.IsFalse(fixture.Controls.ThrustOn);
+
+        InvokeKeyDown(fixture.Controls, Keys.W);
+        Assert.IsTrue(fixture.Controls.ThrustOn);
     }
 
     [TestMethod]
@@ -396,6 +533,16 @@ public class ShipWeaponAudioTests
 
         Assert.IsNotNull(method);
         method!.Invoke(controls, new object[] { controls, new MouseEventArgs(button, clicks: 1, x: 100, y: 100, delta: 0) });
+    }
+
+    private static void InvokeMouseMovement(ShipControls controls, int x, int y)
+    {
+        var method = typeof(ShipControls).GetMethod(
+            "HandleGlobalHookMouseMovement",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.IsNotNull(method);
+        method!.Invoke(controls, new object[] { new MouseEventArgs(MouseButtons.None, clicks: 0, x, y, delta: 0), false });
     }
 
     private sealed class ShipFixture : IDisposable

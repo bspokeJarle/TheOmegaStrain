@@ -330,6 +330,7 @@ public class LiveGameLoopCleanupTests
         public void NextScene(I3dWorld world) { }
         public IScene GetActiveScene() => null!;
         public void HandleKeyPress(KeyEventArgs k, I3dWorld world) { }
+        public void HandleOverlayActivation(I3dWorld world) { }
         public void UpdateFrame(I3dWorld world) { }
     }
 }
