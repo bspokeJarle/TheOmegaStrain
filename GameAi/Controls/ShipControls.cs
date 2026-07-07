@@ -268,9 +268,17 @@ namespace GameAiAndControls.Controls
         private bool _mouseActive = false;
         private int _lastMouseX;
         private int _lastMouseY;
-        private const float MouseSensitivity = 0.06f;
+        private const float MouseYawTargetSensitivity = 0.25f;
+        private const float MousePitchTargetSensitivity = 0.12f;
+        private const float MouseTargetFollowPer90Frame = 0.42f;
         private const float MouseDeadZonePixels = 2f;
+        private const float MaxMouseDeltaPerEvent = 80f;
         private static readonly TimeSpan RawMouseFallbackWindow = TimeSpan.FromMilliseconds(250);
+        private bool _mouseTargetInitialized = false;
+        private float _mouseTargetRotationZ = 0f;
+        private float _mouseTargetTilt = 0f;
+        private float _mouseSmoothedRotationZ = 0f;
+        private float _mouseSmoothedTilt = 0f;
 
         public void GlobalHookMouseMovement(object sender, MouseEventArgs e)
         {
@@ -320,6 +328,9 @@ namespace GameAiAndControls.Controls
             if (RawMouseInput.HasRecentMouseDelta(RawMouseFallbackWindow))
             {
                 _mouseActive = true;
+                _lastMouseX = e.X;
+                _lastMouseY = e.Y;
+                EnsureMouseTargetInitialized();
                 return;
             }
 
@@ -341,32 +352,67 @@ namespace GameAiAndControls.Controls
         {
             _lastMouseX = x;
             _lastMouseY = y;
-            _mouseYawInput = 0f;
-            _mousePitchInput = 0f;
             _mouseActive = true;
+            EnsureMouseTargetInitialized();
         }
 
         private void ResetMouseControlState()
         {
             _mouseActive = false;
-            _mouseYawInput = 0f;
-            _mousePitchInput = 0f;
+            _mouseTargetInitialized = false;
         }
 
         private void ApplyMouseDelta(float deltaX, float deltaY, bool applyDeadZone)
         {
+            EnsureMouseTargetInitialized();
+
             if (applyDeadZone)
             {
                 if (MathF.Abs(deltaX) < MouseDeadZonePixels) deltaX = 0f;
                 if (MathF.Abs(deltaY) < MouseDeadZonePixels) deltaY = 0f;
             }
 
-            _mouseYawInput += deltaX * MouseSensitivity;
-            _mousePitchInput += deltaY * MouseSensitivity;
+            deltaX = ClampMouseDelta(deltaX);
+            deltaY = ClampMouseDelta(deltaY);
+
+            _mouseTargetRotationZ += deltaX * MouseYawTargetSensitivity;
+            _mouseTargetTilt += deltaY * MousePitchTargetSensitivity;
         }
 
-        private float _mouseYawInput = 0f;
-        private float _mousePitchInput = 0f;
+        private static float ClampMouseDelta(float delta)
+        {
+            return Math.Clamp(delta, -MaxMouseDeltaPerEvent, MaxMouseDeltaPerEvent);
+        }
+
+        private void EnsureMouseTargetInitialized()
+        {
+            if (_mouseTargetInitialized)
+                return;
+
+            _mouseTargetRotationZ = rotationZ;
+            _mouseTargetTilt = tilt;
+            _mouseSmoothedRotationZ = rotationZ;
+            _mouseSmoothedTilt = tilt;
+            _mouseTargetInitialized = true;
+        }
+
+        private void ApplyMouseTargetRotation()
+        {
+            EnsureMouseTargetInitialized();
+
+            float follow = 1f - MathF.Pow(1f - MouseTargetFollowPer90Frame, GameState.FrameScale90);
+            _mouseSmoothedRotationZ += (_mouseTargetRotationZ - _mouseSmoothedRotationZ) * follow;
+            _mouseSmoothedTilt += (_mouseTargetTilt - _mouseSmoothedTilt) * follow;
+
+            rotationZ = (int)MathF.Round(_mouseSmoothedRotationZ);
+            tilt = (int)MathF.Round(_mouseSmoothedTilt);
+
+            _yawVelocity = 0f;
+            _pitchVelocity = 0f;
+            _yawAccumulator = 0f;
+            _pitchAccumulator = 0f;
+        }
+
         private float _xboxYawInput = 0f;
         private float _xboxPitchInput = 0f;
         private bool _xboxBulletWasPressed = false;
@@ -1278,39 +1324,31 @@ namespace GameAiAndControls.Controls
             ApplyActiveControlSchemeInputGuards(inputSettings);
             ApplyXboxControllerInput(inputSettings);
 
-            if (_leftHeld) _yawVelocity -= RotationAcceleration * deltaTime;
-            if (_rightHeld) _yawVelocity += RotationAcceleration * deltaTime;
-            if (_upHeld) _pitchVelocity += RotationAcceleration * deltaTime;
-            if (_downHeld) _pitchVelocity -= RotationAcceleration * deltaTime;
-            if (_xboxYawInput != 0f) _yawVelocity += _xboxYawInput * RotationAcceleration * deltaTime;
-            if (_xboxPitchInput != 0f) _pitchVelocity += _xboxPitchInput * RotationAcceleration * deltaTime;
-
             if (inputSettings.ActiveControlScheme == ControlInputMode.Mouse)
             {
-                if (_mouseYawInput != 0f)
-                {
-                    _yawVelocity += _mouseYawInput * RotationAcceleration;
-                    _mouseYawInput = 0f;
-                }
-
-                if (_mousePitchInput != 0f)
-                {
-                    _pitchVelocity += _mousePitchInput * RotationAcceleration;
-                    _mousePitchInput = 0f;
-                }
+                ApplyMouseTargetRotation();
             }
+            else
+            {
+                if (_leftHeld) _yawVelocity -= RotationAcceleration * deltaTime;
+                if (_rightHeld) _yawVelocity += RotationAcceleration * deltaTime;
+                if (_upHeld) _pitchVelocity += RotationAcceleration * deltaTime;
+                if (_downHeld) _pitchVelocity -= RotationAcceleration * deltaTime;
+                if (_xboxYawInput != 0f) _yawVelocity += _xboxYawInput * RotationAcceleration * deltaTime;
+                if (_xboxPitchInput != 0f) _pitchVelocity += _xboxPitchInput * RotationAcceleration * deltaTime;
 
-            float rotationDrag = GameState.ScaleDampingPer90Frame(RotationDrag);
-            _yawVelocity = MathF.Max(-MaxRotationSpeed, MathF.Min(MaxRotationSpeed, _yawVelocity)) * rotationDrag;
-            _pitchVelocity = MathF.Max(-MaxRotationSpeed, MathF.Min(MaxRotationSpeed, _pitchVelocity)) * rotationDrag;
+                float rotationDrag = GameState.ScaleDampingPer90Frame(RotationDrag);
+                _yawVelocity = MathF.Max(-MaxRotationSpeed, MathF.Min(MaxRotationSpeed, _yawVelocity)) * rotationDrag;
+                _pitchVelocity = MathF.Max(-MaxRotationSpeed, MathF.Min(MaxRotationSpeed, _pitchVelocity)) * rotationDrag;
 
-            _yawAccumulator += _yawVelocity * deltaTime;
-            _pitchAccumulator += _pitchVelocity * deltaTime;
+                _yawAccumulator += _yawVelocity * deltaTime;
+                _pitchAccumulator += _pitchVelocity * deltaTime;
 
-            int yawStep = (int)_yawAccumulator;
-            int pitchStep = (int)_pitchAccumulator;
-            if (yawStep != 0) { rotationZ += yawStep; _yawAccumulator -= yawStep; }
-            if (pitchStep != 0) { tilt += pitchStep; _pitchAccumulator -= pitchStep; }
+                int yawStep = (int)_yawAccumulator;
+                int pitchStep = (int)_pitchAccumulator;
+                if (yawStep != 0) { rotationZ += yawStep; _yawAccumulator -= yawStep; }
+                if (pitchStep != 0) { tilt += pitchStep; _pitchAccumulator -= pitchStep; }
+            }
 
             // Gently return tilt toward level-flight angle when no pitch input is held.
             // LevelFlightTilt gives a slight forward lean so the ship cruises naturally

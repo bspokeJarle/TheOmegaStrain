@@ -308,6 +308,57 @@ public class ShipWeaponAudioTests
     }
 
     [TestMethod]
+    public void RawMouseDelta_WhenMouseControlIsActive_UsesLowerPitchSensitivityThanAxisRotation()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.HandleRawMouseDelta(60, 60);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsTrue(Math.Abs(fixture.Controls.rotationZ) > Math.Abs(fixture.Controls.tilt),
+            "Mouse pitch should be less sensitive than rotation around the ship axis, matching the Virus-style feel.");
+    }
+
+    [TestMethod]
+    public void RawMouseDelta_WhenMouseControlIsActive_SettlesAtMouseTargetWithoutRotationalInertia()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.HandleRawMouseDelta(0, 60);
+
+        for (int i = 0; i < 20; i++)
+            fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        int settledTilt = fixture.Controls.tilt;
+
+        for (int i = 0; i < 20; i++)
+            fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.AreEqual(settledTilt, fixture.Controls.tilt,
+            "Mouse control should settle at the virtual mouse target instead of drifting on rotation inertia.");
+    }
+
+    [TestMethod]
+    public void RawMouseDelta_WhenMouseControlIsActive_ClampsSingleLargeDelta()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.HandleRawMouseDelta(5000, 5000);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsTrue(Math.Abs(fixture.Controls.rotationZ) <= 25,
+            "A single raw mouse spike must not cause a long axis-rotation jump.");
+        Assert.IsTrue(Math.Abs(fixture.Controls.tilt) <= 15,
+            "A single raw mouse spike must not cause a long pitch jump.");
+    }
+
+    [TestMethod]
     public void KeyDown_WhenMouseControlIsActive_StillAllowsKeyboardWeaponSelection()
     {
         using var fixture = CreateReadyShip(withWeaponGuides: true);
