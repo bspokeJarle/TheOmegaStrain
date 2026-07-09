@@ -62,6 +62,7 @@ namespace GameAiAndControls.Controls
         private const long HighThrustParticleVariedStartMaxTicks = 1_250_000;
         private const float ThrustBurstTravelBoostAmount = 0.06f;
         private const float ThrustBurstTravelBoostSeconds = 0.28f;
+        private const double DecoyDeployCooldownSeconds = 1.0;
 
         // Cannon recoil animation state
         private float _cannonRecoilOffset = 0f;
@@ -89,6 +90,7 @@ namespace GameAiAndControls.Controls
                 private SoundDefinition? _impactThudSound;
                 private SoundDefinition? _surfaceThudSound;
         private IAudioInstance? _rocketInstance;
+        private DateTime _lastDecoyDeployUtc = DateTime.MinValue;
 
         private float _yawVelocity = 0f;
         private float _pitchVelocity = 0f;
@@ -1029,6 +1031,12 @@ namespace GameAiAndControls.Controls
                 return false;
             }
 
+            var nowUtc = DateTime.UtcNow;
+            if (nowUtc - _lastDecoyDeployUtc < TimeSpan.FromSeconds(DecoyDeployCooldownSeconds))
+            {
+                return false;
+            }
+
             int activeDecoyCount = GameState.SurfaceState.AiObjects.Count(obj =>
                 obj.ObjectName == "DroneDecoy" &&
                 obj.ImpactStatus?.HasExploded != true &&
@@ -1075,6 +1083,7 @@ namespace GameAiAndControls.Controls
 
             GameState.SurfaceState.AiObjects.Add(decoy);
             GameState.PendingWorldObjects.Add(decoy);
+            _lastDecoyDeployUtc = nowUtc;
 
             if (_audio != null && _releaseDecoySound != null)
             {

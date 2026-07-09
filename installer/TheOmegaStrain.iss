@@ -33,8 +33,8 @@ OutputBaseFilename=TheOmegaStrainSetup-{#AppVersion}
 SetupIconFile=..\3dTesting\GameGraphics\OmegaStrain.ico
 WizardImageFile=Assets\InstallerWizardImage.bmp
 WizardSmallImageFile=Assets\InstallerWizardSmall.bmp
-WizardBackImageFile=Assets\InstallerWizardBackImage.png
-WizardBackImageOpacity=155
+WizardBackImageFile=Assets\InstallerWizardBackImage.bmp
+WizardBackImageOpacity=255
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2
 SolidCompression=yes
@@ -123,6 +123,16 @@ function InitializeSetup(): Boolean;
 begin
   StartInstallerMusic();
   Result := True;
+end;
+
+procedure InitializeWizard();
+begin
+  { The full-page cockpit art is pre-faded into an opaque BMP. Hide the stock
+    wizard images so Inno does not repaint grey/white image panels over it on
+    some DPI/theme combinations. }
+  WizardForm.WizardBitmapImage.Visible := False;
+  WizardForm.WizardBitmapImage2.Visible := False;
+  WizardForm.WizardSmallBitmapImage.Visible := False;
 end;
 
 procedure DeinitializeSetup();

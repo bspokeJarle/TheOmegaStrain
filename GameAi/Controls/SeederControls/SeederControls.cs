@@ -286,6 +286,7 @@ namespace GameAiAndControls.Controls.SeederControls
             int damage = theObject.ImpactStatus.ObjectName switch
             {
                 "Ship" => currentHealth,
+                "DroneDecoy" => EnemySetup.DroneDecoyCollisionDamage,
                 string objectName when WeaponSetup.IsWeaponTypeValid(objectName) => WeaponSetup.GetWeaponDamage(objectName),
                 _ => 0
             };

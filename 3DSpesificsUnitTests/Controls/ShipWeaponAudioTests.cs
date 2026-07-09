@@ -372,6 +372,27 @@ public class ShipWeaponAudioTests
     }
 
     [TestMethod]
+    public void FireWeapon_WhenDecoyIsSelected_AllowsOnlyOneDeployPerSecond()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true, parentSurface: new Surface());
+        GameState.GamePlayState.ActivePowerup = "DECOY";
+
+        InvokeKeyDown(fixture.Controls, Keys.RShiftKey);
+        InvokeKeyDown(fixture.Controls, Keys.RShiftKey);
+
+        Assert.AreEqual(1, GameState.SurfaceState.AiObjects.Count(obj => obj.ObjectName == "DroneDecoy"),
+            "Decoy deployment must be rate-limited so repeated input cannot spawn multiple decoys in one second.");
+        Assert.AreEqual(1, GameState.PendingWorldObjects.Count(obj => obj.ObjectName == "DroneDecoy"));
+
+        SetLastDecoyDeployUtc(fixture.Controls, DateTime.UtcNow.AddSeconds(-1.1));
+
+        InvokeKeyDown(fixture.Controls, Keys.RShiftKey);
+
+        Assert.AreEqual(2, GameState.SurfaceState.AiObjects.Count(obj => obj.ObjectName == "DroneDecoy"),
+            "A new decoy should be allowed after the one-second cooldown has elapsed.");
+    }
+
+    [TestMethod]
     public void KeyDown_WhenPowerupSlot4IsPressed_DoesNotChangeCurrentPowerupYet()
     {
         using var fixture = CreateReadyShip(withWeaponGuides: true);
@@ -488,7 +509,7 @@ public class ShipWeaponAudioTests
         Assert.IsFalse(fixture.Ship.ImpactStatus.HasCrashed);
     }
 
-    private static ShipFixture CreateReadyShip(bool withWeaponGuides)
+    private static ShipFixture CreateReadyShip(bool withWeaponGuides, ISurface? parentSurface = null)
     {
         var controls = new ShipControls();
         var ship = new _3dObject
@@ -509,7 +530,8 @@ public class ShipWeaponAudioTests
                     Triangles = new List<ITriangleMeshWithColor> { CreateGuideVertex(0f, -50f, 28f) }
                 }
             },
-            Movement = controls
+            Movement = controls,
+            ParentSurface = parentSurface
         };
 
         var weapons = new Weapons(
@@ -594,6 +616,16 @@ public class ShipWeaponAudioTests
 
         Assert.IsNotNull(method);
         method!.Invoke(controls, new object[] { new MouseEventArgs(MouseButtons.None, clicks: 0, x, y, delta: 0), false });
+    }
+
+    private static void SetLastDecoyDeployUtc(ShipControls controls, DateTime lastDeployUtc)
+    {
+        var field = typeof(ShipControls).GetField(
+            "_lastDecoyDeployUtc",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.IsNotNull(field);
+        field!.SetValue(controls, lastDeployUtc);
     }
 
     private sealed class ShipFixture : IDisposable
