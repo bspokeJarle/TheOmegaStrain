@@ -698,7 +698,6 @@ namespace Domain
                 return 0;
 
             PlanetStyleBonusScore += awarded;
-            Score += awarded;
             return awarded;
         }
 

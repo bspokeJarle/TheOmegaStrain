@@ -23,6 +23,7 @@
     <ProjectReference Include="..\3dRotations\3dSpesifics.csproj" />
     <ProjectReference Include="..\GameAi\GameAiAndControls.csproj" />
     <ProjectReference Include="..\GameAudio\GameAudio.csproj" />
+    <ProjectReference Include="..\SteamIntegration\SteamIntegration.csproj" />
   </ItemGroup>
 
   <ItemGroup>

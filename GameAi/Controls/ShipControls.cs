@@ -2,6 +2,7 @@
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
+using CommonUtilities.Events;
 using CommonUtilities.GamePlayHelpers;
 using CommonUtilities.Persistence;
 using Domain;
@@ -1634,6 +1635,27 @@ namespace GameAiAndControls.Controls
             if (awardedScore <= 0)
                 return;
 
+            var gameplay = GameState.GamePlayState;
+            if (gameplay.CurrentSceneType != SceneTypes.Tutorial)
+            {
+                GameState.EventBus?.Publish(new GameEvent
+                {
+                    Type = GameEventType.StyleBonusAwarded,
+                    ObjectName = "Ship",
+                    SceneType = gameplay.CurrentSceneType,
+                    SceneIndex = gameplay.SceneIndex,
+                    Score = gameplay.Score,
+                    AwardedScore = awardedScore,
+                    TotalKills = gameplay.TotalKills,
+                    TotalShotsFired = gameplay.TotalShotsFired,
+                    TotalDeaths = gameplay.TotalDeaths,
+                    Accuracy = gameplay.Accuracy,
+                    PowerUpsCollected = gameplay.PowerUpsCollected,
+                    SpeedPowerUpLevel = gameplay.SpeedPowerUpLevel,
+                    HadCollision = loopStatus.HadCollision
+                });
+            }
+
             var cue = loopStatus.HadCollision
                 ? ShipAiVoiceCue.CollisionLoop
                 : ShipAiVoiceCue.CleanLoop;
@@ -2266,6 +2288,23 @@ namespace GameAiAndControls.Controls
                         }
                         catch { }
                         try { HighscoreService.SubmitFromGamePlay(gameplay); } catch { }
+
+                        GameState.EventBus?.Publish(new GameEvent
+                        {
+                            Type = GameEventType.PowerUpCollected,
+                            Source = obj,
+                            ObjectName = obj.ObjectName,
+                            PowerUpType = obj.PowerUpType,
+                            SceneType = gameplay.CurrentSceneType,
+                            SceneIndex = gameplay.SceneIndex,
+                            Score = gameplay.Score,
+                            TotalKills = gameplay.TotalKills,
+                            TotalShotsFired = gameplay.TotalShotsFired,
+                            TotalDeaths = gameplay.TotalDeaths,
+                            Accuracy = gameplay.Accuracy,
+                            PowerUpsCollected = gameplay.PowerUpsCollected,
+                            SpeedPowerUpLevel = gameplay.SpeedPowerUpLevel
+                        });
                     }
 
                     if (_audio != null && _powerupSound != null)

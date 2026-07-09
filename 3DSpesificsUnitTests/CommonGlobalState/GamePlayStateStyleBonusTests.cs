@@ -24,7 +24,7 @@ public class GamePlayStateStyleBonusTests
     }
 
     [TestMethod]
-    public void AwardStyleBonus_AddsToScoreAndCapsPerPlanet()
+    public void AwardStyleBonus_AccruesPlanetBudgetWithoutChangingScore()
     {
         GameSetup.PlanetStyleBonusScoreCap = 500;
         var gameplay = new GamePlayState { SceneIndex = 1 };
@@ -34,7 +34,7 @@ public class GamePlayStateStyleBonusTests
 
         Assert.AreEqual(300, first);
         Assert.AreEqual(200, second);
-        Assert.AreEqual(500L, gameplay.Score);
+        Assert.AreEqual(0L, gameplay.Score);
         Assert.AreEqual(500, gameplay.PlanetStyleBonusScore);
         Assert.AreEqual(0, gameplay.PlanetStyleBonusRemaining);
     }
@@ -50,7 +50,7 @@ public class GamePlayStateStyleBonusTests
         int awarded = gameplay.AwardStyleBonus(100);
 
         Assert.AreEqual(100, awarded);
-        Assert.AreEqual(600L, gameplay.Score);
+        Assert.AreEqual(0L, gameplay.Score);
         Assert.AreEqual(100, gameplay.PlanetStyleBonusScore);
         Assert.AreEqual(2, gameplay.PlanetStyleBonusSceneIndex);
     }
@@ -58,15 +58,16 @@ public class GamePlayStateStyleBonusTests
     [TestMethod]
     public void RestoreCheckpoint_RestoresCheckpointStyleBonusBudget()
     {
-        var gameplay = new GamePlayState { SceneIndex = 3 };
+        var gameplay = new GamePlayState { SceneIndex = 3, Score = 1200 };
 
         gameplay.AwardStyleBonus(400);
         gameplay.SaveCheckpoint();
+        gameplay.Score = 1800;
         gameplay.AwardStyleBonus(250);
 
         gameplay.RestoreCheckpoint();
 
-        Assert.AreEqual(400L, gameplay.Score);
+        Assert.AreEqual(1200L, gameplay.Score);
         Assert.AreEqual(400, gameplay.PlanetStyleBonusScore);
         Assert.AreEqual(3, gameplay.PlanetStyleBonusSceneIndex);
     }

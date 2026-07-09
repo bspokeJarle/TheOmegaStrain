@@ -10,6 +10,7 @@ using CommonUtilities.Persistence;
 using Domain;
 using GameAiAndControls.Controls;
 using GameAiAndControls.Input;
+using SteamIntegration;
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -82,6 +83,8 @@ namespace _3dTesting
         private bool _videoEntrancePlayed;
         private bool _xboxOverlayButtonWasDown = false;
         private HwndSource? _rawMouseSource;
+        private SteamManager? _steamManager;
+        private SteamGameplaySync? _steamGameplaySync;
 
         // MotherShip health bar (in-world overlay)
         private readonly Canvas _motherShipHealthBarCanvas;
@@ -128,6 +131,8 @@ namespace _3dTesting
 
             PersistenceSetup.Initialize();
             GameState.GamePlayState.PlayerName = PersistenceSetup.LoadLastPlayerName();
+            GameState.EventBus = world.EventBus;
+            InitializeSteamIntegration();
 
             InitializeComponent();
             this.PreviewKeyDown += new KeyEventHandler(HandleKeys);
@@ -287,8 +292,52 @@ namespace _3dTesting
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             ShutdownRawMouseInput();
+            ShutdownSteamIntegration();
             // Closing the window is not a checkpoint. Progress and highscores
             // are persisted by checkpoint flows: powerups and motherships.
+        }
+
+        private void InitializeSteamIntegration()
+        {
+            _steamManager = new SteamManager();
+
+            if (!_steamManager.Initialize())
+            {
+                if (Logger.EnableFileLogging)
+                    Logger.Log($"[Steam] unavailable: {_steamManager.LastError ?? "SteamAPI.Init returned false"}");
+                return;
+            }
+
+            _steamGameplaySync = new SteamGameplaySync(
+                _steamManager,
+                world.EventBus,
+                CreateSteamGameplaySnapshot);
+
+            if (Logger.EnableFileLogging)
+                Logger.Log($"[Steam] initialized appId={_steamManager.AppId} steamId={_steamManager.SteamId} loggedOn={_steamManager.IsLoggedOn}");
+        }
+
+        private void ShutdownSteamIntegration()
+        {
+            _steamGameplaySync?.Dispose();
+            _steamGameplaySync = null;
+            _steamManager?.Dispose();
+            _steamManager = null;
+        }
+
+        private static SteamGameplaySnapshot CreateSteamGameplaySnapshot()
+        {
+            var gameplay = GameState.GamePlayState;
+            return new SteamGameplaySnapshot(
+                gameplay.CurrentSceneType,
+                gameplay.SceneIndex,
+                gameplay.Score,
+                gameplay.TotalKills,
+                gameplay.TotalShotsFired,
+                gameplay.TotalDeaths,
+                gameplay.Accuracy,
+                gameplay.PowerUpsCollected,
+                gameplay.SpeedPowerUpLevel);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -746,6 +795,7 @@ namespace _3dTesting
             }
 
             float dt = (float)dtSeconds;
+            _steamGameplaySync?.Update();
             SynchronizeTutorialOverlayPause();
             UpdateXboxOverlayActivation();
 

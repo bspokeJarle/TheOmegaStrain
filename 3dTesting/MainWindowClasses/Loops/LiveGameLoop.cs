@@ -8,6 +8,7 @@ using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
 using CommonUtilities.Events;
+using CommonUtilities.GamePlayHelpers;
 using CommonUtilities.Persistence;
 using Domain;
 using GameAiAndControls.Audio.Services;
@@ -109,6 +110,10 @@ namespace _3dTesting.MainWindowClasses.Loops
         private bool _victorySequenceStarted = false;
         private long _victoryStartTicks = 0;
         private const float VictoryDisplaySeconds = 3.0f;
+        private const float VictoryRewardCountUpSeconds = 4.0f;
+        private const float VictoryRewardHoldSeconds = 1.25f;
+        private PlanetRewardBreakdown? _victoryRewardBreakdown;
+        private int _lastAppliedVictoryReward;
         private static readonly HashSet<Type> movementDisposeNotImplementedTypes = new();
         private static readonly object movementDisposeNotImplementedTypesLock = new();
 
@@ -351,6 +356,7 @@ namespace _3dTesting.MainWindowClasses.Loops
                 _deathSequenceStarted = false;
                 _victorySequenceStarted = false;
                 _victoryStartTicks = 0;
+                ClearVictoryRewardState();
                 GameState.WorldFade.RequestFadeIn(1.5f, "SceneReset");
                 if (logPhaseTiming)
                 {
@@ -426,28 +432,24 @@ namespace _3dTesting.MainWindowClasses.Loops
             {
                 _victorySequenceStarted = true;
                 _victoryStartTicks = Stopwatch.GetTimestamp();
-
-                var o = GameState.ScreenOverlayState;
-                o.ResetToDefaults();
-                o.Type = ScreenOverlayType.Game;
-                o.Anchor = ScreenOverlayAnchor.Center;
-                o.Header = "PLANET SECURED";
-                o.Title = "ALL THREATS ELIMINATED";
-                o.Body = "Proceeding to next sector...";
-                o.Footer = "";
-                o.DimStrength = 0.50f;
-                o.PanelWidthRatio = 0.60f;
-                o.PanelHeightRatio = 0.22f;
-                o.ShowOverlay = true;
-                o.AutoHide = false;
-                o.ShowDebugOverlay = false;
+                BeginVictoryRewardOverlay(activeScene?.SceneType ?? SceneTypes.Game);
             }
 
             // Victory timer: show overlay briefly then trigger scene transition
             if (_victorySequenceStarted && !_deathSequenceStarted && !GameState.WorldFade.IsFadeOutPendingOrActive)
             {
                 float elapsed = (Stopwatch.GetTimestamp() - _victoryStartTicks) / (float)Stopwatch.Frequency;
-                if (elapsed >= VictoryDisplaySeconds)
+                if (_victoryRewardBreakdown != null)
+                {
+                    float progress = Math.Clamp(elapsed / VictoryRewardCountUpSeconds, 0f, 1f);
+                    UpdateVictoryRewardOverlay(progress);
+
+                    if (elapsed >= VictoryRewardCountUpSeconds + VictoryRewardHoldSeconds)
+                    {
+                        GameState.WorldFade.RequestFadeOut(1.0f, WorldFadeState.VictoryCompleteReason);
+                    }
+                }
+                else if (elapsed >= VictoryDisplaySeconds)
                 {
                     GameState.WorldFade.RequestFadeOut(1.0f, WorldFadeState.VictoryCompleteReason);
                 }
@@ -622,7 +624,27 @@ namespace _3dTesting.MainWindowClasses.Loops
                     if (EnemySetup.IsEnemyTypeValid(obj.ObjectName))
                     {
                         if (!isTutorialScene)
+                        {
                             gps.RecordKill(obj.ObjectName);
+
+                            world.EventBus?.Publish(new GameEvent
+                            {
+                                Type = GameEventType.EnemyDestroyed,
+                                Source = obj,
+                                ObjectName = obj.ObjectName,
+                                HasPowerUp = obj.HasPowerUp,
+                                PowerUpType = obj.PowerUpType,
+                                SceneType = gps.CurrentSceneType,
+                                SceneIndex = gps.SceneIndex,
+                                Score = gps.Score,
+                                TotalKills = gps.TotalKills,
+                                TotalShotsFired = gps.TotalShotsFired,
+                                TotalDeaths = gps.TotalDeaths,
+                                Accuracy = gps.Accuracy,
+                                PowerUpsCollected = gps.PowerUpsCollected,
+                                SpeedPowerUpLevel = gps.SpeedPowerUpLevel
+                            });
+                        }
 
                         if (Logger.ShouldLog(enableProgressionLogging))
                         {
@@ -971,6 +993,67 @@ namespace _3dTesting.MainWindowClasses.Loops
                 gps.ShowMotherShipHealthBar = false;
                 gps.MotherShipIsOnScreen = false;
             }
+        }
+
+        private void BeginVictoryRewardOverlay(SceneTypes sceneType)
+        {
+            var overlay = GameState.ScreenOverlayState;
+            overlay.ResetToDefaults();
+            overlay.Type = ScreenOverlayType.Game;
+            overlay.Anchor = ScreenOverlayAnchor.Center;
+            overlay.Header = "PLANET SECURED";
+            overlay.Title = "MISSION REWARD";
+            overlay.Footer = "CALCULATING PLANET BONUS";
+            overlay.DimStrength = 0.55f;
+            overlay.PanelWidthRatio = 0.66f;
+            overlay.PanelHeightRatio = 0.38f;
+            overlay.PanelYOffsetRatio = 0.02f;
+            overlay.CenterText = false;
+            overlay.ShowOverlay = true;
+            overlay.AutoHide = false;
+            overlay.ShowDebugOverlay = false;
+
+            if (sceneType != SceneTypes.Game && sceneType != SceneTypes.Simulation)
+            {
+                _victoryRewardBreakdown = null;
+                _lastAppliedVictoryReward = 0;
+                overlay.Title = "ALL THREATS ELIMINATED";
+                overlay.Body = "Proceeding to next sector...";
+                overlay.Footer = "";
+                overlay.PanelHeightRatio = 0.22f;
+                return;
+            }
+
+            _victoryRewardBreakdown = PlanetRewardCalculator.Calculate(GameState.GamePlayState);
+            _lastAppliedVictoryReward = 0;
+            UpdateVictoryRewardOverlay(0f);
+        }
+
+        private void UpdateVictoryRewardOverlay(float progress)
+        {
+            if (_victoryRewardBreakdown == null)
+                return;
+
+            progress = Math.Clamp(progress, 0f, 1f);
+            int displayedReward = _victoryRewardBreakdown.GetDisplayedTotal(progress);
+            int delta = displayedReward - _lastAppliedVictoryReward;
+            if (delta > 0)
+            {
+                GameState.GamePlayState.Score += delta;
+                _lastAppliedVictoryReward = displayedReward;
+            }
+
+            var overlay = GameState.ScreenOverlayState;
+            overlay.Body = _victoryRewardBreakdown.BuildOverlayBody(progress);
+            overlay.Footer = progress >= 1f
+                ? $"BONUS APPLIED  //  SCORE {GameState.GamePlayState.Score:N0}"
+                : $"COUNTING BONUS  //  SCORE {GameState.GamePlayState.Score:N0}";
+        }
+
+        private void ClearVictoryRewardState()
+        {
+            _victoryRewardBreakdown = null;
+            _lastAppliedVictoryReward = 0;
         }
 
         private Dictionary<int, _3dObject> InitializeAiOnScreenTracking()

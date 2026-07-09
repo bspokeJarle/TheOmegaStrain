@@ -7,6 +7,7 @@
     <AssemblyName>TheOmegaStrain</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationIcon>GameGraphics\OmegaStrain.ico</ApplicationIcon>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="GameGraphics\OmegaStrain.ico" />
@@ -14,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\3dRotations\3dSpesifics.csproj" />
     <ProjectReference Include="..\GameAudio\GameAudio.csproj" />
+    <ProjectReference Include="..\SteamIntegration\SteamIntegration.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="GameGraphics\bullet_icon_48.png">

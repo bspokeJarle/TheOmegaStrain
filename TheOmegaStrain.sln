@@ -37,6 +37,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchmarkSuite5", "Benchmar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchmarkSuite6", "BenchmarkSuite6\BenchmarkSuite6.csproj", "{32F56372-1CCB-A9D3-534B-A832DF38C443}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamIntegration", "SteamIntegration\SteamIntegration.csproj", "{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,10 @@ Global
 		{32F56372-1CCB-A9D3-534B-A832DF38C443}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32F56372-1CCB-A9D3-534B-A832DF38C443}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32F56372-1CCB-A9D3-534B-A832DF38C443}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

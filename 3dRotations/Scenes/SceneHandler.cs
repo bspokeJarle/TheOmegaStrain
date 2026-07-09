@@ -13,6 +13,7 @@ using _3dTesting._3dWorld;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
+using CommonUtilities.Events;
 using CommonUtilities.Persistence;
 using Domain;
 using GameAiAndControls.Audio.Services;
@@ -262,6 +263,8 @@ namespace _3DWorld.Scene
             DisposeDirector();
             var gps = GameState.GamePlayState;
             var currentScene = GetActiveScene();
+            int completedSceneIndex = gps.SceneIndex > 0 ? gps.SceneIndex : currentSceneIndex;
+            var completedSceneType = currentScene.SceneType;
             bool isOutro = currentScene.SceneType == SceneTypes.Outro;
             bool isSimulation = currentScene.SceneType == SceneTypes.Simulation;
             bool isTutorial = currentScene.SceneType == SceneTypes.Tutorial;
@@ -322,6 +325,7 @@ namespace _3DWorld.Scene
                 gps.SpeedPowerUpLevel = prevSpeedPowerUpLevel;
 
                 gps.SavePlanetStartSnapshot();
+                PublishSceneCompleted(world, gps, completedSceneIndex, completedSceneType);
                 PersistSceneBoundaryProgress(gps);
 
                 return;
@@ -397,6 +401,7 @@ namespace _3DWorld.Scene
 
             if (currentScene.SceneType == SceneTypes.Game && IsSceneBoundarySaveTarget(nextScene))
             {
+                PublishSceneCompleted(world, gps, completedSceneIndex, completedSceneType);
                 PersistSceneBoundaryProgress(gps);
             }
 
@@ -1400,6 +1405,28 @@ namespace _3DWorld.Scene
             }
             catch { }
             try { HighscoreService.SubmitFromGamePlay(gps); } catch { }
+        }
+
+        private static void PublishSceneCompleted(
+            I3dWorld world,
+            GamePlayState gps,
+            int completedSceneIndex,
+            SceneTypes completedSceneType)
+        {
+            world.EventBus?.Publish(new GameEvent
+            {
+                Type = GameEventType.SceneCompleted,
+                ObjectName = completedSceneType.ToString(),
+                SceneType = completedSceneType,
+                SceneIndex = completedSceneIndex,
+                Score = gps.Score,
+                TotalKills = gps.TotalKills,
+                TotalShotsFired = gps.TotalShotsFired,
+                TotalDeaths = gps.TotalDeaths,
+                Accuracy = gps.Accuracy,
+                PowerUpsCollected = gps.PowerUpsCollected,
+                SpeedPowerUpLevel = gps.SpeedPowerUpLevel
+            });
         }
 
         private static void CapturePlanetStartSnapshotIfNeeded(IScene scene)
