@@ -29,6 +29,7 @@ namespace CommonUtilities.Persistence
             var state = GameState.GamePlayState;
             if (string.IsNullOrWhiteSpace(state.PlayerName)) return;
 
+            state.PlayerName = PlayerNameFormatter.Normalize(state.PlayerName);
             PlayerProgressService.ProtectAndApply(state);
 
             bool useCheckpoint = state.HasCheckpoint;
@@ -189,8 +190,9 @@ namespace CommonUtilities.Persistence
         {
             try
             {
-                var filePath = PersistenceSetup.GetPlayerGameStateFilePath(playerName);
-                var backupFilePath = PersistenceSetup.GetPlayerGameStateBackupFilePath(playerName);
+                var normalizedName = PlayerNameFormatter.Normalize(playerName);
+                var filePath = PersistenceSetup.GetPlayerGameStateFilePath(normalizedName);
+                var backupFilePath = PersistenceSetup.GetPlayerGameStateBackupFilePath(normalizedName);
                 if (!File.Exists(filePath) && !File.Exists(backupFilePath))
                     return null;
 
@@ -204,6 +206,9 @@ namespace CommonUtilities.Persistence
                 var saved = JsonSerializer.Deserialize<SavedGameState>(json, JsonOptions);
                 if (saved != null)
                 {
+                    saved.PlayerName = string.IsNullOrWhiteSpace(saved.PlayerName)
+                        ? normalizedName
+                        : PlayerNameFormatter.Normalize(saved.PlayerName);
                     PlayerProgressService.ProtectAndApply(saved);
                     if (repairHighscore)
                     {
@@ -236,6 +241,7 @@ namespace CommonUtilities.Persistence
         {
             var state = GameState.GamePlayState;
 
+            state.PlayerName = PlayerNameFormatter.Normalize(saved.PlayerName);
             state.Score = saved.Score;
             state.PlanetStyleBonusScore = saved.PlanetStyleBonusScore;
             state.PlanetStyleBonusSceneIndex = saved.PlanetStyleBonusSceneIndex;
@@ -311,17 +317,18 @@ namespace CommonUtilities.Persistence
         /// Returns true if a saved game file exists for the given player.
         /// </summary>
         public static bool HasSavedGame(string playerName) =>
-            PersistenceSetup.HasPlayerSaveFile(playerName);
+            PersistenceSetup.HasPlayerSaveFile(PlayerNameFormatter.Normalize(playerName));
 
         /// <summary>
         /// Deletes the saved game file for the given player.
         /// </summary>
         public static void DeleteSave(string playerName)
         {
-            var path = PersistenceSetup.GetPlayerGameStateFilePath(playerName);
+            var normalizedName = PlayerNameFormatter.Normalize(playerName);
+            var path = PersistenceSetup.GetPlayerGameStateFilePath(normalizedName);
             if (File.Exists(path))
                 File.Delete(path);
-            var backupPath = PersistenceSetup.GetPlayerGameStateBackupFilePath(playerName);
+            var backupPath = PersistenceSetup.GetPlayerGameStateBackupFilePath(normalizedName);
             if (File.Exists(backupPath))
                 File.Delete(backupPath);
         }
@@ -335,16 +342,17 @@ namespace CommonUtilities.Persistence
             if (string.IsNullOrWhiteSpace(playerName))
                 return;
 
-            var saved = LoadGameState(playerName) ?? new SavedGameState
+            var normalizedName = PlayerNameFormatter.Normalize(playerName);
+            var saved = LoadGameState(normalizedName) ?? new SavedGameState
             {
-                PlayerName = playerName,
+                PlayerName = normalizedName,
                 Lives = 3,
                 Health = 100f,
                 MaxHealth = 100f,
                 SavedAtUtc = DateTime.UtcNow.ToString("o")
             };
 
-            saved.PlayerName = playerName;
+            saved.PlayerName = normalizedName;
             saved.SceneIndex = 1;
             saved.SceneBiome = Domain.SceneBiomeTypes.HillsWoods;
             saved.Score = 0;
@@ -407,21 +415,22 @@ namespace CommonUtilities.Persistence
             saved.SavedAtUtc = DateTime.UtcNow.ToString("o");
             PlayerProgressService.ProtectAndApply(saved);
 
-            var filePath = PersistenceSetup.GetPlayerGameStateFilePath(playerName);
+            var filePath = PersistenceSetup.GetPlayerGameStateFilePath(normalizedName);
             Directory.CreateDirectory(PersistenceSetup.LocalFolder);
             EncryptionHelper.EnsureKeyFile(PersistenceSetup.LocalKeyFilePath);
             var json = JsonSerializer.Serialize(saved, JsonOptions);
             EncryptionHelper.EncryptToFileAtomic(
                 filePath,
-                PersistenceSetup.GetPlayerGameStateBackupFilePath(playerName),
+                PersistenceSetup.GetPlayerGameStateBackupFilePath(normalizedName),
                 json,
                 PersistenceSetup.LocalKeyFilePath);
 
             // If this player is active in-memory, reset runtime state as well so
             // scene progression does not keep stale values until next restart.
             var state = GameState.GamePlayState;
-            if (string.Equals(state.PlayerName, playerName, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(state.PlayerName, normalizedName, StringComparison.OrdinalIgnoreCase))
             {
+                state.PlayerName = normalizedName;
                 state.SceneIndex = 1;
                 state.CurrentSceneBiome = Domain.SceneBiomeTypes.HillsWoods;
                 state.Score = 0;

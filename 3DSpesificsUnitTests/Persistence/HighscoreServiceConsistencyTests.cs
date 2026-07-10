@@ -72,6 +72,16 @@ public class HighscoreServiceConsistencyTests
     }
 
     [TestMethod]
+    public void TrySubmitScore_NormalizesPlayerNameToUppercase()
+    {
+        HighscoreService.TrySubmitScore("  CharlieB  ", 1200, 1);
+
+        var entry = HighscoreService.LoadLocalHighscores().Entries.Single();
+
+        Assert.AreEqual("CHARLIEB", entry.PlayerName);
+    }
+
+    [TestMethod]
     public void GetBestLocalScore_ReturnsPersistedScoreForPlayerCaseInsensitively()
     {
         HighscoreService.TrySubmitScore("CharlieB", 50150, 5);
@@ -110,7 +120,7 @@ public class HighscoreServiceConsistencyTests
 
         HighscoreService.TrySubmitScore("CharlieB", 52000, 6);
 
-        var entry = HighscoreService.LoadLocalHighscores().Entries.Single(e => e.PlayerName == "CharlieB");
+        var entry = HighscoreService.LoadLocalHighscores().Entries.Single(e => e.PlayerName == "CHARLIEB");
 
         Assert.AreEqual(52000L, entry.Score);
         Assert.AreEqual(104, entry.TotalKills,
@@ -150,7 +160,7 @@ public class HighscoreServiceConsistencyTests
             }
         });
 
-        var entry = HighscoreService.LoadLocalHighscores().Entries.Single(e => e.PlayerName == "CharlieB");
+        var entry = HighscoreService.LoadLocalHighscores().Entries.Single(e => e.PlayerName == "CHARLIEB");
 
         Assert.AreEqual(50150L, entry.Score);
         Assert.AreEqual(104, entry.TotalKills,
@@ -190,7 +200,7 @@ public class HighscoreServiceConsistencyTests
             totalDeaths: 47,
             accuracy: 104f / 391f);
 
-        var entry = HighscoreService.LoadLocalHighscores().Entries.Single(e => e.PlayerName == "CharlieB");
+        var entry = HighscoreService.LoadLocalHighscores().Entries.Single(e => e.PlayerName == "CHARLIEB");
 
         Assert.IsTrue(repaired,
             "A same-score stat repair should be treated as a successful submit so remote sync can heal too.");

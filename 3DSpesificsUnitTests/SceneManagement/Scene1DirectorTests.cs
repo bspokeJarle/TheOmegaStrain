@@ -287,6 +287,31 @@ public class Scene1DirectorTests
     }
 
     [TestMethod]
+    public void Update_SetsVictory_WhenRestoredMotherShipPhaseHasMissingInitialCounts()
+    {
+        var gps = GameState.GamePlayState;
+        gps.InitialSeeders = 0;
+        gps.InitialDrones = 0;
+        gps.SeedersRemaining = 0;
+        gps.DronesRemaining = 0;
+        gps.MotherShipsRemaining = 1;
+
+        var activeMotherShip = CreateAiObject("MotherShipSmall", isActive: true);
+        GameState.SurfaceState.AiObjects.Add(activeMotherShip);
+
+        _director.Dispose();
+        _director.Initialize(_eventBus, _world);
+
+        GameState.SurfaceState.AiObjects.Remove(activeMotherShip);
+        gps.MotherShipsRemaining = 0;
+
+        _director.Update();
+
+        Assert.IsTrue(_director.IsVictory,
+            "A restored mothership phase should finish after cleanup removes the last mothership, even if legacy saves missed initial counts.");
+    }
+
+    [TestMethod]
     public void Update_DoesNotSetVictory_BeforeMothershipPhaseBegins()
     {
         var gps = GameState.GamePlayState;

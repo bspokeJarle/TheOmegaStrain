@@ -23,6 +23,7 @@ namespace Domain
         // High-level game flow
         // -----------------------------
         public GamePhase Phase { get; set; } = GamePhase.Intro;
+        public bool IsVictoryRewardPauseActive { get; set; } = false;
 
         public bool IsPaused => Phase == GamePhase.Paused;
         public bool IsPlaying => Phase == GamePhase.Playing;
@@ -611,6 +612,7 @@ namespace Domain
         public void ResetForNewGame()
         {
             Phase = GamePhase.Intro;
+            IsVictoryRewardPauseActive = false;
             CurrentSceneType = SceneTypes.Intro;
             CurrentSceneBiome = SceneBiomeTypes.HillsWoods;
 

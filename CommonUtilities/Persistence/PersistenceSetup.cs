@@ -110,7 +110,7 @@ namespace CommonUtilities.Persistence
             try
             {
                 return File.Exists(LastPlayerNameFilePath)
-                    ? File.ReadAllText(LastPlayerNameFilePath).Trim()
+                    ? PlayerNameFormatter.Normalize(File.ReadAllText(LastPlayerNameFilePath))
                     : "";
             }
             catch { return ""; }
@@ -121,7 +121,7 @@ namespace CommonUtilities.Persistence
         /// </summary>
         public static void SaveLastPlayerName(string name)
         {
-            try { File.WriteAllText(LastPlayerNameFilePath, name); }
+            try { File.WriteAllText(LastPlayerNameFilePath, PlayerNameFormatter.Normalize(name)); }
             catch { }
         }
 

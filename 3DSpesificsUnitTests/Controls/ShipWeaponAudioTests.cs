@@ -453,10 +453,8 @@ public class ShipWeaponAudioTests
     [TestMethod]
     public void KeyDown_WhenNonModalGameOverlayIsVisible_StillAcceptsGameplayInput()
     {
-        // Regression: after killing the mothership the victory flow shows a
-        // non-modal Game overlay ("PLANET SECURED") and then triggers a world
-        // fade-out. The ship must remain controllable during that window so the
-        // pilot can finish the planet instead of crashing.
+        // Ordinary non-modal Game overlays should not block controls. Timeline-
+        // driven victory reward overlays use a separate pause flag.
         using var fixture = CreateReadyShip(withWeaponGuides: true);
         GameState.ScreenOverlayState.Type = ScreenOverlayType.Game;
         GameState.ScreenOverlayState.IsModal = false;
@@ -470,6 +468,50 @@ public class ShipWeaponAudioTests
         Assert.AreEqual(1, fixture.Weapons.ActiveWeapons.Count,
             "Weapons must still fire while a non-modal in-game overlay is visible.");
         Assert.AreEqual(1, GameState.GamePlayState.TotalShotsFired);
+    }
+
+    [TestMethod]
+    public void KeyDown_WhenVictoryRewardPauseIsActive_BlocksGameplayInput()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.GamePlayState.IsVictoryRewardPauseActive = true;
+
+        InvokeKeyDown(fixture.Controls, Keys.Space);
+        InvokeKeyDown(fixture.Controls, Keys.RShiftKey);
+
+        Assert.IsFalse(fixture.Controls.ThrustOn);
+        Assert.AreEqual(0, fixture.Weapons.ActiveWeapons.Count);
+        Assert.AreEqual(0, GameState.GamePlayState.TotalShotsFired);
+    }
+
+    [TestMethod]
+    public void MoveObject_WhenVictoryRewardPauseIsActive_FreezesShipPhysics()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+        fixture.Ship.ObjectOffsets.y = 123f;
+        GameState.SurfaceState.GlobalMapPosition.y = 40f;
+
+        InvokeKeyDown(fixture.Controls, Keys.Space);
+        Assert.IsTrue(fixture.Controls.ThrustOn);
+
+        GameState.GamePlayState.IsVictoryRewardPauseActive = true;
+        GameState.ShipState.ShipWorldPosition = new Vector3 { x = 11f, y = 22f, z = 33f };
+        fixture.Ship.Rotation = new Vector3 { x = -35f, y = 18f, z = 142f };
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsFalse(fixture.Controls.ThrustOn);
+        Assert.AreEqual(0f, fixture.Controls.Thrust, 0.001f);
+        Assert.AreEqual(123f, fixture.Ship.ObjectOffsets.y, 0.001f);
+        Assert.AreEqual(40f, GameState.SurfaceState.GlobalMapPosition.y, 0.001f);
+        Assert.AreEqual(-35f, fixture.Ship.Rotation!.x, 0.001f,
+            "Victory reward pause should leave the current ship rotation frozen instead of normalizing it.");
+        Assert.AreEqual(18f, fixture.Ship.Rotation.y, 0.001f);
+        Assert.AreEqual(142f, fixture.Ship.Rotation.z, 0.001f);
+        Assert.AreEqual(11f, GameState.ShipState.ShipWorldPosition!.x, 0.001f,
+            "Victory reward pause should freeze the last known ship world-state instead of recalculating it from a render copy.");
+        Assert.AreEqual(22f, GameState.ShipState.ShipWorldPosition.y, 0.001f);
+        Assert.AreEqual(33f, GameState.ShipState.ShipWorldPosition.z, 0.001f);
     }
 
     [TestMethod]

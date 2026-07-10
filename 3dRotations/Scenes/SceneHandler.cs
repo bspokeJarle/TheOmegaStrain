@@ -654,6 +654,11 @@ namespace _3DWorld.Scene
                 return;
             }
 
+            if (!overlay.CanDismissWithInput)
+            {
+                return;
+            }
+
             if (overlay.Type == ScreenOverlayType.Settings)
             {
                 CloseSettingsOverlay(scene, overlay);
@@ -708,7 +713,7 @@ namespace _3DWorld.Scene
 
             if (k.Key == Key.Return || k.Key == Key.Enter)
             {
-                var name = overlay.NameEntryBuffer.Trim();
+                var name = PlayerNameFormatter.Normalize(overlay.NameEntryBuffer);
                 if (string.IsNullOrEmpty(name))
                 {
                     overlay.NameEntryValidationMessage = ">> CALLSIGN CANNOT BE EMPTY";

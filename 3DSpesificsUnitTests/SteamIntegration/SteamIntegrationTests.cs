@@ -11,7 +11,12 @@ public sealed class SteamIntegrationTests
     public void SteamConfigUsesSpaceWarForDevelopmentOnly()
     {
         Assert.AreEqual<uint>(480, SteamGameConfig.DevelopmentAppId);
-        Assert.AreEqual<uint>(0, SteamGameConfig.ProductionAppId);
+        Assert.AreEqual<uint>(1246061, SteamGameConfig.ProductionAppId);
+#if DEBUG
+        Assert.AreEqual(SteamGameConfig.DevelopmentAppId, SteamGameConfig.RuntimeAppId);
+#else
+        Assert.AreEqual(SteamGameConfig.ProductionAppId, SteamGameConfig.RuntimeAppId);
+#endif
     }
 
     [TestMethod]
@@ -78,6 +83,8 @@ public sealed class SteamIntegrationTests
 
         using var sync = new SteamGameplaySync(manager, bus, () => gameplay);
 
+        Assert.IsFalse(sync.CurrentStatsRequested);
+
         sync.Update();
         bus.Publish(new GameEvent
         {
@@ -106,15 +113,18 @@ public sealed class SteamIntegrationTests
     {
         using var manager = new SteamManager();
 
-        if (!manager.Initialize())
+        if (!manager.Initialize(SteamGameConfig.RuntimeAppId))
         {
             Assert.Inconclusive($"Steam unavailable for live smoke test: {manager.LastError ?? "SteamAPI.Init returned false"}");
         }
 
         manager.RunCallbacks();
 
-        Assert.AreEqual(SteamGameConfig.DevelopmentAppId, manager.AppId);
+        Assert.AreEqual(SteamGameConfig.RuntimeAppId, manager.AppId);
         Assert.AreNotEqual<ulong>(0, manager.SteamId);
+
+        var stats = new SteamStats(manager);
+        Assert.IsTrue(stats.RequestCurrentStats());
     }
 
     private static void AssertSteamName(string name)

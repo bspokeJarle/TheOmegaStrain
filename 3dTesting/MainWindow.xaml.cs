@@ -51,6 +51,8 @@ namespace _3dTesting
     {
         private const bool enableLogging = false;
         private const bool enableFileLogging = LiveGameLoop.EnableCpuHeadroomLogging;
+        private const bool EnableSteamDiagnostics = true;
+        private const string SteamDiagnosticsLogPath = @"C:\Temp\OmegaStrainSteamDiagnostics.txt";
         private DrawingVisualHost visualHost = new DrawingVisualHost();
         private readonly DispatcherTimer timer = new DispatcherTimer();
         private readonly Stopwatch stopwatch = new Stopwatch();
@@ -124,7 +126,13 @@ namespace _3dTesting
             if (Logger.EnableFileLogging)
             {
                 Logger.ClearLog();
-                Logger.Log($"[PerfLogging] enabled targetFps={TargetFps} targetFrameMs={TargetFrameIntervalMs:0.###} displayRefreshHz={_currentDisplayRefreshHz} source=StartupFallback");
+                if (enableFileLogging)
+                    Logger.Log($"[PerfLogging] enabled targetFps={TargetFps} targetFrameMs={TargetFrameIntervalMs:0.###} displayRefreshHz={_currentDisplayRefreshHz} source=StartupFallback");
+            }
+            if (EnableSteamDiagnostics)
+            {
+                ClearSteamDiagnosticsLog();
+                WriteSteamDiagnosticLine("[SteamDiag] file logging enabled.");
             }
 
             GameState.SurfaceState.RecordingFps = ScreenSetup.RuntimeTargetFps;
@@ -301,10 +309,14 @@ namespace _3dTesting
         {
             _steamManager = new SteamManager();
 
-            if (!_steamManager.Initialize())
+            LogSteamDiagnostics("BeforeInitialize");
+
+            if (!_steamManager.Initialize(SteamGameConfig.RuntimeAppId))
             {
                 if (Logger.EnableFileLogging)
                     Logger.Log($"[Steam] unavailable: {_steamManager.LastError ?? "SteamAPI.Init returned false"}");
+                WriteSteamDiagnosticLine($"[Steam] unavailable: {_steamManager.LastError ?? "SteamAPI.Init returned false"}");
+                LogSteamDiagnostics("InitializeFailed");
                 return;
             }
 
@@ -315,6 +327,7 @@ namespace _3dTesting
 
             if (Logger.EnableFileLogging)
                 Logger.Log($"[Steam] initialized appId={_steamManager.AppId} steamId={_steamManager.SteamId} loggedOn={_steamManager.IsLoggedOn}");
+            LogSteamDiagnostics("Initialized");
         }
 
         private void ShutdownSteamIntegration()
@@ -402,6 +415,12 @@ namespace _3dTesting
         {
             bool overlayWasShowing = GameState.ScreenOverlayState.ShowOverlay;
 
+            if (IsSteamOverlayShortcut(e))
+            {
+                LogSteamDiagnostics("ShiftTabReachedGame");
+                return;
+            }
+
             if (IsMenuExitKey(e.Key))
             {
                 var sceneTypeBeforeMenuExit = world?.SceneHandler?.GetActiveScene().SceneType;
@@ -421,7 +440,9 @@ namespace _3dTesting
 
             if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl)
             {
-                if (IsGameplaySceneForPause() && !GameState.ScreenOverlayState.BlocksGameplayInput)
+                if (IsGameplaySceneForPause() &&
+                    !GameState.GamePlayState.IsVictoryRewardPauseActive &&
+                    !GameState.ScreenOverlayState.BlocksGameplayInput)
                     ToggleGameplayPause();
                 e.Handled = true;
                 return;
@@ -432,6 +453,87 @@ namespace _3dTesting
 
             if (overlayWasShowing || GameState.ScreenOverlayState.BlocksGameplayInput)
                 e.Handled = true;
+        }
+
+        private static bool IsSteamOverlayShortcut(KeyEventArgs e)
+        {
+            return e.Key == Key.Tab &&
+                   (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift;
+        }
+
+        private void LogSteamDiagnostics(string source)
+        {
+            if (!EnableSteamDiagnostics)
+                return;
+
+            string baseAppIdPath = Path.Combine(AppContext.BaseDirectory, "steam_appid.txt");
+            string cwdAppIdPath = Path.Combine(Environment.CurrentDirectory, "steam_appid.txt");
+            string appIdText = ReadAppIdText(baseAppIdPath, cwdAppIdPath);
+
+            WriteSteamDiagnosticLine(
+                $"[SteamDiag] source={source} " +
+                $"runtimeAppId={SteamGameConfig.RuntimeAppId} " +
+                $"baseDir='{AppContext.BaseDirectory}' " +
+                $"cwd='{Environment.CurrentDirectory}' " +
+                $"baseAppIdExists={File.Exists(baseAppIdPath)} " +
+                $"cwdAppIdExists={File.Exists(cwdAppIdPath)} " +
+                $"appIdText='{appIdText}' " +
+                $"steamManagerCreated={_steamManager != null} " +
+                $"steamRunning={_steamManager?.IsSteamRunning.ToString() ?? "n/a"} " +
+                $"initialized={_steamManager?.IsInitialized.ToString() ?? "n/a"} " +
+                $"appId={_steamManager?.AppId.ToString() ?? "n/a"} " +
+                $"steamId={_steamManager?.SteamId.ToString() ?? "n/a"} " +
+                $"loggedOn={_steamManager?.IsLoggedOn.ToString() ?? "n/a"} " +
+                $"overlayEnabled={_steamManager?.IsOverlayEnabled.ToString() ?? "n/a"} " +
+                $"lastError='{_steamManager?.LastError ?? ""}'");
+        }
+
+        private static void ClearSteamDiagnosticsLog()
+        {
+            try
+            {
+                string? directory = Path.GetDirectoryName(SteamDiagnosticsLogPath);
+                if (!string.IsNullOrWhiteSpace(directory))
+                    Directory.CreateDirectory(directory);
+                File.WriteAllText(SteamDiagnosticsLogPath, "");
+            }
+            catch
+            {
+            }
+        }
+
+        private static void WriteSteamDiagnosticLine(string message)
+        {
+            try
+            {
+                string? directory = Path.GetDirectoryName(SteamDiagnosticsLogPath);
+                if (!string.IsNullOrWhiteSpace(directory))
+                    Directory.CreateDirectory(directory);
+                File.AppendAllText(
+                    SteamDiagnosticsLogPath,
+                    $"{DateTime.Now:HH:mm:ss.fff} [Steam] {message}{Environment.NewLine}");
+            }
+            catch
+            {
+            }
+        }
+
+        private static string ReadAppIdText(params string[] paths)
+        {
+            foreach (string path in paths)
+            {
+                try
+                {
+                    if (File.Exists(path))
+                        return File.ReadAllText(path).Trim();
+                }
+                catch
+                {
+                    return "<read failed>";
+                }
+            }
+
+            return "";
         }
 
         private void HandleMouseInputForOverlay(object sender, MouseButtonEventArgs e)
@@ -481,6 +583,9 @@ namespace _3dTesting
                 return false;
 
             if (overlay.ChoiceAction != ScreenOverlayChoiceAction.None)
+                return false;
+
+            if (!overlay.CanDismissWithInput)
                 return false;
 
             return true;
@@ -686,7 +791,7 @@ namespace _3dTesting
             GameState.SurfaceState.RecordingFps = ScreenSetup.RuntimeTargetFps;
             _currentDisplayRefreshHz = displayRefreshHz;
 
-            if (Logger.EnableFileLogging &&
+            if (enableFileLogging &&
                 (previousTargetFps != ScreenSetup.RuntimeTargetFps || previousRefreshHz != displayRefreshHz))
             {
                 Logger.Log($"[PerfLogging] enabled targetFps={TargetFps} targetFrameMs={TargetFrameIntervalMs:0.###} displayRefreshHz={displayRefreshHz} source={source}");
@@ -807,6 +912,12 @@ namespace _3dTesting
             if (world.IsPaused)
                 pauseFrameCount++;
 
+            if (GameState.GamePlayState.IsVictoryRewardPauseActive && world.IsPaused)
+            {
+                isPaused = true;
+                pauseFrameCount = limitFrameCount;
+            }
+
             if (pauseFrameCount < limitFrameCount && GameState.WorldFade.TryBeginFadeIn(out var fadeInDurationSeconds))
             {
                 if (!isFading)
@@ -831,6 +942,12 @@ namespace _3dTesting
                 await FadeOutAsync(fadeOutDurationSeconds);
                 GameState.WorldFade.MarkFadeOutComplete();
                 fadeOutTrigged = DateTime.MinValue;
+            }
+
+            if (GameState.GamePlayState.IsVictoryRewardPauseActive)
+            {
+                gameWorldManager.UpdatePausedVictoryReward(world);
+                SyncLocalPauseFromWorld();
             }
 
             // Overlay update + render (UI layer)
@@ -921,6 +1038,9 @@ namespace _3dTesting
                 try
                 {
                     gameWorldManager.UpdateWorld(world, ref screenCoordinates, ref crashBoxCoordinates);
+                    bool freezeFrameActivated =
+                        GameState.GamePlayState.IsVictoryRewardPauseActive &&
+                        world.IsPaused;
 
                     if (shouldLog)
                     {
@@ -928,7 +1048,7 @@ namespace _3dTesting
                         Logger.Log($"[UpdateWorld] ms={elapsedMs:0.###}");
                     }
 
-                    if (!isFading || _isFadingIn)
+                    if ((!isFading || _isFadingIn) && !freezeFrameActivated)
                     {
                         Dispatcher.BeginInvoke(() =>
                         {

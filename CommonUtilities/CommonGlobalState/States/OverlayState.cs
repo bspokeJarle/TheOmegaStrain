@@ -1,4 +1,5 @@
 ﻿using System;
+using CommonUtilities.Persistence;
 using System.Collections.Generic;
 using System.Windows.Input;
 
@@ -72,6 +73,13 @@ namespace Domain
         public bool IsModal { get; set; } = false;
 
         public bool BlocksGameplayInput => ShowOverlay && IsModal;
+
+        /// <summary>
+        /// Some overlays are timeline-driven and must stay visible until their
+        /// owner hides them. Mouse/controller overlay activation should not
+        /// dismiss those panels.
+        /// </summary>
+        public bool CanDismissWithInput { get; set; } = true;
 
         // -----------------------------
         // Content
@@ -279,6 +287,7 @@ namespace Domain
             ShowOverlay = false;
             ShowVideoOverlay = false;
             VideoClipPath = "";
+            CanDismissWithInput = true;
             Opacity = 0f;
             _shownTimeSeconds = 0f;
             _wasShowingLastUpdate = false;
@@ -292,6 +301,7 @@ namespace Domain
             Type = ScreenOverlayType.None;
             ShowOverlay = false;
             IsModal = false;
+            CanDismissWithInput = true;
 
             Header = "";
             Title = "";
@@ -500,6 +510,7 @@ namespace Domain
             Type = ScreenOverlayType.Intro;
             Anchor = ScreenOverlayAnchor.Top;
             IsModal = true;
+            CanDismissWithInput = true;
 
             Header = "RETROMESH BOOT SEQUENCE";
             Title = title;
@@ -520,6 +531,7 @@ namespace Domain
             Type = ScreenOverlayType.Outro;
             Anchor = ScreenOverlayAnchor.Center;
             IsModal = true;
+            CanDismissWithInput = true;
 
             Header = "TRANSMISSION ENDS";
             Title = title;
@@ -540,6 +552,7 @@ namespace Domain
             Type = ScreenOverlayType.Game;
             Anchor = ScreenOverlayAnchor.Top;
             IsModal = false;
+            CanDismissWithInput = true;
 
             Header = header ?? "";
             Title = title ?? "";
@@ -560,13 +573,14 @@ namespace Domain
             Type = ScreenOverlayType.NameEntry;
             Anchor = ScreenOverlayAnchor.Center;
             IsModal = true;
+            CanDismissWithInput = true;
 
             Pages.Clear();
             CurrentPage = 0;
 
             Header = "RETROMESH // PILOT REGISTRY";
             Title = "IDENTIFY YOURSELF";
-            NameEntryBuffer = defaultName;
+            NameEntryBuffer = PlayerNameFormatter.Normalize(defaultName);
             NameEntryValidationMessage = "";
             IsNameConfirmed = false;
             _cursorBlinkTimer = 0f;
@@ -647,6 +661,7 @@ namespace Domain
             SelectedSettingsIndex = 0;
             Anchor = ScreenOverlayAnchor.Center;
             IsModal = true;
+            CanDismissWithInput = true;
 
             Pages.Clear();
             CurrentPage = 0;

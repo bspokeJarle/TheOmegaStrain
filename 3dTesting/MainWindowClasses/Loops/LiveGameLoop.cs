@@ -224,6 +224,8 @@ namespace _3dTesting.MainWindowClasses.Loops
             }
             prepMs = MarkPhase();
 
+            bool gameplayPausedForVictoryReward = GameState.GamePlayState.IsVictoryRewardPauseActive;
+
             foreach (var inhabitant in deepCopiedWorld)
             {
                 if (inhabitant.ObjectName != "Star" && !inhabitant.CheckInhabitantVisibility()) continue;
@@ -233,8 +235,12 @@ namespace _3dTesting.MainWindowClasses.Loops
                     SetAiIsOnScreen(aiById, inhabitant.ObjectId);
                 }
 
-                inhabitant.Movement?.MoveObject(inhabitant, audioPlayer, soundRegistry);
-                PublishObjectExplodedIfNeeded(world, inhabitant);
+                if (!gameplayPausedForVictoryReward)
+                {
+                    inhabitant.Movement?.MoveObject(inhabitant, audioPlayer, soundRegistry);
+                    PublishObjectExplodedIfNeeded(world, inhabitant);
+                }
+
                 if (inhabitant.CrashBoxesFollowRotation) inhabitant.CrashBoxes = RotateAllCrashboxes(inhabitant.CrashBoxes, (Vector3)inhabitant.Rotation);
                 if (inhabitant.ObjectName == "Ship")
                 {
@@ -278,8 +284,12 @@ namespace _3dTesting.MainWindowClasses.Loops
                 if (inhabitant.ObjectName == "Ship")
                     DebugMessage += $" Ship: Y Pos: {inhabitant.ObjectOffsets.y + 300} Z Rotation: {inhabitant.Rotation.z}";
 
-                particleManager.HandleParticles(inhabitant, particleObjectList);
-                weaponsManager.HandleWeapons(inhabitant, weaponObjectList);
+                if (!gameplayPausedForVictoryReward)
+                {
+                    particleManager.HandleParticles(inhabitant, particleObjectList);
+                    weaponsManager.HandleWeapons(inhabitant, weaponObjectList);
+                }
+
                 if (GameState.SettingsState.EnhancedShadowsEnabled)
                     objectShadowManager.HandleObjectShadow(inhabitant, shadowObjectList);
                 renderedList.Add(inhabitant);
@@ -305,17 +315,20 @@ namespace _3dTesting.MainWindowClasses.Loops
 
             var activeScene = world.SceneHandler.GetActiveScene();
 
-            HandleBiomassWarnings();
+            if (!gameplayPausedForVictoryReward)
+                HandleBiomassWarnings();
 
             var ship = activeWorld.FirstOrDefault(x => x.ObjectName == "Ship");
-            if (ship != null && ship.ImpactStatus.HasExploded && !_deathSequenceStarted)
+            if (!gameplayPausedForVictoryReward && ship != null && ship.ImpactStatus.HasExploded && !_deathSequenceStarted)
             {
                 _deathSequenceStarted = true;
                 _victorySequenceStarted = false;
+                GameState.GamePlayState.IsVictoryRewardPauseActive = false;
                 GameState.WorldFade.RequestFadeOut(1.0f, WorldFadeState.ShipDestroyedReason);
             }
 
-            if (!_deathSequenceStarted &&
+            if (!gameplayPausedForVictoryReward &&
+                !_deathSequenceStarted &&
                 GameState.GamePlayState.IsInfectionCritical &&
                 !GameState.WorldFade.IsFadeOutPendingOrActive)
             {
@@ -329,35 +342,7 @@ namespace _3dTesting.MainWindowClasses.Loops
 
             if ((_deathSequenceStarted || _victorySequenceStarted || isChoiceDrivenInfectionReset) && GameState.WorldFade.IsBlack)
             {
-                StopNonMusicAudio();
-                CleanupWorldObjects(world.WorldInhabitants.OfType<_3dObject>().ToList());
-                world.WorldInhabitants.Clear();
-                GameState.SurfaceState.AiObjects.Clear();
-                GameState.SurfaceState.DirtyTiles.Clear();
-                GameState.SurfaceState.PendingLocalInfectionSpread.Clear();
-                GameState.ShipState.BestCandidateStates.Clear();
-                pendingExplosionCleanupIds.Clear();
-                publishedExplosionIds.Clear();
-                StarFieldHandler.ClearStars();
-                StarFieldHandler = null;
-                float weatherOpacity = GetWeatherEffectsOpacity(1f);
-                SnowfallControls.GlobalSnowOpacity = weatherOpacity;
-                RainfallControls.GlobalRainOpacity = weatherOpacity;
-                SandDriftControls.GlobalSandOpacity = weatherOpacity;
-                LeafDriftControls.GlobalLeafOpacity = weatherOpacity;
-
-                if (_victorySequenceStarted && !_deathSequenceStarted)
-                    world.SceneHandler.NextScene(world);
-                else if (GameState.WorldFade.Reason == WorldFadeState.InfectionCriticalPlanetResetReason)
-                    world.SceneHandler.ResetActiveSceneToPlanetStart(world);
-                else
-                    world.SceneHandler.ResetActiveScene(world);
-
-                _deathSequenceStarted = false;
-                _victorySequenceStarted = false;
-                _victoryStartTicks = 0;
-                ClearVictoryRewardState();
-                GameState.WorldFade.RequestFadeIn(1.5f, "SceneReset");
+                CompleteWorldFadeReset(world);
                 if (logPhaseTiming)
                 {
                     LogUpdatePhaseTiming(
@@ -387,7 +372,7 @@ namespace _3dTesting.MainWindowClasses.Loops
                 return [];
             }
 
-            if (doAiMark)
+            if (!gameplayPausedForVictoryReward && doAiMark)
             {
                 AiUpdateCounter = 0;
                 foreach (var aiObject in GameState.SurfaceState.AiObjects)
@@ -404,17 +389,22 @@ namespace _3dTesting.MainWindowClasses.Loops
             offscreenAiMs = MarkPhase();
 
             // Process cascading local infection spread (seeder-infected tiles spread to neighbors after a delay)
-            SeederControls.ProcessLocalInfectionSpread(GameState.SurfaceState);
-            HandleBiomassWarnings();
+            if (!gameplayPausedForVictoryReward)
+            {
+                SeederControls.ProcessLocalInfectionSpread(GameState.SurfaceState);
+                HandleBiomassWarnings();
+            }
             infectionMs = MarkPhase();
 
             projectedCoordinates = From3dTo2d.ConvertTo2dFromObjects(renderedList, FrameCounter, projectedCoordinates);
             projectMs = MarkPhase();
 
-            CrashDetection.HandleCrashboxes(renderedList, world.IsPaused);
+            if (!gameplayPausedForVictoryReward)
+                CrashDetection.HandleCrashboxes(renderedList, world.IsPaused);
             crashMs = MarkPhase();
 
-            CleanupExplodedObjects(world);
+            if (!gameplayPausedForVictoryReward)
+                CleanupExplodedObjects(world);
             cleanupMs = MarkPhase();
 
             // Scene director: centralizes drone activation, mothership activation,
@@ -432,28 +422,11 @@ namespace _3dTesting.MainWindowClasses.Loops
             {
                 _victorySequenceStarted = true;
                 _victoryStartTicks = Stopwatch.GetTimestamp();
-                BeginVictoryRewardOverlay(activeScene?.SceneType ?? SceneTypes.Game);
+                BeginVictoryRewardOverlay(world, activeScene?.SceneType ?? SceneTypes.Game);
             }
 
             // Victory timer: show overlay briefly then trigger scene transition
-            if (_victorySequenceStarted && !_deathSequenceStarted && !GameState.WorldFade.IsFadeOutPendingOrActive)
-            {
-                float elapsed = (Stopwatch.GetTimestamp() - _victoryStartTicks) / (float)Stopwatch.Frequency;
-                if (_victoryRewardBreakdown != null)
-                {
-                    float progress = Math.Clamp(elapsed / VictoryRewardCountUpSeconds, 0f, 1f);
-                    UpdateVictoryRewardOverlay(progress);
-
-                    if (elapsed >= VictoryRewardCountUpSeconds + VictoryRewardHoldSeconds)
-                    {
-                        GameState.WorldFade.RequestFadeOut(1.0f, WorldFadeState.VictoryCompleteReason);
-                    }
-                }
-                else if (elapsed >= VictoryDisplaySeconds)
-                {
-                    GameState.WorldFade.RequestFadeOut(1.0f, WorldFadeState.VictoryCompleteReason);
-                }
-            }
+            UpdateVictoryRewardTimer();
             directorHudMs = MarkPhase();
 
             if (activeScene != null)
@@ -995,8 +968,28 @@ namespace _3dTesting.MainWindowClasses.Loops
             }
         }
 
-        private void BeginVictoryRewardOverlay(SceneTypes sceneType)
+        public void UpdatePausedVictoryReward(I3dWorld world)
         {
+            if (!GameState.GamePlayState.IsVictoryRewardPauseActive)
+                return;
+            if (!_victorySequenceStarted || _deathSequenceStarted)
+                return;
+
+            UpdateVictoryRewardTimer();
+
+            if (GameState.WorldFade.IsFadeOutPendingOrActive)
+            {
+                world.IsPaused = false;
+                GameState.GamePlayState.Phase = GamePhase.Playing;
+            }
+        }
+
+        private void BeginVictoryRewardOverlay(I3dWorld world, SceneTypes sceneType)
+        {
+            GameState.GamePlayState.IsVictoryRewardPauseActive = true;
+            GameState.GamePlayState.Phase = GamePhase.Paused;
+            world.IsPaused = true;
+
             var overlay = GameState.ScreenOverlayState;
             overlay.ResetToDefaults();
             overlay.Type = ScreenOverlayType.Game;
@@ -1010,6 +1003,7 @@ namespace _3dTesting.MainWindowClasses.Loops
             overlay.PanelYOffsetRatio = 0.02f;
             overlay.CenterText = false;
             overlay.ShowOverlay = true;
+            overlay.CanDismissWithInput = false;
             overlay.AutoHide = false;
             overlay.ShowDebugOverlay = false;
 
@@ -1029,6 +1023,26 @@ namespace _3dTesting.MainWindowClasses.Loops
             UpdateVictoryRewardOverlay(0f);
         }
 
+        private void UpdateVictoryRewardTimer()
+        {
+            if (!_victorySequenceStarted || _deathSequenceStarted || GameState.WorldFade.IsFadeOutPendingOrActive)
+                return;
+
+            float elapsed = (Stopwatch.GetTimestamp() - _victoryStartTicks) / (float)Stopwatch.Frequency;
+            if (_victoryRewardBreakdown != null)
+            {
+                float progress = Math.Clamp(elapsed / VictoryRewardCountUpSeconds, 0f, 1f);
+                UpdateVictoryRewardOverlay(progress);
+
+                if (elapsed >= VictoryRewardCountUpSeconds + VictoryRewardHoldSeconds)
+                    GameState.WorldFade.RequestFadeOut(1.0f, WorldFadeState.VictoryCompleteReason);
+            }
+            else if (elapsed >= VictoryDisplaySeconds)
+            {
+                GameState.WorldFade.RequestFadeOut(1.0f, WorldFadeState.VictoryCompleteReason);
+            }
+        }
+
         private void UpdateVictoryRewardOverlay(float progress)
         {
             if (_victoryRewardBreakdown == null)
@@ -1039,7 +1053,10 @@ namespace _3dTesting.MainWindowClasses.Loops
             int delta = displayedReward - _lastAppliedVictoryReward;
             if (delta > 0)
             {
-                GameState.GamePlayState.Score += delta;
+                var gameplay = GameState.GamePlayState;
+                gameplay.Score += delta;
+                if (gameplay.HasCheckpoint)
+                    gameplay.CheckpointScore = gameplay.Score;
                 _lastAppliedVictoryReward = displayedReward;
             }
 
@@ -1054,6 +1071,41 @@ namespace _3dTesting.MainWindowClasses.Loops
         {
             _victoryRewardBreakdown = null;
             _lastAppliedVictoryReward = 0;
+            GameState.GamePlayState.IsVictoryRewardPauseActive = false;
+        }
+
+        private void CompleteWorldFadeReset(I3dWorld world)
+        {
+            StopNonMusicAudio();
+            CleanupWorldObjects(world.WorldInhabitants.OfType<_3dObject>().ToList());
+            world.WorldInhabitants.Clear();
+            GameState.SurfaceState.AiObjects.Clear();
+            GameState.SurfaceState.DirtyTiles.Clear();
+            GameState.SurfaceState.PendingLocalInfectionSpread.Clear();
+            GameState.ShipState.BestCandidateStates.Clear();
+            pendingExplosionCleanupIds.Clear();
+            publishedExplosionIds.Clear();
+            StarFieldHandler?.ClearStars();
+            StarFieldHandler = null;
+            float weatherOpacity = GetWeatherEffectsOpacity(1f);
+            SnowfallControls.GlobalSnowOpacity = weatherOpacity;
+            RainfallControls.GlobalRainOpacity = weatherOpacity;
+            SandDriftControls.GlobalSandOpacity = weatherOpacity;
+            LeafDriftControls.GlobalLeafOpacity = weatherOpacity;
+
+            if (_victorySequenceStarted && !_deathSequenceStarted)
+                world.SceneHandler.NextScene(world);
+            else if (GameState.WorldFade.Reason == WorldFadeState.InfectionCriticalPlanetResetReason)
+                world.SceneHandler.ResetActiveSceneToPlanetStart(world);
+            else
+                world.SceneHandler.ResetActiveScene(world);
+
+            world.IsPaused = false;
+            _deathSequenceStarted = false;
+            _victorySequenceStarted = false;
+            _victoryStartTicks = 0;
+            ClearVictoryRewardState();
+            GameState.WorldFade.RequestFadeIn(1.5f, "SceneReset");
         }
 
         private Dictionary<int, _3dObject> InitializeAiOnScreenTracking()

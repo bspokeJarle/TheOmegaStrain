@@ -20,7 +20,7 @@ namespace _3dRotations.Scene.Scene5
             _eventBus = eventBus;
             _world = world;
             _dronesActivated = false;
-            _motherShipActivated = false;
+            _motherShipActivated = IsRestoredMotherShipPhase();
             IsVictory = false;
             IsDefeat = false;
         }
@@ -106,7 +106,6 @@ namespace _3dRotations.Scene.Scene5
             if (!_motherShipActivated) return;
 
             var gps = GameState.GamePlayState;
-            if (gps.InitialDrones == 0 && gps.InitialSeeders == 0) return;
             if (gps.DronesRemaining != 0 || gps.SeedersRemaining != 0 || gps.MotherShipsRemaining != 0) return;
 
             var aiObjs = GameState.SurfaceState.AiObjects;
@@ -123,6 +122,24 @@ namespace _3dRotations.Scene.Scene5
 
         private static bool IsMotherShip(string objectName) =>
             objectName == "MotherShipSmall" || objectName == "MotherShipMedium" || objectName == "MotherShipLarge";
+
+        private static bool IsRestoredMotherShipPhase()
+        {
+            var gps = GameState.GamePlayState;
+            if (gps.SeedersRemaining != 0 || gps.DronesRemaining != 0)
+                return false;
+            if (gps.MotherShipsRemaining > 0 || gps.InitialMotherShips > 0)
+                return true;
+
+            var aiObjs = GameState.SurfaceState.AiObjects;
+            for (int i = 0; i < aiObjs.Count; i++)
+            {
+                if (IsMotherShip(aiObjs[i].ObjectName) && aiObjs[i].IsActive && aiObjs[i].ImpactStatus?.HasExploded != true)
+                    return true;
+            }
+
+            return false;
+        }
 
         public void Dispose()
         {

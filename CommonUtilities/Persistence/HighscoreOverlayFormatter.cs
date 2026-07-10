@@ -26,9 +26,10 @@ namespace CommonUtilities.Persistence
             for (int i = 0; i < entries.Count; i++)
             {
                 var e = entries[i];
-                var name = e.PlayerName.Length > 16
-                    ? e.PlayerName[..16]
-                    : e.PlayerName.PadRight(16);
+                var playerName = PlayerNameFormatter.Normalize(e.PlayerName);
+                var name = playerName.Length > 16
+                    ? playerName[..16]
+                    : playerName.PadRight(16);
                 sb.AppendLine($" {(i + 1),2}.  {name}  {e.Score,9}  {e.TotalKills,5}");
             }
 

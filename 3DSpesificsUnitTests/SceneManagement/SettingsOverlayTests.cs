@@ -159,6 +159,31 @@ public class SettingsOverlayTests
         });
     }
 
+    [TestMethod]
+    public void OverlayActivation_WhenInputDismissalDisabled_KeepsOverlayOpen()
+    {
+        RunOnStaThread(() =>
+        {
+            var handler = new SceneHandler();
+            var world = CreateRealWorld(handler);
+            handler.SetupActiveScene(world);
+
+            var overlay = GameState.ScreenOverlayState;
+            overlay.ResetToDefaults();
+            overlay.Type = ScreenOverlayType.Game;
+            overlay.Header = "PLANET SECURED";
+            overlay.Title = "MISSION REWARD";
+            overlay.ShowOverlay = true;
+            overlay.CanDismissWithInput = false;
+
+            handler.HandleOverlayActivation(world);
+
+            Assert.AreEqual(ScreenOverlayType.Game, overlay.Type);
+            Assert.AreEqual("MISSION REWARD", overlay.Title);
+            Assert.IsTrue(overlay.ShowOverlay);
+        });
+    }
+
     private static _3dWorld CreateRealWorld(SceneHandler handler)
     {
         var world = new _3dWorld

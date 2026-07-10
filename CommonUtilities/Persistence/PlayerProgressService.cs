@@ -29,7 +29,7 @@ namespace CommonUtilities.Persistence
 
             lock (Gate)
             {
-                return LoadCore(playerName);
+                return LoadCore(PlayerNameFormatter.Normalize(playerName));
             }
         }
 
@@ -50,6 +50,7 @@ namespace CommonUtilities.Persistence
                     speedLevel = Math.Max(speedLevel, state.PlanetStartSpeedPowerUpLevel);
                 }
 
+                state.PlayerName = PlayerNameFormatter.Normalize(state.PlayerName);
                 var progress = ProtectAndSaveCore(state.PlayerName, powerUps, speedLevel);
                 ApplyToGamePlayState(state, progress);
                 return progress;
@@ -60,6 +61,7 @@ namespace CommonUtilities.Persistence
         {
             lock (Gate)
             {
+                state.PlayerName = PlayerNameFormatter.Normalize(state.PlayerName);
                 var progress = LoadCore(state.PlayerName);
                 if (progress != null)
                     ApplyToGamePlayState(state, progress);
@@ -83,6 +85,7 @@ namespace CommonUtilities.Persistence
                     speedLevel = Math.Max(speedLevel, saved.PlanetStartSpeedPowerUpLevel);
                 }
 
+                saved.PlayerName = PlayerNameFormatter.Normalize(saved.PlayerName);
                 var progress = ProtectAndSaveCore(saved.PlayerName, powerUps, speedLevel);
                 saved.PowerUpsCollected = Math.Max(saved.PowerUpsCollected, progress.PowerUpsCollected);
                 saved.CheckpointPowerUpsCollected = Math.Max(saved.CheckpointPowerUpsCollected, progress.PowerUpsCollected);
@@ -98,10 +101,11 @@ namespace CommonUtilities.Persistence
             int powerUpsCollected,
             int speedPowerUpLevel)
         {
-            var existing = LoadCore(playerName);
+            var normalizedName = PlayerNameFormatter.Normalize(playerName);
+            var existing = LoadCore(normalizedName);
             var progress = new PlayerProgressState
             {
-                PlayerName = playerName.Trim(),
+                PlayerName = normalizedName,
                 PowerUpsCollected = Math.Max(existing?.PowerUpsCollected ?? 0, Math.Max(0, powerUpsCollected)),
                 SpeedPowerUpLevel = Math.Max(existing?.SpeedPowerUpLevel ?? 0, Math.Clamp(speedPowerUpLevel, 0, 2)),
                 SavedAtUtc = DateTime.UtcNow.ToString("o")
@@ -111,8 +115,8 @@ namespace CommonUtilities.Persistence
             EncryptionHelper.EnsureKeyFile(PersistenceSetup.LocalKeyFilePath);
             string json = JsonSerializer.Serialize(progress, JsonOptions);
             EncryptionHelper.EncryptToFileAtomic(
-                PersistenceSetup.GetPlayerProgressFilePath(playerName),
-                PersistenceSetup.GetPlayerProgressBackupFilePath(playerName),
+                PersistenceSetup.GetPlayerProgressFilePath(normalizedName),
+                PersistenceSetup.GetPlayerProgressBackupFilePath(normalizedName),
                 json,
                 PersistenceSetup.LocalKeyFilePath);
             return progress;
@@ -122,13 +126,17 @@ namespace CommonUtilities.Persistence
         {
             try
             {
+                var normalizedName = PlayerNameFormatter.Normalize(playerName);
                 string? json = EncryptionHelper.DecryptFromFileOrBackup(
-                    PersistenceSetup.GetPlayerProgressFilePath(playerName),
-                    PersistenceSetup.GetPlayerProgressBackupFilePath(playerName),
+                    PersistenceSetup.GetPlayerProgressFilePath(normalizedName),
+                    PersistenceSetup.GetPlayerProgressBackupFilePath(normalizedName),
                     PersistenceSetup.LocalKeyFilePath);
-                return json == null
+                var progress = json == null
                     ? null
                     : JsonSerializer.Deserialize<PlayerProgressState>(json, JsonOptions);
+                if (progress != null)
+                    progress.PlayerName = PlayerNameFormatter.Normalize(progress.PlayerName);
+                return progress;
             }
             catch
             {

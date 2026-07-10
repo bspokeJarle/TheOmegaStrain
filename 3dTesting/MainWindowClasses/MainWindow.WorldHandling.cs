@@ -74,5 +74,11 @@ namespace _3dTesting.MainWindowClasses
             if (liveLoop is LiveGameLoop liveGameLoop)
                 liveGameLoop.StopNonMusicAudio();
         }
+
+        public void UpdatePausedVictoryReward(I3dWorld world)
+        {
+            if (liveLoop is LiveGameLoop liveGameLoop)
+                liveGameLoop.UpdatePausedVictoryReward(world);
+        }
     }
 }

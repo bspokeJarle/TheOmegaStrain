@@ -33,11 +33,14 @@ public sealed class SteamGameplaySync : IDisposable
         lastPowerUpsCollected = gameplay.PowerUpsCollected;
         lastSpeedPowerUpLevel = gameplay.SpeedPowerUpLevel;
         bestObservedScore = gameplay.Score;
+        CurrentStatsRequested = stats.RequestCurrentStats();
 
         Subscribe();
     }
 
     public bool IsAvailable => steamManager.IsAvailable;
+
+    public bool CurrentStatsRequested { get; }
 
     public void Update()
     {

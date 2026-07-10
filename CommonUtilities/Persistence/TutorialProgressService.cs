@@ -22,7 +22,7 @@ namespace CommonUtilities.Persistence
 
             try
             {
-                var filePath = PersistenceSetup.GetPlayerTutorialProgressFilePath(playerName);
+                var filePath = PersistenceSetup.GetPlayerTutorialProgressFilePath(PlayerNameFormatter.Normalize(playerName));
                 if (!File.Exists(filePath))
                     return false;
 
@@ -43,6 +43,7 @@ namespace CommonUtilities.Persistence
 
             try
             {
+                var normalizedName = PlayerNameFormatter.Normalize(playerName);
                 Directory.CreateDirectory(PersistenceSetup.LocalFolder);
                 var state = new TutorialProgressState
                 {
@@ -51,7 +52,7 @@ namespace CommonUtilities.Persistence
                 };
 
                 var json = JsonSerializer.Serialize(state, JsonOptions);
-                File.WriteAllText(PersistenceSetup.GetPlayerTutorialProgressFilePath(playerName), json);
+                File.WriteAllText(PersistenceSetup.GetPlayerTutorialProgressFilePath(normalizedName), json);
             }
             catch
             {

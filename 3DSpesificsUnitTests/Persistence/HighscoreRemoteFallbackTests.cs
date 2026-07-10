@@ -138,7 +138,7 @@ public class HighscoreRemoteFallbackTests
         const string body = """
         [
           {
-            "player_name": "CHARLIEA",
+            "player_name": "charliea",
             "score": 54950,
             "wave_reached": 4,
             "total_kills": 104,

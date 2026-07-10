@@ -146,6 +146,26 @@ public class SeederGuidanceArrowControlTests
     }
 
     [TestMethod]
+    public void MoveObject_WhenTargetFirstSeenNearbyThenDriftsTooFar_SnapsThatTarget()
+    {
+        var control = new SeederGuidanceArrowControl();
+        var arrow = CreateArrow();
+
+        var seeder = CreateAi("Seeder", 2000f, 0f, 0f, isActive: true);
+        GameState.SurfaceState.AiObjects.Add(seeder);
+
+        control.MoveObject(arrow, null, null);
+        Assert.AreEqual(2000f, seeder.WorldPosition!.x, 0.1f,
+            "A nearby target should not be moved just because the arrow pointed at it.");
+
+        seeder.WorldPosition.x = 8250f;
+        control.MoveObject(arrow, null, null);
+
+        Assert.AreEqual(5250f, seeder.WorldPosition.x, 0.1f,
+            "A target first seen nearby must still snap later if the arrow points at it beyond four screens.");
+    }
+
+    [TestMethod]
     public void MoveObject_SnapsEachTargetOnlyOnce()
     {
         var control = new SeederGuidanceArrowControl();
@@ -166,6 +186,25 @@ public class SeederGuidanceArrowControlTests
 
         Assert.AreEqual(8250f, seeder.WorldPosition.x, 0.1f,
             "Once snapped, the same target must not be snapped again even if it drifts beyond four screens.");
+    }
+
+    [TestMethod]
+    public void MoveObject_WhenMultipleSeedersExist_SnapsOnlyTheTargetedSeeder()
+    {
+        var control = new SeederGuidanceArrowControl();
+        var arrow = CreateArrow();
+
+        var targetedSeeder = CreateAi("Seeder", 8250f, 0f, 0f, isActive: true);
+        var fartherSeeder = CreateAi("Seeder", 12000f, 0f, 0f, isActive: true);
+        GameState.SurfaceState.AiObjects.Add(targetedSeeder);
+        GameState.SurfaceState.AiObjects.Add(fartherSeeder);
+
+        control.MoveObject(arrow, null, null);
+
+        Assert.AreEqual(5250f, targetedSeeder.WorldPosition!.x, 0.1f,
+            "The seeder selected by the guidance arrow should be snapped to four screens.");
+        Assert.AreEqual(12000f, fartherSeeder.WorldPosition!.x, 0.1f,
+            "A non-targeted seeder must not be snapped just because it is also far away.");
     }
 
     [TestMethod]

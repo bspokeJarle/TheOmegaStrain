@@ -764,11 +764,10 @@ namespace GameAiAndControls.Controls
                 gameplay.CurrentSceneType == SceneTypes.Simulation ||
                 gameplay.CurrentSceneType == SceneTypes.Tutorial;
 
-            // Only modal overlays should silence gameplay input. Non-modal in-game
-            // overlays (e.g. the "PLANET SECURED" victory status shown while the
-            // world fades out after killing the mothership) must keep the ship
-            // controllable until the fade-out actually completes.
+            // Modal overlays and explicit reward pauses silence gameplay input.
+            // Ordinary non-modal in-game overlays can still leave the ship controllable.
             return !isGameplayScene ||
+                   gameplay.IsVictoryRewardPauseActive ||
                    GameState.TutorialState.InstructionOverlayPauseActive ||
                    overlay.BlocksGameplayInput ||
                    gameplay.IsPaused;
@@ -1311,6 +1310,11 @@ namespace GameAiAndControls.Controls
                 ParentObject.ObjectOffsets.x = 0;
                 ParentObject.ObjectOffsets.y = ShipRestingScreenY;
                 ParentObject.ObjectOffsets.z = zoom;
+            }
+
+            if (GameState.GamePlayState.IsVictoryRewardPauseActive)
+            {
+                return theObject;
             }
 
             var now = DateTime.Now;

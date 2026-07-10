@@ -60,7 +60,7 @@ namespace CommonUtilities.Persistence
 
                 var payload = new SupabaseHighscoreRow
                 {
-                    PlayerName = entry.PlayerName,
+                    PlayerName = PlayerNameFormatter.Normalize(entry.PlayerName),
                     Score = entry.Score,
                     WaveReached = entry.WaveReached,
                     TotalKills = entry.TotalKills,
@@ -142,7 +142,7 @@ namespace CommonUtilities.Persistence
             {
                 entries.Add(new HighscoreEntry
                 {
-                    PlayerName = row.PlayerName ?? "",
+                    PlayerName = PlayerNameFormatter.Normalize(row.PlayerName),
                     Score = row.Score,
                     WaveReached = row.WaveReached,
                     TotalKills = row.TotalKills,

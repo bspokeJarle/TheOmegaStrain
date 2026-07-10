@@ -3,7 +3,13 @@ namespace SteamIntegration;
 public static class SteamGameConfig
 {
     public const uint DevelopmentAppId = 480;
-    public const uint ProductionAppId = 0;
+    public const uint ProductionAppId = 1246061;
+
+#if DEBUG
+    public const uint RuntimeAppId = DevelopmentAppId;
+#else
+    public const uint RuntimeAppId = ProductionAppId;
+#endif
 
     public static class Leaderboards
     {

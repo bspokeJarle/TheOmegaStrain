@@ -12,6 +12,43 @@ public sealed class SteamManager : IDisposable
 
     public string? LastError { get; private set; }
 
+    public bool IsSteamRunning
+    {
+        get
+        {
+            try
+            {
+                return SteamAPI.IsSteamRunning();
+            }
+            catch (Exception exception)
+            {
+                LastError = exception.Message;
+                return false;
+            }
+        }
+    }
+
+    public bool IsOverlayEnabled
+    {
+        get
+        {
+            if (!IsInitialized)
+            {
+                return false;
+            }
+
+            try
+            {
+                return SteamUtils.IsOverlayEnabled();
+            }
+            catch (Exception exception)
+            {
+                LastError = exception.Message;
+                return false;
+            }
+        }
+    }
+
     public bool IsLoggedOn
     {
         get
@@ -84,14 +121,21 @@ public sealed class SteamManager : IDisposable
 
         try
         {
-            if (appId > 0 && SteamAPI.RestartAppIfNecessary(new AppId_t(appId)))
+            if (appId > 0 &&
+                !HasLocalSteamAppIdFile() &&
+                SteamAPI.RestartAppIfNecessary(new AppId_t(appId)))
             {
                 LastError = "Steam restart requested.";
                 return false;
             }
 
-            IsInitialized = SteamAPI.Init();
-            LastError = IsInitialized ? null : "SteamAPI.Init returned false.";
+            var initResult = SteamAPI.InitEx(out var steamError);
+            IsInitialized = initResult == ESteamAPIInitResult.k_ESteamAPIInitResult_OK;
+            LastError = IsInitialized
+                ? null
+                : string.IsNullOrWhiteSpace(steamError)
+                    ? $"SteamAPI.InitEx returned {initResult}."
+                    : $"SteamAPI.InitEx returned {initResult}: {steamError}";
             return IsInitialized;
         }
         catch (Exception exception)
@@ -100,6 +144,12 @@ public sealed class SteamManager : IDisposable
             IsInitialized = false;
             return false;
         }
+    }
+
+    private static bool HasLocalSteamAppIdFile()
+    {
+        return File.Exists(Path.Combine(AppContext.BaseDirectory, "steam_appid.txt")) ||
+               File.Exists(Path.Combine(Environment.CurrentDirectory, "steam_appid.txt"));
     }
 
     public void RunCallbacks()
