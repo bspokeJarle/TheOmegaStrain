@@ -101,10 +101,11 @@ public class OverlayTextSafetyTests
     public void NameEntryOverlay_UsesAsciiCursorAndActualNewLineForValidation()
     {
         var overlay = GameState.ScreenOverlayState;
-        overlay.SetNameEntryPreset("ACE");
+        overlay.SetNameEntryPreset("ace");
         overlay.NameEntryValidationMessage = "ALREADY USED";
         overlay.Update(1f / 60f);
 
+        Assert.AreEqual("ACE", overlay.NameEntryBuffer);
         AssertOverlayTextIsSafe("NameEntry", overlay);
         Assert.IsTrue(overlay.Body.Contains('\n'), "Name entry validation should use an actual line break.");
     }

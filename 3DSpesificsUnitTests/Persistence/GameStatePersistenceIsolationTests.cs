@@ -62,13 +62,23 @@ public class GameStatePersistenceIsolationTests
 
         Assert.IsNotNull(jarle);
         Assert.IsNotNull(anna);
-        Assert.AreEqual(3, jarle!.SceneIndex);
+        Assert.AreEqual("JARLE", jarle!.PlayerName);
+        Assert.AreEqual("ANNA", anna!.PlayerName);
+        Assert.AreEqual(3, jarle.SceneIndex);
         Assert.AreEqual(1111L, jarle.Score);
         Assert.AreEqual(2, jarle.PowerUpsCollected);
 
-        Assert.AreEqual(1, anna!.SceneIndex);
+        Assert.AreEqual(1, anna.SceneIndex);
         Assert.AreEqual(2222L, anna.Score);
         Assert.AreEqual(0, anna.PowerUpsCollected);
+    }
+
+    [TestMethod]
+    public void LastPlayerName_IsStoredAndLoadedUppercase()
+    {
+        PersistenceSetup.SaveLastPlayerName("  aragorn  ");
+
+        Assert.AreEqual("ARAGORN", PersistenceSetup.LoadLastPlayerName());
     }
 
     [TestMethod]

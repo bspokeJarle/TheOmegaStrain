@@ -35,6 +35,14 @@ namespace CommonUtilities.CommonSetup
         public static int PlanetStyleBonusScoreCap { get; set; } = 2000;
         public static int CleanLoopStyleBonusScore { get; set; } = 250;
         public static int CollisionLoopStyleBonusScore { get; set; } = 0;
+        public static int PlanetBiomassContainedPointsPerCleanPercent { get; set; } = 10;
+        public static int PlanetHullIntegrityMaxBonus { get; set; } = 800;
+        public static int PlanetLifePreservedBonus { get; set; } = 500;
+        public static int PlanetDeathlessBonus { get; set; } = 750;
+        public static int PlanetMothershipTakedownBonusPerScene { get; set; } = 250;
+        public static int PlanetPrecisionBonusTier1 { get; set; } = 250;
+        public static int PlanetPrecisionBonusTier2 { get; set; } = 500;
+        public static int PlanetPrecisionBonusTier3 { get; set; } = 1000;
 
         // Score penalty deducted each time the player dies
         public static int DeathScorePenalty { get; set; } = 200;

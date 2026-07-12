@@ -240,7 +240,7 @@ namespace GameAiAndControls.Controls
                 case ShipAiVoiceCue.TutorialThrust:
                     title = "THRUST AND CONTROL";
                     body =
-                        "Use SPACE or left mouse for thrust.\n\n" +
+                        "Use SPACE or right mouse for thrust.\n\n" +
                         "LEFT and RIGHT turn the ship. UP and DOWN control pitch. Mouse movement can steer too.\n\n" +
                         "The guidance arrow below the HUD points toward the closest seeder or objective. Keep it roughly ahead of you when you navigate.";
                     return true;
@@ -248,7 +248,7 @@ namespace GameAiAndControls.Controls
                 case ShipAiVoiceCue.TutorialWeapons:
                     title = "WEAPONS";
                     body =
-                        "Use RIGHT SHIFT or right mouse to fire.\n\n" +
+                        "Use RIGHT SHIFT or left mouse to fire.\n\n" +
                         "Approach seeders from the front and line up as straight as you can before firing. The aiming helper works best when your attack angle is clean.\n\n" +
                         "Keep distance after a kill. Exploding objects can throw debris that damages your ship.\n\n" +
                         "Use 1, 2 and 3 to switch available systems.";
@@ -258,7 +258,7 @@ namespace GameAiAndControls.Controls
                     title = "SELECT DECOY";
                     body =
                         "Press 2 now to select the decoy system.\n\n" +
-                        "Use RIGHT SHIFT or right mouse to deploy the decoy before the drone engages.\n\n" +
+                        "Use RIGHT SHIFT or left mouse to deploy the decoy before the drone engages.\n\n" +
                         "A decoy can pull the drone away long enough for you to regain control and counterattack.";
                     return true;
 

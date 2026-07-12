@@ -1,4 +1,5 @@
 ﻿using _3DWorld.Scene;
+using CommonUtilities.CommonGlobalState;
 using CommonUtilities.Events;
 using Domain;
 using System.Collections.Generic;
@@ -17,6 +18,8 @@ namespace _3dTesting._3dWorld
 
         public _3dWorld()
         {
+            GameState.EventBus = EventBus;
+
             //Initialize the world with Scene1 (should be Intro later)
             SceneHandler.SetupActiveScene(this);
         }

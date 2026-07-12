@@ -65,10 +65,11 @@ namespace CommonUtilities.Persistence
             if (string.IsNullOrWhiteSpace(playerName))
                 return 0;
 
+            var normalizedName = PlayerNameFormatter.Normalize(playerName);
             return LoadLocalHighscores().Entries
                 .Where(entry => string.Equals(
                     entry.PlayerName,
-                    playerName.Trim(),
+                    normalizedName,
                     StringComparison.OrdinalIgnoreCase))
                 .Select(entry => entry.Score)
                 .DefaultIfEmpty(0L)
@@ -138,7 +139,8 @@ namespace CommonUtilities.Persistence
         {
             if (string.IsNullOrWhiteSpace(playerName)) return false;
 
-            playerName = playerName.Trim();
+            playerName = PlayerNameFormatter.Normalize(playerName);
+            if (string.IsNullOrWhiteSpace(playerName)) return false;
 
             var entry = new HighscoreEntry
             {
@@ -295,9 +297,11 @@ namespace CommonUtilities.Persistence
 
             foreach (var entry in listA.Concat(listB))
             {
-                var key = entry.PlayerName?.Trim() ?? string.Empty;
+                var key = PlayerNameFormatter.Normalize(entry.PlayerName);
                 if (string.IsNullOrEmpty(key))
                     continue;
+
+                entry.PlayerName = key;
 
                 if (!byPlayer.TryGetValue(key, out var existing))
                 {
@@ -347,7 +351,7 @@ namespace CommonUtilities.Persistence
 
             foreach (var e in entries)
             {
-                var key = e.PlayerName?.Trim() ?? string.Empty;
+                var key = PlayerNameFormatter.Normalize(e.PlayerName);
                 if (string.IsNullOrEmpty(key))
                     continue;
 

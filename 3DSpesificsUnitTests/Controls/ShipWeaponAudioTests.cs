@@ -30,6 +30,7 @@ public class ShipWeaponAudioTests
         };
         GameState.ShipState = new ShipState();
         GameState.SettingsState = new GameSettingsState();
+        GameState.DeltaTime = GameState.GameplayBaselineDeltaTime;
     }
 
     [TestMethod]
@@ -212,6 +213,214 @@ public class ShipWeaponAudioTests
     }
 
     [TestMethod]
+    public void MouseDown_WhenKeyboardControlIsActive_DoesNotAffectGameplayInput()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+
+        InvokeMouseDown(fixture.Controls, MouseButtons.Left);
+        InvokeMouseDown(fixture.Controls, MouseButtons.Right);
+
+        Assert.AreEqual(ControlInputMode.Keyboard, GameState.SettingsState.ActiveControlScheme);
+        Assert.AreEqual(0, fixture.Audio.PlayCount);
+        Assert.AreEqual(0, fixture.Weapons.ActiveWeapons.Count);
+        Assert.IsFalse(fixture.Controls.ThrustOn);
+    }
+
+    [TestMethod]
+    public void MouseDown_WhenMouseControlIsActive_UsesMouseMappings()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+
+        InvokeMouseDown(fixture.Controls, MouseButtons.Left);
+
+        Assert.IsFalse(fixture.Controls.ThrustOn);
+        Assert.AreEqual(1, fixture.Weapons.ActiveWeapons.Count);
+        Assert.AreEqual(1, GameState.GamePlayState.TotalShotsFired);
+
+        InvokeMouseDown(fixture.Controls, MouseButtons.Right);
+
+        Assert.IsTrue(fixture.Controls.ThrustOn);
+        Assert.AreEqual(1, fixture.Weapons.ActiveWeapons.Count);
+        Assert.AreEqual(1, GameState.GamePlayState.TotalShotsFired);
+    }
+
+    [TestMethod]
+    public void MouseMove_WhenMouseControlIsActive_AllowsForwardPitch()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        InvokeMouseMovement(fixture.Controls, 100, 100);
+        InvokeMouseMovement(fixture.Controls, 100, 40);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsTrue(fixture.Controls.tilt < 0,
+            "Mouse movement upward must rotate the ship forward with the original Virus-style mapping.");
+    }
+
+    [TestMethod]
+    public void MouseMove_WhenMouseControlIsActive_AllowsBackwardPitch()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        InvokeMouseMovement(fixture.Controls, 100, 100);
+        InvokeMouseMovement(fixture.Controls, 100, 160);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsTrue(fixture.Controls.tilt > 0,
+            "Mouse movement downward must still rotate the ship backward with the original Virus-style mapping.");
+    }
+
+    [TestMethod]
+    public void RawMouseDelta_WhenMouseControlIsActive_AllowsForwardPitch()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.HandleRawMouseDelta(0, -60);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsTrue(fixture.Controls.tilt < 0,
+            "Raw mouse delta upward must rotate the ship forward without relying on screen position.");
+    }
+
+    [TestMethod]
+    public void RawMouseDelta_WhenMouseControlIsActive_AllowsBackwardPitch()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.HandleRawMouseDelta(0, 60);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsTrue(fixture.Controls.tilt > 0,
+            "Raw mouse delta downward must rotate the ship backward without relying on screen position.");
+    }
+
+    [TestMethod]
+    public void RawMouseDelta_WhenMouseControlIsActive_UsesLowerPitchSensitivityThanAxisRotation()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.HandleRawMouseDelta(60, 60);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsTrue(Math.Abs(fixture.Controls.rotationZ) > Math.Abs(fixture.Controls.tilt),
+            "Mouse pitch should be less sensitive than rotation around the ship axis, matching the Virus-style feel.");
+    }
+
+    [TestMethod]
+    public void RawMouseDelta_WhenMouseControlIsActive_SettlesAtMouseTargetWithoutRotationalInertia()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.HandleRawMouseDelta(0, 60);
+
+        for (int i = 0; i < 20; i++)
+            fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        int settledTilt = fixture.Controls.tilt;
+
+        for (int i = 0; i < 20; i++)
+            fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.AreEqual(settledTilt, fixture.Controls.tilt,
+            "Mouse control should settle at the virtual mouse target instead of drifting on rotation inertia.");
+    }
+
+    [TestMethod]
+    public void RawMouseDelta_WhenMouseControlIsActive_ClampsSingleLargeDelta()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.DeltaTime = 0.1f;
+
+        fixture.Controls.HandleRawMouseDelta(5000, 5000);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsTrue(Math.Abs(fixture.Controls.rotationZ) <= 25,
+            "A single raw mouse spike must not cause a long axis-rotation jump.");
+        Assert.IsTrue(Math.Abs(fixture.Controls.tilt) <= 15,
+            "A single raw mouse spike must not cause a long pitch jump.");
+    }
+
+    [TestMethod]
+    public void KeyDown_WhenMouseControlIsActive_StillAllowsKeyboardWeaponSelection()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.ActiveControlScheme = ControlInputMode.Mouse;
+        GameState.GamePlayState.PowerUpsCollected = 1;
+
+        InvokeKeyDown(fixture.Controls, Keys.D2);
+
+        Assert.AreEqual("DECOY", GameState.GamePlayState.ActivePowerup);
+        Assert.IsFalse(fixture.Controls.ThrustOn);
+    }
+
+    [TestMethod]
+    public void FireWeapon_WhenDecoyIsSelected_AllowsOnlyOneDeployPerSecond()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true, parentSurface: new Surface());
+        GameState.GamePlayState.ActivePowerup = "DECOY";
+
+        InvokeKeyDown(fixture.Controls, Keys.RShiftKey);
+        InvokeKeyDown(fixture.Controls, Keys.RShiftKey);
+
+        Assert.AreEqual(1, GameState.SurfaceState.AiObjects.Count(obj => obj.ObjectName == "DroneDecoy"),
+            "Decoy deployment must be rate-limited so repeated input cannot spawn multiple decoys in one second.");
+        Assert.AreEqual(1, GameState.PendingWorldObjects.Count(obj => obj.ObjectName == "DroneDecoy"));
+
+        SetLastDecoyDeployUtc(fixture.Controls, DateTime.UtcNow.AddSeconds(-1.1));
+
+        InvokeKeyDown(fixture.Controls, Keys.RShiftKey);
+
+        Assert.AreEqual(2, GameState.SurfaceState.AiObjects.Count(obj => obj.ObjectName == "DroneDecoy"),
+            "A new decoy should be allowed after the one-second cooldown has elapsed.");
+    }
+
+    [TestMethod]
+    public void KeyDown_WhenPowerupSlot4IsPressed_DoesNotChangeCurrentPowerupYet()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.GamePlayState.PowerUpsCollected = 3;
+        GameState.GamePlayState.SelectedWeapon = WeaponType.Lazer;
+        GameState.GamePlayState.ActivePowerup = "LAZER";
+
+        InvokeKeyDown(fixture.Controls, Keys.D4);
+
+        Assert.AreEqual(WeaponType.Lazer, GameState.GamePlayState.SelectedWeapon);
+        Assert.AreEqual("LAZER", GameState.GamePlayState.ActivePowerup);
+        Assert.AreEqual(0, fixture.Audio.PlayCount);
+    }
+
+    [TestMethod]
+    public void KeyDown_WhenKeyboardMappingChanges_UsesConfiguredKey()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.SettingsState.KeyboardThrustKey = "W";
+
+        InvokeKeyDown(fixture.Controls, Keys.Space);
+        Assert.IsFalse(fixture.Controls.ThrustOn);
+
+        InvokeKeyDown(fixture.Controls, Keys.W);
+        Assert.IsTrue(fixture.Controls.ThrustOn);
+    }
+
+    [TestMethod]
     public void ClearGameplayInputForPause_WhenThrustIsHeld_StopsThrustImmediately()
     {
         using var fixture = CreateReadyShip(withWeaponGuides: true);
@@ -244,10 +453,8 @@ public class ShipWeaponAudioTests
     [TestMethod]
     public void KeyDown_WhenNonModalGameOverlayIsVisible_StillAcceptsGameplayInput()
     {
-        // Regression: after killing the mothership the victory flow shows a
-        // non-modal Game overlay ("PLANET SECURED") and then triggers a world
-        // fade-out. The ship must remain controllable during that window so the
-        // pilot can finish the planet instead of crashing.
+        // Ordinary non-modal Game overlays should not block controls. Timeline-
+        // driven victory reward overlays use a separate pause flag.
         using var fixture = CreateReadyShip(withWeaponGuides: true);
         GameState.ScreenOverlayState.Type = ScreenOverlayType.Game;
         GameState.ScreenOverlayState.IsModal = false;
@@ -261,6 +468,50 @@ public class ShipWeaponAudioTests
         Assert.AreEqual(1, fixture.Weapons.ActiveWeapons.Count,
             "Weapons must still fire while a non-modal in-game overlay is visible.");
         Assert.AreEqual(1, GameState.GamePlayState.TotalShotsFired);
+    }
+
+    [TestMethod]
+    public void KeyDown_WhenVictoryRewardPauseIsActive_BlocksGameplayInput()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.GamePlayState.IsVictoryRewardPauseActive = true;
+
+        InvokeKeyDown(fixture.Controls, Keys.Space);
+        InvokeKeyDown(fixture.Controls, Keys.RShiftKey);
+
+        Assert.IsFalse(fixture.Controls.ThrustOn);
+        Assert.AreEqual(0, fixture.Weapons.ActiveWeapons.Count);
+        Assert.AreEqual(0, GameState.GamePlayState.TotalShotsFired);
+    }
+
+    [TestMethod]
+    public void MoveObject_WhenVictoryRewardPauseIsActive_FreezesShipPhysics()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+        fixture.Ship.ObjectOffsets.y = 123f;
+        GameState.SurfaceState.GlobalMapPosition.y = 40f;
+
+        InvokeKeyDown(fixture.Controls, Keys.Space);
+        Assert.IsTrue(fixture.Controls.ThrustOn);
+
+        GameState.GamePlayState.IsVictoryRewardPauseActive = true;
+        GameState.ShipState.ShipWorldPosition = new Vector3 { x = 11f, y = 22f, z = 33f };
+        fixture.Ship.Rotation = new Vector3 { x = -35f, y = 18f, z = 142f };
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.IsFalse(fixture.Controls.ThrustOn);
+        Assert.AreEqual(0f, fixture.Controls.Thrust, 0.001f);
+        Assert.AreEqual(123f, fixture.Ship.ObjectOffsets.y, 0.001f);
+        Assert.AreEqual(40f, GameState.SurfaceState.GlobalMapPosition.y, 0.001f);
+        Assert.AreEqual(-35f, fixture.Ship.Rotation!.x, 0.001f,
+            "Victory reward pause should leave the current ship rotation frozen instead of normalizing it.");
+        Assert.AreEqual(18f, fixture.Ship.Rotation.y, 0.001f);
+        Assert.AreEqual(142f, fixture.Ship.Rotation.z, 0.001f);
+        Assert.AreEqual(11f, GameState.ShipState.ShipWorldPosition!.x, 0.001f,
+            "Victory reward pause should freeze the last known ship world-state instead of recalculating it from a render copy.");
+        Assert.AreEqual(22f, GameState.ShipState.ShipWorldPosition.y, 0.001f);
+        Assert.AreEqual(33f, GameState.ShipState.ShipWorldPosition.z, 0.001f);
     }
 
     [TestMethod]
@@ -300,7 +551,7 @@ public class ShipWeaponAudioTests
         Assert.IsFalse(fixture.Ship.ImpactStatus.HasCrashed);
     }
 
-    private static ShipFixture CreateReadyShip(bool withWeaponGuides)
+    private static ShipFixture CreateReadyShip(bool withWeaponGuides, ISurface? parentSurface = null)
     {
         var controls = new ShipControls();
         var ship = new _3dObject
@@ -321,7 +572,8 @@ public class ShipWeaponAudioTests
                     Triangles = new List<ITriangleMeshWithColor> { CreateGuideVertex(0f, -50f, 28f) }
                 }
             },
-            Movement = controls
+            Movement = controls,
+            ParentSurface = parentSurface
         };
 
         var weapons = new Weapons(
@@ -396,6 +648,26 @@ public class ShipWeaponAudioTests
 
         Assert.IsNotNull(method);
         method!.Invoke(controls, new object[] { controls, new MouseEventArgs(button, clicks: 1, x: 100, y: 100, delta: 0) });
+    }
+
+    private static void InvokeMouseMovement(ShipControls controls, int x, int y)
+    {
+        var method = typeof(ShipControls).GetMethod(
+            "HandleGlobalHookMouseMovement",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.IsNotNull(method);
+        method!.Invoke(controls, new object[] { new MouseEventArgs(MouseButtons.None, clicks: 0, x, y, delta: 0), false });
+    }
+
+    private static void SetLastDecoyDeployUtc(ShipControls controls, DateTime lastDeployUtc)
+    {
+        var field = typeof(ShipControls).GetField(
+            "_lastDecoyDeployUtc",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.IsNotNull(field);
+        field!.SetValue(controls, lastDeployUtc);
     }
 
     private sealed class ShipFixture : IDisposable

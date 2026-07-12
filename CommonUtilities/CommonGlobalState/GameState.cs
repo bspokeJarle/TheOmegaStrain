@@ -21,6 +21,7 @@ namespace CommonUtilities.CommonGlobalState
         public static GamePlayState GamePlayState = new GamePlayState();
         public static GameSettingsState SettingsState = new GameSettingsState();
         public static TutorialRuntimeState TutorialState = new TutorialRuntimeState();
+        public static IGameEventBus? EventBus { get; set; }
         public static List<_3dSpecificsImplementations._3dObject> PendingWorldObjects { get; } = new();
         public static long FrameCount { get; set; } = 0;
         public static int ObjectIdCounter { get; set; } = 0;

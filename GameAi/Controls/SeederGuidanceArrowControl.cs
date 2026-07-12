@@ -220,12 +220,13 @@ namespace GameAiAndControls.Controls
         /// farther than MaxTargetDistanceInScreens screens from the ship along
         /// the XZ plane, mutate its WorldPosition so the guidance target ends up
         /// at exactly that distance in the same direction. Returns the (possibly
-        /// updated) guidance position. Records the ObjectId so each target is
-        /// snapped at most once.
+        /// updated) guidance position. Records the ObjectId only when an actual
+        /// snap happens, so a target first seen nearby can still be corrected if
+        /// it later drifts too far away while the arrow is pointing at it.
         /// </summary>
         private Vector3 SnapTargetIfTooFar(I3dObject winnerObj, Vector3 winnerGuidancePos, Vector3 shipWorld)
         {
-            if (!_snappedTargetIds.Add(winnerObj.ObjectId))
+            if (_snappedTargetIds.Contains(winnerObj.ObjectId))
                 return winnerGuidancePos;
 
             var worldPosition = winnerObj.WorldPosition;
@@ -257,6 +258,7 @@ namespace GameAiAndControls.Controls
             float worldDeltaZ = newGuidanceZ - winnerGuidancePos.z;
             worldPosition.x += worldDeltaX;
             worldPosition.z += worldDeltaZ;
+            _snappedTargetIds.Add(winnerObj.ObjectId);
 
             return new Vector3 { x = newGuidanceX, y = winnerGuidancePos.y, z = newGuidanceZ };
         }

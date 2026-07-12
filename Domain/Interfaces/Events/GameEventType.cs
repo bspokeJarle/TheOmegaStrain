@@ -5,6 +5,8 @@ namespace Domain
         ObjectExploded,
         EnemyDestroyed,
         PowerUpCollected,
-        DecoyUnlocked
+        DecoyUnlocked,
+        StyleBonusAwarded,
+        SceneCompleted
     }
 }

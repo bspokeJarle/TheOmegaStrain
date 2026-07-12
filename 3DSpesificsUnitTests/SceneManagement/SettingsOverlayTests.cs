@@ -110,6 +110,80 @@ public class SettingsOverlayTests
         });
     }
 
+    [TestMethod]
+    public void IntroControlsSettings_OpensAdjustsAndSaves()
+    {
+        RunOnStaThread(() =>
+        {
+            var handler = new SceneHandler();
+            var world = CreateRealWorld(handler);
+            handler.SetupActiveScene(world);
+
+            var overlay = GameState.ScreenOverlayState;
+            overlay.ShowOverlay = true;
+
+            HandleKeyPress(handler, world, Key.C);
+
+            Assert.AreEqual(ScreenOverlayType.Settings, overlay.Type);
+            Assert.AreEqual(ScreenOverlaySettingsPanel.Controls, overlay.SettingsPanel);
+            Assert.AreEqual(ControlInputMode.Keyboard, GameState.SettingsState.ActiveControlScheme);
+            StringAssert.Contains(overlay.Title, "CONTROL");
+
+            HandleKeyPress(handler, world, Key.Right);
+
+            Assert.AreEqual(ControlInputMode.Mouse, GameState.SettingsState.ActiveControlScheme);
+            StringAssert.Contains(overlay.Body, "MOUSE");
+            Assert.IsTrue(File.Exists(PersistenceSetup.LocalSettingsFilePath));
+        });
+    }
+
+    [TestMethod]
+    public void OverlayActivation_WhenSettingsOverlayIsOpen_ClosesAndReturnsToIntro()
+    {
+        RunOnStaThread(() =>
+        {
+            var handler = new SceneHandler();
+            var world = CreateRealWorld(handler);
+            handler.SetupActiveScene(world);
+
+            var overlay = GameState.ScreenOverlayState;
+            overlay.ShowOverlay = true;
+
+            HandleKeyPress(handler, world, Key.C);
+            Assert.AreEqual(ScreenOverlayType.Settings, overlay.Type);
+
+            handler.HandleOverlayActivation(world);
+
+            Assert.AreEqual(ScreenOverlayType.Intro, overlay.Type);
+            Assert.IsTrue(overlay.ShowOverlay);
+        });
+    }
+
+    [TestMethod]
+    public void OverlayActivation_WhenInputDismissalDisabled_KeepsOverlayOpen()
+    {
+        RunOnStaThread(() =>
+        {
+            var handler = new SceneHandler();
+            var world = CreateRealWorld(handler);
+            handler.SetupActiveScene(world);
+
+            var overlay = GameState.ScreenOverlayState;
+            overlay.ResetToDefaults();
+            overlay.Type = ScreenOverlayType.Game;
+            overlay.Header = "PLANET SECURED";
+            overlay.Title = "MISSION REWARD";
+            overlay.ShowOverlay = true;
+            overlay.CanDismissWithInput = false;
+
+            handler.HandleOverlayActivation(world);
+
+            Assert.AreEqual(ScreenOverlayType.Game, overlay.Type);
+            Assert.AreEqual("MISSION REWARD", overlay.Title);
+            Assert.IsTrue(overlay.ShowOverlay);
+        });
+    }
+
     private static _3dWorld CreateRealWorld(SceneHandler handler)
     {
         var world = new _3dWorld

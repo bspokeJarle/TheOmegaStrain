@@ -35,3 +35,10 @@ Output is written under:
 ```text
 artifacts\installer\
 ```
+
+## Artwork
+
+The installer uses `Assets\InstallerWizardBackImage.bmp` as an opaque, pre-faded
+background. Keep `InstallerWizardBackImage.png` as the source artwork, but do not
+point Inno directly at it with runtime opacity. The baked BMP avoids repainting
+artifacts on some Windows DPI/theme combinations.

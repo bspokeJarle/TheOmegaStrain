@@ -89,6 +89,18 @@ public class SeederControlsParticleGuideTests
     }
 
     [TestMethod]
+    public void HandleCrash_DroneDecoyDestroysSeederInOneHit()
+    {
+        var seeder = CreateSeederCollisionObject();
+        var controls = new SeederControls();
+
+        HitSeeder(controls, seeder, "DroneDecoy");
+
+        Assert.IsTrue(seeder.ImpactStatus!.ObjectHealth <= 0);
+        Assert.AreEqual(0, seeder.CrashBoxes.Count, "A decoy hit should damage seeders through the normal seeder crash flow.");
+    }
+
+    [TestMethod]
     public void MoveObject_ExplodingSeederKeepsHitFrameTransformAfterSurfaceScroll()
     {
         GameState.SurfaceState.GlobalMapPosition = new Vector3 { x = 0f, y = 40f, z = 0f };

@@ -4,10 +4,13 @@ using _3dTesting.MainWindowClasses.Loops;
 using _3dTesting.MainWindowClasses.Overlays;
 using _3dTesting.Rendering;
 using CommonUtilities.CommonGlobalState;
+using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
 using CommonUtilities.Persistence;
 using Domain;
 using GameAiAndControls.Controls;
+using GameAiAndControls.Input;
+using SteamIntegration;
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -48,6 +51,8 @@ namespace _3dTesting
     {
         private const bool enableLogging = false;
         private const bool enableFileLogging = LiveGameLoop.EnableCpuHeadroomLogging;
+        private const bool EnableSteamDiagnostics = true;
+        private const string SteamDiagnosticsLogPath = @"C:\Temp\OmegaStrainSteamDiagnostics.txt";
         private DrawingVisualHost visualHost = new DrawingVisualHost();
         private readonly DispatcherTimer timer = new DispatcherTimer();
         private readonly Stopwatch stopwatch = new Stopwatch();
@@ -78,6 +83,10 @@ namespace _3dTesting
         private string? _currentVideoClipPath;
         private bool _videoOverlayIsPlaying;
         private bool _videoEntrancePlayed;
+        private bool _xboxOverlayButtonWasDown = false;
+        private HwndSource? _rawMouseSource;
+        private SteamManager? _steamManager;
+        private SteamGameplaySync? _steamGameplaySync;
 
         // MotherShip health bar (in-world overlay)
         private readonly Canvas _motherShipHealthBarCanvas;
@@ -117,17 +126,30 @@ namespace _3dTesting
             if (Logger.EnableFileLogging)
             {
                 Logger.ClearLog();
-                Logger.Log($"[PerfLogging] enabled targetFps={TargetFps} targetFrameMs={TargetFrameIntervalMs:0.###} displayRefreshHz={_currentDisplayRefreshHz} source=StartupFallback");
+                if (enableFileLogging)
+                    Logger.Log($"[PerfLogging] enabled targetFps={TargetFps} targetFrameMs={TargetFrameIntervalMs:0.###} displayRefreshHz={_currentDisplayRefreshHz} source=StartupFallback");
+            }
+            if (EnableSteamDiagnostics)
+            {
+                ClearSteamDiagnosticsLog();
+                WriteSteamDiagnosticLine("[SteamDiag] file logging enabled.");
             }
 
             GameState.SurfaceState.RecordingFps = ScreenSetup.RuntimeTargetFps;
 
             PersistenceSetup.Initialize();
             GameState.GamePlayState.PlayerName = PersistenceSetup.LoadLastPlayerName();
+            GameState.EventBus = world.EventBus;
+            InitializeSteamIntegration();
 
             InitializeComponent();
             this.PreviewKeyDown += new KeyEventHandler(HandleKeys);
-            SourceInitialized += (_, _) => ConfigureRuntimeFpsForCurrentMonitor("SourceInitialized");
+            this.PreviewMouseDown += HandleMouseInputForOverlay;
+            SourceInitialized += (_, _) =>
+            {
+                ConfigureRuntimeFpsForCurrentMonitor("SourceInitialized");
+                InitializeRawMouseInput();
+            };
             LocationChanged += (_, _) => ConfigureRuntimeFpsForCurrentMonitor("LocationChanged");
             Closing += MainWindow_Closing;
             Loaded += Window_Loaded;
@@ -277,8 +299,58 @@ namespace _3dTesting
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
+            ShutdownRawMouseInput();
+            ShutdownSteamIntegration();
             // Closing the window is not a checkpoint. Progress and highscores
             // are persisted by checkpoint flows: powerups and motherships.
+        }
+
+        private void InitializeSteamIntegration()
+        {
+            _steamManager = new SteamManager();
+
+            LogSteamDiagnostics("BeforeInitialize");
+
+            if (!_steamManager.Initialize(SteamGameConfig.RuntimeAppId))
+            {
+                if (Logger.EnableFileLogging)
+                    Logger.Log($"[Steam] unavailable: {_steamManager.LastError ?? "SteamAPI.Init returned false"}");
+                WriteSteamDiagnosticLine($"[Steam] unavailable: {_steamManager.LastError ?? "SteamAPI.Init returned false"}");
+                LogSteamDiagnostics("InitializeFailed");
+                return;
+            }
+
+            _steamGameplaySync = new SteamGameplaySync(
+                _steamManager,
+                world.EventBus,
+                CreateSteamGameplaySnapshot);
+
+            if (Logger.EnableFileLogging)
+                Logger.Log($"[Steam] initialized appId={_steamManager.AppId} steamId={_steamManager.SteamId} loggedOn={_steamManager.IsLoggedOn}");
+            LogSteamDiagnostics("Initialized");
+        }
+
+        private void ShutdownSteamIntegration()
+        {
+            _steamGameplaySync?.Dispose();
+            _steamGameplaySync = null;
+            _steamManager?.Dispose();
+            _steamManager = null;
+        }
+
+        private static SteamGameplaySnapshot CreateSteamGameplaySnapshot()
+        {
+            var gameplay = GameState.GamePlayState;
+            return new SteamGameplaySnapshot(
+                gameplay.CurrentSceneType,
+                gameplay.SceneIndex,
+                gameplay.Score,
+                gameplay.TotalKills,
+                gameplay.TotalShotsFired,
+                gameplay.TotalDeaths,
+                gameplay.Accuracy,
+                gameplay.PowerUpsCollected,
+                gameplay.SpeedPowerUpLevel);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -291,9 +363,63 @@ namespace _3dTesting
                 ScreenSetup.Initialize(w, h);
         }
 
+        private void InitializeRawMouseInput()
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            if (hwnd == IntPtr.Zero)
+                return;
+
+            _rawMouseSource = HwndSource.FromHwnd(hwnd);
+            if (_rawMouseSource == null)
+                return;
+
+            _rawMouseSource.AddHook(RawMouseWndProc);
+            if (!RawMouseInput.RegisterMouse(hwnd))
+            {
+                _rawMouseSource.RemoveHook(RawMouseWndProc);
+                _rawMouseSource = null;
+            }
+        }
+
+        private void ShutdownRawMouseInput()
+        {
+            _rawMouseSource?.RemoveHook(RawMouseWndProc);
+            _rawMouseSource = null;
+            RawMouseInput.ClearRegistration();
+        }
+
+        private IntPtr RawMouseWndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == RawMouseInput.WmInput &&
+                RawMouseInput.TryReadMouseDelta(lParam, out int deltaX, out int deltaY))
+            {
+                DispatchRawMouseDelta(deltaX, deltaY);
+            }
+
+            return IntPtr.Zero;
+        }
+
+        private void DispatchRawMouseDelta(int deltaX, int deltaY)
+        {
+            var settings = GameState.SettingsState;
+            settings.Normalize();
+
+            if (settings.ActiveControlScheme != ControlInputMode.Mouse)
+                return;
+
+            if (TryGetActiveShipControls(out var shipControls, out _))
+                shipControls.HandleRawMouseDelta(deltaX, deltaY);
+        }
+
         private void HandleKeys(object sender, KeyEventArgs e)
         {
             bool overlayWasShowing = GameState.ScreenOverlayState.ShowOverlay;
+
+            if (IsSteamOverlayShortcut(e))
+            {
+                LogSteamDiagnostics("ShiftTabReachedGame");
+                return;
+            }
 
             if (IsMenuExitKey(e.Key))
             {
@@ -314,7 +440,9 @@ namespace _3dTesting
 
             if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl)
             {
-                if (IsGameplaySceneForPause() && !GameState.ScreenOverlayState.BlocksGameplayInput)
+                if (IsGameplaySceneForPause() &&
+                    !GameState.GamePlayState.IsVictoryRewardPauseActive &&
+                    !GameState.ScreenOverlayState.BlocksGameplayInput)
                     ToggleGameplayPause();
                 e.Handled = true;
                 return;
@@ -325,6 +453,150 @@ namespace _3dTesting
 
             if (overlayWasShowing || GameState.ScreenOverlayState.BlocksGameplayInput)
                 e.Handled = true;
+        }
+
+        private static bool IsSteamOverlayShortcut(KeyEventArgs e)
+        {
+            return e.Key == Key.Tab &&
+                   (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift;
+        }
+
+        private void LogSteamDiagnostics(string source)
+        {
+            if (!EnableSteamDiagnostics)
+                return;
+
+            string baseAppIdPath = Path.Combine(AppContext.BaseDirectory, "steam_appid.txt");
+            string cwdAppIdPath = Path.Combine(Environment.CurrentDirectory, "steam_appid.txt");
+            string appIdText = ReadAppIdText(baseAppIdPath, cwdAppIdPath);
+
+            WriteSteamDiagnosticLine(
+                $"[SteamDiag] source={source} " +
+                $"runtimeAppId={SteamGameConfig.RuntimeAppId} " +
+                $"baseDir='{AppContext.BaseDirectory}' " +
+                $"cwd='{Environment.CurrentDirectory}' " +
+                $"baseAppIdExists={File.Exists(baseAppIdPath)} " +
+                $"cwdAppIdExists={File.Exists(cwdAppIdPath)} " +
+                $"appIdText='{appIdText}' " +
+                $"steamManagerCreated={_steamManager != null} " +
+                $"steamRunning={_steamManager?.IsSteamRunning.ToString() ?? "n/a"} " +
+                $"initialized={_steamManager?.IsInitialized.ToString() ?? "n/a"} " +
+                $"appId={_steamManager?.AppId.ToString() ?? "n/a"} " +
+                $"steamId={_steamManager?.SteamId.ToString() ?? "n/a"} " +
+                $"loggedOn={_steamManager?.IsLoggedOn.ToString() ?? "n/a"} " +
+                $"overlayEnabled={_steamManager?.IsOverlayEnabled.ToString() ?? "n/a"} " +
+                $"lastError='{_steamManager?.LastError ?? ""}'");
+        }
+
+        private static void ClearSteamDiagnosticsLog()
+        {
+            try
+            {
+                string? directory = Path.GetDirectoryName(SteamDiagnosticsLogPath);
+                if (!string.IsNullOrWhiteSpace(directory))
+                    Directory.CreateDirectory(directory);
+                File.WriteAllText(SteamDiagnosticsLogPath, "");
+            }
+            catch
+            {
+            }
+        }
+
+        private static void WriteSteamDiagnosticLine(string message)
+        {
+            try
+            {
+                string? directory = Path.GetDirectoryName(SteamDiagnosticsLogPath);
+                if (!string.IsNullOrWhiteSpace(directory))
+                    Directory.CreateDirectory(directory);
+                File.AppendAllText(
+                    SteamDiagnosticsLogPath,
+                    $"{DateTime.Now:HH:mm:ss.fff} [Steam] {message}{Environment.NewLine}");
+            }
+            catch
+            {
+            }
+        }
+
+        private static string ReadAppIdText(params string[] paths)
+        {
+            foreach (string path in paths)
+            {
+                try
+                {
+                    if (File.Exists(path))
+                        return File.ReadAllText(path).Trim();
+                }
+                catch
+                {
+                    return "<read failed>";
+                }
+            }
+
+            return "";
+        }
+
+        private void HandleMouseInputForOverlay(object sender, MouseButtonEventArgs e)
+        {
+            var settings = GameState.SettingsState;
+            settings.Normalize();
+
+            if (settings.ActiveControlScheme != ControlInputMode.Mouse)
+                return;
+
+            if (!CanNonKeyboardInputActivateOverlay())
+                return;
+
+            HandleNonKeyboardOverlayActivation();
+            e.Handled = true;
+        }
+
+        private void UpdateXboxOverlayActivation()
+        {
+            var settings = GameState.SettingsState;
+            settings.Normalize();
+
+            if (settings.ActiveControlScheme != ControlInputMode.XboxController ||
+                !CanNonKeyboardInputActivateOverlay())
+            {
+                _xboxOverlayButtonWasDown = false;
+                return;
+            }
+
+            bool buttonIsDown =
+                XboxControllerInput.TryGetState(controllerIndex: 0, out var controllerState) &&
+                XboxControllerInput.HasButtonInput(controllerState);
+
+            if (buttonIsDown && !_xboxOverlayButtonWasDown)
+                HandleNonKeyboardOverlayActivation();
+
+            _xboxOverlayButtonWasDown = buttonIsDown;
+        }
+
+        private bool CanNonKeyboardInputActivateOverlay()
+        {
+            var overlay = GameState.ScreenOverlayState;
+            if (overlay == null || !overlay.ShowOverlay)
+                return false;
+
+            if (overlay.Type == ScreenOverlayType.NameEntry)
+                return false;
+
+            if (overlay.ChoiceAction != ScreenOverlayChoiceAction.None)
+                return false;
+
+            if (!overlay.CanDismissWithInput)
+                return false;
+
+            return true;
+        }
+
+        private void HandleNonKeyboardOverlayActivation()
+        {
+            var sceneTypeBeforeMenuExit = world?.SceneHandler?.GetActiveScene().SceneType;
+            world.SceneHandler.HandleOverlayActivation(world);
+            StopNonMusicAudioIfReturnedToIntro(sceneTypeBeforeMenuExit);
+            SyncLocalPauseFromWorld();
         }
 
         private void StopNonMusicAudioIfReturnedToIntro(SceneTypes? previousSceneType)
@@ -402,18 +674,30 @@ namespace _3dTesting
 
         private void ResumeShipAfterGameplayPause()
         {
+            if (TryGetActiveShipControls(out var shipControls, out var ship))
+                shipControls.ResumeFromGameplayPause(ship);
+        }
+
+        private bool TryGetActiveShipControls(out ShipControls shipControls, out I3dObject ship)
+        {
+            shipControls = null!;
+            ship = null!;
+
             if (world?.WorldInhabitants == null)
-                return;
+                return false;
 
             for (int i = 0; i < world.WorldInhabitants.Count; i++)
             {
                 var obj = world.WorldInhabitants[i];
-                if (obj.ObjectName == "Ship" && obj.Movement is ShipControls shipControls)
+                if (obj.ObjectName == "Ship" && obj.Movement is ShipControls controls)
                 {
-                    shipControls.ResumeFromGameplayPause(obj);
-                    return;
+                    shipControls = controls;
+                    ship = obj;
+                    return true;
                 }
             }
+
+            return false;
         }
 
         private static bool HasActiveSurfaceMapForMinimap()
@@ -507,7 +791,7 @@ namespace _3dTesting
             GameState.SurfaceState.RecordingFps = ScreenSetup.RuntimeTargetFps;
             _currentDisplayRefreshHz = displayRefreshHz;
 
-            if (Logger.EnableFileLogging &&
+            if (enableFileLogging &&
                 (previousTargetFps != ScreenSetup.RuntimeTargetFps || previousRefreshHz != displayRefreshHz))
             {
                 Logger.Log($"[PerfLogging] enabled targetFps={TargetFps} targetFrameMs={TargetFrameIntervalMs:0.###} displayRefreshHz={displayRefreshHz} source={source}");
@@ -616,7 +900,9 @@ namespace _3dTesting
             }
 
             float dt = (float)dtSeconds;
+            _steamGameplaySync?.Update();
             SynchronizeTutorialOverlayPause();
+            UpdateXboxOverlayActivation();
 
             if (GameState.ScreenOverlayState.ShowDebugOverlay == false)
                 FpsText.Visibility = Visibility.Collapsed;
@@ -625,6 +911,12 @@ namespace _3dTesting
 
             if (world.IsPaused)
                 pauseFrameCount++;
+
+            if (GameState.GamePlayState.IsVictoryRewardPauseActive && world.IsPaused)
+            {
+                isPaused = true;
+                pauseFrameCount = limitFrameCount;
+            }
 
             if (pauseFrameCount < limitFrameCount && GameState.WorldFade.TryBeginFadeIn(out var fadeInDurationSeconds))
             {
@@ -650,6 +942,12 @@ namespace _3dTesting
                 await FadeOutAsync(fadeOutDurationSeconds);
                 GameState.WorldFade.MarkFadeOutComplete();
                 fadeOutTrigged = DateTime.MinValue;
+            }
+
+            if (GameState.GamePlayState.IsVictoryRewardPauseActive)
+            {
+                gameWorldManager.UpdatePausedVictoryReward(world);
+                SyncLocalPauseFromWorld();
             }
 
             // Overlay update + render (UI layer)
@@ -740,6 +1038,9 @@ namespace _3dTesting
                 try
                 {
                     gameWorldManager.UpdateWorld(world, ref screenCoordinates, ref crashBoxCoordinates);
+                    bool freezeFrameActivated =
+                        GameState.GamePlayState.IsVictoryRewardPauseActive &&
+                        world.IsPaused;
 
                     if (shouldLog)
                     {
@@ -747,7 +1048,7 @@ namespace _3dTesting
                         Logger.Log($"[UpdateWorld] ms={elapsedMs:0.###}");
                     }
 
-                    if (!isFading || _isFadingIn)
+                    if ((!isFading || _isFadingIn) && !freezeFrameActivated)
                     {
                         Dispatcher.BeginInvoke(() =>
                         {
