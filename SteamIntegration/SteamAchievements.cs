@@ -15,20 +15,28 @@ public sealed class SteamAchievements
     {
         if (!CanUseSteam(achievementId))
         {
+            SteamDiagnostics.Write($"[Achievement] unlock skipped id='{achievementId}' steamAvailable={steamManager.IsAvailable}");
             return false;
         }
 
-        return SteamUserStats.SetAchievement(achievementId) && SteamUserStats.StoreStats();
+        bool set = SteamUserStats.SetAchievement(achievementId);
+        bool stored = set && SteamUserStats.StoreStats();
+        SteamDiagnostics.Write($"[Achievement] unlock id='{achievementId}' set={set} stored={stored}");
+        return set && stored;
     }
 
     public bool Clear(string achievementId)
     {
         if (!CanUseSteam(achievementId))
         {
+            SteamDiagnostics.Write($"[Achievement] clear skipped id='{achievementId}' steamAvailable={steamManager.IsAvailable}");
             return false;
         }
 
-        return SteamUserStats.ClearAchievement(achievementId) && SteamUserStats.StoreStats();
+        bool cleared = SteamUserStats.ClearAchievement(achievementId);
+        bool stored = cleared && SteamUserStats.StoreStats();
+        SteamDiagnostics.Write($"[Achievement] clear id='{achievementId}' cleared={cleared} stored={stored}");
+        return cleared && stored;
     }
 
     public bool TryGetUnlocked(string achievementId, out bool isUnlocked)
@@ -37,10 +45,13 @@ public sealed class SteamAchievements
 
         if (!CanUseSteam(achievementId))
         {
+            SteamDiagnostics.Write($"[Achievement] get skipped id='{achievementId}' steamAvailable={steamManager.IsAvailable}");
             return false;
         }
 
-        return SteamUserStats.GetAchievement(achievementId, out isUnlocked);
+        bool found = SteamUserStats.GetAchievement(achievementId, out isUnlocked);
+        SteamDiagnostics.Write($"[Achievement] get id='{achievementId}' found={found} unlocked={isUnlocked}");
+        return found;
     }
 
     private bool CanUseSteam(string steamId)

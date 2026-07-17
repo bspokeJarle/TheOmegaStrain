@@ -6,9 +6,10 @@ The game should keep working when Steam is unavailable, the Steam client is not 
 or `steam_api64.dll` is missing. `SteamManager.Initialize` returns `false` in those cases
 and the wrapper classes no-op instead of throwing into gameplay code.
 
-Debug builds copy `steam_appid.txt` with the Steamworks SpaceWar development AppID (`480`).
-Do not publish or ship that file. Release/publish builds should use the real Steam AppID
-assigned to The Omega Strain (`1246061`), set in `SteamGameConfig.ProductionAppId`.
+Debug builds copy `steam_appid.txt` with The Omega Strain Steam AppID (`4952000`) so
+local runs exercise the same backend as Steam launches. Do not publish or ship that file.
+Release/publish builds should use the real Steam AppID assigned to The Omega Strain
+(`4952000`), set in `SteamGameConfig.ProductionAppId`.
 
 Call `SteamManager.RunCallbacks` from the normal game loop when Steam is initialized.
 Leaderboard calls complete only while callbacks are pumped.

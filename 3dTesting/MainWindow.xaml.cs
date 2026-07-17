@@ -52,7 +52,6 @@ namespace _3dTesting
         private const bool enableLogging = false;
         private const bool enableFileLogging = LiveGameLoop.EnableCpuHeadroomLogging;
         private const bool EnableSteamDiagnostics = true;
-        private const string SteamDiagnosticsLogPath = @"C:\Temp\OmegaStrainSteamDiagnostics.txt";
         private DrawingVisualHost visualHost = new DrawingVisualHost();
         private readonly DispatcherTimer timer = new DispatcherTimer();
         private readonly Stopwatch stopwatch = new Stopwatch();
@@ -131,8 +130,9 @@ namespace _3dTesting
             }
             if (EnableSteamDiagnostics)
             {
-                ClearSteamDiagnosticsLog();
-                WriteSteamDiagnosticLine("[SteamDiag] file logging enabled.");
+                SteamDiagnostics.Enabled = true;
+                SteamDiagnostics.Clear();
+                SteamDiagnostics.Write("[SteamDiag] file logging enabled.");
             }
 
             GameState.SurfaceState.RecordingFps = ScreenSetup.RuntimeTargetFps;
@@ -315,7 +315,7 @@ namespace _3dTesting
             {
                 if (Logger.EnableFileLogging)
                     Logger.Log($"[Steam] unavailable: {_steamManager.LastError ?? "SteamAPI.Init returned false"}");
-                WriteSteamDiagnosticLine($"[Steam] unavailable: {_steamManager.LastError ?? "SteamAPI.Init returned false"}");
+                SteamDiagnostics.Write($"[Steam] unavailable: {_steamManager.LastError ?? "SteamAPI.Init returned false"}");
                 LogSteamDiagnostics("InitializeFailed");
                 return;
             }
@@ -470,7 +470,7 @@ namespace _3dTesting
             string cwdAppIdPath = Path.Combine(Environment.CurrentDirectory, "steam_appid.txt");
             string appIdText = ReadAppIdText(baseAppIdPath, cwdAppIdPath);
 
-            WriteSteamDiagnosticLine(
+            SteamDiagnostics.Write(
                 $"[SteamDiag] source={source} " +
                 $"runtimeAppId={SteamGameConfig.RuntimeAppId} " +
                 $"baseDir='{AppContext.BaseDirectory}' " +
@@ -486,36 +486,6 @@ namespace _3dTesting
                 $"loggedOn={_steamManager?.IsLoggedOn.ToString() ?? "n/a"} " +
                 $"overlayEnabled={_steamManager?.IsOverlayEnabled.ToString() ?? "n/a"} " +
                 $"lastError='{_steamManager?.LastError ?? ""}'");
-        }
-
-        private static void ClearSteamDiagnosticsLog()
-        {
-            try
-            {
-                string? directory = Path.GetDirectoryName(SteamDiagnosticsLogPath);
-                if (!string.IsNullOrWhiteSpace(directory))
-                    Directory.CreateDirectory(directory);
-                File.WriteAllText(SteamDiagnosticsLogPath, "");
-            }
-            catch
-            {
-            }
-        }
-
-        private static void WriteSteamDiagnosticLine(string message)
-        {
-            try
-            {
-                string? directory = Path.GetDirectoryName(SteamDiagnosticsLogPath);
-                if (!string.IsNullOrWhiteSpace(directory))
-                    Directory.CreateDirectory(directory);
-                File.AppendAllText(
-                    SteamDiagnosticsLogPath,
-                    $"{DateTime.Now:HH:mm:ss.fff} [Steam] {message}{Environment.NewLine}");
-            }
-            catch
-            {
-            }
         }
 
         private static string ReadAppIdText(params string[] paths)

@@ -13,12 +13,16 @@ public sealed class SteamStats
 
     public bool RequestCurrentStats()
     {
-        return steamManager.IsAvailable && SteamUserStats.RequestCurrentStats();
+        bool requested = steamManager.IsAvailable && SteamUserStats.RequestCurrentStats();
+        SteamDiagnostics.Write($"[Stats] requestCurrentStats steamAvailable={steamManager.IsAvailable} requested={requested}");
+        return requested;
     }
 
     public bool Store()
     {
-        return steamManager.IsAvailable && SteamUserStats.StoreStats();
+        bool stored = steamManager.IsAvailable && SteamUserStats.StoreStats();
+        SteamDiagnostics.Write($"[Stats] store steamAvailable={steamManager.IsAvailable} stored={stored}");
+        return stored;
     }
 
     public bool TryGetInt(string statId, out int value)
@@ -30,17 +34,23 @@ public sealed class SteamStats
             return false;
         }
 
-        return SteamUserStats.GetStat(statId, out value);
+        bool found = SteamUserStats.GetStat(statId, out value);
+        SteamDiagnostics.Write($"[Stats] getInt id='{statId}' found={found} value={value}");
+        return found;
     }
 
     public bool SetInt(string statId, int value, bool storeImmediately = true)
     {
-        if (!CanUseSteam(statId) || !SteamUserStats.SetStat(statId, value))
+        if (!CanUseSteam(statId))
         {
+            SteamDiagnostics.Write($"[Stats] setInt skipped id='{statId}' value={value} steamAvailable={steamManager.IsAvailable}");
             return false;
         }
 
-        return !storeImmediately || SteamUserStats.StoreStats();
+        bool set = SteamUserStats.SetStat(statId, value);
+        bool stored = set && (!storeImmediately || SteamUserStats.StoreStats());
+        SteamDiagnostics.Write($"[Stats] setInt id='{statId}' value={value} set={set} stored={stored} storeImmediately={storeImmediately}");
+        return set && stored;
     }
 
     public bool TryGetFloat(string statId, out float value)
@@ -52,17 +62,23 @@ public sealed class SteamStats
             return false;
         }
 
-        return SteamUserStats.GetStat(statId, out value);
+        bool found = SteamUserStats.GetStat(statId, out value);
+        SteamDiagnostics.Write($"[Stats] getFloat id='{statId}' found={found} value={value}");
+        return found;
     }
 
     public bool SetFloat(string statId, float value, bool storeImmediately = true)
     {
-        if (!CanUseSteam(statId) || !SteamUserStats.SetStat(statId, value))
+        if (!CanUseSteam(statId))
         {
+            SteamDiagnostics.Write($"[Stats] setFloat skipped id='{statId}' value={value} steamAvailable={steamManager.IsAvailable}");
             return false;
         }
 
-        return !storeImmediately || SteamUserStats.StoreStats();
+        bool set = SteamUserStats.SetStat(statId, value);
+        bool stored = set && (!storeImmediately || SteamUserStats.StoreStats());
+        SteamDiagnostics.Write($"[Stats] setFloat id='{statId}' value={value} set={set} stored={stored} storeImmediately={storeImmediately}");
+        return set && stored;
     }
 
     private bool CanUseSteam(string steamId)

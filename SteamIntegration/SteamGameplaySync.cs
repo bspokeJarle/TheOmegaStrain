@@ -34,6 +34,9 @@ public sealed class SteamGameplaySync : IDisposable
         lastSpeedPowerUpLevel = gameplay.SpeedPowerUpLevel;
         bestObservedScore = gameplay.Score;
         CurrentStatsRequested = stats.RequestCurrentStats();
+        SteamDiagnostics.Write(
+            $"[Sync] created available={steamManager.IsAvailable} currentStatsRequested={CurrentStatsRequested} " +
+            $"sceneType={gameplay.CurrentSceneType} sceneIndex={gameplay.SceneIndex} score={gameplay.Score} kills={gameplay.TotalKills}");
 
         Subscribe();
     }
@@ -73,8 +76,13 @@ public sealed class SteamGameplaySync : IDisposable
     {
         if (!steamManager.IsAvailable || IsTutorial(gameEvent))
         {
+            SteamDiagnostics.Write($"[Sync] enemyDestroyed skipped available={steamManager.IsAvailable} tutorial={IsTutorial(gameEvent)} object='{gameEvent.ObjectName}'");
             return;
         }
+
+        SteamDiagnostics.Write(
+            $"[Sync] enemyDestroyed object='{gameEvent.ObjectName}' score={gameEvent.Score} kills={gameEvent.TotalKills} " +
+            $"sceneType={gameEvent.SceneType} sceneIndex={gameEvent.SceneIndex}");
 
         if (string.Equals(gameEvent.ObjectName, "Seeder", StringComparison.OrdinalIgnoreCase))
         {
@@ -93,8 +101,12 @@ public sealed class SteamGameplaySync : IDisposable
     {
         if (!steamManager.IsAvailable || IsTutorial(gameEvent))
         {
+            SteamDiagnostics.Write($"[Sync] powerUpCollected skipped available={steamManager.IsAvailable} tutorial={IsTutorial(gameEvent)}");
             return;
         }
+
+        SteamDiagnostics.Write(
+            $"[Sync] powerUpCollected type={gameEvent.PowerUpType} speedLevel={gameEvent.SpeedPowerUpLevel} score={gameEvent.Score}");
 
         if (gameEvent.PowerUpType != PowerUpType.Standard || gameEvent.SpeedPowerUpLevel > 0)
         {
@@ -109,8 +121,12 @@ public sealed class SteamGameplaySync : IDisposable
     {
         if (!steamManager.IsAvailable || IsTutorial(gameEvent))
         {
+            SteamDiagnostics.Write($"[Sync] styleBonus skipped available={steamManager.IsAvailable} tutorial={IsTutorial(gameEvent)}");
             return;
         }
+
+        SteamDiagnostics.Write(
+            $"[Sync] styleBonus awarded={gameEvent.AwardedScore} hadCollision={gameEvent.HadCollision} score={gameEvent.Score}");
 
         if (!gameEvent.HadCollision)
         {
@@ -130,8 +146,12 @@ public sealed class SteamGameplaySync : IDisposable
     {
         if (!steamManager.IsAvailable || IsTutorial(gameEvent))
         {
+            SteamDiagnostics.Write($"[Sync] sceneCompleted skipped available={steamManager.IsAvailable} tutorial={IsTutorial(gameEvent)}");
             return;
         }
+
+        SteamDiagnostics.Write(
+            $"[Sync] sceneCompleted sceneType={gameEvent.SceneType} sceneIndex={gameEvent.SceneIndex} score={gameEvent.Score}");
 
         if (gameEvent.SceneType == SceneTypes.Game || gameEvent.SceneType == SceneTypes.Simulation)
         {
@@ -159,6 +179,10 @@ public sealed class SteamGameplaySync : IDisposable
         if (gameplay.PowerUpsCollected > lastPowerUpsCollected ||
             gameplay.SpeedPowerUpLevel > lastSpeedPowerUpLevel)
         {
+            SteamDiagnostics.Write(
+                $"[Sync] progressionChanged powerUps={lastPowerUpsCollected}->{gameplay.PowerUpsCollected} " +
+                $"speed={lastSpeedPowerUpLevel}->{gameplay.SpeedPowerUpLevel} score={gameplay.Score}");
+
             if (gameplay.SpeedPowerUpLevel > lastSpeedPowerUpLevel)
             {
                 achievements.Unlock(SteamGameConfig.Achievements.SpeedUpgradeCollected);

@@ -8,10 +8,11 @@ namespace _3DSpesificsUnitTests.SteamIntegration;
 public sealed class SteamIntegrationTests
 {
     [TestMethod]
-    public void SteamConfigUsesSpaceWarForDevelopmentOnly()
+    public void SteamConfigUsesTheOmegaStrainAppId()
     {
-        Assert.AreEqual<uint>(480, SteamGameConfig.DevelopmentAppId);
-        Assert.AreEqual<uint>(1246061, SteamGameConfig.ProductionAppId);
+        Assert.AreEqual<uint>(480, SteamGameConfig.SpaceWarSampleAppId);
+        Assert.AreEqual<uint>(4952000, SteamGameConfig.ProductionAppId);
+        Assert.AreEqual(SteamGameConfig.ProductionAppId, SteamGameConfig.DevelopmentAppId);
 #if DEBUG
         Assert.AreEqual(SteamGameConfig.DevelopmentAppId, SteamGameConfig.RuntimeAppId);
 #else
@@ -105,7 +106,7 @@ public sealed class SteamIntegrationTests
         var appIdPath = Path.Combine(AppContext.BaseDirectory, "steam_appid.txt");
 
         Assert.IsTrue(File.Exists(appIdPath));
-        Assert.AreEqual("480", File.ReadAllText(appIdPath).Trim());
+        Assert.AreEqual(SteamGameConfig.DevelopmentAppId.ToString(), File.ReadAllText(appIdPath).Trim());
     }
 
     [TestMethod]

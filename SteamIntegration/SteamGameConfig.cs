@@ -2,8 +2,9 @@ namespace SteamIntegration;
 
 public static class SteamGameConfig
 {
-    public const uint DevelopmentAppId = 480;
-    public const uint ProductionAppId = 1246061;
+    public const uint SpaceWarSampleAppId = 480;
+    public const uint ProductionAppId = 4952000;
+    public const uint DevelopmentAppId = ProductionAppId;
 
 #if DEBUG
     public const uint RuntimeAppId = DevelopmentAppId;

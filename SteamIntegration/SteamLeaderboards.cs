@@ -16,9 +16,11 @@ public sealed class SteamLeaderboards
     {
         if (!CanUseSteam(leaderboardName))
         {
+            SteamDiagnostics.Write($"[Leaderboard] find skipped name='{leaderboardName}' steamAvailable={steamManager.IsAvailable}");
             return Task.FromResult<SteamLeaderboard_t?>(null);
         }
 
+        SteamDiagnostics.Write($"[Leaderboard] find requested name='{leaderboardName}'");
         var completion = new TaskCompletionSource<SteamLeaderboard_t?>(TaskCreationOptions.RunContinuationsAsynchronously);
         var call = SteamUserStats.FindLeaderboard(leaderboardName);
         CallResult<LeaderboardFindResult_t>? result = null;
@@ -28,10 +30,12 @@ public sealed class SteamLeaderboards
 
             if (failure || !Convert.ToBoolean(leaderboard.m_bLeaderboardFound))
             {
+                SteamDiagnostics.Write($"[Leaderboard] find completed name='{leaderboardName}' failure={failure} found={Convert.ToBoolean(leaderboard.m_bLeaderboardFound)}");
                 completion.TrySetResult(null);
                 return;
             }
 
+            SteamDiagnostics.Write($"[Leaderboard] find completed name='{leaderboardName}' failure={failure} found=True handle={leaderboard.m_hSteamLeaderboard.m_SteamLeaderboard}");
             completion.TrySetResult(leaderboard.m_hSteamLeaderboard);
         });
 
@@ -44,9 +48,11 @@ public sealed class SteamLeaderboards
     {
         if (!steamManager.IsAvailable)
         {
+            SteamDiagnostics.Write($"[Leaderboard] upload skipped score={score} steamAvailable=False");
             return Task.FromResult(false);
         }
 
+        SteamDiagnostics.Write($"[Leaderboard] upload requested handle={leaderboard.m_SteamLeaderboard} score={score}");
         var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var call = SteamUserStats.UploadLeaderboardScore(
             leaderboard,
@@ -59,7 +65,9 @@ public sealed class SteamLeaderboards
         result = CallResult<LeaderboardScoreUploaded_t>.Create((uploaded, failure) =>
         {
             pendingCallResults.Remove(result);
-            completion.TrySetResult(!failure && Convert.ToBoolean(uploaded.m_bSuccess));
+            bool success = !failure && Convert.ToBoolean(uploaded.m_bSuccess);
+            SteamDiagnostics.Write($"[Leaderboard] upload completed handle={leaderboard.m_SteamLeaderboard} score={score} failure={failure} success={success}");
+            completion.TrySetResult(success);
         });
 
         pendingCallResults.Add(result);
@@ -74,9 +82,11 @@ public sealed class SteamLeaderboards
     {
         if (!steamManager.IsAvailable)
         {
+            SteamDiagnostics.Write("[Leaderboard] download skipped steamAvailable=False");
             return Task.FromResult<IReadOnlyList<SteamLeaderboardEntry>>([]);
         }
 
+        SteamDiagnostics.Write($"[Leaderboard] download requested handle={leaderboard.m_SteamLeaderboard} first={firstEntry} last={lastEntry}");
         var completion = new TaskCompletionSource<IReadOnlyList<SteamLeaderboardEntry>>(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -93,6 +103,7 @@ public sealed class SteamLeaderboards
 
             if (failure)
             {
+                SteamDiagnostics.Write($"[Leaderboard] download completed handle={leaderboard.m_SteamLeaderboard} failure=True");
                 completion.TrySetResult([]);
                 return;
             }
@@ -118,6 +129,7 @@ public sealed class SteamLeaderboards
                     entry.m_nScore));
             }
 
+            SteamDiagnostics.Write($"[Leaderboard] download completed handle={leaderboard.m_SteamLeaderboard} failure=False entries={entries.Count}");
             completion.TrySetResult(entries);
         });
 
