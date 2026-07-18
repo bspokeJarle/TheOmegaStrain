@@ -28,9 +28,10 @@ namespace GameAiAndControls.Controls
         private int movementLogCounter = 0;
         private const float MaxThrust = 10.0f;
         private const float ThrustIncreaseRate = 0.5f;
-
         private const float RotationAcceleration = 1000f;
         private const float MaxRotationSpeed = 160f;
+        private const float XboxRotationAccelerationMultiplier = 1.35f;
+        private const float XboxMaxRotationSpeedMultiplier = 1.35f;
         private const float RotationDrag = 0.90f;
         private const float DEG2RAD = MathF.PI / 180f;
         private const float SurfaceLandingDamageSpeedThreshold = 5f;
@@ -1348,12 +1349,16 @@ namespace GameAiAndControls.Controls
                 if (_rightHeld) _yawVelocity += RotationAcceleration * deltaTime;
                 if (_upHeld) _pitchVelocity += RotationAcceleration * deltaTime;
                 if (_downHeld) _pitchVelocity -= RotationAcceleration * deltaTime;
-                if (_xboxYawInput != 0f) _yawVelocity += _xboxYawInput * RotationAcceleration * deltaTime;
-                if (_xboxPitchInput != 0f) _pitchVelocity += _xboxPitchInput * RotationAcceleration * deltaTime;
+                float xboxRotationAcceleration = RotationAcceleration * XboxRotationAccelerationMultiplier;
+                if (_xboxYawInput != 0f) _yawVelocity += _xboxYawInput * xboxRotationAcceleration * deltaTime;
+                if (_xboxPitchInput != 0f) _pitchVelocity += _xboxPitchInput * xboxRotationAcceleration * deltaTime;
 
                 float rotationDrag = GameState.ScaleDampingPer90Frame(RotationDrag);
-                _yawVelocity = MathF.Max(-MaxRotationSpeed, MathF.Min(MaxRotationSpeed, _yawVelocity)) * rotationDrag;
-                _pitchVelocity = MathF.Max(-MaxRotationSpeed, MathF.Min(MaxRotationSpeed, _pitchVelocity)) * rotationDrag;
+                float maxRotationSpeed = inputSettings.ActiveControlScheme == ControlInputMode.XboxController
+                    ? MaxRotationSpeed * XboxMaxRotationSpeedMultiplier
+                    : MaxRotationSpeed;
+                _yawVelocity = MathF.Max(-maxRotationSpeed, MathF.Min(maxRotationSpeed, _yawVelocity)) * rotationDrag;
+                _pitchVelocity = MathF.Max(-maxRotationSpeed, MathF.Min(maxRotationSpeed, _pitchVelocity)) * rotationDrag;
 
                 _yawAccumulator += _yawVelocity * deltaTime;
                 _pitchAccumulator += _pitchVelocity * deltaTime;
