@@ -10,11 +10,17 @@ public sealed class SteamGameplaySync : IDisposable
     private readonly SteamStats stats;
     private readonly IGameEventBus? eventBus;
     private readonly Func<SteamGameplaySnapshot> gameplayStateProvider;
+    private readonly HashSet<string> unlockedAchievements = new(StringComparer.OrdinalIgnoreCase);
+    private readonly object leaderboardUploadGate = new();
 
     private int lastPowerUpsCollected;
     private int lastSpeedPowerUpLevel;
     private long bestObservedScore;
-    private long lastUploadedScore = -1;
+    private long lastConfirmedLeaderboardScore = -1;
+    private long inFlightLeaderboardScore = -1;
+    private long queuedLeaderboardScore = -1;
+    private bool leaderboardUploadInFlight;
+    private SteamSyncedStats? lastSyncedStats;
     private bool disposed;
 
     public SteamGameplaySync(
@@ -86,11 +92,11 @@ public sealed class SteamGameplaySync : IDisposable
 
         if (string.Equals(gameEvent.ObjectName, "Seeder", StringComparison.OrdinalIgnoreCase))
         {
-            achievements.Unlock(SteamGameConfig.Achievements.FirstSeederDestroyed);
+            UnlockAchievementOnce(SteamGameConfig.Achievements.FirstSeederDestroyed);
         }
         else if (IsMotherShip(gameEvent.ObjectName))
         {
-            achievements.Unlock(SteamGameConfig.Achievements.FirstMothershipDestroyed);
+            UnlockAchievementOnce(SteamGameConfig.Achievements.FirstMothershipDestroyed);
         }
 
         SyncStats(gameEvent);
@@ -110,7 +116,7 @@ public sealed class SteamGameplaySync : IDisposable
 
         if (gameEvent.PowerUpType != PowerUpType.Standard || gameEvent.SpeedPowerUpLevel > 0)
         {
-            achievements.Unlock(SteamGameConfig.Achievements.SpeedUpgradeCollected);
+            UnlockAchievementOnce(SteamGameConfig.Achievements.SpeedUpgradeCollected);
         }
 
         SyncStats(gameEvent);
@@ -130,7 +136,7 @@ public sealed class SteamGameplaySync : IDisposable
 
         if (!gameEvent.HadCollision)
         {
-            achievements.Unlock(SteamGameConfig.Achievements.CleanLoop);
+            UnlockAchievementOnce(SteamGameConfig.Achievements.CleanLoop);
         }
 
         if (gameEvent.AwardedScore > 0)
@@ -155,11 +161,11 @@ public sealed class SteamGameplaySync : IDisposable
 
         if (gameEvent.SceneType == SceneTypes.Game || gameEvent.SceneType == SceneTypes.Simulation)
         {
-            achievements.Unlock(SteamGameConfig.Achievements.FirstPlanetCleared);
+            UnlockAchievementOnce(SteamGameConfig.Achievements.FirstPlanetCleared);
 
             if (gameEvent.SceneIndex == 6)
             {
-                achievements.Unlock(SteamGameConfig.Achievements.DesertPlanetCleared);
+                UnlockAchievementOnce(SteamGameConfig.Achievements.DesertPlanetCleared);
             }
         }
 
@@ -185,7 +191,7 @@ public sealed class SteamGameplaySync : IDisposable
 
             if (gameplay.SpeedPowerUpLevel > lastSpeedPowerUpLevel)
             {
-                achievements.Unlock(SteamGameConfig.Achievements.SpeedUpgradeCollected);
+                UnlockAchievementOnce(SteamGameConfig.Achievements.SpeedUpgradeCollected);
             }
 
             SyncStats(gameplay);
@@ -198,35 +204,142 @@ public sealed class SteamGameplaySync : IDisposable
 
     private void SyncStats(IGameEvent gameEvent)
     {
-        bestObservedScore = Math.Max(bestObservedScore, gameEvent.Score);
-        stats.SetInt(SteamGameConfig.Stats.BestScore, ToSteamInt(bestObservedScore), storeImmediately: false);
-        stats.SetInt(SteamGameConfig.Stats.TotalScore, ToSteamInt(gameEvent.Score), storeImmediately: false);
-        stats.SetInt(SteamGameConfig.Stats.TotalKills, gameEvent.TotalKills, storeImmediately: false);
-        stats.SetInt(SteamGameConfig.Stats.Deaths, gameEvent.TotalDeaths, storeImmediately: false);
-        stats.SetInt(SteamGameConfig.Stats.PlanetsCleared, Math.Max(0, gameEvent.SceneIndex - 1), storeImmediately: false);
-        stats.Store();
+        SyncStats(gameEvent.Score, gameEvent.TotalKills, gameEvent.TotalDeaths, gameEvent.SceneIndex);
     }
 
     private void SyncStats(SteamGameplaySnapshot gameplay)
     {
-        bestObservedScore = Math.Max(bestObservedScore, gameplay.Score);
-        stats.SetInt(SteamGameConfig.Stats.BestScore, ToSteamInt(bestObservedScore), storeImmediately: false);
-        stats.SetInt(SteamGameConfig.Stats.TotalScore, ToSteamInt(gameplay.Score), storeImmediately: false);
-        stats.SetInt(SteamGameConfig.Stats.TotalKills, gameplay.TotalKills, storeImmediately: false);
-        stats.SetInt(SteamGameConfig.Stats.Deaths, gameplay.TotalDeaths, storeImmediately: false);
-        stats.SetInt(SteamGameConfig.Stats.PlanetsCleared, Math.Max(0, gameplay.SceneIndex - 1), storeImmediately: false);
-        stats.Store();
+        SyncStats(gameplay.Score, gameplay.TotalKills, gameplay.TotalDeaths, gameplay.SceneIndex);
+    }
+
+    private void SyncStats(long score, int totalKills, int totalDeaths, int sceneIndex)
+    {
+        bestObservedScore = Math.Max(bestObservedScore, score);
+
+        var nextStats = new SteamSyncedStats(
+            BestScore: ToSteamInt(bestObservedScore),
+            TotalScore: ToSteamInt(score),
+            TotalKills: totalKills,
+            Deaths: totalDeaths,
+            PlanetsCleared: Math.Max(0, sceneIndex - 1));
+
+        if (lastSyncedStats == nextStats)
+        {
+            SteamDiagnostics.Write($"[Stats] sync skipped unchanged score={score} kills={totalKills} deaths={totalDeaths} sceneIndex={sceneIndex}");
+            return;
+        }
+
+        bool bestSet = stats.SetInt(SteamGameConfig.Stats.BestScore, nextStats.BestScore, storeImmediately: false);
+        bool totalScoreSet = stats.SetInt(SteamGameConfig.Stats.TotalScore, nextStats.TotalScore, storeImmediately: false);
+        bool totalKillsSet = stats.SetInt(SteamGameConfig.Stats.TotalKills, nextStats.TotalKills, storeImmediately: false);
+        bool deathsSet = stats.SetInt(SteamGameConfig.Stats.Deaths, nextStats.Deaths, storeImmediately: false);
+        bool planetsSet = stats.SetInt(SteamGameConfig.Stats.PlanetsCleared, nextStats.PlanetsCleared, storeImmediately: false);
+        bool stored = stats.Store();
+
+        if (bestSet && totalScoreSet && totalKillsSet && deathsSet && planetsSet && stored)
+        {
+            lastSyncedStats = nextStats;
+        }
+    }
+
+    private void UnlockAchievementOnce(string achievementId)
+    {
+        if (!unlockedAchievements.Add(achievementId))
+        {
+            SteamDiagnostics.Write($"[Achievement] unlock skipped duplicate id='{achievementId}'");
+            return;
+        }
+
+        if (!achievements.Unlock(achievementId))
+        {
+            unlockedAchievements.Remove(achievementId);
+        }
     }
 
     private void UploadScoreIfImproved(long score)
     {
-        if (score <= lastUploadedScore)
+        long steamScore = ToSteamInt(score);
+
+        if (steamScore < 0)
         {
             return;
         }
 
-        lastUploadedScore = score;
-        _ = leaderboards.UploadScoreAsync(SteamGameConfig.Leaderboards.GlobalHighScore, ToSteamInt(score));
+        long scoreToUpload;
+        lock (leaderboardUploadGate)
+        {
+            long bestKnownScore = Math.Max(
+                lastConfirmedLeaderboardScore,
+                Math.Max(inFlightLeaderboardScore, queuedLeaderboardScore));
+
+            if (steamScore <= bestKnownScore)
+            {
+                SteamDiagnostics.Write(
+                    $"[Leaderboard] upload skipped score={steamScore} bestKnown={bestKnownScore} " +
+                    $"confirmed={lastConfirmedLeaderboardScore} inFlight={inFlightLeaderboardScore} queued={queuedLeaderboardScore}");
+                return;
+            }
+
+            if (leaderboardUploadInFlight)
+            {
+                queuedLeaderboardScore = steamScore;
+                SteamDiagnostics.Write($"[Leaderboard] upload queued score={steamScore} inFlight={inFlightLeaderboardScore}");
+                return;
+            }
+
+            leaderboardUploadInFlight = true;
+            inFlightLeaderboardScore = steamScore;
+            scoreToUpload = steamScore;
+        }
+
+        _ = UploadLeaderboardScoreAsync(scoreToUpload);
+    }
+
+    private async Task UploadLeaderboardScoreAsync(long score)
+    {
+        bool uploaded = false;
+
+        try
+        {
+            uploaded = await leaderboards
+                .UploadScoreAsync(SteamGameConfig.Leaderboards.GlobalHighScore, ToSteamInt(score))
+                .ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            SteamDiagnostics.Write($"[Leaderboard] upload failed score={score} error='{exception.Message}'");
+        }
+
+        long nextScoreToUpload = -1;
+        lock (leaderboardUploadGate)
+        {
+            if (uploaded)
+            {
+                lastConfirmedLeaderboardScore = Math.Max(lastConfirmedLeaderboardScore, score);
+            }
+
+            if (inFlightLeaderboardScore == score)
+            {
+                inFlightLeaderboardScore = -1;
+            }
+
+            if (queuedLeaderboardScore > Math.Max(lastConfirmedLeaderboardScore, inFlightLeaderboardScore))
+            {
+                nextScoreToUpload = queuedLeaderboardScore;
+                queuedLeaderboardScore = -1;
+                inFlightLeaderboardScore = nextScoreToUpload;
+            }
+            else
+            {
+                queuedLeaderboardScore = -1;
+                leaderboardUploadInFlight = false;
+            }
+        }
+
+        if (nextScoreToUpload >= 0)
+        {
+            _ = UploadLeaderboardScoreAsync(nextScoreToUpload);
+        }
     }
 
     private static bool IsTutorial(IGameEvent gameEvent) => gameEvent.SceneType == SceneTypes.Tutorial;
@@ -259,6 +372,13 @@ public sealed class SteamGameplaySync : IDisposable
         disposed = true;
     }
 }
+
+internal readonly record struct SteamSyncedStats(
+    int BestScore,
+    int TotalScore,
+    int TotalKills,
+    int Deaths,
+    int PlanetsCleared);
 
 public readonly record struct SteamGameplaySnapshot(
     SceneTypes CurrentSceneType,
