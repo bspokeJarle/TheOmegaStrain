@@ -108,8 +108,11 @@ namespace GameAiAndControls.Physics
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private float ApplyDragAndClamp(float inertia, float deltaTime)
         {
+            var biomePhysics = BiomePhysicsSetup.CurrentProfile;
             float speedRatio = MathF.Abs(inertia) / MaxInertia;
-            float drag = InertiaDrag - DragSpeedScaling * speedRatio * speedRatio;
+            float drag = InertiaDrag * biomePhysics.InertiaRetentionMultiplier
+                         - DragSpeedScaling * speedRatio * speedRatio;
+            drag = Math.Clamp(drag, 0.01f, 0.99f);
             float scaledDrag = MathF.Pow(drag, deltaTime * GameState.GameplayBaselineFps);
             return Math.Clamp(inertia * scaledDrag, -MaxInertia, MaxInertia);
         }
@@ -255,7 +258,11 @@ namespace GameAiAndControls.Physics
         public IVector3 ApplyRotationDragForce(IVector3 rotationVector)
         {
             const float RotationalDamping = 0.94f;
-            float scaledDamping = GameState.ScaleDampingPer90Frame(RotationalDamping);
+            float biomeDamping = Math.Clamp(
+                RotationalDamping * BiomePhysicsSetup.CurrentProfile.RotationRetentionMultiplier,
+                0.01f,
+                0.999f);
+            float scaledDamping = GameState.ScaleDampingPer90Frame(biomeDamping);
             return new Vector3
             {
                 x = rotationVector.x * scaledDamping,
@@ -319,6 +326,9 @@ namespace GameAiAndControls.Physics
         // Gravity scales in with VerticalLiftFactor to prevent an initial dip at thrust start.
         public float CalculateThrustForces(float thrust, float tiltDegrees, float rotationDegrees, float deltaTime)
         {
+            var biomePhysics = BiomePhysicsSetup.CurrentProfile;
+            float effectiveThrust = thrust * biomePhysics.ThrustMultiplier;
+
             ThrustEffect = MathF.Min(ThrustEffect + ThrustRampRate * deltaTime, 1f);
             VerticalLiftFactor = MathF.Min(VerticalLiftFactor + VerticalLiftRate * deltaTime, 1f);
 
@@ -331,12 +341,12 @@ namespace GameAiAndControls.Physics
             float dirZ = MathF.Cos(rotationRad);
 
             // Horizontal forces — projected onto world X/Z axes
-            float horizontalForce = thrust * ThrustEffect * ThrustSpeedMultiplier * forwardFactor * deltaTime;
+            float horizontalForce = effectiveThrust * ThrustEffect * ThrustSpeedMultiplier * forwardFactor * deltaTime;
             InertiaX = ApplyDragAndClamp(InertiaX + horizontalForce * dirX, deltaTime);
             InertiaZ = ApplyDragAndClamp(InertiaZ - horizontalForce * dirZ, deltaTime);
 
             // Vertical thrust — angle-dependent (negative when inverted pushes into ground)
-            float verticalThrust = thrust * ThrustEffect * VerticalLiftFactor * ThrustHeightMultiplier
+            float verticalThrust = effectiveThrust * ThrustEffect * VerticalLiftFactor * ThrustHeightMultiplier
                                  * upwardFactor * VerticalThrustSmoothing * deltaTime;
             float gravityPull = GravityAcceleration * GravityPullMultiplier * VerticalLiftFactor * deltaTime;
 

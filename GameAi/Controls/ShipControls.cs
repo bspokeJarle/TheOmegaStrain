@@ -1345,15 +1345,21 @@ namespace GameAiAndControls.Controls
             }
             else
             {
-                if (_leftHeld) _yawVelocity -= RotationAcceleration * deltaTime;
-                if (_rightHeld) _yawVelocity += RotationAcceleration * deltaTime;
-                if (_upHeld) _pitchVelocity += RotationAcceleration * deltaTime;
-                if (_downHeld) _pitchVelocity -= RotationAcceleration * deltaTime;
-                float xboxRotationAcceleration = RotationAcceleration * XboxRotationAccelerationMultiplier;
+                var biomePhysics = BiomePhysicsSetup.CurrentProfile;
+                float rotationAcceleration = RotationAcceleration * biomePhysics.RotationAccelerationMultiplier;
+                if (_leftHeld) _yawVelocity -= rotationAcceleration * deltaTime;
+                if (_rightHeld) _yawVelocity += rotationAcceleration * deltaTime;
+                if (_upHeld) _pitchVelocity += rotationAcceleration * deltaTime;
+                if (_downHeld) _pitchVelocity -= rotationAcceleration * deltaTime;
+                float xboxRotationAcceleration = rotationAcceleration * XboxRotationAccelerationMultiplier;
                 if (_xboxYawInput != 0f) _yawVelocity += _xboxYawInput * xboxRotationAcceleration * deltaTime;
                 if (_xboxPitchInput != 0f) _pitchVelocity += _xboxPitchInput * xboxRotationAcceleration * deltaTime;
 
-                float rotationDrag = GameState.ScaleDampingPer90Frame(RotationDrag);
+                float rotationDragBase = Math.Clamp(
+                    RotationDrag * biomePhysics.RotationRetentionMultiplier,
+                    0.01f,
+                    0.999f);
+                float rotationDrag = GameState.ScaleDampingPer90Frame(rotationDragBase);
                 float maxRotationSpeed = inputSettings.ActiveControlScheme == ControlInputMode.XboxController
                     ? MaxRotationSpeed * XboxMaxRotationSpeedMultiplier
                     : MaxRotationSpeed;
@@ -2008,6 +2014,7 @@ namespace GameAiAndControls.Controls
             float verticalInertia = Physics.CalculateThrustForces(Thrust, tilt, rotationZ, deltaTime);
             float frameScale = GameState.FrameScale90;
             float travelSpeedMultiplier = GameState.GamePlayState.TravelSpeedMultiplier *
+                                          BiomePhysicsSetup.CurrentProfile.TravelSpeedMultiplier *
                                           ConsumeThrustBurstTravelBoost(deltaTime);
 
             float maxX = (ParentObject.ParentSurface.GlobalMapSize() * ParentObject.ParentSurface.TileSize()) -
