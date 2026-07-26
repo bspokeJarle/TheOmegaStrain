@@ -1,6 +1,7 @@
 using SteamIntegration;
 using CommonUtilities.Events;
 using Domain;
+using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.SteamIntegration;
 
@@ -27,6 +28,9 @@ public sealed class SteamIntegrationTests
         AssertSteamName(SteamGameConfig.Achievements.FirstSeederDestroyed);
         AssertSteamName(SteamGameConfig.Achievements.FirstPlanetCleared);
         AssertSteamName(SteamGameConfig.Achievements.FirstMothershipDestroyed);
+        AssertSteamName(SteamGameConfig.Achievements.CleanLoop);
+        AssertSteamName(SteamGameConfig.Achievements.LowAltitudeRun);
+        AssertSteamName(SteamGameConfig.Achievements.DecoyKill);
         AssertSteamName(SteamGameConfig.Leaderboards.GlobalHighScore);
         AssertSteamName(SteamGameConfig.Stats.BestScore);
         AssertSteamName(SteamGameConfig.Stats.TotalKills);
@@ -80,7 +84,8 @@ public sealed class SteamIntegrationTests
             TotalDeaths: 0,
             Accuracy: 0.5f,
             PowerUpsCollected: 0,
-            SpeedPowerUpLevel: 0);
+            SpeedPowerUpLevel: 0,
+            TutorialCompleted: false);
 
         using var sync = new SteamGameplaySync(manager, bus, () => gameplay);
 
@@ -98,6 +103,94 @@ public sealed class SteamIntegrationTests
         });
 
         Assert.IsFalse(sync.IsAvailable);
+    }
+
+    [TestMethod]
+    public void SteamGameplaySync_DetectsDecoyKillFromEnemyImpactSource()
+    {
+        var seeder = new _3dObject
+        {
+            ObjectId = 1,
+            ObjectName = "Seeder",
+            CrashBoxes = new List<List<IVector3>>(),
+            ImpactStatus = new ImpactStatus { ObjectName = "DroneDecoy" }
+        };
+
+        var gameEvent = new GameEvent
+        {
+            Type = GameEventType.EnemyDestroyed,
+            Source = seeder,
+            ObjectName = "Seeder",
+            SceneType = SceneTypes.Game
+        };
+
+        Assert.IsTrue(SteamGameplaySync.IsDecoyKill(gameEvent));
+    }
+
+    [TestMethod]
+    public void SteamGameplaySync_DoesNotTreatNormalWeaponKillAsDecoyKill()
+    {
+        var seeder = new _3dObject
+        {
+            ObjectId = 1,
+            ObjectName = "Seeder",
+            CrashBoxes = new List<List<IVector3>>(),
+            ImpactStatus = new ImpactStatus { ObjectName = "Lazer" }
+        };
+
+        var gameEvent = new GameEvent
+        {
+            Type = GameEventType.EnemyDestroyed,
+            Source = seeder,
+            ObjectName = "Seeder",
+            SceneType = SceneTypes.Game
+        };
+
+        Assert.IsFalse(SteamGameplaySync.IsDecoyKill(gameEvent));
+    }
+
+    [TestMethod]
+    public void SteamGameplaySync_SeparatesLowAltitudeStyleBonusFromCleanLoop()
+    {
+        var lowAltitudeEvent = new GameEvent
+        {
+            Type = GameEventType.StyleBonusAwarded,
+            StyleBonusType = StyleBonusTypes.LowAltitudeRun,
+            AwardedScore = 250,
+            HadCollision = false,
+            SceneType = SceneTypes.Game
+        };
+
+        Assert.IsTrue(SteamGameplaySync.IsLowAltitudeStyleBonus(lowAltitudeEvent));
+        Assert.IsFalse(SteamGameplaySync.IsCleanLoopStyleBonus(lowAltitudeEvent));
+    }
+
+    [TestMethod]
+    public void SteamGameplaySync_KeepsLegacyCleanLoopFallbackForUntypedStyleBonus()
+    {
+        var legacyCleanLoopEvent = new GameEvent
+        {
+            Type = GameEventType.StyleBonusAwarded,
+            AwardedScore = 250,
+            HadCollision = false,
+            SceneType = SceneTypes.Game
+        };
+
+        Assert.IsTrue(SteamGameplaySync.IsCleanLoopStyleBonus(legacyCleanLoopEvent));
+    }
+
+    [TestMethod]
+    public void SteamGameplaySync_DetectsTrainingCompletedScene()
+    {
+        var tutorialCompletedEvent = new GameEvent
+        {
+            Type = GameEventType.SceneCompleted,
+            ObjectName = SceneTypes.Tutorial.ToString(),
+            SceneType = SceneTypes.Tutorial,
+            SceneIndex = 11
+        };
+
+        Assert.IsTrue(SteamGameplaySync.IsTrainingCompletedScene(tutorialCompletedEvent));
     }
 
     [TestMethod]

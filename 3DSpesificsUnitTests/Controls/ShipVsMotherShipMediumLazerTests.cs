@@ -50,13 +50,50 @@ public class ShipVsMotherShipMediumLazerTests
         public void Dispose() { }
     }
 
-    private static _3dObject BuildLazerTemplate(string name = "Lazer")
+    private static _3dObject BuildLazerTemplate(string name = "Lazer", float scaleMultiplier = 1f, float crashBoxScaleMultiplier = 1f)
     {
         // Use the real factory so DeepCopySingleObject has every field it expects
         // (ObjectOffsets, Rotation, WorldPosition, etc.). Surface can be null for this test.
-        var beam = Lazer.CreateLazer(parentSurface: null!);
+        var beam = Lazer.CreateLazer(
+            parentSurface: null!,
+            scaleMultiplier: scaleMultiplier,
+            crashBoxScaleMultiplier: crashBoxScaleMultiplier);
         beam.ObjectName = name;
         return beam;
+    }
+
+    private static Vector3 GetCrashBoxSize(_3dObject obj)
+    {
+        Assert.IsNotNull(obj.CrashBoxes, $"{obj.ObjectName}: expected crashboxes.");
+        Assert.AreEqual(1, obj.CrashBoxes.Count, $"{obj.ObjectName}: expected one lazer crashbox.");
+        return GetCrashBoxSize(obj.CrashBoxes[0]);
+    }
+
+    private static Vector3 GetCrashBoxSize(List<IVector3> box)
+    {
+        var minX = float.MaxValue;
+        var minY = float.MaxValue;
+        var minZ = float.MaxValue;
+        var maxX = float.MinValue;
+        var maxY = float.MinValue;
+        var maxZ = float.MinValue;
+
+        foreach (var point in box)
+        {
+            if (point.x < minX) minX = point.x;
+            if (point.y < minY) minY = point.y;
+            if (point.z < minZ) minZ = point.z;
+            if (point.x > maxX) maxX = point.x;
+            if (point.y > maxY) maxY = point.y;
+            if (point.z > maxZ) maxZ = point.z;
+        }
+
+        return new Vector3
+        {
+            x = maxX - minX,
+            y = maxY - minY,
+            z = maxZ - minZ
+        };
     }
 
     private static _3dObject BuildShooter(string objectName, Vector3 objectOffsets, Vector3 worldPosition)
@@ -86,7 +123,10 @@ public class ShipVsMotherShipMediumLazerTests
     private static Weapons BuildMotherShipMediumLikeWeapons(_3dObject mother)
     {
         // Match Scene5 EXACTLY (after we reverted the velocity/range/lifetime overrides).
-        var template = BuildLazerTemplate("Lazer");
+        var template = BuildLazerTemplate(
+            "Lazer",
+            scaleMultiplier: 2.0f,
+            crashBoxScaleMultiplier: WeaponSetup.EnemyLazerMediumCrashBoxScale);
         return new Weapons(new List<I3dObject> { template }, new NoopMovement(), mother)
         {
             ShowAimAssist = false,
@@ -107,6 +147,23 @@ public class ShipVsMotherShipMediumLazerTests
 
         Assert.AreEqual(1, weapons.ActiveWeapons.Count, $"{shooter.ObjectName}: expected exactly one ActiveWeapon after a single FireWeapon call.");
         return (ActiveWeapon)weapons.ActiveWeapons[0];
+    }
+
+    [TestMethod]
+    public void MotherShipMedium_lazer_template_has_twenty_percent_smaller_crashbox()
+    {
+        var normalBeam = Lazer.CreateLazer(parentSurface: null!, scaleMultiplier: 2.0f);
+        var mediumBeam = Lazer.CreateLazer(
+            parentSurface: null!,
+            scaleMultiplier: 2.0f,
+            crashBoxScaleMultiplier: WeaponSetup.EnemyLazerMediumCrashBoxScale);
+
+        var normalSize = GetCrashBoxSize(normalBeam);
+        var mediumSize = GetCrashBoxSize(mediumBeam);
+
+        Assert.AreEqual(normalSize.x * WeaponSetup.EnemyLazerMediumCrashBoxScale, mediumSize.x, Epsilon);
+        Assert.AreEqual(normalSize.y * WeaponSetup.EnemyLazerMediumCrashBoxScale, mediumSize.y, Epsilon);
+        Assert.AreEqual(normalSize.z * WeaponSetup.EnemyLazerMediumCrashBoxScale, mediumSize.z, Epsilon);
     }
 
     [TestMethod]

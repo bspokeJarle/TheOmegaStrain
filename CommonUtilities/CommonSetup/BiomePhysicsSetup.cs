@@ -14,11 +14,11 @@ namespace CommonUtilities.CommonSetup
         public static BiomePhysicsProfile GetProfile(SceneBiomeTypes biome) => biome switch
         {
             SceneBiomeTypes.Winter => new BiomePhysicsProfile(
-                InertiaRetentionMultiplier: 0.985f,
-                ThrustMultiplier: 0.98f,
-                TravelSpeedMultiplier: 0.98f,
-                RotationAccelerationMultiplier: 0.98f,
-                RotationRetentionMultiplier: 0.995f),
+                InertiaRetentionMultiplier: 0.992f,
+                ThrustMultiplier: 0.99f,
+                TravelSpeedMultiplier: 0.99f,
+                RotationAccelerationMultiplier: 0.99f,
+                RotationRetentionMultiplier: 0.998f),
 
             SceneBiomeTypes.Desert => new BiomePhysicsProfile(
                 InertiaRetentionMultiplier: 1.015f,
@@ -28,11 +28,11 @@ namespace CommonUtilities.CommonSetup
                 RotationRetentionMultiplier: 1.005f),
 
             SceneBiomeTypes.Rainforrest => new BiomePhysicsProfile(
-                InertiaRetentionMultiplier: 0.992f,
-                ThrustMultiplier: 0.99f,
-                TravelSpeedMultiplier: 0.995f,
+                InertiaRetentionMultiplier: 0.996f,
+                ThrustMultiplier: 0.995f,
+                TravelSpeedMultiplier: 0.998f,
                 RotationAccelerationMultiplier: 1.0f,
-                RotationRetentionMultiplier: 0.998f),
+                RotationRetentionMultiplier: 0.999f),
 
             _ => new BiomePhysicsProfile(
                 InertiaRetentionMultiplier: 1.0f,

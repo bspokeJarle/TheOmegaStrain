@@ -139,6 +139,8 @@ public class TutorialSceneTests
         var scene = new TutorialScene();
         var world = new TestWorld();
         GameState.GamePlayState.PlayerName = "Pilot";
+        IGameEvent? completedEvent = null;
+        world.EventBus!.Subscribe(GameEventType.SceneCompleted, gameEvent => completedEvent = gameEvent);
 
         scene.SetupScene(world);
         scene.Director!.Initialize(world.EventBus!, world);
@@ -165,6 +167,8 @@ public class TutorialSceneTests
 
         Assert.IsTrue(scene.Director.IsVictory);
         Assert.IsTrue(TutorialProgressService.HasCompletedTutorial("Pilot"));
+        Assert.IsNotNull(completedEvent);
+        Assert.AreEqual(SceneTypes.Tutorial, completedEvent.SceneType);
     }
 
     [TestMethod]

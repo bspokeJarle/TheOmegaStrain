@@ -222,7 +222,10 @@ namespace _3dRotations.Scenes.SceneSimulation
                 motherShipMedium.ObjectOffsets = new Vector3 { x = 0, y = -1500, z = 400 };
                 motherShipMedium.ObjectName = "MotherShipMedium";
                 motherShipMedium.Movement = new MotherShipMediumControls();
-                var lazer = Lazer.CreateLazer(Surface, scaleMultiplier: 2.0f);
+                var lazer = Lazer.CreateLazer(
+                    Surface,
+                    scaleMultiplier: 2.0f,
+                    crashBoxScaleMultiplier: WeaponSetup.EnemyLazerMediumCrashBoxScale);
                 lazer.CrashBoxDebugMode = false;
                 motherShipMedium.WeaponSystems = new Weapons(new List<I3dObject> { lazer }, motherShipMedium.Movement!, (_3dObject)motherShipMedium)
                 {

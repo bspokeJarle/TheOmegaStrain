@@ -1,3 +1,4 @@
+using _3dRotations.Helpers;
 using _3dRotations.Scene.Scene4;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
@@ -33,6 +34,10 @@ public class Scene4BearSpawningTests
         var aiBears = GameState.SurfaceState.AiObjects.Where(o => o.ObjectName == "PolarBear").ToList();
         var snowEmitters = world.WorldInhabitants.Where(o => o.ObjectName == "SnowEmitter").ToList();
 
+        Assert.AreEqual(
+            PowerUpType.TravelSpeedLevel1,
+            PowerUpDropPolicy.FirstKillPowerUpType,
+            "Scene4 should introduce the first travel-speed powerup earlier in the campaign.");
         Assert.AreEqual(1, snowEmitters.Count, "Winter scene should add exactly one snow emitter.");
         Assert.AreEqual(0, snowEmitters[0].CrashBoxes.Count, "Snow should not participate in crash detection.");
         Assert.IsNull(snowEmitters[0].Particles, "Snow is rendered by the scene-owned emitter, not a global particle system.");

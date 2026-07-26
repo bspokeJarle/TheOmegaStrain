@@ -350,7 +350,8 @@ namespace _3dTesting
                 gameplay.TotalDeaths,
                 gameplay.Accuracy,
                 gameplay.PowerUpsCollected,
-                gameplay.SpeedPowerUpLevel);
+                gameplay.SpeedPowerUpLevel,
+                TutorialProgressService.HasCompletedTutorial(gameplay.PlayerName));
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

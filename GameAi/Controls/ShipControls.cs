@@ -102,6 +102,7 @@ namespace GameAiAndControls.Controls
         private bool _surfaceBounceWaitingForGravity = false;
         private bool _unsafeSurfaceHitArmed = false;
         private DateTime _unsafeSurfaceHitAt = DateTime.MinValue;
+        private float _lowAltitudeRunSeconds = 0f;
         private readonly ShipLoopTracker _loopTracker = new();
         private readonly ShipAiVoiceService _shipAiVoiceService = ShipAiVoiceService.Shared;
 
@@ -1445,6 +1446,8 @@ namespace GameAiAndControls.Controls
                 Physics.FloorHeight,
                 Physics.CeilingHeight);
 
+            HandleLowAltitudeRunBonus(deltaTime);
+
             if (!isExploding)
             {
                 ApplyLocalTiltToMesh(tilt, theObject);
@@ -1661,6 +1664,9 @@ namespace GameAiAndControls.Controls
                     SceneIndex = gameplay.SceneIndex,
                     Score = gameplay.Score,
                     AwardedScore = awardedScore,
+                    StyleBonusType = loopStatus.HadCollision
+                        ? StyleBonusTypes.CollisionLoop
+                        : StyleBonusTypes.CleanLoop,
                     TotalKills = gameplay.TotalKills,
                     TotalShotsFired = gameplay.TotalShotsFired,
                     TotalDeaths = gameplay.TotalDeaths,
@@ -1679,6 +1685,68 @@ namespace GameAiAndControls.Controls
                 cue = ShipAiVoiceCue.PlanetBonusComplete;
 
             _shipAiVoiceService.TrySpeak(cue, _audio, _soundRegistry);
+        }
+
+        private void HandleLowAltitudeRunBonus(float deltaTime)
+        {
+            if (!IsLowAltitudeRunActive())
+            {
+                _lowAltitudeRunSeconds = 0f;
+                return;
+            }
+
+            _lowAltitudeRunSeconds += MathF.Max(0f, deltaTime);
+            if (_lowAltitudeRunSeconds < GameSetup.LowAltitudeRunRequiredSeconds)
+                return;
+
+            _lowAltitudeRunSeconds = 0f;
+
+            var gameplay = GameState.GamePlayState;
+            int awardedScore = gameplay.AwardStyleBonus(GameSetup.LowAltitudeRunStyleBonusScore);
+            if (awardedScore <= 0)
+                return;
+
+            GameState.EventBus?.Publish(new GameEvent
+            {
+                Type = GameEventType.StyleBonusAwarded,
+                ObjectName = "Ship",
+                SceneType = gameplay.CurrentSceneType,
+                SceneIndex = gameplay.SceneIndex,
+                Score = gameplay.Score,
+                AwardedScore = awardedScore,
+                StyleBonusType = StyleBonusTypes.LowAltitudeRun,
+                TotalKills = gameplay.TotalKills,
+                TotalShotsFired = gameplay.TotalShotsFired,
+                TotalDeaths = gameplay.TotalDeaths,
+                Accuracy = gameplay.Accuracy,
+                PowerUpsCollected = gameplay.PowerUpsCollected,
+                SpeedPowerUpLevel = gameplay.SpeedPowerUpLevel,
+                HadCollision = false
+            });
+
+            var cue = gameplay.PlanetStyleBonusRemaining <= 0
+                ? ShipAiVoiceCue.PlanetBonusComplete
+                : ShipAiVoiceCue.LowAltitudeRisk;
+
+            _shipAiVoiceService.TrySpeak(cue, _audio, _soundRegistry);
+        }
+
+        private bool IsLowAltitudeRunActive()
+        {
+            var gameplay = GameState.GamePlayState;
+            if (gameplay.CurrentSceneType == SceneTypes.Tutorial || isExploding || landed)
+                return false;
+
+            float altitude = GameState.SurfaceState.GlobalMapPosition.y;
+            if (altitude < GameSetup.LowAltitudeRunMinHeight ||
+                altitude > GameSetup.LowAltitudeRunMaxHeight)
+                return false;
+
+            float horizontalSpeed = MathF.Sqrt(
+                Physics.InertiaX * Physics.InertiaX +
+                Physics.InertiaZ * Physics.InertiaZ);
+
+            return horizontalSpeed >= GameSetup.LowAltitudeRunMinHorizontalSpeed;
         }
 
         private static bool IsLoopCollision(IImpactStatus? impactStatus)

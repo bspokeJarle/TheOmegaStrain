@@ -1,4 +1,5 @@
 using CommonUtilities.CommonGlobalState;
+using CommonUtilities.Events;
 using CommonUtilities.Persistence;
 using Domain;
 using GameAiAndControls.Controls.KamikazeDroneControls;
@@ -81,7 +82,27 @@ namespace _3dRotations.Scenes.Tutorial
                 return;
 
             TutorialProgressService.MarkTutorialCompleted(GameState.GamePlayState.PlayerName);
+            PublishTrainingCompleted();
             IsVictory = true;
+        }
+
+        private void PublishTrainingCompleted()
+        {
+            var gameplay = GameState.GamePlayState;
+            _eventBus?.Publish(new GameEvent
+            {
+                Type = GameEventType.SceneCompleted,
+                ObjectName = SceneTypes.Tutorial.ToString(),
+                SceneType = SceneTypes.Tutorial,
+                SceneIndex = gameplay.SceneIndex,
+                Score = gameplay.Score,
+                TotalKills = gameplay.TotalKills,
+                TotalShotsFired = gameplay.TotalShotsFired,
+                TotalDeaths = gameplay.TotalDeaths,
+                Accuracy = gameplay.Accuracy,
+                PowerUpsCollected = gameplay.PowerUpsCollected,
+                SpeedPowerUpLevel = gameplay.SpeedPowerUpLevel
+            });
         }
 
         private static int CountLiveSeeders()

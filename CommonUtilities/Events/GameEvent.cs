@@ -13,6 +13,7 @@ namespace CommonUtilities.Events
         public int SceneIndex { get; init; }
         public long Score { get; init; }
         public int AwardedScore { get; init; }
+        public string? StyleBonusType { get; init; }
         public int TotalKills { get; init; }
         public int TotalShotsFired { get; init; }
         public int TotalDeaths { get; init; }

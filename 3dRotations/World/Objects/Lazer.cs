@@ -13,7 +13,7 @@ namespace _3dRotations.World.Objects
     {
         private const float ZoomRatio = 1f;
 
-        public static _3dObject CreateLazer(ISurface parentSurface, float scaleMultiplier = 1f)
+        public static _3dObject CreateLazer(ISurface parentSurface, float scaleMultiplier = 1f, float crashBoxScaleMultiplier = 1f)
         {
             var seg1 = LazerSegment1(); // longest, bright
             var seg2 = LazerSegment2(); // medium, darker
@@ -39,6 +39,7 @@ namespace _3dRotations.World.Objects
             if (crash != null) beam.CrashBoxes = crash;
 
             _3dObjectHelpers.ApplyScaleToObject(beam, ZoomRatio * scaleMultiplier);
+            ScaleCrashBoxesAroundCenter(beam.CrashBoxes, crashBoxScaleMultiplier);
 
             return beam;
         }
@@ -63,6 +64,53 @@ namespace _3dRotations.World.Objects
             {
                 _3dObjectHelpers.GenerateCrashBoxCorners(min, max)
             };
+        }
+
+        private static void ScaleCrashBoxesAroundCenter(List<List<IVector3>>? crashBoxes, float scale)
+        {
+            if (crashBoxes == null || scale == 1f)
+                return;
+
+            foreach (var box in crashBoxes)
+            {
+                if (box == null || box.Count == 0)
+                    continue;
+
+                var minX = float.MaxValue;
+                var minY = float.MaxValue;
+                var minZ = float.MaxValue;
+                var maxX = float.MinValue;
+                var maxY = float.MinValue;
+                var maxZ = float.MinValue;
+
+                foreach (var point in box)
+                {
+                    if (point.x < minX) minX = point.x;
+                    if (point.y < minY) minY = point.y;
+                    if (point.z < minZ) minZ = point.z;
+                    if (point.x > maxX) maxX = point.x;
+                    if (point.y > maxY) maxY = point.y;
+                    if (point.z > maxZ) maxZ = point.z;
+                }
+
+                var center = new Vector3
+                {
+                    x = (minX + maxX) * 0.5f,
+                    y = (minY + maxY) * 0.5f,
+                    z = (minZ + maxZ) * 0.5f
+                };
+
+                for (var i = 0; i < box.Count; i++)
+                {
+                    var point = box[i];
+                    box[i] = new Vector3
+                    {
+                        x = center.x + (point.x - center.x) * scale,
+                        y = center.y + (point.y - center.y) * scale,
+                        z = center.z + (point.z - center.z) * scale
+                    };
+                }
+            }
         }
 
         // === Geometry helpers (inline per segment to avoid external deps) ===

@@ -24,6 +24,7 @@ namespace CommonUtilities.CommonSetup
         public const float LazerCrashBoxMaxY = -20f;   // slightly closer to muzzle
         public const float LazerCrashBoxMinZ = -20f;
         public const float LazerCrashBoxMaxZ = 145f;
+        public const float EnemyLazerMediumCrashBoxScale = 0.8f;
 
         // Bullet crashbox extents (local coords, adjustable per axis)
         // X = lateral (left/right), Y = longitudinal (bullet direction), Z = vertical (up/down)

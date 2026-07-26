@@ -106,7 +106,8 @@ namespace _3dRotations.Scene.Scene4
                 GameState.SurfaceState.GlobalMapPosition,
                 totalSeederCount: 15,
                 regularSeed: 4041,
-                nearSeederCount: 7);
+                nearSeederCount: 7,
+                firstKillPowerUpType: PowerUpType.TravelSpeedLevel1);
 
             // Mothership — spawns inactive, enters when all seeders and drones are destroyed
             var motherShip = MotherShipMedium.CreateMotherShipMedium(Surface);
@@ -115,7 +116,10 @@ namespace _3dRotations.Scene.Scene4
             motherShip.ObjectOffsets = new Vector3 { x = 0, y = -2500, z = 400 };
             motherShip.ObjectName = "MotherShipMedium";
             motherShip.Movement = new MotherShipMediumControls();
-            var motherShipLazer = Lazer.CreateLazer(Surface, scaleMultiplier: 2.0f);
+            var motherShipLazer = Lazer.CreateLazer(
+                Surface,
+                scaleMultiplier: 2.0f,
+                crashBoxScaleMultiplier: WeaponSetup.EnemyLazerMediumCrashBoxScale);
             motherShipLazer.CrashBoxDebugMode = false;
             var motherShipWeapons = new List<I3dObject> { motherShipLazer };
             motherShip.WeaponSystems = new Weapons(motherShipWeapons, motherShip.Movement!, (_3dObject)motherShip)

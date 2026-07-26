@@ -45,6 +45,7 @@ public sealed class SteamGameplaySync : IDisposable
             $"sceneType={gameplay.CurrentSceneType} sceneIndex={gameplay.SceneIndex} score={gameplay.Score} kills={gameplay.TotalKills}");
 
         Subscribe();
+        SyncTrainingCompletion(gameplay);
     }
 
     public bool IsAvailable => steamManager.IsAvailable;
@@ -59,7 +60,9 @@ public sealed class SteamGameplaySync : IDisposable
         }
 
         steamManager.RunCallbacks();
-        SyncProgressionChanges(gameplayStateProvider());
+        var gameplay = gameplayStateProvider();
+        SyncTrainingCompletion(gameplay);
+        SyncProgressionChanges(gameplay);
     }
 
     private void Subscribe()
@@ -99,6 +102,11 @@ public sealed class SteamGameplaySync : IDisposable
             UnlockAchievementOnce(SteamGameConfig.Achievements.FirstMothershipDestroyed);
         }
 
+        if (IsDecoyKill(gameEvent))
+        {
+            UnlockAchievementOnce(SteamGameConfig.Achievements.DecoyKill);
+        }
+
         SyncStats(gameEvent);
         UploadScoreIfImproved(gameEvent.Score);
     }
@@ -134,12 +142,16 @@ public sealed class SteamGameplaySync : IDisposable
         SteamDiagnostics.Write(
             $"[Sync] styleBonus awarded={gameEvent.AwardedScore} hadCollision={gameEvent.HadCollision} score={gameEvent.Score}");
 
-        if (!gameEvent.HadCollision)
+        if (IsCleanLoopStyleBonus(gameEvent))
         {
             UnlockAchievementOnce(SteamGameConfig.Achievements.CleanLoop);
         }
+        else if (IsLowAltitudeStyleBonus(gameEvent))
+        {
+            UnlockAchievementOnce(SteamGameConfig.Achievements.LowAltitudeRun);
+        }
 
-        if (gameEvent.AwardedScore > 0)
+        if (gameEvent.AwardedScore > 0 && IsCleanLoopStyleBonus(gameEvent))
         {
             stats.SetInt(
                 SteamGameConfig.Stats.CleanLoops,
@@ -150,7 +162,7 @@ public sealed class SteamGameplaySync : IDisposable
 
     private void OnSceneCompleted(IGameEvent gameEvent)
     {
-        if (!steamManager.IsAvailable || IsTutorial(gameEvent))
+        if (!steamManager.IsAvailable)
         {
             SteamDiagnostics.Write($"[Sync] sceneCompleted skipped available={steamManager.IsAvailable} tutorial={IsTutorial(gameEvent)}");
             return;
@@ -158,6 +170,12 @@ public sealed class SteamGameplaySync : IDisposable
 
         SteamDiagnostics.Write(
             $"[Sync] sceneCompleted sceneType={gameEvent.SceneType} sceneIndex={gameEvent.SceneIndex} score={gameEvent.Score}");
+
+        if (IsTrainingCompletedScene(gameEvent))
+        {
+            UnlockAchievementOnce(SteamGameConfig.Achievements.TrainingComplete);
+            return;
+        }
 
         if (gameEvent.SceneType == SceneTypes.Game || gameEvent.SceneType == SceneTypes.Simulation)
         {
@@ -177,6 +195,7 @@ public sealed class SteamGameplaySync : IDisposable
     {
         if (gameplay.CurrentSceneType == SceneTypes.Tutorial)
         {
+            SyncTrainingCompletion(gameplay);
             lastPowerUpsCollected = gameplay.PowerUpsCollected;
             lastSpeedPowerUpLevel = gameplay.SpeedPowerUpLevel;
             return;
@@ -200,6 +219,14 @@ public sealed class SteamGameplaySync : IDisposable
 
         lastPowerUpsCollected = gameplay.PowerUpsCollected;
         lastSpeedPowerUpLevel = gameplay.SpeedPowerUpLevel;
+    }
+
+    private void SyncTrainingCompletion(SteamGameplaySnapshot gameplay)
+    {
+        if (gameplay.TutorialCompleted)
+        {
+            UnlockAchievementOnce(SteamGameConfig.Achievements.TrainingComplete);
+        }
     }
 
     private void SyncStats(IGameEvent gameEvent)
@@ -344,6 +371,31 @@ public sealed class SteamGameplaySync : IDisposable
 
     private static bool IsTutorial(IGameEvent gameEvent) => gameEvent.SceneType == SceneTypes.Tutorial;
 
+    internal static bool IsTrainingCompletedScene(IGameEvent gameEvent)
+    {
+        return gameEvent.Type == GameEventType.SceneCompleted &&
+               gameEvent.SceneType == SceneTypes.Tutorial;
+    }
+
+    internal static bool IsDecoyKill(IGameEvent gameEvent)
+    {
+        return string.Equals(
+            gameEvent.Source?.ImpactStatus?.ObjectName,
+            "DroneDecoy",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    internal static bool IsCleanLoopStyleBonus(IGameEvent gameEvent)
+    {
+        return string.Equals(gameEvent.StyleBonusType, StyleBonusTypes.CleanLoop, StringComparison.OrdinalIgnoreCase) ||
+               (gameEvent.StyleBonusType == null && !gameEvent.HadCollision);
+    }
+
+    internal static bool IsLowAltitudeStyleBonus(IGameEvent gameEvent)
+    {
+        return string.Equals(gameEvent.StyleBonusType, StyleBonusTypes.LowAltitudeRun, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool IsMotherShip(string? objectName)
     {
         return string.Equals(objectName, "MotherShipSmall", StringComparison.OrdinalIgnoreCase) ||
@@ -389,4 +441,5 @@ public readonly record struct SteamGameplaySnapshot(
     int TotalDeaths,
     float Accuracy,
     int PowerUpsCollected,
-    int SpeedPowerUpLevel);
+    int SpeedPowerUpLevel,
+    bool TutorialCompleted);

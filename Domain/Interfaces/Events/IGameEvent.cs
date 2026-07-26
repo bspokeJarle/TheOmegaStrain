@@ -11,6 +11,7 @@ namespace Domain
         int SceneIndex { get; }
         long Score { get; }
         int AwardedScore { get; }
+        string? StyleBonusType { get; }
         int TotalKills { get; }
         int TotalShotsFired { get; }
         int TotalDeaths { get; }
