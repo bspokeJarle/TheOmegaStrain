@@ -5,6 +5,7 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\RetroMesh.Engine\RetroMesh.Engine.csproj" />
     <PackageReference Include="MouseKeyHook" Version="5.7.1" />
   </ItemGroup>
 </Project>
