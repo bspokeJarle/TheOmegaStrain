@@ -1,7 +1,6 @@
 ﻿using System;
 using CommonUtilities.Persistence;
 using System.Collections.Generic;
-using System.Windows.Input;
 
 namespace Domain
 {
@@ -601,36 +600,36 @@ namespace Domain
         /// <summary>
         /// Processes a key press during name entry. Returns true if the key was consumed.
         /// </summary>
-        public bool ProcessNameEntryKey(Key key)
+        public bool ProcessNameEntryKey(GameInputKey key)
         {
             if (Type != ScreenOverlayType.NameEntry || !ShowOverlay) return false;
 
             // Letters A-Z
-            if (key >= Key.A && key <= Key.Z)
+            if (key >= GameInputKey.A && key <= GameInputKey.Z)
             {
                 if (NameEntryBuffer.Length < MaxCallsignLength)
-                    NameEntryBuffer += (char)('A' + (key - Key.A));
+                    NameEntryBuffer += (char)('A' + (key - GameInputKey.A));
                 return true;
             }
 
             // Digits 0-9 (top row)
-            if (key >= Key.D0 && key <= Key.D9)
+            if (key >= GameInputKey.D0 && key <= GameInputKey.D9)
             {
                 if (NameEntryBuffer.Length < MaxCallsignLength)
-                    NameEntryBuffer += (char)('0' + (key - Key.D0));
+                    NameEntryBuffer += (char)('0' + (key - GameInputKey.D0));
                 return true;
             }
 
             // NumPad digits
-            if (key >= Key.NumPad0 && key <= Key.NumPad9)
+            if (key >= GameInputKey.NumPad0 && key <= GameInputKey.NumPad9)
             {
                 if (NameEntryBuffer.Length < MaxCallsignLength)
-                    NameEntryBuffer += (char)('0' + (key - Key.NumPad0));
+                    NameEntryBuffer += (char)('0' + (key - GameInputKey.NumPad0));
                 return true;
             }
 
             // Backspace
-            if (key == Key.Back && NameEntryBuffer.Length > 0)
+            if (key == GameInputKey.Back && NameEntryBuffer.Length > 0)
             {
                 NameEntryBuffer = NameEntryBuffer[..^1];
                 NameEntryValidationMessage = "";
@@ -638,14 +637,14 @@ namespace Domain
             }
 
             // Space
-            if (key == Key.Space && NameEntryBuffer.Length < MaxCallsignLength)
+            if (key == GameInputKey.Space && NameEntryBuffer.Length < MaxCallsignLength)
             {
                 NameEntryBuffer += ' ';
                 return true;
             }
 
             // Minus / underscore
-            if ((key == Key.OemMinus || key == Key.Subtract) && NameEntryBuffer.Length < MaxCallsignLength)
+            if ((key == GameInputKey.OemMinus || key == GameInputKey.Subtract) && NameEntryBuffer.Length < MaxCallsignLength)
             {
                 NameEntryBuffer += '-';
                 return true;

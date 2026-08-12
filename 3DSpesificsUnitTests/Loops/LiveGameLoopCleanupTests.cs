@@ -9,7 +9,6 @@ using CommonUtilities.Persistence;
 using Domain;
 using System.Diagnostics;
 using System.Reflection;
-using System.Windows.Input;
 using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.Loops;
@@ -543,7 +542,7 @@ public class LiveGameLoopCleanupTests
         public void ResetActiveSceneToPlanetStart(I3dWorld world) { }
         public void NextScene(I3dWorld world) { }
         public IScene GetActiveScene() => null!;
-        public void HandleKeyPress(KeyEventArgs k, I3dWorld world) { }
+        public void HandleKeyPress(GameInputKey key, I3dWorld world) { }
         public void HandleOverlayActivation(I3dWorld world) { }
         public void UpdateFrame(I3dWorld world) { }
     }

@@ -1,4 +1,5 @@
 using _3dTesting.Helpers;
+using _3dTesting.Input;
 using _3dTesting.MainWindowClasses;
 using _3dTesting.MainWindowClasses.Loops;
 using _3dTesting.MainWindowClasses.Overlays;
@@ -432,7 +433,7 @@ namespace _3dTesting
                     return;
                 }
 
-                world.SceneHandler.HandleKeyPress(e, world);
+                world.SceneHandler.HandleKeyPress(WpfGameInputKeyMapper.ToGameInputKey(e.Key), world);
                 StopNonMusicAudioIfReturnedToIntro(sceneTypeBeforeMenuExit);
                 SyncLocalPauseFromWorld();
                 e.Handled = true;
@@ -449,7 +450,7 @@ namespace _3dTesting
                 return;
             }
             //Send keys to Scenehandler to handle scene switches and overlay switches
-            world.SceneHandler.HandleKeyPress(e,world);
+            world.SceneHandler.HandleKeyPress(WpfGameInputKeyMapper.ToGameInputKey(e.Key), world);
             SyncLocalPauseFromWorld();
 
             if (overlayWasShowing || GameState.ScreenOverlayState.BlocksGameplayInput)

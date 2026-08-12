@@ -9,8 +9,6 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using System.Windows.Input;
-using System.Windows.Interop;
 using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.SceneManagement;
@@ -229,7 +227,7 @@ public class ReturnToIntroAndSimulationRoundTests
             SetCurrentSceneIndex(handler, 1);
             GameState.ScreenOverlayState.ShowOverlay = false;
 
-            HandleKeyPress(handler, world, Key.Escape);
+            HandleKeyPress(handler, world, GameInputKey.Escape);
 
             Assert.AreEqual(SceneTypes.Intro, handler.GetActiveScene().SceneType,
                 "Escape from a game scene should return to the intro/menu, not exit immediately.");
@@ -251,7 +249,7 @@ public class ReturnToIntroAndSimulationRoundTests
             SetCurrentSceneIndex(handler, 1);
             GameState.ScreenOverlayState.ShowOverlay = false;
 
-            HandleKeyPress(handler, world, Key.X);
+            HandleKeyPress(handler, world, GameInputKey.X);
 
             Assert.AreEqual(SceneTypes.Intro, handler.GetActiveScene().SceneType,
                 "X from a game scene should return to the intro/menu.");
@@ -353,23 +351,9 @@ public class ReturnToIntroAndSimulationRoundTests
         method?.Invoke(handler, new object[] { world });
     }
 
-    private static void HandleKeyPress(SceneHandler handler, _3dWorld world, Key key)
+    private static void HandleKeyPress(SceneHandler handler, _3dWorld world, GameInputKey key)
     {
-        using var source = new HwndSource(new HwndSourceParameters("OmegaStrainKeyTest")
-        {
-            Width = 1,
-            Height = 1
-        });
-
-        handler.HandleKeyPress(CreateKeyArgs(key, source), world);
-    }
-
-    private static KeyEventArgs CreateKeyArgs(Key key, HwndSource source)
-    {
-        return new KeyEventArgs(Keyboard.PrimaryDevice, source, 0, key)
-        {
-            RoutedEvent = Keyboard.KeyDownEvent
-        };
+        handler.HandleKeyPress(key, world);
     }
 
     private static void RunOnStaThread(Action action)

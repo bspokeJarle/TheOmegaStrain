@@ -1,5 +1,3 @@
-using System.Windows.Input;
-
 namespace Domain
 {
     public interface ISceneHandler
@@ -9,7 +7,7 @@ namespace Domain
         void ResetActiveSceneToPlanetStart(I3dWorld world);
         void NextScene(I3dWorld world);
         IScene GetActiveScene();
-        void HandleKeyPress(KeyEventArgs k, I3dWorld world);
+        void HandleKeyPress(GameInputKey key, I3dWorld world);
         void HandleOverlayActivation(I3dWorld world);
         void UpdateFrame(I3dWorld world);
     }

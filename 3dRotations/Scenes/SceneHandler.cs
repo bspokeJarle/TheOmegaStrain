@@ -22,7 +22,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Windows.Input;
 using static Domain._3dSpecificsImplementations;
 
 namespace _3DWorld.Scene
@@ -513,30 +512,30 @@ namespace _3DWorld.Scene
         // Key handling
         // -----------------------------------------------------------------
 
-        public void HandleKeyPress(KeyEventArgs k, I3dWorld world)
+        public void HandleKeyPress(GameInputKey key, I3dWorld world)
         {
             var scene = GetActiveScene();
             var overlay = GameState.ScreenOverlayState;
 
             if (overlay.Type == ScreenOverlayType.NameEntry && overlay.ShowOverlay)
             {
-                HandleNameEntryKey(k, scene, overlay);
+                HandleNameEntryKey(key, scene, overlay);
                 return;
             }
 
             if (overlay.Type == ScreenOverlayType.Settings && overlay.ShowOverlay)
             {
-                HandleSettingsOverlayKey(k, scene, overlay);
+                HandleSettingsOverlayKey(key, scene, overlay);
                 return;
             }
 
             if (overlay.ShowOverlay && overlay.ChoiceAction == ScreenOverlayChoiceAction.PlanetLostRecovery)
             {
-                HandlePlanetLostRecoveryChoice(k, world, overlay);
+                HandlePlanetLostRecoveryChoice(key, world, overlay);
                 return;
             }
 
-            if (CanOpenSettingsOverlay(scene, overlay) && TryOpenSettingsOverlay(k.Key, scene, overlay))
+            if (CanOpenSettingsOverlay(scene, overlay) && TryOpenSettingsOverlay(key, scene, overlay))
             {
                 return;
             }
@@ -545,7 +544,7 @@ namespace _3DWorld.Scene
                 overlay.ShowOverlay &&
                 GameState.TutorialState.InstructionOverlayPauseActive)
             {
-                if (k.Key == Key.Escape)
+                if (key == GameInputKey.Escape)
                 {
                     CloseTutorialOverlayAndResume(scene, world);
                     return;
@@ -560,13 +559,13 @@ namespace _3DWorld.Scene
 
             if (scene.SceneType == SceneTypes.Tutorial &&
                 overlay.ShowOverlay &&
-                k.Key == Key.Escape)
+                key == GameInputKey.Escape)
             {
                 CloseTutorialOverlayAndResume(scene, world);
                 return;
             }
 
-            if (scene.SceneType == SceneTypes.Tutorial && IsMenuExitKey(k.Key))
+            if (scene.SceneType == SceneTypes.Tutorial && IsMenuExitKey(key))
             {
                 ReturnToIntro(world, persistCurrentRun: false);
                 return;
@@ -582,20 +581,20 @@ namespace _3DWorld.Scene
             {
                 if (scene.SceneType == SceneTypes.Intro)
                     SkipLogoCube(world, scene);
-                else if ((scene.SceneType == SceneTypes.Game || scene.SceneType == SceneTypes.Simulation) && IsMenuExitKey(k.Key))
+                else if ((scene.SceneType == SceneTypes.Game || scene.SceneType == SceneTypes.Simulation) && IsMenuExitKey(key))
                     ReturnToIntro(world);
                 return;
             }
 
             if (scene.SceneType == SceneTypes.Intro)
             {
-                HandleIntroKey(overlay, k);
+                HandleIntroKey(overlay, key);
                 return;
             }
 
             if (scene.SceneType == SceneTypes.Outro && overlay.Type == ScreenOverlayType.Outro)
             {
-                if (IsMenuExitKey(k.Key))
+                if (IsMenuExitKey(key))
                 {
                     ReturnToIntro(world);
                     return;
@@ -604,13 +603,13 @@ namespace _3DWorld.Scene
                 // Page navigation with arrow keys; any other key deploys to the Simulation scene.
                 if (overlay.HasMultiplePages)
                 {
-                    if (k.Key == Key.Right || k.Key == Key.D)
+                    if (key == GameInputKey.Right || key == GameInputKey.D)
                     {
                         overlay.NextPage();
                         RefreshCurrentHighscorePage(overlay);
                         return;
                     }
-                    if (k.Key == Key.Left || k.Key == Key.A)
+                    if (key == GameInputKey.Left || key == GameInputKey.A)
                     {
                         overlay.PreviousPage();
                         RefreshCurrentHighscorePage(overlay);
@@ -627,12 +626,12 @@ namespace _3DWorld.Scene
 
             if (scene.SceneType == SceneTypes.Game || scene.SceneType == SceneTypes.Simulation)
             {
-                if (IsMenuExitKey(k.Key))
+                if (IsMenuExitKey(key))
                 {
                     ReturnToIntro(world);
                     return;
                 }
-                HandleGameKey(k, scene, overlay);
+                HandleGameKey(key, scene, overlay);
             }
         }
 
@@ -702,16 +701,16 @@ namespace _3DWorld.Scene
             }
         }
 
-        private void HandleNameEntryKey(KeyEventArgs k, IScene scene, ScreenOverlayState overlay)
+        private void HandleNameEntryKey(GameInputKey key, IScene scene, ScreenOverlayState overlay)
         {
-            if (k.Key == Key.Escape)
+            if (key == GameInputKey.Escape)
             {
                 overlay.HardHide();
                 scene.SetupSceneOverlay();
                 return;
             }
 
-            if (k.Key == Key.Return || k.Key == Key.Enter)
+            if (key == GameInputKey.Return || key == GameInputKey.Enter)
             {
                 var name = PlayerNameFormatter.Normalize(overlay.NameEntryBuffer);
                 if (string.IsNullOrEmpty(name))
@@ -774,87 +773,87 @@ namespace _3DWorld.Scene
                 return;
             }
 
-            overlay.ProcessNameEntryKey(k.Key);
+            overlay.ProcessNameEntryKey(key);
         }
 
-        private static void HandlePlanetLostRecoveryChoice(KeyEventArgs k, I3dWorld world, ScreenOverlayState overlay)
+        private static void HandlePlanetLostRecoveryChoice(GameInputKey key, I3dWorld world, ScreenOverlayState overlay)
         {
-            if (k.Key == Key.Up || k.Key == Key.W || k.Key == Key.Left || k.Key == Key.A)
+            if (key == GameInputKey.Up || key == GameInputKey.W || key == GameInputKey.Left || key == GameInputKey.A)
             {
                 overlay.MoveChoiceSelection(-1);
                 return;
             }
 
-            if (k.Key == Key.Down || k.Key == Key.S || k.Key == Key.Right || k.Key == Key.D)
+            if (key == GameInputKey.Down || key == GameInputKey.S || key == GameInputKey.Right || key == GameInputKey.D)
             {
                 overlay.MoveChoiceSelection(1);
                 return;
             }
 
-            if (k.Key == Key.Escape || k.Key == Key.X)
+            if (key == GameInputKey.Escape || key == GameInputKey.X)
             {
                 StartPlanetLostRecoveryFade(world, resetToPlanetStart: false);
                 return;
             }
 
-            if (k.Key == Key.Return || k.Key == Key.Enter || k.Key == Key.Space)
+            if (key == GameInputKey.Return || key == GameInputKey.Enter || key == GameInputKey.Space)
             {
                 StartPlanetLostRecoveryFade(world, resetToPlanetStart: overlay.SelectedChoiceIndex == 1);
             }
         }
 
-        private void HandleSettingsOverlayKey(KeyEventArgs k, IScene scene, ScreenOverlayState overlay)
+        private void HandleSettingsOverlayKey(GameInputKey key, IScene scene, ScreenOverlayState overlay)
         {
-            if (k.Key == Key.Escape || k.Key == Key.Return || k.Key == Key.Enter)
+            if (key == GameInputKey.Escape || key == GameInputKey.Return || key == GameInputKey.Enter)
             {
                 CloseSettingsOverlay(scene, overlay);
                 return;
             }
 
-            if (TryOpenSettingsOverlay(k.Key, scene, overlay))
+            if (TryOpenSettingsOverlay(key, scene, overlay))
                 return;
 
-            if (k.Key == Key.Up)
+            if (key == GameInputKey.Up)
             {
                 overlay.MoveSettingsSelection(-1, GetSettingsOptionCount(overlay.SettingsPanel));
                 RefreshSettingsOverlayBody(overlay);
                 return;
             }
 
-            if (k.Key == Key.Down)
+            if (key == GameInputKey.Down)
             {
                 overlay.MoveSettingsSelection(1, GetSettingsOptionCount(overlay.SettingsPanel));
                 RefreshSettingsOverlayBody(overlay);
                 return;
             }
 
-            if (k.Key == Key.Left)
+            if (key == GameInputKey.Left)
             {
                 AdjustSelectedSetting(overlay, -1);
                 return;
             }
 
-            if (k.Key == Key.Right)
+            if (key == GameInputKey.Right)
             {
                 AdjustSelectedSetting(overlay, 1);
             }
         }
 
-        private bool TryOpenSettingsOverlay(Key key, IScene scene, ScreenOverlayState overlay)
+        private bool TryOpenSettingsOverlay(GameInputKey key, IScene scene, ScreenOverlayState overlay)
         {
-            if (key == Key.S)
+            if (key == GameInputKey.S)
             {
                 ShowSettingsOverlay(scene, overlay, ScreenOverlaySettingsPanel.Audio);
                 return true;
             }
 
-            if (key == Key.G)
+            if (key == GameInputKey.G)
             {
                 ShowSettingsOverlay(scene, overlay, ScreenOverlaySettingsPanel.Graphics);
                 return true;
             }
 
-            if (key == Key.C)
+            if (key == GameInputKey.C)
             {
                 ShowSettingsOverlay(scene, overlay, ScreenOverlaySettingsPanel.Controls);
                 return true;
@@ -961,11 +960,11 @@ namespace _3DWorld.Scene
                     : WorldFadeState.InfectionCriticalContinueReason);
         }
 
-        private void HandleIntroKey(ScreenOverlayState overlay, KeyEventArgs k)
+        private void HandleIntroKey(ScreenOverlayState overlay, GameInputKey key)
         {
             if (Logger.ShouldLog(enableLogging)) Logger.Log($"Scenehandler: Keypress during Intro ShowOverlay: {overlay.ShowOverlay} ", "General");
 
-            if (IsTutorialStartKey(k.Key))
+            if (IsTutorialStartKey(key))
             {
                 _pendingTutorialStart = true;
                 ShowNameEntryOverlay(overlay);
@@ -975,13 +974,13 @@ namespace _3DWorld.Scene
             // Page navigation with arrow keys
             if (overlay.HasMultiplePages)
             {
-                if (k.Key == Key.Right || k.Key == Key.D)
+                if (key == GameInputKey.Right || key == GameInputKey.D)
                 {
                     overlay.NextPage();
                     RefreshCurrentHighscorePage(overlay);
                     return;
                 }
-                if (k.Key == Key.Left || k.Key == Key.A)
+                if (key == GameInputKey.Left || key == GameInputKey.A)
                 {
                     overlay.PreviousPage();
                     RefreshCurrentHighscorePage(overlay);
@@ -992,20 +991,20 @@ namespace _3DWorld.Scene
             ShowNameEntryOverlay(overlay);
         }
 
-        private static void HandleGameKey(KeyEventArgs k, IScene scene, ScreenOverlayState overlay)
+        private static void HandleGameKey(GameInputKey key, IScene scene, ScreenOverlayState overlay)
         {
             if (overlay.Type == ScreenOverlayType.Intro && overlay.ShowOverlay)
             {
                 // Page navigation with arrow keys
                 if (overlay.HasMultiplePages)
                 {
-                    if (k.Key == Key.Right || k.Key == Key.D)
+                    if (key == GameInputKey.Right || key == GameInputKey.D)
                     {
                         overlay.NextPage();
                         RefreshCurrentHighscorePage(overlay);
                         return;
                     }
-                    if (k.Key == Key.Left || k.Key == Key.A)
+                    if (key == GameInputKey.Left || key == GameInputKey.A)
                     {
                         overlay.PreviousPage();
                         RefreshCurrentHighscorePage(overlay);
@@ -1023,8 +1022,8 @@ namespace _3DWorld.Scene
             HighscoreOverlayFormatter.RefreshCurrentPageIfHighscorePage(overlay);
         }
 
-        private static bool IsMenuExitKey(Key key) => key == Key.X || key == Key.Escape;
-        private static bool IsTutorialStartKey(Key key) => key == Key.T;
+        private static bool IsMenuExitKey(GameInputKey key) => key == GameInputKey.X || key == GameInputKey.Escape;
+        private static bool IsTutorialStartKey(GameInputKey key) => key == GameInputKey.T;
         private static bool CanOpenSettingsOverlay(IScene scene, ScreenOverlayState overlay)
         {
             if (scene.SceneType == SceneTypes.Intro && overlay.ShowOverlay && overlay.Type == ScreenOverlayType.Intro)

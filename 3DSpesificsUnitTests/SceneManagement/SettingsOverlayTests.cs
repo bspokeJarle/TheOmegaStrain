@@ -4,8 +4,6 @@ using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.Persistence;
 using Domain;
-using System.Windows.Input;
-using System.Windows.Interop;
 
 namespace _3DSpesificsUnitTests.SceneManagement;
 
@@ -62,19 +60,19 @@ public class SettingsOverlayTests
             overlay.CurrentPage = 1;
             overlay.ApplyPageContent();
 
-            HandleKeyPress(handler, world, Key.S);
+            HandleKeyPress(handler, world, GameInputKey.S);
 
             Assert.AreEqual(ScreenOverlayType.Settings, overlay.Type);
             Assert.AreEqual(ScreenOverlaySettingsPanel.Audio, overlay.SettingsPanel);
             Assert.IsTrue(overlay.IsModal);
             StringAssert.Contains(overlay.Title, "SOUND");
 
-            HandleKeyPress(handler, world, Key.Left);
+            HandleKeyPress(handler, world, GameInputKey.Left);
 
             Assert.AreEqual(95, GameState.SettingsState.MasterVolumePercent);
             Assert.IsTrue(File.Exists(PersistenceSetup.LocalSettingsFilePath));
 
-            HandleKeyPress(handler, world, Key.Escape);
+            HandleKeyPress(handler, world, GameInputKey.Escape);
 
             Assert.AreEqual(ScreenOverlayType.Intro, overlay.Type);
             Assert.IsTrue(overlay.ShowOverlay);
@@ -94,13 +92,13 @@ public class SettingsOverlayTests
             var overlay = GameState.ScreenOverlayState;
             overlay.ShowOverlay = true;
 
-            HandleKeyPress(handler, world, Key.G);
+            HandleKeyPress(handler, world, GameInputKey.G);
 
             Assert.AreEqual(ScreenOverlayType.Settings, overlay.Type);
             Assert.AreEqual(ScreenOverlaySettingsPanel.Graphics, overlay.SettingsPanel);
             Assert.AreEqual(GraphicsQualityPreset.Balanced, GameState.SettingsState.GraphicsQuality);
 
-            HandleKeyPress(handler, world, Key.Right);
+            HandleKeyPress(handler, world, GameInputKey.Right);
 
             Assert.AreEqual(GraphicsQualityPreset.High, GameState.SettingsState.GraphicsQuality);
             Assert.AreEqual(180, GameState.SettingsState.ParticleDensityPercent);
@@ -122,14 +120,14 @@ public class SettingsOverlayTests
             var overlay = GameState.ScreenOverlayState;
             overlay.ShowOverlay = true;
 
-            HandleKeyPress(handler, world, Key.C);
+            HandleKeyPress(handler, world, GameInputKey.C);
 
             Assert.AreEqual(ScreenOverlayType.Settings, overlay.Type);
             Assert.AreEqual(ScreenOverlaySettingsPanel.Controls, overlay.SettingsPanel);
             Assert.AreEqual(ControlInputMode.Keyboard, GameState.SettingsState.ActiveControlScheme);
             StringAssert.Contains(overlay.Title, "CONTROL");
 
-            HandleKeyPress(handler, world, Key.Right);
+            HandleKeyPress(handler, world, GameInputKey.Right);
 
             Assert.AreEqual(ControlInputMode.Mouse, GameState.SettingsState.ActiveControlScheme);
             StringAssert.Contains(overlay.Body, "MOUSE");
@@ -149,7 +147,7 @@ public class SettingsOverlayTests
             var overlay = GameState.ScreenOverlayState;
             overlay.ShowOverlay = true;
 
-            HandleKeyPress(handler, world, Key.C);
+            HandleKeyPress(handler, world, GameInputKey.C);
             Assert.AreEqual(ScreenOverlayType.Settings, overlay.Type);
 
             handler.HandleOverlayActivation(world);
@@ -194,23 +192,9 @@ public class SettingsOverlayTests
         return world;
     }
 
-    private static void HandleKeyPress(SceneHandler handler, _3dWorld world, Key key)
+    private static void HandleKeyPress(SceneHandler handler, _3dWorld world, GameInputKey key)
     {
-        using var source = new HwndSource(new HwndSourceParameters("OmegaStrainSettingsKeyTest")
-        {
-            Width = 1,
-            Height = 1
-        });
-
-        handler.HandleKeyPress(CreateKeyArgs(key, source), world);
-    }
-
-    private static KeyEventArgs CreateKeyArgs(Key key, HwndSource source)
-    {
-        return new KeyEventArgs(Keyboard.PrimaryDevice, source, 0, key)
-        {
-            RoutedEvent = Keyboard.KeyDownEvent
-        };
+        handler.HandleKeyPress(key, world);
     }
 
     private static void RunOnStaThread(Action action)

@@ -141,7 +141,7 @@ public class UpdateWorldCleanupExplodedBenchmarks
         {
         }
 
-        public void HandleKeyPress(System.Windows.Input.KeyEventArgs k, I3dWorld world)
+        public void HandleKeyPress(GameInputKey key, I3dWorld world)
         {
         }
 

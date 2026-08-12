@@ -10,8 +10,6 @@ using Domain;
 using GameAiAndControls.Audio.Services;
 using GameAiAndControls.Controls;
 using GameAiAndControls.Controls.KamikazeDroneControls;
-using System.Windows.Input;
-using System.Windows.Interop;
 using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.SceneManagement;
@@ -194,7 +192,7 @@ public class TutorialSceneTests
             var world = CreateRealWorld(handler);
 
             GameState.ScreenOverlayState.SetNameEntryPreset("Pilot");
-            HandleKeyPress(handler, world, Key.Enter);
+            HandleKeyPress(handler, world, GameInputKey.Return);
             AdvancePendingScene(handler, world);
 
             Assert.AreEqual(SceneTypes.Tutorial, handler.GetActiveScene().SceneType);
@@ -344,13 +342,13 @@ public class TutorialSceneTests
             GameState.ScreenOverlayState.SetIntroPreset("THE OMEGA STRAIN");
             GameState.ScreenOverlayState.ShowOverlay = true;
 
-            HandleKeyPress(handler, world, Key.T);
+            HandleKeyPress(handler, world, GameInputKey.T);
 
             Assert.AreEqual(ScreenOverlayType.NameEntry, GameState.ScreenOverlayState.Type);
             Assert.IsTrue(GameState.ScreenOverlayState.ShowOverlay);
 
             GameState.ScreenOverlayState.NameEntryBuffer = "Pilot";
-            HandleKeyPress(handler, world, Key.Enter);
+            HandleKeyPress(handler, world, GameInputKey.Return);
             AdvancePendingScene(handler, world);
 
             Assert.AreEqual(SceneTypes.Tutorial, handler.GetActiveScene().SceneType);
@@ -378,9 +376,9 @@ public class TutorialSceneTests
             GameState.ScreenOverlayState.SetIntroPreset("THE OMEGA STRAIN");
             GameState.ScreenOverlayState.ShowOverlay = true;
 
-            HandleKeyPress(handler, world, Key.T);
+            HandleKeyPress(handler, world, GameInputKey.T);
             GameState.ScreenOverlayState.NameEntryBuffer = "Pilot";
-            HandleKeyPress(handler, world, Key.Enter);
+            HandleKeyPress(handler, world, GameInputKey.Return);
             AdvancePendingScene(handler, world);
 
             Assert.AreEqual(SceneTypes.Tutorial, handler.GetActiveScene().SceneType);
@@ -412,7 +410,7 @@ public class TutorialSceneTests
             sceneIndexField?.SetValue(handler, 11);
 
             GameState.ScreenOverlayState.ShowOverlay = true;
-            HandleKeyPress(handler, world, Key.X);
+            HandleKeyPress(handler, world, GameInputKey.X);
 
             Assert.IsTrue(TutorialProgressService.HasCompletedTutorial("Pilot"));
             Assert.AreEqual(SceneTypes.Intro, handler.GetActiveScene().SceneType);
@@ -452,7 +450,7 @@ public class TutorialSceneTests
             GameState.TutorialState.ShowInstructionOverlay("TutorialIntro");
             world.IsPaused = true;
 
-            HandleKeyPress(handler, world, Key.X);
+            HandleKeyPress(handler, world, GameInputKey.X);
 
             Assert.AreEqual(SceneTypes.Tutorial, handler.GetActiveScene().SceneType);
             Assert.IsTrue(GameState.ScreenOverlayState.ShowOverlay);
@@ -460,7 +458,7 @@ public class TutorialSceneTests
             Assert.IsTrue(GameState.TutorialState.InstructionOverlayPauseActive);
             Assert.IsTrue(world.IsPaused);
 
-            HandleKeyPress(handler, world, Key.Escape);
+            HandleKeyPress(handler, world, GameInputKey.Escape);
 
             Assert.AreEqual(SceneTypes.Tutorial, handler.GetActiveScene().SceneType);
             Assert.IsFalse(GameState.ScreenOverlayState.ShowOverlay);
@@ -513,7 +511,7 @@ public class TutorialSceneTests
             GameState.ScreenOverlayState.Type = ScreenOverlayType.Game;
             world.IsPaused = true;
 
-            HandleKeyPress(handler, world, Key.Escape);
+            HandleKeyPress(handler, world, GameInputKey.Escape);
 
             Assert.AreEqual(SceneTypes.Tutorial, handler.GetActiveScene().SceneType);
             Assert.IsFalse(GameState.ScreenOverlayState.ShowOverlay);
@@ -530,7 +528,7 @@ public class TutorialSceneTests
             Assert.IsTrue(GameState.ShipState.ShipCrashDetectionDisabledUntilUtc > DateTime.UtcNow);
             Assert.IsTrue(GameState.ShipState.ShipGravityDisabledUntilUtc > DateTime.UtcNow);
 
-            HandleKeyPress(handler, world, Key.Escape);
+            HandleKeyPress(handler, world, GameInputKey.Escape);
 
             Assert.AreEqual(SceneTypes.Intro, handler.GetActiveScene().SceneType);
         });
@@ -559,7 +557,7 @@ public class TutorialSceneTests
 
         Assert.IsTrue(GameState.ScreenOverlayState.Pages.Any(page => page.Any(text => text.Contains("[T] TRAINING"))));
         var controls = GameState.ScreenOverlayState.Pages.Single(page => page[1] == "FLIGHT CONTROLS")[2];
-        StringAssert.Contains(controls, "[T] START TUTORIAL");
+        StringAssert.Contains(controls, "[T] TUTORIAL");
     }
 
     private sealed class TestWorld : I3dWorld
@@ -602,23 +600,9 @@ public class TutorialSceneTests
             handler.UpdateFrame(world);
     }
 
-    private static void HandleKeyPress(SceneHandler handler, _3dWorld world, Key key)
+    private static void HandleKeyPress(SceneHandler handler, _3dWorld world, GameInputKey key)
     {
-        using var source = new HwndSource(new HwndSourceParameters("OmegaStrainTutorialKeyTest")
-        {
-            Width = 1,
-            Height = 1
-        });
-
-        handler.HandleKeyPress(CreateKeyArgs(key, source), world);
-    }
-
-    private static KeyEventArgs CreateKeyArgs(Key key, HwndSource source)
-    {
-        return new KeyEventArgs(Keyboard.PrimaryDevice, source, 0, key)
-        {
-            RoutedEvent = Keyboard.KeyDownEvent
-        };
+        handler.HandleKeyPress(key, world);
     }
 
     private static void RunOnStaThread(Action action)
