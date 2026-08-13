@@ -1,4 +1,3 @@
-using _3dTesting._Coordinates;
 using _3dTesting.Helpers;
 using CommonUtilities._3DHelpers;
 using CommonUtilities.CommonSetup;
@@ -7,37 +6,37 @@ using System;
 using System.Collections.Generic;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3dTesting._3dRotation
+namespace _3dRotations.Projection
 {
-    public class _3dTo2d : IWorldProjector<_3dObject, _2dTriangleMesh>
+    public class PerspectiveWorldProjector : IWorldProjector<_3dObject, ProjectedTriangleMesh>
     {
         private readonly bool enableLogging = false;
         private readonly IProjectionViewport viewport;
         private const double DebugCrashBoxScreenMargin = 0.05;
         private long CurrentFrame = 0;
 
-        public _3dTo2d() : this(new ScreenSetupProjectionViewport())
+        public PerspectiveWorldProjector() : this(new ScreenSetupProjectionViewport())
         {
         }
 
-        public _3dTo2d(IProjectionViewport viewport)
+        public PerspectiveWorldProjector(IProjectionViewport viewport)
         {
             this.viewport = viewport ?? throw new ArgumentNullException(nameof(viewport));
         }
 
-        public List<_2dTriangleMesh> ConvertTo2dFromObjects(List<_3dObject> inhabitants, long? currentFrame)
+        public List<ProjectedTriangleMesh> ProjectToTriangles(List<_3dObject> inhabitants, long? currentFrame)
         {
-            return ConvertTo2dFromObjects(inhabitants, currentFrame, null);
+            return ProjectToTriangles(inhabitants, currentFrame, null);
         }
 
-        public List<_2dTriangleMesh> ConvertTo2dFromObjects(
+        public List<ProjectedTriangleMesh> ProjectToTriangles(
             List<_3dObject> inhabitants,
             long? currentFrame,
-            List<_2dTriangleMesh>? reusableResult)
+            List<ProjectedTriangleMesh>? reusableResult)
         {
             //If available use global framecounter
             if (currentFrame > 0) CurrentFrame = (long)currentFrame;
-            var screenCoordinates = reusableResult ?? new List<_2dTriangleMesh>(inhabitants.Count * 2);
+            var screenCoordinates = reusableResult ?? new List<ProjectedTriangleMesh>(inhabitants.Count * 2);
             screenCoordinates.Clear();
 
             int expectedCapacity = EstimateTriangleCapacity(inhabitants);
@@ -92,7 +91,7 @@ namespace _3dTesting._3dRotation
         }
 
         //This method is for debugging av crashboxes only
-        private void ConvertCrashBoxesTo2d(_3dObject obj, double objPosX, double objPosY, double objPosZ, List<_2dTriangleMesh> result)
+        private void ConvertCrashBoxesTo2d(_3dObject obj, double objPosX, double objPosY, double objPosZ, List<ProjectedTriangleMesh> result)
         {
             for (int boxIndex = 0; boxIndex < obj.CrashBoxes.Count; boxIndex++)
             {
@@ -147,9 +146,9 @@ namespace _3dTesting._3dRotation
         }
 
         // Creating Triangles for rendring the CrashBoxes for debugging purposes
-        private _2dTriangleMesh CreateCrashBoxTriangle((double x, double y) p1, (double x, double y) p2, (double x, double y) p3, string color, _3dObject obj)
+        private ProjectedTriangleMesh CreateCrashBoxTriangle((double x, double y) p1, (double x, double y) p2, (double x, double y) p3, string color, _3dObject obj)
         {
-            return new _2dTriangleMesh
+            return new ProjectedTriangleMesh
             {
                 X1 = (int)p1.x,
                 Y1 = (int)p1.y,
@@ -163,7 +162,7 @@ namespace _3dTesting._3dRotation
             };
         }
 
-        private void ConvertObjectTo2d(_3dObject obj, double objPosX, double objPosY, double objPosZ, List<_2dTriangleMesh> result)
+        private void ConvertObjectTo2d(_3dObject obj, double objPosX, double objPosY, double objPosZ, List<ProjectedTriangleMesh> result)
         {
             var parts = obj.ObjectParts;
             var objectOffsets = obj.ObjectOffsets;
@@ -206,7 +205,7 @@ namespace _3dTesting._3dRotation
                     {
                         Logger.Log($"Converted 3D object '{objectName}' to 2D. CalculatedZ: {(float)((float)(((v1.z + v2.z + v3.z) / 3) + objectOffsetsZ) - objPosZ)}");
                     }
-                    result.Add(new _2dTriangleMesh
+                    result.Add(new ProjectedTriangleMesh
                     {
                         X1 = Convert.ToInt32(x1),
                         Y1 = Convert.ToInt32(y1),

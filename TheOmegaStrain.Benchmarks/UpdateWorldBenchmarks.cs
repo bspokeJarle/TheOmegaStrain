@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
 using _3dTesting.MainWindowClasses;
-using _3dTesting._Coordinates;
 using _3dTesting._3dWorld;
 using _3dTesting.Helpers;
 using Domain;
@@ -14,8 +13,8 @@ public class UpdateWorldBenchmarks
 {
     private GameWorldManager _manager = null !;
     private _3dWorld _world = null !;
-    private List<_2dTriangleMesh> _screen = null !;
-    private List<_2dTriangleMesh> _crash = null !;
+    private List<ProjectedTriangleMesh> _screen = null !;
+    private List<ProjectedTriangleMesh> _crash = null !;
     [GlobalSetup]
     public void Setup()
     {
@@ -33,19 +32,19 @@ public class UpdateWorldBenchmarks
         surfaceObj.CrashBoxesFollowRotation = false;
         _world.WorldInhabitants.Add(dynamicObj);
         _world.WorldInhabitants.Add(surfaceObj);
-        _screen = new List<_2dTriangleMesh>();
-        _crash = new List<_2dTriangleMesh>();
+        _screen = new List<ProjectedTriangleMesh>();
+        _crash = new List<ProjectedTriangleMesh>();
     }
 
     [IterationSetup]
     public void IterationSetup()
     {
-        _screen = new List<_2dTriangleMesh>();
-        _crash = new List<_2dTriangleMesh>();
+        _screen = new List<ProjectedTriangleMesh>();
+        _crash = new List<ProjectedTriangleMesh>();
     }
 
     [Benchmark]
-    public List<_2dTriangleMesh> UpdateWorld()
+    public List<ProjectedTriangleMesh> UpdateWorld()
     {
         return _manager.UpdateWorld(_world, ref _screen, ref _crash);
     }

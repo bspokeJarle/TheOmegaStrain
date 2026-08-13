@@ -1,6 +1,5 @@
 using _3dRotations.World.Objects;
-using _3dTesting._3dRotation;
-using _3dTesting._Coordinates;
+using _3dRotations.Projection;
 using _3dTesting.Helpers;
 using _3dTesting.Rendering;
 using CommonUtilities.CommonGlobalState;
@@ -249,15 +248,15 @@ public class RenderSimpleOptimizationTests
     }
 
     [TestMethod]
-    public void ConvertTo2dFromObjects_ReusesProvidedResultList()
+    public void ProjectToTriangles_ReusesProvidedResultList()
     {
-        var converter = new _3dTo2d();
-        var reusable = new List<_2dTriangleMesh>
+        var converter = new PerspectiveWorldProjector();
+        var reusable = new List<ProjectedTriangleMesh>
         {
             new() { PartName = "Stale" }
         };
 
-        var result = converter.ConvertTo2dFromObjects(
+        var result = converter.ProjectToTriangles(
             new List<_3dObject> { CreateRenderableObject() },
             1,
             reusable);
@@ -266,17 +265,17 @@ public class RenderSimpleOptimizationTests
         Assert.AreEqual(1, result.Count);
         Assert.AreEqual("Main", result[0].PartName);
 
-        var emptyResult = converter.ConvertTo2dFromObjects(new List<_3dObject>(), 2, reusable);
+        var emptyResult = converter.ProjectToTriangles(new List<_3dObject>(), 2, reusable);
 
         Assert.AreSame(reusable, emptyResult);
         Assert.AreEqual(0, emptyResult.Count);
     }
 
     [TestMethod]
-    public void ConvertTo2dFromObjects_ReservesCapacityForVisibleTriangles()
+    public void ProjectToTriangles_ReservesCapacityForVisibleTriangles()
     {
-        var converter = new _3dTo2d();
-        var reusable = new List<_2dTriangleMesh>(capacity: 1);
+        var converter = new PerspectiveWorldProjector();
+        var reusable = new List<ProjectedTriangleMesh>(capacity: 1);
         var obj = CreateRenderableObject();
         var triangles = obj.ObjectParts[0].Triangles;
         var template = triangles[0];
@@ -294,7 +293,7 @@ public class RenderSimpleOptimizationTests
             });
         }
 
-        var result = converter.ConvertTo2dFromObjects(
+        var result = converter.ProjectToTriangles(
             new List<_3dObject> { obj },
             1,
             reusable);
@@ -306,11 +305,11 @@ public class RenderSimpleOptimizationTests
     }
 
     [TestMethod]
-    public void ConvertTo2dFromObjects_MarksDynamicEffectsForEffectPipeline()
+    public void ProjectToTriangles_MarksDynamicEffectsForEffectPipeline()
     {
-        var converter = new _3dTo2d();
+        var converter = new PerspectiveWorldProjector();
 
-        var result = converter.ConvertTo2dFromObjects(
+        var result = converter.ProjectToTriangles(
             new List<_3dObject> { CreateRenderableObject("ExplodingPart") },
             1);
 
@@ -322,15 +321,15 @@ public class RenderSimpleOptimizationTests
     }
 
     [TestMethod]
-    public void ConvertTo2dFromObjects_UsesInjectedProjectionViewport()
+    public void ProjectToTriangles_UsesInjectedProjectionViewport()
     {
-        var converter = new _3dTo2d(new ProjectionViewport(
+        var converter = new PerspectiveWorldProjector(new ProjectionViewport(
             screenWidth: 1000,
             screenHeight: 800,
             perspectiveAdjustment: 1500,
             objectZoom: 2));
 
-        var result = converter.ConvertTo2dFromObjects(
+        var result = converter.ProjectToTriangles(
             new List<_3dObject> { CreateRenderableObject() },
             1);
 
@@ -402,9 +401,9 @@ public class RenderSimpleOptimizationTests
     }
 
     [TestMethod]
-    public void ConvertTo2dFromObjects_ClampsCrashBoxDebugTrianglesToScreenMargin()
+    public void ProjectToTriangles_ClampsCrashBoxDebugTrianglesToScreenMargin()
     {
-        var converter = new _3dTo2d();
+        var converter = new PerspectiveWorldProjector();
         var surface = CreateRenderableObject();
         surface.ObjectName = "Surface";
         surface.CrashBoxDebugMode = true;
@@ -416,7 +415,7 @@ public class RenderSimpleOptimizationTests
         };
         surface.CrashBoxNames = new List<string?> { "TerrainSurface" };
 
-        var result = converter.ConvertTo2dFromObjects(new List<_3dObject> { surface }, 1);
+        var result = converter.ProjectToTriangles(new List<_3dObject> { surface }, 1);
         var crashTriangles = result.Where(t => t.PartName == "CrashBox-Surface").ToList();
 
         Assert.IsTrue(crashTriangles.Count > 0, "Expected debug crashbox triangles to be rendered.");
@@ -429,9 +428,9 @@ public class RenderSimpleOptimizationTests
     }
 
     [TestMethod]
-    public void ConvertTo2dFromObjects_RendersSurfaceMainCrashBoxDebug()
+    public void ProjectToTriangles_RendersSurfaceMainCrashBoxDebug()
     {
-        var converter = new _3dTo2d();
+        var converter = new PerspectiveWorldProjector();
         var surface = CreateRenderableObject();
         surface.ObjectName = "Surface";
         surface.CrashBoxDebugMode = true;
@@ -443,7 +442,7 @@ public class RenderSimpleOptimizationTests
         };
         surface.CrashBoxNames = new List<string?> { "MainSurface" };
 
-        var result = converter.ConvertTo2dFromObjects(new List<_3dObject> { surface }, 1);
+        var result = converter.ProjectToTriangles(new List<_3dObject> { surface }, 1);
 
         Assert.IsTrue(result.Any(t => t.PartName == "CrashBox-Surface"),
             "MainSurface should still be visible when surface crashbox debug mode is enabled.");
@@ -452,7 +451,7 @@ public class RenderSimpleOptimizationTests
     [TestMethod]
     public void CullTrianglesOutsideRenderDepth_RemovesOutOfRangeTrianglesBeforeSort()
     {
-        var triangles = new List<_2dTriangleMesh>
+        var triangles = new List<ProjectedTriangleMesh>
         {
             new() { CalculatedZ = ScreenSetup.RenderNearZ - 1, PartName = "TooNear" },
             new() { CalculatedZ = 0, PartName = "KeepMiddle" },
@@ -473,7 +472,7 @@ public class RenderSimpleOptimizationTests
     [TestMethod]
     public void ProcessTrianglesForRender_CreatesPensForVisibleTrianglesToCoverSeams()
     {
-        var triangles = new List<_2dTriangleMesh>
+        var triangles = new List<ProjectedTriangleMesh>
         {
             new() { CalculatedZ = 0, TriangleAngle = 0.5f, Color = "ffffff", PartName = "Surface" },
             new() { CalculatedZ = 0, TriangleAngle = 0.5f, Color = "ff0000", PartName = "CrashBox-Test" }
@@ -524,7 +523,7 @@ public class RenderSimpleOptimizationTests
         Assert.IsFalse(WorldRenderer.ShouldRenderAsSeparateTriangle("EarthGlobe"),
             "Stable world geometry should keep batching enabled.");
 
-        Assert.IsTrue(WorldRenderer.ShouldUseEffectRenderingPipeline(new _2dTriangleMesh
+        Assert.IsTrue(WorldRenderer.ShouldUseEffectRenderingPipeline(new ProjectedTriangleMesh
         {
             PartName = "Surface",
             UseEffectRenderingPipeline = true
@@ -534,11 +533,11 @@ public class RenderSimpleOptimizationTests
     [TestMethod]
     public void GlowCandidates_UseEffectPipelineWhenGlowIsEnabledAndParticlesStayDynamic()
     {
-        var lazer = new _2dTriangleMesh { PartName = "Lazer_Beam" };
-        var powerUp = new _2dTriangleMesh { PartName = "TravelSpeedPowerUpBody" };
-        var bullet = new _2dTriangleMesh { PartName = "BulletBody" };
-        var particle = new _2dTriangleMesh { PartName = "Particle" };
-        var stableWorldPart = new _2dTriangleMesh { PartName = "HouseWalls" };
+        var lazer = new ProjectedTriangleMesh { PartName = "Lazer_Beam" };
+        var powerUp = new ProjectedTriangleMesh { PartName = "TravelSpeedPowerUpBody" };
+        var bullet = new ProjectedTriangleMesh { PartName = "BulletBody" };
+        var particle = new ProjectedTriangleMesh { PartName = "Particle" };
+        var stableWorldPart = new ProjectedTriangleMesh { PartName = "HouseWalls" };
 
         GameState.SettingsState.GlowEffectsEnabled = false;
         Assert.IsFalse(WorldRenderer.ShouldUseEffectRenderingPipeline(lazer));
@@ -560,7 +559,7 @@ public class RenderSimpleOptimizationTests
     [TestMethod]
     public void HighGraphics_RendersShadowsThroughEffectPipeline()
     {
-        var shadow = new _2dTriangleMesh { PartName = "Shadow" };
+        var shadow = new ProjectedTriangleMesh { PartName = "Shadow" };
 
         GameState.SettingsState.GraphicsQuality = GraphicsQualityPreset.Balanced;
         GameState.SettingsState.EnhancedShadowsEnabled = true;
@@ -576,11 +575,11 @@ public class RenderSimpleOptimizationTests
     {
         GameState.SettingsState.GlowEffectsEnabled = false;
 
-        Assert.IsTrue(WorldRenderer.ShouldUseEffectRenderingPipeline(new _2dTriangleMesh
+        Assert.IsTrue(WorldRenderer.ShouldUseEffectRenderingPipeline(new ProjectedTriangleMesh
         {
             PartName = "ExplodingPart"
         }), "Explosion fragments already use the dynamic effect path and should not depend on glow settings.");
-        Assert.IsTrue(WorldRenderer.ShouldUseEffectRenderingPipeline(new _2dTriangleMesh
+        Assert.IsTrue(WorldRenderer.ShouldUseEffectRenderingPipeline(new ProjectedTriangleMesh
         {
             PartName = "MuzzleFlash"
         }), "Muzzle flashes are short-lived dynamic effects and should not depend on glow settings.");

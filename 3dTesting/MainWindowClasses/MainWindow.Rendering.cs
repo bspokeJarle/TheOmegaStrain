@@ -1,4 +1,3 @@
-﻿using _3dTesting._Coordinates;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
@@ -12,7 +11,7 @@ using System.Windows.Media;
 
 namespace _3dTesting.Rendering
 {
-    public class WorldRenderer : IProjectedTriangleRenderer<_2dTriangleMesh>
+    public class WorldRenderer : IProjectedTriangleRenderer<ProjectedTriangleMesh>
     {
         private readonly DrawingVisualHost visualHost;
         private readonly DrawingVisual visual = new DrawingVisual();
@@ -136,7 +135,7 @@ namespace _3dTesting.Rendering
         }
 
 
-        public void RenderTriangles(List<_2dTriangleMesh> screenCoordinates)
+        public void RenderTriangles(List<ProjectedTriangleMesh> screenCoordinates)
         {
             bool logRenderTiming = Logger.ShouldLog(enableRenderPerfLogging);
             long renderStartTicks = logRenderTiming ? Stopwatch.GetTimestamp() : 0;
@@ -300,7 +299,7 @@ namespace _3dTesting.Rendering
             }
         }
 
-        public static int CullTrianglesOutsideRenderDepth(List<_2dTriangleMesh> triangles)
+        public static int CullTrianglesOutsideRenderDepth(List<ProjectedTriangleMesh> triangles)
         {
             int writeIndex = 0;
             for (int readIndex = 0; readIndex < triangles.Count; readIndex++)
@@ -322,7 +321,7 @@ namespace _3dTesting.Rendering
         }
 
         public static int ProcessTrianglesForRender(
-            List<_2dTriangleMesh> triangles,
+            List<ProjectedTriangleMesh> triangles,
             Dictionary<(float, string), Color> colorCache,
             Dictionary<Color, SolidColorBrush> brushCache,
             Dictionary<Color, Pen> penCache)
@@ -393,7 +392,7 @@ namespace _3dTesting.Rendering
             return IsDynamicEffectPartName(partName);
         }
 
-        public static bool ShouldUseEffectRenderingPipeline(_2dTriangleMesh triangle)
+        public static bool ShouldUseEffectRenderingPipeline(ProjectedTriangleMesh triangle)
         {
             return triangle.UseEffectRenderingPipeline ||
                    IsDynamicEffectPartName(triangle.PartName) ||
@@ -520,7 +519,7 @@ namespace _3dTesting.Rendering
             return ReferenceEquals(currentBrush, nextBrush) && ReferenceEquals(currentPen, nextPen);
         }
 
-        private int DrawEffectTriangle(DrawingContext dc, _2dTriangleMesh triangle)
+        private int DrawEffectTriangle(DrawingContext dc, ProjectedTriangleMesh triangle)
         {
             Color color = GetCachedTriangleColor(triangle);
             int drawCalls = 0;
@@ -548,13 +547,13 @@ namespace _3dTesting.Rendering
             return drawCalls + 1;
         }
 
-        private int DrawSoftShadow(DrawingContext dc, _2dTriangleMesh triangle)
+        private int DrawSoftShadow(DrawingContext dc, ProjectedTriangleMesh triangle)
         {
             DrawScaledTriangle(dc, triangle, Colors.Black, alpha: 70, scale: 1.28f);
             return 1;
         }
 
-        private int DrawGlow(DrawingContext dc, _2dTriangleMesh triangle, Color color)
+        private int DrawGlow(DrawingContext dc, ProjectedTriangleMesh triangle, Color color)
         {
             Color glowColor = BoostGlowColor(color, triangle.PartName);
             float outerScale = GetGlowScale(triangle.PartName, outer: true);
@@ -565,7 +564,7 @@ namespace _3dTesting.Rendering
             return 2;
         }
 
-        private void DrawScaledTriangle(DrawingContext dc, _2dTriangleMesh triangle, Color color, byte alpha, float scale)
+        private void DrawScaledTriangle(DrawingContext dc, ProjectedTriangleMesh triangle, Color color, byte alpha, float scale)
         {
             SolidColorBrush brush = GetCachedAlphaBrush(color, alpha);
             StreamGeometry geometry = GetNextGeometry();
@@ -592,7 +591,7 @@ namespace _3dTesting.Rendering
             return brush;
         }
 
-        private Color GetCachedTriangleColor(_2dTriangleMesh triangle)
+        private Color GetCachedTriangleColor(ProjectedTriangleMesh triangle)
         {
             float shadeKey = GetTriangleShadeKey(triangle);
             string baseColor = NormalizeColor(triangle.Color);
@@ -634,7 +633,7 @@ namespace _3dTesting.Rendering
             return pen;
         }
 
-        private static float GetTriangleShadeKey(_2dTriangleMesh triangle)
+        private static float GetTriangleShadeKey(ProjectedTriangleMesh triangle)
         {
             return RenderShadeMath.GetTriangleShadeKey(
                 triangle.CalculatedZ,
@@ -649,7 +648,7 @@ namespace _3dTesting.Rendering
             return partName != null && partName.Contains("Star_Core");
         }
 
-        private static void AddTriangleFigure(StreamGeometryContext ctx, _2dTriangleMesh triangle)
+        private static void AddTriangleFigure(StreamGeometryContext ctx, ProjectedTriangleMesh triangle)
         {
             var p1 = new Point(triangle.X1, triangle.Y1);
             var p2 = new Point(triangle.X2, triangle.Y2);
@@ -660,7 +659,7 @@ namespace _3dTesting.Rendering
             ctx.LineTo(p3, true, false);
         }
 
-        private static void AddScaledTriangleFigure(StreamGeometryContext ctx, _2dTriangleMesh triangle, float scale)
+        private static void AddScaledTriangleFigure(StreamGeometryContext ctx, ProjectedTriangleMesh triangle, float scale)
         {
             double centerX = (triangle.X1 + triangle.X2 + triangle.X3) / 3.0;
             double centerY = (triangle.Y1 + triangle.Y2 + triangle.Y3) / 3.0;
@@ -824,7 +823,7 @@ namespace _3dTesting.Rendering
             return RenderShadeMath.NormalizeAngleTo01(angle);
         }
 
-        /*private void DrawTriangle(DrawingContext dc, _2dTriangleMesh triangle, SolidColorBrush brush, Pen pen)
+        /*private void DrawTriangle(DrawingContext dc, ProjectedTriangleMesh triangle, SolidColorBrush brush, Pen pen)
         {
             var p1 = new Point(triangle.X1, triangle.Y1);
             var p2 = new Point(triangle.X2, triangle.Y2);

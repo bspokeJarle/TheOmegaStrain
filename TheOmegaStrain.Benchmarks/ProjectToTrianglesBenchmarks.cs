@@ -1,22 +1,21 @@
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
-using _3dTesting._3dRotation;
-using _3dTesting._Coordinates;
+using _3dRotations.Projection;
 using Domain;
 using CommonUtilities.CommonGlobalState;
 using static Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
-public class ConvertTo2dFromObjectsBenchmarks
+public class ProjectToTrianglesBenchmarks
 {
-    private _3dTo2d _converter = null !;
+    private PerspectiveWorldProjector _converter = null !;
     private List<_3dObject> _objects = null !;
     [GlobalSetup]
     public void Setup()
     {
-        _converter = new _3dTo2d();
+        _converter = new PerspectiveWorldProjector();
         _objects = new List<_3dObject>(128);
         GameState.SurfaceState.GlobalMapPosition = new Vector3
         {
@@ -61,8 +60,8 @@ public class ConvertTo2dFromObjectsBenchmarks
     }
 
     [Benchmark]
-    public List<_2dTriangleMesh> ConvertTo2dFromObjects()
+    public List<ProjectedTriangleMesh> ProjectToTriangles()
     {
-        return _converter.ConvertTo2dFromObjects(_objects, 1);
+        return _converter.ProjectToTriangles(_objects, 1);
     }
 }

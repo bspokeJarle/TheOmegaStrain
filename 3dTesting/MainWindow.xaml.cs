@@ -60,7 +60,7 @@ namespace _3dTesting
 
         private Grid mainGrid;
         private GameWorldManager gameWorldManager = new GameWorldManager();
-        private IProjectedTriangleRenderer<_Coordinates._2dTriangleMesh> worldRenderer;
+        private IProjectedTriangleRenderer<ProjectedTriangleMesh> worldRenderer;
 
         public _3dWorld._3dWorld world = new();
         public MediaPlayer player = new MediaPlayer();
@@ -75,7 +75,7 @@ namespace _3dTesting
         private long _lastWorldUpdateTimestamp = 0;
         private int _minimapFrameSkip = 0;
         private readonly object _triangleListPoolLock = new();
-        private readonly Stack<List<_Coordinates._2dTriangleMesh>> _triangleListPool = new();
+        private readonly Stack<List<ProjectedTriangleMesh>> _triangleListPool = new();
 
         // Overlay handlers
         private OverlayManager _overlayManager;
@@ -1130,7 +1130,7 @@ namespace _3dTesting
             }
         }
 
-        private List<_Coordinates._2dTriangleMesh> RentTriangleList()
+        private List<ProjectedTriangleMesh> RentTriangleList()
         {
             lock (_triangleListPoolLock)
             {
@@ -1138,10 +1138,10 @@ namespace _3dTesting
                     return _triangleListPool.Pop();
             }
 
-            return new List<_Coordinates._2dTriangleMesh>();
+            return new List<ProjectedTriangleMesh>();
         }
 
-        private void ReturnTriangleList(List<_Coordinates._2dTriangleMesh> list)
+        private void ReturnTriangleList(List<ProjectedTriangleMesh> list)
         {
             list.Clear();
 

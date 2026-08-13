@@ -1,7 +1,6 @@
 using _3dRotations.Helpers;
+using _3dRotations.Projection;
 using _3dRotations.World.Objects;
-using _3dTesting._3dRotation;
-using _3dTesting._Coordinates;
 using _3dTesting.Helpers;
 using CommonUtilities._3DHelpers;
 using CommonUtilities.CommonGlobalState;
@@ -24,7 +23,7 @@ using static Domain._3dSpecificsImplementations;
 
 namespace _3dTesting.MainWindowClasses.Loops
 {
-    public class LiveGameLoop : IGameLoop<_2dTriangleMesh>
+    public class LiveGameLoop : IGameLoop<ProjectedTriangleMesh>
     {
         public const bool EnableCpuHeadroomLogging = false;
         private const bool EnableAdaptiveGc = true;
@@ -45,7 +44,7 @@ namespace _3dTesting.MainWindowClasses.Loops
         private long adaptiveGcAttempts = 0;
         private int AiUpdateCounter = 0;
         private const int AiUpdateInterval = 5; // Update offscreen AI every 5 frames
-        private readonly IWorldProjector<_3dObject, _2dTriangleMesh> From3dTo2d = new _3dTo2d();
+        private readonly IWorldProjector<_3dObject, ProjectedTriangleMesh> worldProjector = new PerspectiveWorldProjector();
         private readonly _3dRotationCommon Rotate3d = new();
         private readonly ParticleManager particleManager = new();
         private readonly WeaponsManager weaponsManager = new();
@@ -121,7 +120,7 @@ namespace _3dTesting.MainWindowClasses.Loops
         public I3dObject ShipCopy { get; set; }
         public I3dObject SurfaceCopy { get; set; }
 
-        public List<_2dTriangleMesh> UpdateWorld(I3dWorld world, ref List<_2dTriangleMesh> projectedCoordinates, ref List<_2dTriangleMesh> crashBoxCoordinates)
+        public List<ProjectedTriangleMesh> UpdateWorld(I3dWorld world, ref List<ProjectedTriangleMesh> projectedCoordinates, ref List<ProjectedTriangleMesh> crashBoxCoordinates)
         {
             frameTimer.Restart();
             FrameCounter++;
@@ -396,7 +395,7 @@ namespace _3dTesting.MainWindowClasses.Loops
             }
             infectionMs = MarkPhase();
 
-            projectedCoordinates = From3dTo2d.ConvertTo2dFromObjects(renderedList, FrameCounter, projectedCoordinates);
+            projectedCoordinates = worldProjector.ProjectToTriangles(renderedList, FrameCounter, projectedCoordinates);
             projectMs = MarkPhase();
 
             if (!gameplayPausedForVictoryReward)

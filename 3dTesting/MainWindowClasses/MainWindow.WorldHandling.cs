@@ -1,4 +1,3 @@
-﻿using _3dTesting._Coordinates;
 using _3dTesting.MainWindowClasses.Loops;
 using Domain;
 using System.Collections.Generic;
@@ -7,8 +6,8 @@ namespace _3dTesting.MainWindowClasses
 {
     public class GameWorldManager
     {
-        private readonly IGameLoop<_2dTriangleMesh> liveLoop;
-        private IGameLoop<_2dTriangleMesh> currentLoop;
+        private readonly IGameLoop<ProjectedTriangleMesh> liveLoop;
+        private IGameLoop<ProjectedTriangleMesh> currentLoop;
 
         public GameWorldManager()
         {
@@ -16,13 +15,13 @@ namespace _3dTesting.MainWindowClasses
             currentLoop = liveLoop;
         }
 
-        public GameWorldManager(IGameLoop<_2dTriangleMesh> gameLoop)
+        public GameWorldManager(IGameLoop<ProjectedTriangleMesh> gameLoop)
         {
             liveLoop = gameLoop;
             currentLoop = gameLoop;
         }
 
-        private IGameLoop<_2dTriangleMesh> GetActiveLoop(I3dWorld world)
+        private IGameLoop<ProjectedTriangleMesh> GetActiveLoop(I3dWorld world)
         {
             currentLoop = liveLoop;
             return currentLoop;
@@ -64,7 +63,7 @@ namespace _3dTesting.MainWindowClasses
             set => currentLoop.SurfaceCopy = value;
         }
 
-        public List<_2dTriangleMesh> UpdateWorld(I3dWorld world, ref List<_2dTriangleMesh> projectedCoordinates, ref List<_2dTriangleMesh> crashBoxCoordinates)
+        public List<ProjectedTriangleMesh> UpdateWorld(I3dWorld world, ref List<ProjectedTriangleMesh> projectedCoordinates, ref List<ProjectedTriangleMesh> crashBoxCoordinates)
         {
             return GetActiveLoop(world).UpdateWorld(world, ref projectedCoordinates, ref crashBoxCoordinates);
         }

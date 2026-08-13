@@ -1,5 +1,4 @@
 using _3dTesting.MainWindowClasses.Loops;
-using _3dTesting._Coordinates;
 using CommonUtilities._3DHelpers;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
@@ -342,8 +341,8 @@ public class LiveGameLoopCleanupTests
         };
 
         var loop = new LiveGameLoop();
-        var projected = new List<_2dTriangleMesh>();
-        var crashBoxes = new List<_2dTriangleMesh>();
+        var projected = new List<ProjectedTriangleMesh>();
+        var crashBoxes = new List<ProjectedTriangleMesh>();
 
         loop.UpdateWorld(world, ref projected, ref crashBoxes);
 

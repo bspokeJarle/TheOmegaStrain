@@ -1,6 +1,5 @@
-﻿using _3dTesting._3dWorld;
-using _3dTesting._3dRotation;
-using _3dTesting._Coordinates;
+using _3dTesting._3dWorld;
+using _3dRotations.Projection;
 using _3dTesting.Rendering;
 using _3DWorld.Scene;
 using _3dRotations.World.Objects;
@@ -238,8 +237,8 @@ public class OutroSceneTests
         ApplyLiveMeshRotation(earth);
 
         int triangleCount = earth.ObjectParts.Sum(p => p.Triangles.Count);
-        var converter = new _3dTo2d();
-        var projected = converter.ConvertTo2dFromObjects(new List<_3dObject> { earth }, currentFrame: 1);
+        var converter = new PerspectiveWorldProjector();
+        var projected = converter.ProjectToTriangles(new List<_3dObject> { earth }, currentFrame: 1);
 
         // Stars carry noHidden=true and always project; globe and miniatures use backface culling.
         int starTriangleCount = earth.ObjectParts.Where(IsOutroStarPart).Sum(p => p.Triangles.Count);
@@ -358,8 +357,8 @@ public class OutroSceneTests
         ship.Movement!.MoveObject(ship, null, null);
         ApplyLiveMeshRotation(ship);
 
-        var converter = new _3dTo2d();
-        var projected = converter.ConvertTo2dFromObjects(new List<_3dObject> { ship }, currentFrame: 1);
+        var converter = new PerspectiveWorldProjector();
+        var projected = converter.ProjectToTriangles(new List<_3dObject> { ship }, currentFrame: 1);
 
         Assert.IsTrue(projected.Count > 0, "Outro ship should be visible on the first rendered movement frame.");
         Assert.IsTrue(projected.Any(t => t.PartName == "UpperPart" || t.PartName == "LowerPart" || t.PartName == "RearPart"),
@@ -736,9 +735,9 @@ public class OutroSceneTests
         ApplyLiveMeshRotation(earth);
         ApplyLiveMeshRotation(ship);
 
-        var converter = new _3dTo2d();
+        var converter = new PerspectiveWorldProjector();
         // Project both objects together, exactly as the renderer does
-        var allTriangles = converter.ConvertTo2dFromObjects(new List<_3dObject> { earth, ship }, currentFrame: 1);
+        var allTriangles = converter.ProjectToTriangles(new List<_3dObject> { earth, ship }, currentFrame: 1);
 
         // Renderer sort: ascending CalculatedZ ? highest = drawn last = on top
         allTriangles.Sort((a, b) => a.CalculatedZ.CompareTo(b.CalculatedZ));
@@ -838,9 +837,9 @@ public class OutroSceneTests
         var earth = (_3dObject)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
         ApplyLiveMeshRotation(earth);
         int triangleCount = earth.ObjectParts.Sum(p => p.Triangles.Count);
-        var converter = new _3dTo2d();
+        var converter = new PerspectiveWorldProjector();
 
-        var projected = converter.ConvertTo2dFromObjects(new List<_3dObject> { earth }, currentFrame: 1);
+        var projected = converter.ProjectToTriangles(new List<_3dObject> { earth }, currentFrame: 1);
         var bounds = GetProjectedBounds(projected);
         var brightestShade = projected.Max(CalculateRenderShadeFactor);
 
@@ -862,8 +861,8 @@ public class OutroSceneTests
         var earth = (_3dObject)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
         ApplyLiveMeshRotation(earth);
 
-        var converter = new _3dTo2d();
-        var projected = converter.ConvertTo2dFromObjects(new List<_3dObject> { earth }, currentFrame: 1);
+        var converter = new PerspectiveWorldProjector();
+        var projected = converter.ProjectToTriangles(new List<_3dObject> { earth }, currentFrame: 1);
         int renderable = WorldRenderer.ProcessTrianglesForRender(
             projected,
             new Dictionary<(float, string), Color>(),
@@ -1624,7 +1623,7 @@ public class OutroSceneTests
         }
     }
 
-    private static (int Width, int Height) GetProjectedBounds(List<_2dTriangleMesh> triangles)
+    private static (int Width, int Height) GetProjectedBounds(List<ProjectedTriangleMesh> triangles)
     {
         Assert.IsTrue(triangles.Count > 0, "Cannot measure bounds without projected triangles.");
 
@@ -1649,8 +1648,8 @@ public class OutroSceneTests
         controls.MoveObject(ship, null, null);
         ApplyLiveMeshRotation(ship);
 
-        var converter = new _3dTo2d();
-        var projected = converter.ConvertTo2dFromObjects(new List<_3dObject> { ship }, currentFrame: 1)
+        var converter = new PerspectiveWorldProjector();
+        var projected = converter.ProjectToTriangles(new List<_3dObject> { ship }, currentFrame: 1)
             .Where(t => t.PartName == "UpperPart" || t.PartName == "LowerPart" || t.PartName == "RearPart" || t.PartName == "Winglets")
             .ToList();
 
@@ -1713,7 +1712,7 @@ public class OutroSceneTests
             .Max(v => v.z);
     }
 
-    private static float CalculateRenderShadeFactor(_2dTriangleMesh triangle)
+    private static float CalculateRenderShadeFactor(ProjectedTriangleMesh triangle)
     {
         float depthFactor01 = WorldRenderer.GetDepthFactor01(triangle.CalculatedZ);
         float angleFactor01 = Math.Clamp((triangle.TriangleAngle + 1f) * 0.5f, 0f, 1f);

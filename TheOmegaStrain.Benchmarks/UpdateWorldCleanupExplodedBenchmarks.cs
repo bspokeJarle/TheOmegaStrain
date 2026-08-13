@@ -7,7 +7,6 @@ using Domain;
 using Microsoft.VSDiagnostics;
 using _3dTesting.MainWindowClasses;
 using _3dTesting._3dWorld;
-using _3dTesting._Coordinates;
 using _3dTesting.Helpers;
 using static Domain._3dSpecificsImplementations;
 
@@ -18,8 +17,8 @@ public class UpdateWorldCleanupExplodedBenchmarks
     private const int ExplodedObjectCount = 128;
     private GameWorldManager _manager = null!;
     private _3dWorld _world = null!;
-    private List<_2dTriangleMesh> _screen = null!;
-    private List<_2dTriangleMesh> _crash = null!;
+    private List<ProjectedTriangleMesh> _screen = null!;
+    private List<ProjectedTriangleMesh> _crash = null!;
     [GlobalSetup]
     public void Setup()
     {
@@ -39,8 +38,8 @@ public class UpdateWorldCleanupExplodedBenchmarks
         {
             BestCandidateStates = new List<BestCandidateState>(ExplodedObjectCount)
         };
-        _screen = new List<_2dTriangleMesh>();
-        _crash = new List<_2dTriangleMesh>();
+        _screen = new List<ProjectedTriangleMesh>();
+        _crash = new List<ProjectedTriangleMesh>();
     }
 
     [IterationSetup]
@@ -111,12 +110,12 @@ public class UpdateWorldCleanupExplodedBenchmarks
             GameState.ShipState.BestCandidateStates.Add(new BestCandidateState { BestEnemyCandidate = new EnemyCandidateInfo { EnemyObject = exploded, EnemyCenterPosition = new Vector3 { x = 0, y = 0, z = 0 }, DistanceToShip = 100f + i } });
         }
 
-        _screen = new List<_2dTriangleMesh>();
-        _crash = new List<_2dTriangleMesh>();
+        _screen = new List<ProjectedTriangleMesh>();
+        _crash = new List<ProjectedTriangleMesh>();
     }
 
     [Benchmark]
-    public List<_2dTriangleMesh> UpdateWorldCleanupExplodedObjects()
+    public List<ProjectedTriangleMesh> UpdateWorldCleanupExplodedObjects()
     {
         return _manager.UpdateWorld(_world, ref _screen, ref _crash);
     }
