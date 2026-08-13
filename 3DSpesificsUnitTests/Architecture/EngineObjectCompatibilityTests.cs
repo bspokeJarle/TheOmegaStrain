@@ -144,6 +144,52 @@ public class EngineObjectCompatibilityTests
     }
 
     [TestMethod]
+    public void EngineRenderingHelpers_ExposeDynamicEffectPipelineRules()
+    {
+        Assert.IsTrue(RenderPipelineMarkers.IsDynamicEffectPartName("ExplodingPart"));
+        Assert.IsTrue(RenderPipelineMarkers.IsDynamicEffectPartName("Particle"));
+        Assert.IsTrue(RenderPipelineMarkers.IsDynamicEffectPartName("ParticleShadow"));
+        Assert.IsTrue(RenderPipelineMarkers.IsDynamicEffectPartName("MuzzleFlash"));
+        Assert.IsFalse(RenderPipelineMarkers.IsDynamicEffectPartName("Surface"));
+
+        Assert.IsTrue(RenderPipelineMarkers.ShouldUseEffectRenderingPipeline("Particle", "Main"));
+        Assert.IsFalse(RenderPipelineMarkers.ShouldUseEffectRenderingPipeline("Seeder", "Hull"));
+    }
+
+    [TestMethod]
+    public void EngineRenderingHelpers_ShadeHexColorsWithoutGameplayDependencies()
+    {
+        Assert.AreEqual("#030303", RenderColorShading.GetShadeOfColorFromNormal(0f, "FF0000"));
+        Assert.AreEqual("#820303", RenderColorShading.GetShadeOfColorFromNormal(0.5f, "FF0000"));
+        Assert.AreEqual("#000000", RenderColorShading.GetShadeOfColorFromNormal(1f, "bad"));
+        Assert.AreEqual("#040506", RenderColorShading.GetShadeOfColorFromNormal(1f, "010203"));
+    }
+
+    [TestMethod]
+    public void EngineRenderingHelpers_CalculateDepthAndAngleShadeKeys()
+    {
+        Assert.AreEqual(0f, RenderShadeMath.GetDepthFactor01(-2000f, -1000f, 1000f));
+        Assert.AreEqual(0.5f, RenderShadeMath.GetDepthFactor01(0f, -1000f, 1000f));
+        Assert.AreEqual(1f, RenderShadeMath.GetDepthFactor01(1000f, -1000f, 1000f));
+
+        Assert.AreEqual(0f, RenderShadeMath.NormalizeAngleTo01(-1f));
+        Assert.AreEqual(0.5f, RenderShadeMath.NormalizeAngleTo01(0f));
+        Assert.AreEqual(1f, RenderShadeMath.NormalizeAngleTo01(1f));
+
+        Assert.AreEqual(0.25f, RenderShadeMath.GetTriangleShadeKey(
+            calculatedZ: 0f,
+            triangleAngle: 0f,
+            nearZ: -1000f,
+            farZ: 1000f));
+        Assert.AreEqual(0.5f, RenderShadeMath.GetTriangleShadeKey(
+            calculatedZ: 0f,
+            triangleAngle: -1f,
+            nearZ: -1000f,
+            farZ: 1000f,
+            useDepthOnlyShading: true));
+    }
+
+    [TestMethod]
     public void ProjectedTriangleMesh_ImplementsEngineProjectedTriangleContract()
     {
         IProjectedTriangle triangle = new _2dTriangleMesh

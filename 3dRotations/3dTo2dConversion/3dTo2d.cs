@@ -227,9 +227,7 @@ namespace _3dTesting._3dRotation
 
         private static bool ShouldUseEffectRenderingPipeline(string? objectName, string? partName)
         {
-            return TriangleRenderPipelineMarkers.IsDynamicEffectPartName(partName)
-                || string.Equals(objectName, "Particle", StringComparison.Ordinal)
-                || string.Equals(objectName, "ParticleShadow", StringComparison.Ordinal);
+            return RenderPipelineMarkers.ShouldUseEffectRenderingPipeline(objectName, partName);
         }
 
         private (double x, double y) ProjectVertex(Vector3 v, double objPosX, double objPosY, double objPosZ)

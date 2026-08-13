@@ -8,12 +8,7 @@ namespace _3dTesting._Coordinates
     public static class TriangleRenderPipelineMarkers
     {
         public static bool IsDynamicEffectPartName(string? partName)
-        {
-            return string.Equals(partName, "ExplodingPart", StringComparison.Ordinal)
-                || string.Equals(partName, "Particle", StringComparison.Ordinal)
-                || string.Equals(partName, "ParticleShadow", StringComparison.Ordinal)
-                || string.Equals(partName, "MuzzleFlash", StringComparison.Ordinal);
-        }
+            => RenderPipelineMarkers.IsDynamicEffectPartName(partName);
     }
 
     public struct _2dTriangleMesh : IProjectedTriangle

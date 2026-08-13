@@ -101,7 +101,7 @@ namespace _3dTesting.Rendering
                             // NOTE: We keep the call signature the same for now,
                             // since you said you're aligned with renaming later.
                             Color color = (Color)ColorConverter.ConvertFromString(
-                                Helpers.Colors.getShadeOfColorFromNormal(roundedFactor01, normalized));
+                                RenderColorShading.GetShadeOfColorFromNormal(roundedFactor01, normalized));
                             color = ApplyGraphicsQualityColor(color, roundedFactor01, quality);
 
                             colorCache[cacheKey] = color;
@@ -218,7 +218,7 @@ namespace _3dTesting.Rendering
                     {
                         if (ShouldLog()) Logger.Log($"[WorldRenderer] ⚠️ Color cache miss for key ({shadeKey}, {baseColor}). CalculatedZ:{triangle.CalculatedZ} Angle:{triangle.TriangleAngle:0.00}");
 
-                        string hex = Helpers.Colors.getShadeOfColorFromNormal(shadeKey, baseColor);
+                        string hex = RenderColorShading.GetShadeOfColorFromNormal(shadeKey, baseColor);
 
                         color = ApplyGraphicsQualityColor(HexToColor(hex), shadeKey, quality);
                         colorCache[colorCacheKey] = color;
@@ -336,12 +336,12 @@ namespace _3dTesting.Rendering
                 if (triangle.CalculatedZ > FarZ || triangle.CalculatedZ < NearZ)
                     continue;
 
-                float depthFactor01 = GetDepthFactor01(triangle.CalculatedZ);
-                float angleFactor01 = NormalizeAngleTo01(triangle.TriangleAngle);
-
-                float combinedFactor01 = Math.Clamp(angleFactor01 * depthFactor01, 0f, 1f);
-                if (triangle.PartName != null && triangle.PartName.Contains("Star_Core"))
-                    combinedFactor01 = depthFactor01;
+                float shadeKey = RenderShadeMath.GetTriangleShadeKey(
+                    triangle.CalculatedZ,
+                    triangle.TriangleAngle,
+                    NearZ,
+                    FarZ,
+                    IsDepthOnlyShadePartName(triangle.PartName));
 
                 string? baseColor = triangle.Color;
                 if (string.IsNullOrWhiteSpace(baseColor))
@@ -356,11 +356,9 @@ namespace _3dTesting.Rendering
                     baseColor = baseColor.ToLowerInvariant();
                 }
 
-                float shadeKey = (float)Math.Round(combinedFactor01, 2, MidpointRounding.AwayFromZero);
-
                 if (!colorCache.TryGetValue((shadeKey, baseColor), out Color color))
                 {
-                    string hex = Helpers.Colors.getShadeOfColorFromNormal(shadeKey, baseColor);
+                    string hex = RenderColorShading.GetShadeOfColorFromNormal(shadeKey, baseColor);
                     color = HexToColor(hex);
                     colorCache[(shadeKey, baseColor)] = color;
                 }
@@ -410,7 +408,7 @@ namespace _3dTesting.Rendering
 
         public static bool IsDynamicEffectPartName(string? partName)
         {
-            return TriangleRenderPipelineMarkers.IsDynamicEffectPartName(partName);
+            return RenderPipelineMarkers.IsDynamicEffectPartName(partName);
         }
 
         public static bool IsGlowCandidatePartName(string? partName)
@@ -605,7 +603,7 @@ namespace _3dTesting.Rendering
                 return color;
             }
 
-            color = ApplyGraphicsQualityColor(HexToColor(Helpers.Colors.getShadeOfColorFromNormal(shadeKey, baseColor)), shadeKey, quality);
+            color = ApplyGraphicsQualityColor(HexToColor(RenderColorShading.GetShadeOfColorFromNormal(shadeKey, baseColor)), shadeKey, quality);
             colorCache[cacheKey] = color;
             return color;
         }
@@ -638,16 +636,17 @@ namespace _3dTesting.Rendering
 
         private static float GetTriangleShadeKey(_2dTriangleMesh triangle)
         {
-            float depthFactor01 = GetDepthFactor01(triangle.CalculatedZ);
-            float angleFactor01 = NormalizeAngleTo01(triangle.TriangleAngle);
-            float combinedFactor01 = Math.Clamp(angleFactor01 * depthFactor01, 0f, 1f);
+            return RenderShadeMath.GetTriangleShadeKey(
+                triangle.CalculatedZ,
+                triangle.TriangleAngle,
+                NearZ,
+                FarZ,
+                IsDepthOnlyShadePartName(triangle.PartName));
+        }
 
-            if (triangle.PartName != null && triangle.PartName.Contains("Star_Core"))
-            {
-                combinedFactor01 = depthFactor01;
-            }
-
-            return (float)Math.Round(combinedFactor01, 2, MidpointRounding.AwayFromZero);
+        private static bool IsDepthOnlyShadePartName(string? partName)
+        {
+            return partName != null && partName.Contains("Star_Core");
         }
 
         private static void AddTriangleFigure(StreamGeometryContext ctx, _2dTriangleMesh triangle)
@@ -816,21 +815,13 @@ namespace _3dTesting.Rendering
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float GetDepthFactor01(float calculatedZ)
         {
-            float near = NearZ; // lav Z -> mørkere (0)
-            float far = FarZ;  // høy Z -> lysere (1)
-
-            if (calculatedZ <= near) return 0f;
-            if (calculatedZ >= far) return 1f;
-
-            return (calculatedZ - near) / (far - near);
+            return RenderShadeMath.GetDepthFactor01(calculatedZ, NearZ, FarZ);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float NormalizeAngleTo01(float angle)
         {
-            // Angle is typically a dot product in [-1, 1]; map to [0, 1]
-            float normalized = (angle + 1f) * 0.5f;
-            return Math.Clamp(normalized, 0f, 1f);
+            return RenderShadeMath.NormalizeAngleTo01(angle);
         }
 
         /*private void DrawTriangle(DrawingContext dc, _2dTriangleMesh triangle, SolidColorBrush brush, Pen pen)

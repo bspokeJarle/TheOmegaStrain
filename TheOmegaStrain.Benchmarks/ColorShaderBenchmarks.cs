@@ -1,5 +1,5 @@
 using BenchmarkDotNet.Attributes;
-using _3dTesting.Helpers;
+using Domain;
 using Microsoft.VSDiagnostics;
 
 namespace TheOmegaStrain.Benchmarks;
@@ -19,7 +19,7 @@ public class ColorShaderBenchmarks
         string result = "";
         for (int i = 0; i < ValidColors.Length; i++)
             for (int j = 0; j < Normals.Length; j++)
-                result = Colors.getShadeOfColorFromNormal(Normals[j], ValidColors[i]);
+                result = RenderColorShading.GetShadeOfColorFromNormal(Normals[j], ValidColors[i]);
         return result;
     }
 
@@ -29,7 +29,7 @@ public class ColorShaderBenchmarks
         string result = "";
         for (int i = 0; i < MalformedColors.Length; i++)
             for (int j = 0; j < Normals.Length; j++)
-                result = Colors.getShadeOfColorFromNormal(Normals[j], MalformedColors[i]);
+                result = RenderColorShading.GetShadeOfColorFromNormal(Normals[j], MalformedColors[i]);
         return result;
     }
 }
