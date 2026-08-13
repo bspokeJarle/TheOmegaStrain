@@ -45,7 +45,7 @@ namespace _3dTesting.MainWindowClasses.Loops
         private long adaptiveGcAttempts = 0;
         private int AiUpdateCounter = 0;
         private const int AiUpdateInterval = 5; // Update offscreen AI every 5 frames
-        private readonly _3dTo2d From3dTo2d = new();
+        private readonly IWorldProjector<_3dObject, _2dTriangleMesh> From3dTo2d = new _3dTo2d();
         private readonly _3dRotationCommon Rotate3d = new();
         private readonly ParticleManager particleManager = new();
         private readonly WeaponsManager weaponsManager = new();

@@ -1,4 +1,6 @@
 using Domain;
+using _3dTesting._3dRotation;
+using _3dTesting._Coordinates;
 using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.Architecture;
@@ -113,6 +115,14 @@ public class EngineObjectCompatibilityTests
     {
         Assert.IsTrue(
             typeof(IGameLoop<object>).GetInterfaces().Contains(typeof(IWorldFrameLoop<I3dWorld, object>)));
+    }
+
+    [TestMethod]
+    public void ProjectionConverter_ImplementsEngineProjectionContract()
+    {
+        Assert.IsInstanceOfType(
+            new _3dTo2d(),
+            typeof(IWorldProjector<_3dObject, _2dTriangleMesh>));
     }
 
     private sealed class TestWorld : I3dWorld

@@ -2,13 +2,14 @@ using _3dTesting._Coordinates;
 using _3dTesting.Helpers;
 using CommonUtilities._3DHelpers;
 using CommonUtilities.CommonSetup;
+using Domain;
 using System;
 using System.Collections.Generic;
 using static Domain._3dSpecificsImplementations;
 
 namespace _3dTesting._3dRotation
 {
-    public class _3dTo2d
+    public class _3dTo2d : IWorldProjector<_3dObject, _2dTriangleMesh>
     {
         private readonly bool enableLogging = false;
         private static int screenCenterX => ScreenSetup.screenSizeX / 2;
