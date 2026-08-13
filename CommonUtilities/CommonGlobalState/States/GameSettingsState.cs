@@ -1,4 +1,5 @@
 using System;
+using Domain;
 
 namespace CommonUtilities.CommonGlobalState.States
 {
@@ -68,7 +69,7 @@ namespace CommonUtilities.CommonGlobalState.States
         RightStickRight = 23
     }
 
-    public sealed class GameSettingsState
+    public sealed class GameSettingsState : IAudioVolumeProfile
     {
         public const int CurrentSettingsSchemaVersion = 3;
         public const int VolumeStepPercent = 5;

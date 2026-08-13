@@ -1,4 +1,3 @@
-﻿using CommonUtilities.CommonSetup;
 using Domain;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
@@ -21,6 +20,7 @@ internal sealed class NAudioAudioInstance : IAudioInstance
     private readonly SegmentedLoopSampleProvider? _loopProvider;
     private readonly SoundDefinition _definition;
     private readonly bool _use3dSpatialization;
+    private readonly AudioRuntimeSettings _runtimeSettings;
 
     private float _baseVolume;
     private float _currentSpeed;
@@ -49,7 +49,8 @@ internal sealed class NAudioAudioInstance : IAudioInstance
         AudioPlayMode mode,
         float initialVolume,
         float initialSpeed,
-        AudioPlayOptions? options)
+        AudioPlayOptions? options,
+        AudioRuntimeSettings runtimeSettings)
     {
         _owner = owner;
         _definition = definition;
@@ -58,6 +59,7 @@ internal sealed class NAudioAudioInstance : IAudioInstance
         _pipeline = pipeline;
         _loopProvider = loopProvider;
         _use3dSpatialization = definition.Settings.Is3D;
+        _runtimeSettings = runtimeSettings;
         _baseVolume = SanitizeVolume(initialVolume);
         _currentSpeed = initialSpeed;
         _worldPosition = SanitizeWorldPosition(options?.WorldPosition ?? Vector3.Zero);
@@ -91,7 +93,7 @@ internal sealed class NAudioAudioInstance : IAudioInstance
         float pan = _hasExplicitPan
             ? _currentPan
             : _use3dSpatialization
-                ? SanitizePan(_worldPosition.X / AudioSetup.SpatialPanDistance)
+                ? SanitizePan(_worldPosition.X / Math.Max(1f, _runtimeSettings.SpatialPanDistance))
                 : 0f;
 
         _panProvider.Pan = pan;
@@ -103,7 +105,7 @@ internal sealed class NAudioAudioInstance : IAudioInstance
         }
 
         float depth = MathF.Abs(SanitizeFinite(_worldPosition.Z));
-        float attenuation = 1f / (1f + (depth / AudioSetup.SpatialDepthScale));
+        float attenuation = 1f / (1f + (depth / Math.Max(1f, _runtimeSettings.SpatialDepthScale)));
         _volumeProvider.Volume = SanitizeVolume(_baseVolume * attenuation);
     }
 

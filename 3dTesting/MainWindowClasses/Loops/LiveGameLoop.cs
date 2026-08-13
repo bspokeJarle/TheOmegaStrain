@@ -63,7 +63,7 @@ namespace _3dTesting.MainWindowClasses.Loops
         private StarFieldHandler StarFieldHandler { get; set; }
 
         private const float DefaultMusicVolume = 0.15f;
-        private readonly IAudioPlayer audioPlayer = new NAudioAudioPlayer(AudioSetup.AudioBasePath);
+        private readonly IAudioPlayer audioPlayer = new NAudioAudioPlayer(AudioSetup.AudioBasePath, AudioSetup.CreateRuntimeSettings());
         private readonly ISoundRegistry soundRegistry = new JsonSoundRegistry(AudioSetup.SoundRegistryPath);
         private SoundDefinition MusicDef { get; set; } = null;
         private bool MusicIsPlaying { get; set; } = false;

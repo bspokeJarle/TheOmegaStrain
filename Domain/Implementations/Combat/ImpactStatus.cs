@@ -2,15 +2,10 @@ namespace Domain
 {
     public partial class _3dSpecificsImplementations
     {
-        public class ImpactStatus : IImpactStatus
+        public class ImpactStatus : EngineImpactState, IImpactStatus
         {
-            public bool HasCrashed { get; set; }
-            public string ObjectName { get; set; }
-            public ImpactDirection? ImpactDirection { get; set; }
-            public IParticle SourceParticle { get; set; }
+            public IParticle? SourceParticle { get; set; }
             public int? ObjectHealth { get; set; } = 100;
-            public string? CrashBoxName { get; set; }
-            public bool HasExploded { get; set; }
         }
     }
 }

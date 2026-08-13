@@ -83,6 +83,31 @@ public class EngineObjectCompatibilityTests
         Assert.AreEqual(0, renderableWorld.RenderableObjects.Count());
     }
 
+    [TestMethod]
+    public void DomainImpactStatus_ImplementsGameplayAndEngineImpactContracts()
+    {
+        IImpactStatus gameplayImpact = new ImpactStatus
+        {
+            HasCrashed = true,
+            HasExploded = true,
+            ObjectName = "Surface",
+            CrashBoxName = "MainSurface",
+            ImpactDirection = ImpactDirection.Bottom,
+            ObjectHealth = 42
+        };
+
+        Assert.IsInstanceOfType(gameplayImpact, typeof(IImpactState));
+
+        var engineImpact = (IImpactState)gameplayImpact;
+
+        Assert.IsTrue(engineImpact.HasCrashed);
+        Assert.IsTrue(engineImpact.HasExploded);
+        Assert.AreEqual("Surface", engineImpact.ObjectName);
+        Assert.AreEqual("MainSurface", engineImpact.CrashBoxName);
+        Assert.AreEqual(ImpactDirection.Bottom, engineImpact.ImpactDirection);
+        Assert.AreEqual(42, gameplayImpact.ObjectHealth);
+    }
+
     private sealed class TestWorld : I3dWorld
     {
         public List<I3dObject> WorldInhabitants { get; set; } = new();

@@ -1,4 +1,6 @@
 using System.IO;
+using CommonUtilities.CommonGlobalState;
+using Domain;
 
 namespace CommonUtilities.CommonSetup
 {
@@ -21,5 +23,14 @@ namespace CommonUtilities.CommonSetup
         public const float OffscreenAiAudioCurveExponent = 2.2f;
 
         public static string SoundRegistryPath => Path.Combine(AudioBasePath, SoundRegistryFileName);
+
+        public static AudioRuntimeSettings CreateRuntimeSettings() => new()
+        {
+            MusicFadeOutDurationMs = MusicFadeOutDurationMs,
+            MusicFadeOutSteps = MusicFadeOutSteps,
+            SpatialPanDistance = SpatialPanDistance,
+            SpatialDepthScale = SpatialDepthScale,
+            VolumeProfileProvider = static () => GameState.SettingsState
+        };
     }
 }

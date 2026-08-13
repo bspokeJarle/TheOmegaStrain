@@ -1,5 +1,3 @@
-﻿using CommonUtilities.CommonSetup;
-using CommonUtilities.CommonGlobalState;
 using Domain;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
@@ -22,14 +20,21 @@ public sealed class NAudioAudioPlayer : IAudioPlayer, IDisposable
 
     private readonly string _audioBasePath;
     private readonly Random _rng = new();
+    private readonly AudioRuntimeSettings _runtimeSettings;
 
     private NAudioAudioInstance? _musicInstance;
     private float _musicVolume = 0.6f;
     public float MusicVolume => _musicVolume;
 
     public NAudioAudioPlayer(string audioBasePath)
+        : this(audioBasePath, new AudioRuntimeSettings())
+    {
+    }
+
+    public NAudioAudioPlayer(string audioBasePath, AudioRuntimeSettings? runtimeSettings)
     {
         _audioBasePath = audioBasePath;
+        _runtimeSettings = runtimeSettings ?? new AudioRuntimeSettings();
 
         // The mixer runs in one fixed format so every sound can be combined safely.
         var waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(44100, 2);
@@ -123,7 +128,8 @@ public sealed class NAudioAudioPlayer : IAudioPlayer, IDisposable
             mode,
             baseVolume,
             speed,
-            options);
+            options,
+            _runtimeSettings);
 
         _instances[instance.Id] = instance;
         _mixer.AddMixerInput(pipeline);
@@ -208,18 +214,18 @@ public sealed class NAudioAudioPlayer : IAudioPlayer, IDisposable
         _musicInstance = instance as NAudioAudioInstance;
     }
 
-    private static float ApplyUserSettingsVolume(SoundDefinition definition, float baseVolume)
+    private float ApplyUserSettingsVolume(SoundDefinition definition, float baseVolume)
     {
-        var settings = GameState.SettingsState;
-        if (settings == null)
+        var volumeProfile = _runtimeSettings.GetVolumeProfile();
+        if (volumeProfile == null)
             return baseVolume;
 
         if (IsMusicSound(definition))
             return baseVolume;
 
-        return settings.IsVoiceSound(definition.Id, definition.Usage)
-            ? settings.ApplyVoiceVolume(baseVolume)
-            : settings.ApplyEffectsVolume(baseVolume);
+        return volumeProfile.IsVoiceSound(definition.Id, definition.Usage)
+            ? volumeProfile.ApplyVoiceVolume(baseVolume)
+            : volumeProfile.ApplyEffectsVolume(baseVolume);
     }
 
     private static bool IsMusicSound(SoundDefinition definition)
@@ -253,13 +259,13 @@ public sealed class NAudioAudioPlayer : IAudioPlayer, IDisposable
 
         float startVolume = _musicVolume;
 
-        if (AudioSetup.MusicFadeOutDurationMs > 0 && AudioSetup.MusicFadeOutSteps > 0 && startVolume > 0f)
+        if (_runtimeSettings.MusicFadeOutDurationMs > 0 && _runtimeSettings.MusicFadeOutSteps > 0 && startVolume > 0f)
         {
-            int sleepPerStepMs = Math.Max(1, AudioSetup.MusicFadeOutDurationMs / AudioSetup.MusicFadeOutSteps);
+            int sleepPerStepMs = Math.Max(1, _runtimeSettings.MusicFadeOutDurationMs / _runtimeSettings.MusicFadeOutSteps);
 
-            for (int step = AudioSetup.MusicFadeOutSteps - 1; step >= 0; step--)
+            for (int step = _runtimeSettings.MusicFadeOutSteps - 1; step >= 0; step--)
             {
-                instance.SetVolume(startVolume * step / AudioSetup.MusicFadeOutSteps);
+                instance.SetVolume(startVolume * step / _runtimeSettings.MusicFadeOutSteps);
                 Thread.Sleep(sleepPerStepMs);
             }
         }
