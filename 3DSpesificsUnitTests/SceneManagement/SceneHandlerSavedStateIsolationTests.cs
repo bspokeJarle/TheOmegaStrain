@@ -1,5 +1,5 @@
-using _3DWorld.Scene;
-using _3dTesting._3dWorld;
+using _3dRotations.SceneManagement;
+using _3dRotations.World;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.Persistence;
@@ -421,9 +421,9 @@ public class SceneHandlerSavedStateIsolationTests
         field!.SetValue(handler, value);
     }
 
-    private static _3dWorld CreateWorld(SceneHandler handler)
+    private static GameWorld CreateWorld(SceneHandler handler)
     {
-        var world = new _3dWorld();
+        var world = new GameWorld();
         world.SceneHandler = handler;
         world.WorldInhabitants.Clear();
         handler.SetupActiveScene(world);

@@ -1,6 +1,6 @@
-using _3DWorld.Scene;
+using _3dRotations.SceneManagement;
 using _3dRotations.World.Objects;
-using _3dTesting._3dWorld;
+using _3dRotations.World;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.Persistence;
@@ -325,9 +325,9 @@ public class ReturnToIntroAndSimulationRoundTests
     // Helpers
     // ------------------------------------------------------------------
 
-    private static _3dWorld CreateMinimalWorld(SceneHandler handler)
+    private static GameWorld CreateMinimalWorld(SceneHandler handler)
     {
-        var world = new _3dWorld();
+        var world = new GameWorld();
         world.SceneHandler = handler;
         world.WorldInhabitants.Clear();
         return world;
@@ -340,7 +340,7 @@ public class ReturnToIntroAndSimulationRoundTests
         GameState.GamePlayState.SceneIndex = index;
     }
 
-    private static void InvokeReturnToIntro(SceneHandler handler, _3dWorld world)
+    private static void InvokeReturnToIntro(SceneHandler handler, GameWorld world)
     {
         var method = typeof(SceneHandler).GetMethod(
             "ReturnToIntro",
@@ -351,7 +351,7 @@ public class ReturnToIntroAndSimulationRoundTests
         method?.Invoke(handler, new object[] { world });
     }
 
-    private static void HandleKeyPress(SceneHandler handler, _3dWorld world, GameInputKey key)
+    private static void HandleKeyPress(SceneHandler handler, GameWorld world, GameInputKey key)
     {
         handler.HandleKeyPress(key, world);
     }

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
 using _3dTesting.MainWindowClasses;
-using _3dTesting._3dWorld;
+using _3dRotations.World;
 using _3dTesting.Helpers;
 using Domain;
 using static Domain._3dSpecificsImplementations;
@@ -12,14 +12,14 @@ namespace TheOmegaStrain.Benchmarks;
 public class UpdateWorldBenchmarks
 {
     private GameWorldManager _manager = null !;
-    private _3dWorld _world = null !;
+    private GameWorld _world = null !;
     private List<ProjectedTriangleMesh> _screen = null !;
     private List<ProjectedTriangleMesh> _crash = null !;
     [GlobalSetup]
     public void Setup()
     {
         _manager = new GameWorldManager();
-        _world = new _3dWorld();
+        _world = new GameWorld();
         _world.WorldInhabitants.Clear();
         _world.SceneHandler = new StubSceneHandler();
         var dynamicObj = TestObjectFactory.CreateDynamicTestObject();

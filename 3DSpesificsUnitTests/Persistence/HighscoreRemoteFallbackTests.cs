@@ -1,4 +1,4 @@
-using _3dTesting._3dWorld;
+using _3dRotations.World;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.Persistence;
@@ -207,7 +207,7 @@ public class HighscoreRemoteFallbackTests
                 CreateEntry("STARTUPACE", 33333, 33)
             });
 
-        _ = new _3dWorld();
+        _ = new GameWorld();
 
         Assert.IsTrue(PersistenceSetup.IsSupabaseConfigured);
         var highscorePage = GameState.ScreenOverlayState.Pages.Single(page => page[1] == "TOP PILOTS");

@@ -4,6 +4,7 @@ using _3dTesting.MainWindowClasses;
 using _3dTesting.MainWindowClasses.Loops;
 using _3dTesting.MainWindowClasses.Overlays;
 using _3dTesting.Rendering;
+using _3dRotations.World;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
@@ -62,7 +63,7 @@ namespace _3dTesting
         private GameWorldManager gameWorldManager = new GameWorldManager();
         private IProjectedTriangleRenderer<ProjectedTriangleMesh> worldRenderer;
 
-        public _3dWorld._3dWorld world = new();
+        public GameWorld world = new();
         public MediaPlayer player = new MediaPlayer();
 
         private bool isPaused = false;

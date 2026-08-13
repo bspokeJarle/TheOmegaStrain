@@ -1,5 +1,5 @@
-﻿using _3dRotations.World.Objects;
-using _3dTesting._3dWorld;
+using _3dRotations.World.Objects;
+using _3dRotations.World;
 using Domain;
 using System.Collections.Generic;
 using static Domain._3dSpecificsImplementations;

@@ -1,4 +1,4 @@
-﻿using _3dRotations.Scene.Scene1;
+using _3dRotations.Scene.Scene1;
 using _3dRotations.Scene.Scene3;
 using _3dRotations.Scene.Scene4;
 using _3dRotations.Scene.Scene5;
@@ -9,7 +9,7 @@ using _3dRotations.Scenes.Intro;
 using _3dRotations.Scenes.Outro;
 using _3dRotations.Scenes.SceneSimulation;
 using _3dRotations.Scenes.Tutorial;
-using _3dTesting._3dWorld;
+using _3dRotations.World;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
@@ -24,7 +24,7 @@ using System.Diagnostics;
 using System.Linq;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3DWorld.Scene
+namespace _3dRotations.SceneManagement
 {
     public class SceneHandler : ISceneHandler
     {
@@ -88,7 +88,7 @@ namespace _3DWorld.Scene
             scene.SetupSceneOverlay();
             ClearVideoOverlay();
             ApplySceneSettings(scene);
-            scene.SetupScene((_3dWorld)world);
+            scene.SetupScene((GameWorld)world);
             InitializeDirector(scene, world);
             ValidateGameSceneSetup(scene, world);
             CapturePlanetStartSnapshotIfNeeded(scene);
@@ -143,7 +143,7 @@ namespace _3DWorld.Scene
             GameState.ScreenOverlayState.HardHide();
             newScene.SetupGameOverlay();
             ApplySceneSettings(newScene);
-            newScene.SetupScene((_3dWorld)world);
+            newScene.SetupScene((GameWorld)world);
             ApplySceneSettings(newScene);
 
             if (hadCheckpoint)
@@ -229,7 +229,7 @@ namespace _3DWorld.Scene
             GameState.ScreenOverlayState.HardHide();
             newScene.SetupGameOverlay();
             ApplySceneSettings(newScene);
-            newScene.SetupScene((_3dWorld)world);
+            newScene.SetupScene((GameWorld)world);
             ApplySceneSettings(newScene);
 
             if (hasPlanetStartSnapshot)
@@ -1205,7 +1205,7 @@ namespace _3DWorld.Scene
 
             introScene.SetupSceneOverlay();
             ApplySceneSettings(introScene);
-            introScene.SetupScene((_3dWorld)world);
+            introScene.SetupScene((GameWorld)world);
         }
 
         private static void DisposeWorldMovements(I3dWorld world)

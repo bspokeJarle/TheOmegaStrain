@@ -6,7 +6,7 @@ using CommonUtilities.CommonSetup;
 using Domain;
 using Microsoft.VSDiagnostics;
 using _3dTesting.MainWindowClasses;
-using _3dTesting._3dWorld;
+using _3dRotations.World;
 using _3dTesting.Helpers;
 using static Domain._3dSpecificsImplementations;
 
@@ -16,14 +16,14 @@ public class UpdateWorldCleanupExplodedBenchmarks
 {
     private const int ExplodedObjectCount = 128;
     private GameWorldManager _manager = null!;
-    private _3dWorld _world = null!;
+    private GameWorld _world = null!;
     private List<ProjectedTriangleMesh> _screen = null!;
     private List<ProjectedTriangleMesh> _crash = null!;
     [GlobalSetup]
     public void Setup()
     {
         _manager = new GameWorldManager();
-        _world = new _3dWorld
+        _world = new GameWorld
         {
             SceneHandler = new StubSceneHandler()
         };

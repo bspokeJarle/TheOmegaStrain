@@ -1,7 +1,7 @@
-using _3dTesting._3dWorld;
+using _3dRotations.World;
 using _3dRotations.Projection;
 using _3dTesting.Rendering;
-using _3DWorld.Scene;
+using _3dRotations.SceneManagement;
 using _3dRotations.World.Objects;
 using _3dRotations.World.Objects.EarthObject;
 using _3dRotations.Scenes.Outro;
@@ -37,11 +37,11 @@ public class OutroSceneTests
         GameState.DeltaTime = 0f;
     }
 
-    private static _3dWorld CreateWorldAtOutro()
+    private static GameWorld CreateWorldAtOutro()
     {
         GameState.GamePlayState.SceneIndex = 9;
         var handler = new SceneHandler();
-        var world = new _3dWorld();
+        var world = new GameWorld();
         world.SceneHandler = handler;
         world.WorldInhabitants.Clear();
         handler.SetupActiveScene(world);

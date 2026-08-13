@@ -1,6 +1,6 @@
-using _3DWorld.Scene;
+using _3dRotations.SceneManagement;
 using _3dRotations.Scenes.SceneSimulation;
-using _3dTesting._3dWorld;
+using _3dRotations.World;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.Events;
@@ -300,7 +300,7 @@ public class SceneSimulationTests
     public void SceneHandler_LegacySimulationCheckpointSavedAsScene1_TargetsSimulation()
     {
         var handler = new SceneHandler();
-        var world = new _3dWorld();
+        var world = new GameWorld();
         world.SceneHandler = handler;
         world.WorldInhabitants.Clear();
 
@@ -349,7 +349,7 @@ public class SceneSimulationTests
     public void SceneHandler_LoadedSimulationSave_RebuildsSavedRound()
     {
         var handler = new SceneHandler();
-        var world = new _3dWorld();
+        var world = new GameWorld();
         world.SceneHandler = handler;
         world.WorldInhabitants.Clear();
 

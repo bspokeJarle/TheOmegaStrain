@@ -1,5 +1,5 @@
-using _3DWorld.Scene;
-using _3dTesting._3dWorld;
+using _3dRotations.SceneManagement;
+using _3dRotations.World;
 using _3dRotations.Scene.Scene1;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
@@ -563,19 +563,19 @@ public class SceneHandlerTests
     // Helpers
     // -----------------------------------------------------------------
 
-    private static _3dWorld CreateWorld(SceneHandler handler)
+    private static GameWorld CreateWorld(SceneHandler handler)
     {
         // Create a world that uses the provided handler (avoiding
-        // the default _3dWorld constructor which creates its own SceneHandler)
-        var world = (Activator.CreateInstance(typeof(_3dWorld), true) as _3dWorld)!;
+        // the default GameWorld constructor which creates its own SceneHandler)
+        var world = (Activator.CreateInstance(typeof(GameWorld), true) as GameWorld)!;
 
         // Use reflection to avoid the constructor auto-calling SetupActiveScene
         // Alternatively, just create via normal constructor and accept the side-effect
         // Since the constructor calls SetupActiveScene for Intro, this is fine
-        world = new _3dWorld();
+        world = new GameWorld();
         world.SceneHandler = handler;
 
-        // The _3dWorld constructor already called SetupActiveScene on its own handler.
+        // The GameWorld constructor already called SetupActiveScene on its own handler.
         // We set our handler and re-setup so the test handler owns the scene.
         world.WorldInhabitants.Clear();
         handler.SetupActiveScene(world);
@@ -583,7 +583,7 @@ public class SceneHandlerTests
         return world;
     }
 
-    private static void AdvanceScene(SceneHandler handler, _3dWorld world)
+    private static void AdvanceScene(SceneHandler handler, GameWorld world)
     {
         handler.NextScene(world);
     }

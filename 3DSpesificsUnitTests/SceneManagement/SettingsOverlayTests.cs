@@ -1,5 +1,5 @@
-using _3DWorld.Scene;
-using _3dTesting._3dWorld;
+using _3dRotations.SceneManagement;
+using _3dRotations.World;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.Persistence;
@@ -182,9 +182,9 @@ public class SettingsOverlayTests
         });
     }
 
-    private static _3dWorld CreateRealWorld(SceneHandler handler)
+    private static GameWorld CreateRealWorld(SceneHandler handler)
     {
-        var world = new _3dWorld
+        var world = new GameWorld
         {
             SceneHandler = handler
         };
@@ -192,7 +192,7 @@ public class SettingsOverlayTests
         return world;
     }
 
-    private static void HandleKeyPress(SceneHandler handler, _3dWorld world, GameInputKey key)
+    private static void HandleKeyPress(SceneHandler handler, GameWorld world, GameInputKey key)
     {
         handler.HandleKeyPress(key, world);
     }
