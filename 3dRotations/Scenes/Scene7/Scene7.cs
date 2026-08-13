@@ -15,7 +15,7 @@ using System;
 using System.Collections.Generic;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.Scene.Scene7
+namespace _3dRotations.Scenes.Scene7
 {
     public class Scene7 : IScene
     {

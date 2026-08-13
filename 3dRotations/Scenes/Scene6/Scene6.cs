@@ -15,7 +15,7 @@ using GameAiAndControls.Controls.JumpingFishControls;
 using GameAiAndControls.Controls.SpaceSwanControls;
 using System;
 
-namespace _3dRotations.Scene.Scene6
+namespace _3dRotations.Scenes.Scene6
 {
     public class Scene6 : IScene
     {

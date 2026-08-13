@@ -3,7 +3,7 @@ using CommonUtilities.Persistence;
 using Domain;
 using GameAiAndControls.Audio.Services;
 
-namespace _3dRotations.Scene.Scene5
+namespace _3dRotations.Scenes.Scene5
 {
     public class Scene5Director : ISceneDirector
     {

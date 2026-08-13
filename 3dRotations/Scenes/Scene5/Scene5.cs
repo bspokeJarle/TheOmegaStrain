@@ -14,7 +14,7 @@ using System.Collections.Generic;
 using static Domain._3dSpecificsImplementations;
 using GameAiAndControls.Controls.MotherShipMediumControls;
 
-namespace _3dRotations.Scene.Scene5
+namespace _3dRotations.Scenes.Scene5
 {
     public class Scene5 : IScene
     {

@@ -2,7 +2,7 @@ using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.Events;
 using Domain;
-using _3dRotations.Scene.Scene3;
+using _3dRotations.Scenes.Scene3;
 using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.SceneManagement;

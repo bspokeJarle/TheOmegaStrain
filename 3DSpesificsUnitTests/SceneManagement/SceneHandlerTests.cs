@@ -1,6 +1,7 @@
 using _3dRotations.SceneManagement;
 using _3dRotations.World;
-using _3dRotations.Scene.Scene1;
+using _3dRotations.Scenes.Scene1;
+using _3dRotations.Scenes.Scene2;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using Domain;

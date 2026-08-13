@@ -1,4 +1,4 @@
-using _3dRotations.Scene.Scene1;
+using _3dRotations.Scenes.Scene1;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.Events;

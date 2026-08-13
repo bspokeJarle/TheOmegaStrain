@@ -13,7 +13,7 @@ using System;
 using System.Collections.Generic;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.Scene.Scene8
+namespace _3dRotations.Scenes.Scene8
 {
     public class Scene8 : IScene
     {

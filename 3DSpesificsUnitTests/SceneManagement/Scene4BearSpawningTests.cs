@@ -1,5 +1,5 @@
 using _3dRotations.Helpers;
-using _3dRotations.Scene.Scene4;
+using _3dRotations.Scenes.Scene4;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
