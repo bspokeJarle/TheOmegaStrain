@@ -44,9 +44,6 @@ namespace _3dTesting.MainWindowClasses
 
         // Cached surface-tilt trig — mirrors ObjectShadowManager so particle
         // shadows rotate onto the ground plane the same way.
-        private const float SurfaceTiltDegrees = 70f;
-        private static readonly float SurfaceTiltCos = MathF.Cos(SurfaceTiltDegrees * MathF.PI / 180f);
-        private static readonly float SurfaceTiltSin = MathF.Sin(SurfaceTiltDegrees * MathF.PI / 180f);
 
         public void HandleParticles(_3dObject inhabitant, List<_3dObject> particleObjectList)
         {
@@ -173,34 +170,28 @@ namespace _3dTesting.MainWindowClasses
                 if (!ShouldRenderParticleShadow(inhabitant.ObjectName, particleOffsetY, groundScreenY))
                     continue;
 
-                float altitudeRaw = MathF.Max(0f, groundScreenY - particleOffsetY);
-                float altitude = MathF.Min(altitudeRaw, MaxParticleAltitudeForProjection);
-                float scale = MathF.Max(MinProjectedScale, BaseProjectedScale - altitudeRaw * AltitudeShrinkFactor);
-
-                // Projection offset in MODEL space. Altitude is scaled down by
-                // ParticleAltitudeProjection because particle altitude is in
-                // screen-space units (much larger than object vertex z).
-                float projX = altitude * slopeX * ParticleAltitudeProjection;
-                float projY = altitude * slopeY * ParticleAltitudeProjection;
+                var shadowProjection = GroundShadowProjectionMath.ProjectTriangleShadow(
+                    particleOffsetY,
+                    groundScreenY,
+                    groundLocalX,
+                    groundLocalY,
+                    groundLocalZ,
+                    CreateParticleShadowProjectionOptions(slopeX, slopeY));
 
                 // Rotate the flat (projX, projY) offset through the surface
                 // tilt (X=70°) so it lies on the tilted ground plane.
                 //   (x, y, 0) rotated about X -> (x, y*cos, y*sin)
-                float anchorX = groundLocalX + projX;
-                float anchorY = groundLocalY + projY * SurfaceTiltCos - ParticleShadowLift;
-                float anchorZ = groundLocalZ + projY * SurfaceTiltSin;
 
                 // Small fixed silhouette — a flat triangle at z=0 in model
                 // space, sized by `scale`. We DO NOT use the rotated
                 // particle triangle: a tumbling particle would produce a
                 // wildly flickering shadow. The silhouette is a tiny blob.
-                float s = ParticleShadowSize * scale;
                 var shadowTriangle = new TriangleMeshWithColor
                 {
                     Color = ShadowColor,
-                    vert1 = new Vector3 { x = anchorX - s, y = anchorY, z = anchorZ },
-                    vert2 = new Vector3 { x = anchorX + s, y = anchorY, z = anchorZ },
-                    vert3 = new Vector3 { x = anchorX, y = anchorY + s * SurfaceTiltCos, z = anchorZ + s * SurfaceTiltSin },
+                    vert1 = ToVector3(shadowProjection.Vertex1),
+                    vert2 = ToVector3(shadowProjection.Vertex2),
+                    vert3 = ToVector3(shadowProjection.Vertex3),
                     noHidden = true
                 };
 
@@ -235,26 +226,29 @@ namespace _3dTesting.MainWindowClasses
             return groundScreenY - particleScreenY > ParticleShadowMinAltitude;
         }
 
+        private static GroundShadowProjectionOptions CreateParticleShadowProjectionOptions(float slopeX, float slopeY)
+        {
+            return new GroundShadowProjectionOptions
+            {
+                ShadowSize = ParticleShadowSize,
+                BaseProjectedScale = BaseProjectedScale,
+                MinProjectedScale = MinProjectedScale,
+                AltitudeShrinkFactor = AltitudeShrinkFactor,
+                AltitudeProjection = ParticleAltitudeProjection,
+                MaxAltitudeForProjection = MaxParticleAltitudeForProjection,
+                ShadowLift = ParticleShadowLift,
+                ShadowSlopeX = slopeX,
+                ShadowSlopeY = slopeY,
+                SurfaceTiltDegrees = CommonUtilities.CommonSetup.WorldViewSetup.SurfacePitchDegrees
+            };
+        }
+
         //Creates a crashbox from a triangle
         private List<List<IVector3>> CreateCrashBoxFromTriangle(ITriangleMeshWithColor triangle)
         {
-            float minX = MathF.Min(triangle.vert1.x, MathF.Min(triangle.vert2.x, triangle.vert3.x));
-            float maxX = MathF.Max(triangle.vert1.x, MathF.Max(triangle.vert2.x, triangle.vert3.x));
-
-            float minY = MathF.Min(triangle.vert1.y, MathF.Min(triangle.vert2.y, triangle.vert3.y));
-            float maxY = MathF.Max(triangle.vert1.y, MathF.Max(triangle.vert2.y, triangle.vert3.y));
-
-            float minZ = MathF.Min(triangle.vert1.z, MathF.Min(triangle.vert2.z, triangle.vert3.z));
-            float maxZ = MathF.Max(triangle.vert1.z, MathF.Max(triangle.vert2.z, triangle.vert3.z));
-
-            return new List<List<IVector3>>
-            {
-                new List<IVector3>
-                {
-                    new Vector3 { x = minX, y = minY, z = minZ },
-                    new Vector3 { x = maxX, y = maxY, z = maxZ }
-                }
-            };
+            return MeshGeometryOperations.GenerateTriangleAabbCrashBox(
+                triangle,
+                static (x, y, z) => new Vector3 { x = x, y = y, z = z });
         }
 
         private ITriangleMeshWithColor RotateParticle(ITriangleMeshWithColor particleTriangle, Vector3 rotation)
@@ -288,6 +282,16 @@ namespace _3dTesting.MainWindowClasses
         }
 
         private static Vector3 CopyVector(IVector3 vector)
+        {
+            return new Vector3
+            {
+                x = vector.x,
+                y = vector.y,
+                z = vector.z
+            };
+        }
+
+        private static Vector3 ToVector3(IVector3 vector)
         {
             return new Vector3
             {

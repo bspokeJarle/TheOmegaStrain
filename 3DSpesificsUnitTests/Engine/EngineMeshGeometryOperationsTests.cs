@@ -187,6 +187,88 @@ public class EngineMeshGeometryOperationsTests
         Assert.IsFalse(overlaps);
     }
 
+    [TestMethod]
+    public void GenerateTriangleAabbCrashBox_UsesTriangleExtents()
+    {
+        var triangle = new EngineTriangleMeshWithColor
+        {
+            vert1 = new EngineVector3(-2f, 4f, 8f),
+            vert2 = new EngineVector3(5f, -6f, 1f),
+            vert3 = new EngineVector3(3f, 2f, 12f)
+        };
+
+        var boxes = MeshGeometryOperations.GenerateTriangleAabbCrashBox(
+            triangle,
+            static (x, y, z) => new EngineVector3(x, y, z));
+
+        Assert.AreEqual(1, boxes.Count);
+        Assert.AreEqual(8, boxes[0].Count);
+
+        var bounds = AabbBounds.FromPoints(boxes[0]);
+        Assert.AreEqual(-2f, bounds.MinX, 0.001f);
+        Assert.AreEqual(5f, bounds.MaxX, 0.001f);
+        Assert.AreEqual(-6f, bounds.MinY, 0.001f);
+        Assert.AreEqual(4f, bounds.MaxY, 0.001f);
+        Assert.AreEqual(1f, bounds.MinZ, 0.001f);
+        Assert.AreEqual(12f, bounds.MaxZ, 0.001f);
+    }
+
+    [TestMethod]
+    public void ApplyPositiveRotationOffsetToTriangle_AppliesOnlyPositiveOffsets()
+    {
+        var triangle = new EngineTriangleMeshWithColor
+        {
+            vert1 = new EngineVector3(1f, 2f, 3f),
+            vert2 = new EngineVector3(4f, 5f, 6f),
+            vert3 = new EngineVector3(7f, 8f, 9f)
+        };
+
+        MeshGeometryOperations.ApplyPositiveRotationOffsetToTriangle(
+            triangle,
+            offsetX: 10f,
+            offsetY: -20f,
+            offsetZ: 30f);
+
+        Assert.AreEqual(11f, triangle.vert1.x, 0.001f);
+        Assert.AreEqual(2f, triangle.vert1.y, 0.001f);
+        Assert.AreEqual(33f, triangle.vert1.z, 0.001f);
+        Assert.AreEqual(17f, triangle.vert3.x, 0.001f);
+        Assert.AreEqual(8f, triangle.vert3.y, 0.001f);
+        Assert.AreEqual(39f, triangle.vert3.z, 0.001f);
+    }
+
+    [TestMethod]
+    public void GetObjectCentroid_AveragesAllTriangleVertices()
+    {
+        var obj = new Engine3dObject
+        {
+            ObjectId = 4,
+            ObjectParts = new List<I3dObjectPart>
+            {
+                new Engine3dObjectPart
+                {
+                    Triangles = new List<ITriangleMeshWithColor>
+                    {
+                        new EngineTriangleMeshWithColor
+                        {
+                            vert1 = new EngineVector3(0f, 0f, 0f),
+                            vert2 = new EngineVector3(6f, 0f, 0f),
+                            vert3 = new EngineVector3(0f, 6f, 6f)
+                        }
+                    }
+                }
+            }
+        };
+
+        var centroid = MeshGeometryOperations.GetObjectCentroid(
+            obj,
+            static (x, y, z) => new EngineVector3(x, y, z));
+
+        Assert.AreEqual(2f, centroid.x, 0.001f);
+        Assert.AreEqual(2f, centroid.y, 0.001f);
+        Assert.AreEqual(2f, centroid.z, 0.001f);
+    }
+
     private sealed class EngineTriangleMeshWithColor : EngineTriangleMesh, ITriangleMeshWithColor
     {
         public string? Color { get; set; }

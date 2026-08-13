@@ -45,9 +45,6 @@
     <None Update="GameGraphics\seeder_icon_48.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="GameObjects\seeder_ball.stl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="SceneFiles\**\*.retro">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

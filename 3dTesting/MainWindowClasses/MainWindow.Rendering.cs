@@ -161,7 +161,7 @@ namespace _3dTesting.Rendering
             cullMs = MarkPhase();
 
             renderingTriangleCount = screenCoordinates.Count;
-            screenCoordinates.Sort((a, b) => a.CalculatedZ.CompareTo(b.CalculatedZ));
+            ProjectedTriangleRenderMath.SortTrianglesByDepth(screenCoordinates);
             sortMs = MarkPhase();
 
             geometryPoolIndex = 0;
@@ -301,23 +301,7 @@ namespace _3dTesting.Rendering
 
         public static int CullTrianglesOutsideRenderDepth(List<ProjectedTriangleMesh> triangles)
         {
-            int writeIndex = 0;
-            for (int readIndex = 0; readIndex < triangles.Count; readIndex++)
-            {
-                var triangle = triangles[readIndex];
-                if (triangle.CalculatedZ > FarZ || triangle.CalculatedZ < NearZ)
-                    continue;
-
-                if (writeIndex != readIndex)
-                    triangles[writeIndex] = triangle;
-
-                writeIndex++;
-            }
-
-            if (writeIndex < triangles.Count)
-                triangles.RemoveRange(writeIndex, triangles.Count - writeIndex);
-
-            return writeIndex;
+            return ProjectedTriangleRenderMath.CullTrianglesOutsideRenderDepth(triangles, NearZ, FarZ);
         }
 
         public static int ProcessTrianglesForRender(
@@ -332,28 +316,16 @@ namespace _3dTesting.Rendering
             {
                 var triangle = triangles[i];
 
-                if (triangle.CalculatedZ > FarZ || triangle.CalculatedZ < NearZ)
+                if (!ProjectedTriangleRenderMath.IsInsideRenderDepth(triangle.CalculatedZ, NearZ, FarZ))
                     continue;
 
-                float shadeKey = RenderShadeMath.GetTriangleShadeKey(
-                    triangle.CalculatedZ,
-                    triangle.TriangleAngle,
+                float shadeKey = ProjectedTriangleRenderMath.GetTriangleShadeKey(
+                    triangle,
                     NearZ,
                     FarZ,
-                    IsDepthOnlyShadePartName(triangle.PartName));
+                    IsDepthOnlyShadePartName);
 
-                string? baseColor = triangle.Color;
-                if (string.IsNullOrWhiteSpace(baseColor))
-                {
-                    baseColor = "000000";
-                }
-                else
-                {
-                    baseColor = baseColor.Trim();
-                    if (baseColor.Length > 0 && baseColor[0] == '#')
-                        baseColor = baseColor.Substring(1);
-                    baseColor = baseColor.ToLowerInvariant();
-                }
+                string baseColor = ProjectedTriangleRenderMath.NormalizeColor(triangle.Color);
 
                 if (!colorCache.TryGetValue((shadeKey, baseColor), out Color color))
                 {
@@ -384,25 +356,22 @@ namespace _3dTesting.Rendering
 
         public static bool IsCrashBoxPartName(string? partName)
         {
-            return partName != null && partName.StartsWith("CrashBox-", StringComparison.Ordinal);
+            return ProjectedTriangleRenderMath.IsCrashBoxPartName(partName);
         }
 
         public static bool ShouldRenderAsSeparateTriangle(string? partName)
         {
-            return IsDynamicEffectPartName(partName);
+            return ProjectedTriangleRenderMath.ShouldRenderAsSeparateTriangle(partName);
         }
 
         public static bool ShouldUseEffectRenderingPipeline(ProjectedTriangleMesh triangle)
         {
-            return triangle.UseEffectRenderingPipeline ||
-                   IsDynamicEffectPartName(triangle.PartName) ||
-                   ShouldRenderEnhancedShadow(triangle.PartName) ||
-                   (GameState.SettingsState?.GlowEffectsEnabled == true && IsGlowCandidatePartName(triangle.PartName));
+            return ProjectedTriangleRenderMath.ShouldUseEffectRenderingPipeline(triangle, GetRenderOptions());
         }
 
         public static bool IsExplodingPartName(string? partName)
         {
-            return string.Equals(partName, "ExplodingPart", StringComparison.Ordinal);
+            return ProjectedTriangleRenderMath.IsExplodingPartName(partName);
         }
 
         public static bool IsDynamicEffectPartName(string? partName)
@@ -437,15 +406,7 @@ namespace _3dTesting.Rendering
 
         public static int CountCrashBoxParts(string[] partNames)
         {
-            int count = 0;
-            for (int i = 0; i < partNames.Length; i++)
-            {
-                if (IsCrashBoxPartName(partNames[i]))
-                {
-                    count++;
-                }
-            }
-            return count;
+            return ProjectedTriangleRenderMath.CountCrashBoxParts(partNames);
         }
 
         private static readonly Dictionary<Color, SolidColorBrush> CrashBoxBrushCache = new();
@@ -635,12 +596,11 @@ namespace _3dTesting.Rendering
 
         private static float GetTriangleShadeKey(ProjectedTriangleMesh triangle)
         {
-            return RenderShadeMath.GetTriangleShadeKey(
-                triangle.CalculatedZ,
-                triangle.TriangleAngle,
+            return ProjectedTriangleRenderMath.GetTriangleShadeKey(
+                triangle,
                 NearZ,
                 FarZ,
-                IsDepthOnlyShadePartName(triangle.PartName));
+                IsDepthOnlyShadePartName);
         }
 
         private static bool IsDepthOnlyShadePartName(string? partName)
@@ -693,13 +653,7 @@ namespace _3dTesting.Rendering
 
         private static string NormalizeColor(string? raw)
         {
-            if (string.IsNullOrWhiteSpace(raw))
-                return "000000";
-
-            var normalized = raw.Trim();
-            if (normalized.Length > 0 && normalized[0] == '#')
-                normalized = normalized.Substring(1);
-            return normalized.ToLowerInvariant();
+            return ProjectedTriangleRenderMath.NormalizeColor(raw);
         }
 
         private static Color BoostGlowColor(Color color, string? partName)
@@ -758,6 +712,19 @@ namespace _3dTesting.Rendering
                    settings.GraphicsQuality == GraphicsQualityPreset.High &&
                    settings.EnhancedShadowsEnabled &&
                    IsEnhancedShadowCandidatePartName(partName);
+        }
+
+        private static ProjectedTriangleRenderOptions GetRenderOptions()
+        {
+            var settings = GameState.SettingsState;
+            return new ProjectedTriangleRenderOptions
+            {
+                GlowEffectsEnabled = settings?.GlowEffectsEnabled == true,
+                EnhancedShadowsEnabled = settings?.EnhancedShadowsEnabled == true,
+                HighGraphicsQuality = settings?.GraphicsQuality == GraphicsQualityPreset.High,
+                IsGlowCandidatePartName = IsGlowCandidatePartName,
+                IsEnhancedShadowCandidatePartName = IsEnhancedShadowCandidatePartName
+            };
         }
 
         private static GraphicsQualityPreset GetRenderQuality()

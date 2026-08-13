@@ -22,6 +22,71 @@ namespace Domain
             }
         }
 
+        public static void ApplyPositiveRotationOffsetToTriangle(
+            ITriangleMeshWithColor triangle,
+            float? offsetX,
+            float? offsetY,
+            float? offsetZ)
+        {
+            if (triangle == null)
+                return;
+
+            if (offsetX > 0)
+            {
+                triangle.vert1.x += offsetX.Value;
+                triangle.vert2.x += offsetX.Value;
+                triangle.vert3.x += offsetX.Value;
+            }
+
+            if (offsetY > 0)
+            {
+                triangle.vert1.y += offsetY.Value;
+                triangle.vert2.y += offsetY.Value;
+                triangle.vert3.y += offsetY.Value;
+            }
+
+            if (offsetZ > 0)
+            {
+                triangle.vert1.z += offsetZ.Value;
+                triangle.vert2.z += offsetZ.Value;
+                triangle.vert3.z += offsetZ.Value;
+            }
+        }
+
+        public static TVector GetObjectCentroid<TVector>(
+            IRenderable3dObject? obj,
+            Func<float, float, float, TVector> vectorFactory)
+            where TVector : IVector3
+        {
+            if (obj?.ObjectParts == null || obj.ObjectParts.Count == 0)
+                return vectorFactory(0f, 0f, 0f);
+
+            float sumX = 0f;
+            float sumY = 0f;
+            float sumZ = 0f;
+            int totalVertices = 0;
+
+            for (int partIndex = 0; partIndex < obj.ObjectParts.Count; partIndex++)
+            {
+                var part = obj.ObjectParts[partIndex];
+                if (part.Triangles == null)
+                    continue;
+
+                for (int triangleIndex = 0; triangleIndex < part.Triangles.Count; triangleIndex++)
+                {
+                    var triangle = part.Triangles[triangleIndex];
+                    sumX += triangle.vert1.x + triangle.vert2.x + triangle.vert3.x;
+                    sumY += triangle.vert1.y + triangle.vert2.y + triangle.vert3.y;
+                    sumZ += triangle.vert1.z + triangle.vert2.z + triangle.vert3.z;
+                    totalVertices += 3;
+                }
+            }
+
+            return totalVertices == 0
+                ? vectorFactory(0f, 0f, 0f)
+                : vectorFactory(sumX / totalVertices, sumY / totalVertices, sumZ / totalVertices);
+        }
+
         public static void ApplyScaleToObject(
             IRenderable3dObject? actualObject,
             float scale,
@@ -307,6 +372,28 @@ namespace Domain
                 vectorFactory(max.x, max.y, max.z),
                 vectorFactory(max.x, min.y, max.z),
                 vectorFactory(min.x, min.y, max.z)
+            };
+        }
+
+        public static List<List<IVector3>> GenerateTriangleAabbCrashBox(
+            ITriangleMeshWithColor triangle,
+            Func<float, float, float, IVector3> vectorFactory)
+        {
+            float minX = MathF.Min(triangle.vert1.x, MathF.Min(triangle.vert2.x, triangle.vert3.x));
+            float maxX = MathF.Max(triangle.vert1.x, MathF.Max(triangle.vert2.x, triangle.vert3.x));
+
+            float minY = MathF.Min(triangle.vert1.y, MathF.Min(triangle.vert2.y, triangle.vert3.y));
+            float maxY = MathF.Max(triangle.vert1.y, MathF.Max(triangle.vert2.y, triangle.vert3.y));
+
+            float minZ = MathF.Min(triangle.vert1.z, MathF.Min(triangle.vert2.z, triangle.vert3.z));
+            float maxZ = MathF.Max(triangle.vert1.z, MathF.Max(triangle.vert2.z, triangle.vert3.z));
+
+            return new List<List<IVector3>>
+            {
+                GenerateCrashBoxCorners(
+                    new EngineVector3(minX, minY, minZ),
+                    new EngineVector3(maxX, maxY, maxZ),
+                    vectorFactory)
             };
         }
 

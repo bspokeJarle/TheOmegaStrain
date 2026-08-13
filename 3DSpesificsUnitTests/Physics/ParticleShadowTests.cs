@@ -8,11 +8,6 @@ using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.Physics;
 
-// These tests MIRROR the particle-shadow projection math in
-// 3dTesting\MainWindowClasses\MainWindow.Particles.cs (ParticleManager.HandleParticles).
-// The projection formula is duplicated here; if the production math changes,
-// update these constants/functions to keep parity.
-//
 // The tests exist primarily to catch REGRESSIONS of the bug that caused
 // particle shadows to vanish:
 //   * If the altitude-to-projection factor becomes too large, the projected
@@ -45,29 +40,31 @@ public class ParticleShadowProjectionTests
     private static ShadowVerts ProjectShadow(float particleScreenY, float surfaceScreenY,
         float groundLocalX, float groundLocalY, float groundLocalZ)
     {
-        float groundScreenY = surfaceScreenY + groundLocalY;
-        float altitudeRaw = MathF.Max(0f, groundScreenY - particleScreenY);
-        float altitude = MathF.Min(altitudeRaw, MaxParticleAltitudeForProjection);
-        float scale = MathF.Max(MinProjectedScale, BaseProjectedScale - altitudeRaw * AltitudeShrinkFactor);
+        var projected = GroundShadowProjectionMath.ProjectTriangleShadow(
+            particleScreenY,
+            surfaceScreenY + groundLocalY,
+            groundLocalX,
+            groundLocalY,
+            groundLocalZ,
+            new GroundShadowProjectionOptions
+            {
+                ShadowSize = ParticleShadowSize,
+                BaseProjectedScale = BaseProjectedScale,
+                MinProjectedScale = MinProjectedScale,
+                AltitudeShrinkFactor = AltitudeShrinkFactor,
+                AltitudeProjection = ParticleAltitudeProjection,
+                MaxAltitudeForProjection = MaxParticleAltitudeForProjection,
+                ShadowLift = 0f,
+                ShadowSlopeX = ShadowSlopeX,
+                ShadowSlopeY = ShadowSlopeY,
+                SurfaceTiltDegrees = SurfaceTiltDegrees
+            });
 
-        float projX = altitude * ShadowSlopeX * ParticleAltitudeProjection;
-        float projY = altitude * ShadowSlopeY * ParticleAltitudeProjection;
-
-        float anchorX = groundLocalX + projX;
-        float anchorY = groundLocalY + projY * SurfaceTiltCos;
-        float anchorZ = groundLocalZ + projY * SurfaceTiltSin;
-
-        float s = ParticleShadowSize * scale;
-
-        var v1 = new Vector3 { x = anchorX - s, y = anchorY, z = anchorZ };
-        var v2 = new Vector3 { x = anchorX + s, y = anchorY, z = anchorZ };
-        var v3 = new Vector3
-        {
-            x = anchorX,
-            y = anchorY + s * SurfaceTiltCos,
-            z = anchorZ + s * SurfaceTiltSin
-        };
-        return new ShadowVerts(v1, v2, v3, scale);
+        return new ShadowVerts(
+            ToVector3(projected.Vertex1),
+            ToVector3(projected.Vertex2),
+            ToVector3(projected.Vertex3),
+            projected.Scale);
     }
 
     [TestInitialize]
@@ -422,6 +419,16 @@ public class ParticleShadowProjectionTests
             vert1 = new Vector3 { x = -1f, y = -1f, z = 0f },
             vert2 = new Vector3 { x = 1f, y = -1f, z = 0f },
             vert3 = new Vector3 { x = 0f, y = 1f, z = 0f }
+        };
+    }
+
+    private static Vector3 ToVector3(IVector3 vector)
+    {
+        return new Vector3
+        {
+            x = vector.x,
+            y = vector.y,
+            z = vector.z
         };
     }
 }

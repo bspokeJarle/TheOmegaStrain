@@ -96,9 +96,6 @@ namespace _3dTesting.MainWindowClasses
         // the projected silhouette offsets and leave the shadow object's own
         // Rotation at zero — otherwise LiveGameLoop rotates the (base + offset)
         // vertex a SECOND time and the silhouette pops back up off the ground.
-        private const float SurfaceTiltDegrees = 70f;
-        private static readonly float SurfaceTiltCos = MathF.Cos(SurfaceTiltDegrees * MathF.PI / 180f);
-        private static readonly float SurfaceTiltSin = MathF.Sin(SurfaceTiltDegrees * MathF.PI / 180f);
 
         /// <summary>
         /// Creates a black flattened shadow projected onto the surface.
@@ -312,33 +309,29 @@ namespace _3dTesting.MainWindowClasses
                 shadowBaseZ += inhabitant.ShadowOffset.z;
             }
 
-            // Per-vertex projection stretch. The base of the silhouette (z=0
-            // vertices) stays anchored at shadowBase so the shadow starts AT the
-            // object; only the upper vertices (z>0) are displaced along the
-            // light direction. Larger VertexStretchBoost = longer cast shadow.
-            float vStretchX = ShadowSlopeX * VertexStretchBoost;
-            float vStretchY = ShadowSlopeY * VertexStretchBoost;
-
             {
                 var part = simplifiedShadowPart;
 
                 var shadowTriangles = new List<ITriangleMeshWithColor>(part.Triangles.Count);
+                var projectionOptions = CreateObjectShadowProjectionOptions(
+                    shadowBaseX,
+                    shadowBaseY,
+                    shadowBaseZ,
+                    shadowOffsetX,
+                    shadowOffsetY,
+                    StaticOffsetZ,
+                    scale);
 
                 for (int i = 0; i < part.Triangles.Count; i++)
                 {
                     var tri = part.Triangles[i];
+                    var projected = ObjectShadowProjectionMath.ProjectModelTriangleShadow(tri, projectionOptions);
 
                     // 1. Project each vertex onto the model-space ground plane (z=0)
                     //    along the global light direction, using the boosted slopes
                     //    so tall silhouettes (tower/tree prisms) actually stretch.
                     //    Verts at z=0 stay put; verts at z=H land at
                     //    (x + H*vStretchX, y + H*vStretchY, 0).
-                    float p1x = tri.vert1.x + tri.vert1.z * vStretchX;
-                    float p1y = tri.vert1.y + tri.vert1.z * vStretchY;
-                    float p2x = tri.vert2.x + tri.vert2.z * vStretchX;
-                    float p2y = tri.vert2.y + tri.vert2.z * vStretchY;
-                    float p3x = tri.vert3.x + tri.vert3.z * vStretchX;
-                    float p3y = tri.vert3.y + tri.vert3.z * vStretchY;
 
                     // 2. Rotate that flat silhouette by the surface tilt (X = 70°)
                     //    so it lies in the tilted ground plane. A point (x, y, 0)
@@ -346,34 +339,12 @@ namespace _3dTesting.MainWindowClasses
                     //    The silhouette is scaled, then added to shadowBase (which
                     //    comes from the already-rotated tile mesh). shadow.Rotation
                     //    is (0,0,0) so LiveGameLoop does NOT rotate these again.
-                    float sx1 = p1x * scale;
-                    float sy1 = p1y * scale;
-                    float sx2 = p2x * scale;
-                    float sy2 = p2y * scale;
-                    float sx3 = p3x * scale;
-                    float sy3 = p3y * scale;
-
                     shadowTriangles.Add(new TriangleMeshWithColor
                     {
                         Color = ShadowColor,
-                        vert1 = new Vector3
-                        {
-                            x = shadowBaseX + sx1 + shadowOffsetX,
-                            y = shadowBaseY + sy1 * SurfaceTiltCos + shadowOffsetY,
-                            z = shadowBaseZ + sy1 * SurfaceTiltSin + StaticOffsetZ
-                        },
-                        vert2 = new Vector3
-                        {
-                            x = shadowBaseX + sx2 + shadowOffsetX,
-                            y = shadowBaseY + sy2 * SurfaceTiltCos + shadowOffsetY,
-                            z = shadowBaseZ + sy2 * SurfaceTiltSin + StaticOffsetZ
-                        },
-                        vert3 = new Vector3
-                        {
-                            x = shadowBaseX + sx3 + shadowOffsetX,
-                            y = shadowBaseY + sy3 * SurfaceTiltCos + shadowOffsetY,
-                            z = shadowBaseZ + sy3 * SurfaceTiltSin + StaticOffsetZ
-                        },
+                        vert1 = ToVector3(projected.Vertex1),
+                        vert2 = ToVector3(projected.Vertex2),
+                        vert3 = ToVector3(projected.Vertex3),
                         noHidden = true
                     });
                 }
@@ -414,6 +385,41 @@ namespace _3dTesting.MainWindowClasses
                 out groundX,
                 out groundY,
                 out groundZ);
+        }
+
+        private static ObjectShadowProjectionOptions CreateObjectShadowProjectionOptions(
+            float shadowBaseX,
+            float shadowBaseY,
+            float shadowBaseZ,
+            float shadowOffsetX,
+            float shadowOffsetY,
+            float shadowOffsetZ,
+            float scale)
+        {
+            return new ObjectShadowProjectionOptions
+            {
+                ShadowBaseX = shadowBaseX,
+                ShadowBaseY = shadowBaseY,
+                ShadowBaseZ = shadowBaseZ,
+                ShadowOffsetX = shadowOffsetX,
+                ShadowOffsetY = shadowOffsetY,
+                ShadowOffsetZ = shadowOffsetZ,
+                Scale = scale,
+                ShadowSlopeX = ShadowSlopeX,
+                ShadowSlopeY = ShadowSlopeY,
+                VertexStretchBoost = VertexStretchBoost,
+                SurfaceTiltDegrees = WorldViewSetup.SurfacePitchDegrees
+            };
+        }
+
+        private static Vector3 ToVector3(IVector3 vector)
+        {
+            return new Vector3
+            {
+                x = vector.x,
+                y = vector.y,
+                z = vector.z
+            };
         }
     }
 }
