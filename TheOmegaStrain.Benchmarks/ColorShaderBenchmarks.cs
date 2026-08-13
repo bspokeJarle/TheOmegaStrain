@@ -2,7 +2,7 @@ using BenchmarkDotNet.Attributes;
 using _3dTesting.Helpers;
 using Microsoft.VSDiagnostics;
 
-namespace _3dTesting.Benchmarks;
+namespace TheOmegaStrain.Benchmarks;
 [InProcess]
 [CPUUsageDiagnoser]
 public class ColorShaderBenchmarks

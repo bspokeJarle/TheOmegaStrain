@@ -7,7 +7,7 @@ using _3dTesting;
 using _3dTesting.Rendering;
 using _3dTesting._Coordinates;
 
-namespace _3dTesting.Benchmarks;
+namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 [InProcess]
 public class WorldRendererBenchmarks

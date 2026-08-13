@@ -2,7 +2,7 @@ using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
 using _3dTesting.Rendering;
 
-namespace BenchmarkSuite1.Benchmarks;
+namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 public class WorldRendererCrashBoxBenchmarks
 {

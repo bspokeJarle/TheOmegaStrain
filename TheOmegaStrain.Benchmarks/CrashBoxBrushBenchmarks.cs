@@ -3,7 +3,7 @@ using Microsoft.VSDiagnostics;
 using System.Windows.Media;
 using _3dTesting.Rendering;
 
-namespace BenchmarkSuite1.Benchmarks;
+namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 public class CrashBoxBrushBenchmarks
 {

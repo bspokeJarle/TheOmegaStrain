@@ -5,7 +5,7 @@ using Domain;
 using CommonUtilities._3DHelpers;
 using static Domain._3dSpecificsImplementations;
 
-namespace BenchmarkSuite1.Benchmarks;
+namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 public class DeepCopySingleObjectBenchmarks
 {

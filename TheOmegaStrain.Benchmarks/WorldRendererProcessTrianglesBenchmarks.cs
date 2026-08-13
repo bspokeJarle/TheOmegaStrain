@@ -5,7 +5,7 @@ using _3dTesting.Rendering;
 using _3dTesting._Coordinates;
 using System.Windows.Media;
 
-namespace BenchmarkSuite1.Benchmarks;
+namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 public class WorldRendererProcessTrianglesBenchmarks
 {

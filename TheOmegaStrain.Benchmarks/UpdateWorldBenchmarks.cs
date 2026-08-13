@@ -8,7 +8,7 @@ using _3dTesting.Helpers;
 using Domain;
 using static Domain._3dSpecificsImplementations;
 
-namespace BenchmarkSuite1.Benchmarks;
+namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 public class UpdateWorldBenchmarks
 {

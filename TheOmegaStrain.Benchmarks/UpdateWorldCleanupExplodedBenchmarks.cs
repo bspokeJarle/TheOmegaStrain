@@ -11,7 +11,7 @@ using _3dTesting._Coordinates;
 using _3dTesting.Helpers;
 using static Domain._3dSpecificsImplementations;
 
-namespace BenchmarkSuite1.Benchmarks;
+namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 public class UpdateWorldCleanupExplodedBenchmarks
 {

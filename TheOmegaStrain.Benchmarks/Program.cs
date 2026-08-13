@@ -1,7 +1,7 @@
 using System;
 using BenchmarkDotNet.Running;
 
-namespace BenchmarkSuite1
+namespace TheOmegaStrain.Benchmarks
 {
     internal class Program
     {

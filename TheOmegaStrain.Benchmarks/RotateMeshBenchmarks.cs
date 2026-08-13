@@ -5,7 +5,7 @@ using Domain;
 using static Domain._3dSpecificsImplementations;
 using Microsoft.VSDiagnostics;
 
-namespace CommonUtilities.Benchmarks;
+namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 public class RotateMeshBenchmarks
 {

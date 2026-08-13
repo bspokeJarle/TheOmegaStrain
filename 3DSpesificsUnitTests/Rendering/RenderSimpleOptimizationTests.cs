@@ -322,6 +322,86 @@ public class RenderSimpleOptimizationTests
     }
 
     [TestMethod]
+    public void ConvertTo2dFromObjects_UsesInjectedProjectionViewport()
+    {
+        var converter = new _3dTo2d(new ProjectionViewport(
+            screenWidth: 1000,
+            screenHeight: 800,
+            perspectiveAdjustment: 1500,
+            objectZoom: 2));
+
+        var result = converter.ConvertTo2dFromObjects(
+            new List<_3dObject> { CreateRenderableObject() },
+            1);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(480, result[0].X1);
+        Assert.AreEqual(380, result[0].Y1);
+        Assert.AreEqual(520, result[0].X2);
+        Assert.AreEqual(380, result[0].Y2);
+        Assert.AreEqual(500, result[0].X3);
+        Assert.AreEqual(420, result[0].Y3);
+    }
+
+    [TestMethod]
+    public void ProjectionMath_ProjectsVertexWithViewportSettings()
+    {
+        var viewport = new ProjectionViewport(1000, 800, 1500, 2);
+
+        bool projected = ProjectionMath.TryProjectVertex(
+            new Vector3 { x = 10f, y = -10f, z = 0f },
+            objectScreenX: viewport.ScreenCenterX,
+            objectScreenY: viewport.ScreenCenterY,
+            objectScreenZ: 0,
+            viewport,
+            out var screenPoint);
+
+        Assert.IsTrue(projected);
+        Assert.AreEqual(520, screenPoint.x);
+        Assert.AreEqual(380, screenPoint.y);
+    }
+
+    [TestMethod]
+    public void ProjectionMath_RejectsVerticesBehindPerspectivePlane()
+    {
+        var viewport = new ProjectionViewport(1000, 800, 1500, 2);
+
+        bool projected = ProjectionMath.TryProjectVertex(
+            new Vector3 { x = 10f, y = 10f, z = 1500f },
+            objectScreenX: viewport.ScreenCenterX,
+            objectScreenY: viewport.ScreenCenterY,
+            objectScreenZ: 0,
+            viewport,
+            out var screenPoint);
+
+        Assert.IsFalse(projected);
+        Assert.IsTrue(double.IsNaN(screenPoint.x));
+        Assert.IsTrue(double.IsNaN(screenPoint.y));
+    }
+
+    [TestMethod]
+    public void ProjectionMath_ClampsDebugTrianglesToViewportMargin()
+    {
+        var viewport = new ProjectionViewport(1000, 800, 1500, 2);
+        var p1 = (-1000d, -1000d);
+        var p2 = (500d, 400d);
+        var p3 = (2000d, 2000d);
+
+        bool kept = ProjectionMath.TryClampTriangleToViewport(
+            ref p1,
+            ref p2,
+            ref p3,
+            viewport,
+            screenMarginFactor: 0.05);
+
+        Assert.IsTrue(kept);
+        Assert.AreEqual(-50d, p1.Item1);
+        Assert.AreEqual(-40d, p1.Item2);
+        Assert.AreEqual(1050d, p3.Item1);
+        Assert.AreEqual(840d, p3.Item2);
+    }
+
+    [TestMethod]
     public void ConvertTo2dFromObjects_ClampsCrashBoxDebugTrianglesToScreenMargin()
     {
         var converter = new _3dTo2d();

@@ -3,7 +3,7 @@ using Domain;
 using static Domain._3dSpecificsImplementations;
 using Microsoft.VSDiagnostics;
 
-namespace Domain.Benchmarks;
+namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 public class TriangleMeshCtorBenchmarks
 {

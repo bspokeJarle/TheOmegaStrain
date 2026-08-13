@@ -12,10 +12,18 @@ namespace _3dTesting._3dRotation
     public class _3dTo2d : IWorldProjector<_3dObject, _2dTriangleMesh>
     {
         private readonly bool enableLogging = false;
-        private static int screenCenterX => ScreenSetup.screenSizeX / 2;
-        private static int screenCenterY => ScreenSetup.screenSizeY / 2;
+        private readonly IProjectionViewport viewport;
         private const double DebugCrashBoxScreenMargin = 0.05;
         private long CurrentFrame = 0;
+
+        public _3dTo2d() : this(new ScreenSetupProjectionViewport())
+        {
+        }
+
+        public _3dTo2d(IProjectionViewport viewport)
+        {
+            this.viewport = viewport ?? throw new ArgumentNullException(nameof(viewport));
+        }
 
         public List<_2dTriangleMesh> ConvertTo2dFromObjects(List<_3dObject> inhabitants, long? currentFrame)
         {
@@ -40,7 +48,7 @@ namespace _3dTesting._3dRotation
             {
                 if (obj == null || (obj.ObjectName != "Star" && !obj.CheckInhabitantVisibility())) continue;
 
-                if (!ObjectPlacementHelpers.TryGetRenderPosition(obj, screenCenterX, screenCenterY, out double screenX, out double screenY, out double screenZ))
+                if (!ObjectPlacementHelpers.TryGetRenderPosition(obj, viewport.ScreenCenterX, viewport.ScreenCenterY, out double screenX, out double screenY, out double screenZ))
                     continue;
 
                 //Standard 3d Rendring
@@ -125,44 +133,17 @@ namespace _3dTesting._3dRotation
             }
         }
 
-        private static bool TryClampDebugCrashBoxTriangle(
+        private bool TryClampDebugCrashBoxTriangle(
             ref (double x, double y) p1,
             ref (double x, double y) p2,
             ref (double x, double y) p3)
         {
-            if (double.IsNaN(p1.x) || double.IsNaN(p1.y) ||
-                double.IsNaN(p2.x) || double.IsNaN(p2.y) ||
-                double.IsNaN(p3.x) || double.IsNaN(p3.y))
-                return false;
-
-            double minX = -(ScreenSetup.screenSizeX * DebugCrashBoxScreenMargin);
-            double maxX = ScreenSetup.screenSizeX * (1 + DebugCrashBoxScreenMargin);
-            double minY = -(ScreenSetup.screenSizeY * DebugCrashBoxScreenMargin);
-            double maxY = ScreenSetup.screenSizeY * (1 + DebugCrashBoxScreenMargin);
-
-            if ((p1.x < minX && p2.x < minX && p3.x < minX) ||
-                (p1.x > maxX && p2.x > maxX && p3.x > maxX) ||
-                (p1.y < minY && p2.y < minY && p3.y < minY) ||
-                (p1.y > maxY && p2.y > maxY && p3.y > maxY))
-                return false;
-
-            p1 = ClampDebugPoint(p1, minX, maxX, minY, maxY);
-            p2 = ClampDebugPoint(p2, minX, maxX, minY, maxY);
-            p3 = ClampDebugPoint(p3, minX, maxX, minY, maxY);
-            return true;
-        }
-
-        private static (double x, double y) ClampDebugPoint(
-            (double x, double y) point,
-            double minX,
-            double maxX,
-            double minY,
-            double maxY)
-        {
-            return (
-                Math.Clamp(point.x, minX, maxX),
-                Math.Clamp(point.y, minY, maxY)
-            );
+            return ProjectionMath.TryClampTriangleToViewport(
+                ref p1,
+                ref p2,
+                ref p3,
+                viewport,
+                DebugCrashBoxScreenMargin);
         }
 
         // Creating Triangles for rendring the CrashBoxes for debugging purposes
@@ -253,26 +234,24 @@ namespace _3dTesting._3dRotation
 
         private (double x, double y) ProjectVertex(Vector3 v, double objPosX, double objPosY, double objPosZ)
         {
-            double denom = -v.z + objPosZ + ScreenSetup.perspectiveAdjustment;
-
-            // If the point is on or behind the 'camera plane' -> do not render it.
-            // (denom <= 0 means we cross the perspective plane and factor would flip)
-            if (denom <= 1.0) // 1.0 as small safety margin
-            {
-                return (double.NaN, double.NaN);
-            }
-
-            double factor = ScreenSetup.perspectiveAdjustment / denom;
-
-            double x = (v.x * factor * ScreenSetup.defaultObjectZoom) + objPosX;
-            double y = (v.y * factor * ScreenSetup.defaultObjectZoom) + objPosY;
-            return (x, y);
+            return ProjectionMath.TryProjectVertex(v, objPosX, objPosY, objPosZ, viewport, out var screenPoint)
+                ? screenPoint
+                : (double.NaN, double.NaN);
         }
 
-        private static bool IsOnScreen(double x, double y)
+        private bool IsOnScreen(double x, double y)
         {
-            return x >= -(ScreenSetup.screenSizeX * 0.2) && x <= (ScreenSetup.screenSizeX * 1.2)
-                && y >= -(ScreenSetup.screenSizeY * 0.2) && y <= (ScreenSetup.screenSizeY * 1.2);
+            return ProjectionMath.IsOnScreen(x, y, viewport);
+        }
+
+        private sealed class ScreenSetupProjectionViewport : IProjectionViewport
+        {
+            public int ScreenWidth => ScreenSetup.screenSizeX;
+            public int ScreenHeight => ScreenSetup.screenSizeY;
+            public int ScreenCenterX => ScreenWidth / 2;
+            public int ScreenCenterY => ScreenHeight / 2;
+            public double PerspectiveAdjustment => ScreenSetup.perspectiveAdjustment;
+            public double ObjectZoom => ScreenSetup.defaultObjectZoom;
         }
     }
 }

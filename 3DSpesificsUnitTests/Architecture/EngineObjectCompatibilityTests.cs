@@ -127,6 +127,23 @@ public class EngineObjectCompatibilityTests
     }
 
     [TestMethod]
+    public void ProjectionViewport_ExposesEngineProjectionSettings()
+    {
+        IProjectionViewport viewport = new ProjectionViewport(
+            screenWidth: 1000,
+            screenHeight: 800,
+            perspectiveAdjustment: 1500,
+            objectZoom: 2);
+
+        Assert.AreEqual(1000, viewport.ScreenWidth);
+        Assert.AreEqual(800, viewport.ScreenHeight);
+        Assert.AreEqual(500, viewport.ScreenCenterX);
+        Assert.AreEqual(400, viewport.ScreenCenterY);
+        Assert.AreEqual(1500, viewport.PerspectiveAdjustment);
+        Assert.AreEqual(2, viewport.ObjectZoom);
+    }
+
+    [TestMethod]
     public void ProjectedTriangleMesh_ImplementsEngineProjectedTriangleContract()
     {
         IProjectedTriangle triangle = new _2dTriangleMesh

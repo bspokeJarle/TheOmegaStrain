@@ -8,7 +8,7 @@ using Microsoft.VSDiagnostics;
 using _3dRotations.World.Objects;
 using static Domain._3dSpecificsImplementations;
 
-namespace BenchmarkSuite1.Benchmarks;
+namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 public class SurfaceViewportBenchmarks
 {

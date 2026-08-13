@@ -7,7 +7,7 @@ using Domain;
 using CommonUtilities.CommonGlobalState;
 using static Domain._3dSpecificsImplementations;
 
-namespace BenchmarkSuite1.Benchmarks;
+namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 public class ConvertTo2dFromObjectsBenchmarks
 {
