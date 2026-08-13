@@ -108,6 +108,13 @@ public class EngineObjectCompatibilityTests
         Assert.AreEqual(42, gameplayImpact.ObjectHealth);
     }
 
+    [TestMethod]
+    public void DomainGameLoop_ExtendsEngineFrameLoopContract()
+    {
+        Assert.IsTrue(
+            typeof(IGameLoop<object>).GetInterfaces().Contains(typeof(IWorldFrameLoop<I3dWorld, object>)));
+    }
+
     private sealed class TestWorld : I3dWorld
     {
         public List<I3dObject> WorldInhabitants { get; set; } = new();

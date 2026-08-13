@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Domain
 {
-    public interface IGameLoop<TTriangle>
+    public interface IGameLoop<TTriangle> : IWorldFrameLoop<I3dWorld, TTriangle>
     {
         string DebugMessage { get; set; }
         bool FadeOutWorld { get; set; }
@@ -10,10 +10,5 @@ namespace Domain
         bool SceneResetReady { get; set; }
         I3dObject ShipCopy { get; set; }
         I3dObject SurfaceCopy { get; set; }
-
-        List<TTriangle> UpdateWorld(
-            I3dWorld world,
-            ref List<TTriangle> projectedCoordinates,
-            ref List<TTriangle> crashBoxCoordinates);
     }
 }
