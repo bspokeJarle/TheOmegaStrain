@@ -61,6 +61,7 @@ public class TreeControlsTests
     public void MoveObject_WindAnimation_IsVisibleOnRealTreeGeometry()
     {
         var tree = Tree.CreateTree(null!);
+        tree.ObjectId = 0;
         var controls = new TreeControls();
         var baseFoliage = CloneTriangles(GetPart(tree, "TreeFoliage").Triangles);
 

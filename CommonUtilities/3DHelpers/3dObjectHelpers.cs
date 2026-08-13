@@ -26,6 +26,12 @@ namespace CommonUtilities._3DHelpers
             return new Vector3(vector.x, vector.y, vector.z);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector3 CreateVector(float x, float y, float z)
+        {
+            return new Vector3(x, y, z);
+        }
+
         // -----------------------------------------------------------------
         //  HEADING HELPERS
         //  Shared heading logic for pointing objects toward a target.
@@ -77,37 +83,16 @@ namespace CommonUtilities._3DHelpers
         {
             return GeometryMath.DotNormalized(a, b);
         }
-        public static IVector3 GetLocalWorldPosition(this _3dObject inhabitant)
+        public static IVector3? GetLocalWorldPosition(this _3dObject inhabitant)
         {
             var globalMapPosition = GameState.SurfaceState.GlobalMapPosition;
-            //Some objects will always be in location, they have no world position, just return
-            if (inhabitant.WorldPosition.x == 0 && inhabitant.WorldPosition.y == 0 && inhabitant.WorldPosition.z == 0) return null;
-            //Some objects fly around, they have this world position, so they appear when you are at that location in the map
-            var localWorldPosition = new Vector3
-            {
-                x = globalMapPosition.x - inhabitant.WorldPosition.x,
-                y = globalMapPosition.y - inhabitant.WorldPosition.y,
-                z = globalMapPosition.z - inhabitant.WorldPosition.z
-            };
-            return localWorldPosition;
+            return WorldPositionMath.GetLocalWorldPosition(inhabitant, globalMapPosition, CreateVector);
         }
 
         public static Vector3 GetAudioPosition(this _3dObject inhabitant)
         {
-            var objectOffsets = CopyVector(inhabitant?.ObjectOffsets) ?? new Vector3();
             var localWorldPosition = inhabitant?.GetLocalWorldPosition();
-
-            if (localWorldPosition == null)
-            {
-                return objectOffsets;
-            }
-
-            return new Vector3
-            {
-                x = -localWorldPosition.x + objectOffsets.x,
-                y = -localWorldPosition.y + objectOffsets.y,
-                z = localWorldPosition.z + objectOffsets.z
-            };
+            return WorldPositionMath.GetAudioPosition(inhabitant, localWorldPosition, CreateVector);
         }
         public static bool CheckInhabitantVisibility(this _3dObject inhabitant)
         {
@@ -118,9 +103,7 @@ namespace CommonUtilities._3DHelpers
             }
 
             // 2. Always-visible (onscreen) objects — world position (0, 0, 0)
-            if (inhabitant.WorldPosition.x == 0 &&
-                inhabitant.WorldPosition.y == 0 &&
-                inhabitant.WorldPosition.z == 0)
+            if (WorldPositionMath.IsOrigin(inhabitant.WorldPosition))
             {
                 return true;
             }
@@ -130,10 +113,7 @@ namespace CommonUtilities._3DHelpers
             var inhabitantPosition = inhabitant.WorldPosition;
 
             float maxDistance = ScreenSetup.ObjectVisibilityDistance * ScreenSetup.ScreenScaleX;
-            float maxDistanceSq = maxDistance * maxDistance;
-            float distanceSq = GetDistanceSquared(globalMapPosition, inhabitantPosition);
-
-            return distanceSq <= maxDistanceSq;
+            return WorldPositionMath.IsWithinDistance(globalMapPosition, inhabitantPosition, maxDistance);
         }
 
 

@@ -33,6 +33,19 @@ public class LandingPlatformHelpersTests
     }
 
     [TestMethod]
+    public void GetLandingPlatformRect_AppliesBufferAndClampsToMapBounds()
+    {
+        var map = CreateMap(10, 10);
+
+        var rect = LandingPlatformHelpers.GetLandingPlatformRect(map, bufferTiles: 5);
+
+        Assert.AreEqual(0, rect.MinX);
+        Assert.AreEqual(0, rect.MinZ);
+        Assert.AreEqual(9, rect.MaxX);
+        Assert.AreEqual(9, rect.MaxZ);
+    }
+
+    [TestMethod]
     public void GetLandingPlatformCenterTile_ReturnsCenterOfPlatformRect()
     {
         var map = CreateMap(20, 20);

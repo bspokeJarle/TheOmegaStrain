@@ -12,6 +12,7 @@ using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.Physics;
 
+[DoNotParallelize]
 [TestClass]
 public class ShipSurfaceLandingTests
 {
@@ -40,6 +41,8 @@ public class ShipSurfaceLandingTests
     [TestInitialize]
     public void Setup()
     {
+        ScreenSetup.Initialize(1500, 1024);
+        GameState.DeltaTime = GameState.GameplayBaselineDeltaTime;
         GameState.GamePlayState = new GamePlayState
         {
             CurrentSceneType = SceneTypes.Game

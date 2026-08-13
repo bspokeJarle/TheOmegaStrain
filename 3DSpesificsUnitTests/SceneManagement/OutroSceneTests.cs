@@ -1312,12 +1312,19 @@ public class OutroSceneTests
     {
         string originalLocalFolder = PersistenceSetup.LocalFolder;
         int originalMaxEntries = PersistenceSetup.MaxHighscoreEntries;
+        string? originalSupabaseUrl = PersistenceSetup.SupabaseUrl;
+        string? originalSupabaseAnonKey = PersistenceSetup.SupabaseAnonKey;
+        string originalSupabaseTableName = PersistenceSetup.SupabaseTableName;
         string testLocalFolder = Path.Combine(Path.GetTempPath(), "OmegaStrainOutroHighscoreTests", Guid.NewGuid().ToString("N"));
 
         try
         {
             PersistenceSetup.LocalFolder = testLocalFolder;
             PersistenceSetup.MaxHighscoreEntries = 100;
+            PersistenceSetup.SupabaseUrl = null;
+            PersistenceSetup.SupabaseAnonKey = null;
+            PersistenceSetup.SupabaseTableName = "highscores";
+            HighscoreService.ResetRemoteFetchStateForTests();
             PersistenceSetup.Initialize();
             HighscoreService.SaveLocalHighscores(new HighscoreList
             {
@@ -1376,7 +1383,7 @@ public class OutroSceneTests
             Assert.AreEqual("LEADERBOARD", overlay.Pages[2][1]);
             Assert.AreEqual(HighscoreOverlayFormatter.BuildBody(), overlay.Pages[2][2],
                 "Outro leaderboard page should reuse the same highscore body formatter as the existing highscore page.");
-            Assert.IsTrue(overlay.Pages[2][2].Contains("Jarle"),
+            Assert.IsTrue(overlay.Pages[2][2].Contains(PlayerNameFormatter.Normalize("Jarle")),
                 "Final outro overlay should include the saved highscore list.");
             Assert.IsTrue(overlay.Pages[2][3].Contains("PAGE 3 / 3"));
         }
@@ -1384,6 +1391,10 @@ public class OutroSceneTests
         {
             PersistenceSetup.LocalFolder = originalLocalFolder;
             PersistenceSetup.MaxHighscoreEntries = originalMaxEntries;
+            PersistenceSetup.SupabaseUrl = originalSupabaseUrl;
+            PersistenceSetup.SupabaseAnonKey = originalSupabaseAnonKey;
+            PersistenceSetup.SupabaseTableName = originalSupabaseTableName;
+            HighscoreService.ResetRemoteFetchStateForTests();
 
             try
             {

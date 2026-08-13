@@ -1,20 +1,18 @@
-using System;
-using System.Collections.Generic;
 using Domain;
 
 namespace CommonUtilities._3DHelpers
 {
     public static class SurfaceGroundProjectionHelpers
     {
-        public const float DefaultShadowStaticOffsetX = -30f;
-        public const float DefaultShadowStaticOffsetY = -40f;
-        public const float DefaultShadowStaticOffsetZ = 0f;
-        public const float DefaultShadowBaseScale = 1.0f;
-        public const float DefaultShadowMinScale = 0.2f;
-        public const float DefaultShadowAltitudeShrinkFactor = 0.002f;
-        public const float DefaultShadowSlopeX = -0.15f;
-        public const float DefaultShadowSlopeY = -0.55f;
-        public const float DefaultShadowVertexStretchBoost = 1.2f;
+        public const float DefaultShadowStaticOffsetX = GroundProjectionMath.DefaultShadowStaticOffsetX;
+        public const float DefaultShadowStaticOffsetY = GroundProjectionMath.DefaultShadowStaticOffsetY;
+        public const float DefaultShadowStaticOffsetZ = GroundProjectionMath.DefaultShadowStaticOffsetZ;
+        public const float DefaultShadowBaseScale = GroundProjectionMath.DefaultShadowBaseScale;
+        public const float DefaultShadowMinScale = GroundProjectionMath.DefaultShadowMinScale;
+        public const float DefaultShadowAltitudeShrinkFactor = GroundProjectionMath.DefaultShadowAltitudeShrinkFactor;
+        public const float DefaultShadowSlopeX = GroundProjectionMath.DefaultShadowSlopeX;
+        public const float DefaultShadowSlopeY = GroundProjectionMath.DefaultShadowSlopeY;
+        public const float DefaultShadowVertexStretchBoost = GroundProjectionMath.DefaultShadowVertexStretchBoost;
 
         public static bool TryGetSurfaceGroundPoint(
             IReadOnlyList<ITriangleMeshWithColor>? rotatedTiles,
@@ -24,44 +22,13 @@ namespace CommonUtilities._3DHelpers
             out float groundY,
             out float groundZ)
         {
-            groundX = targetX;
-            groundY = 0f;
-            groundZ = targetZ;
-
-            if (rotatedTiles == null || rotatedTiles.Count == 0)
-                return false;
-
-            float fallbackY = 0f;
-            float bestDistSq = float.MaxValue;
-            bool hasFallback = false;
-
-            for (int i = 0; i < rotatedTiles.Count; i++)
-            {
-                var tile = rotatedTiles[i];
-                if (TryInterpolateTriangleY(tile, targetX, targetZ, out float interpolatedY))
-                {
-                    groundY = interpolatedY;
-                    return true;
-                }
-
-                float tileCenterX = (tile.vert1.x + tile.vert2.x + tile.vert3.x) / 3f;
-                float tileCenterZ = (tile.vert1.z + tile.vert2.z + tile.vert3.z) / 3f;
-                float dx = tileCenterX - targetX;
-                float dz = tileCenterZ - targetZ;
-                float d2 = dx * dx + dz * dz;
-                if (d2 < bestDistSq)
-                {
-                    bestDistSq = d2;
-                    fallbackY = (tile.vert1.y + tile.vert2.y + tile.vert3.y) / 3f;
-                    hasFallback = true;
-                }
-            }
-
-            if (!hasFallback)
-                return false;
-
-            groundY = fallbackY;
-            return true;
+            return GroundProjectionMath.TryGetSurfaceGroundPoint(
+                rotatedTiles,
+                targetX,
+                targetZ,
+                out groundX,
+                out groundY,
+                out groundZ);
         }
 
         public static bool TryGetFrontmostSurfaceGroundPoint(
@@ -71,64 +38,12 @@ namespace CommonUtilities._3DHelpers
             out float groundY,
             out float groundZ)
         {
-            groundX = targetX;
-            groundY = 0f;
-            groundZ = 0f;
-
-            if (rotatedTiles == null || rotatedTiles.Count == 0)
-                return false;
-
-            float minAbsY = float.MaxValue;
-            bool found = false;
-
-            for (int i = 0; i < rotatedTiles.Count; i++)
-            {
-                var tile = rotatedTiles[i];
-                float tileCenterY = (tile.vert1.y + tile.vert2.y + tile.vert3.y) / 3f;
-                float absY = MathF.Abs(tileCenterY);
-                if (absY >= minAbsY)
-                    continue;
-
-                minAbsY = absY;
-                groundY = tileCenterY;
-                groundZ = (tile.vert1.z + tile.vert2.z + tile.vert3.z) / 3f;
-                found = true;
-            }
-
-            return found;
-        }
-
-        private static bool TryInterpolateTriangleY(
-            ITriangleMeshWithColor triangle,
-            float targetX,
-            float targetZ,
-            out float groundY)
-        {
-            groundY = 0f;
-            const float epsilon = 0.001f;
-
-            float x1 = triangle.vert1.x;
-            float z1 = triangle.vert1.z;
-            float x2 = triangle.vert2.x;
-            float z2 = triangle.vert2.z;
-            float x3 = triangle.vert3.x;
-            float z3 = triangle.vert3.z;
-
-            float denominator = ((z2 - z3) * (x1 - x3)) + ((x3 - x2) * (z1 - z3));
-            if (MathF.Abs(denominator) < 0.0001f)
-                return false;
-
-            float weight1 = (((z2 - z3) * (targetX - x3)) + ((x3 - x2) * (targetZ - z3))) / denominator;
-            float weight2 = (((z3 - z1) * (targetX - x3)) + ((x1 - x3) * (targetZ - z3))) / denominator;
-            float weight3 = 1f - weight1 - weight2;
-
-            if (weight1 < -epsilon || weight2 < -epsilon || weight3 < -epsilon)
-                return false;
-
-            groundY = (weight1 * triangle.vert1.y)
-                + (weight2 * triangle.vert2.y)
-                + (weight3 * triangle.vert3.y);
-            return true;
+            return GroundProjectionMath.TryGetFrontmostSurfaceGroundPoint(
+                rotatedTiles,
+                targetX,
+                out groundX,
+                out groundY,
+                out groundZ);
         }
     }
 }
