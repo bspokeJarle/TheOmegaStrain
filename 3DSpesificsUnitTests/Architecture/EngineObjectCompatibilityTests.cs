@@ -49,4 +49,45 @@ public class EngineObjectCompatibilityTests
         Assert.IsTrue(gameplayObject.HasPowerUp);
         Assert.AreEqual(PowerUpType.TravelSpeedLevel1, gameplayObject.PowerUpType);
     }
+
+    [TestMethod]
+    public void DomainWorld_ExposesRenderableWorldView()
+    {
+        I3dWorld world = new TestWorld
+        {
+            WorldInhabitants = new List<I3dObject>
+            {
+                new _3dObject { ObjectId = 1, ObjectName = "Ship" },
+                new _3dObject { ObjectId = 2, ObjectName = "Surface" }
+            }
+        };
+
+        var renderableWorld = (IRenderable3dWorldView)world;
+
+        Assert.AreEqual(2, renderableWorld.RenderableObjects.Count());
+        Assert.IsTrue(renderableWorld.RenderableObjects.All(o => o is IRenderable3dObject));
+    }
+
+    [TestMethod]
+    public void RenderableWorldView_TracksWorldInhabitantsWithoutCopying()
+    {
+        I3dWorld world = new TestWorld();
+        var renderableWorld = (IRenderable3dWorldView)world;
+
+        world.WorldInhabitants.Add(new _3dObject { ObjectId = 1, ObjectName = "Ship" });
+
+        Assert.AreEqual("Ship", renderableWorld.RenderableObjects.Single().ObjectName);
+
+        world.WorldInhabitants.Clear();
+
+        Assert.AreEqual(0, renderableWorld.RenderableObjects.Count());
+    }
+
+    private sealed class TestWorld : I3dWorld
+    {
+        public List<I3dObject> WorldInhabitants { get; set; } = new();
+        public ISceneHandler SceneHandler { get; set; } = null!;
+        public IGameEventBus? EventBus { get; set; }
+        public bool IsPaused { get; set; }
+    }
 }
