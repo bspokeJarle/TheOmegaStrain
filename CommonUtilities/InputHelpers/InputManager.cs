@@ -1,6 +1,6 @@
-﻿using Gma.System.MouseKeyHook;
+using Gma.System.MouseKeyHook;
 
-namespace GameAiAndControls.Input
+namespace CommonUtilities.Input
 {
     public static class InputManager
     {

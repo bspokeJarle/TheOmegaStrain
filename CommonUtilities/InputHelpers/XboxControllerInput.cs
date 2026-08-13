@@ -4,7 +4,7 @@ using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace GameAiAndControls.Input
+namespace CommonUtilities.Input
 {
     public readonly struct XboxControllerSnapshot
     {

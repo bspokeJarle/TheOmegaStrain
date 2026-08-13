@@ -1,5 +1,5 @@
 using CommonUtilities.CommonGlobalState.States;
-using GameAiAndControls.Input;
+using CommonUtilities.Input;
 
 namespace _3DSpesificsUnitTests.Controls;
 

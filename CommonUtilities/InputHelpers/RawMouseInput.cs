@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace GameAiAndControls.Input
+namespace CommonUtilities.Input
 {
     public static class RawMouseInput
     {

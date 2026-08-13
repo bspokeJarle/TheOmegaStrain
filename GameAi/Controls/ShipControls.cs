@@ -1,4 +1,4 @@
-﻿using CommonUtilities._3DHelpers;
+using CommonUtilities._3DHelpers;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
@@ -7,7 +7,7 @@ using CommonUtilities.GamePlayHelpers;
 using CommonUtilities.Persistence;
 using Domain;
 using GameAiAndControls.Audio.Services;
-using GameAiAndControls.Input;
+using CommonUtilities.Input;
 using Gma.System.MouseKeyHook;
 using System;
 using System.Collections.Generic;
