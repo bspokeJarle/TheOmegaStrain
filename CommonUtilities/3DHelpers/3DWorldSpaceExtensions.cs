@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3dTesting.Helpers
+namespace CommonUtilities._3DHelpers
 {
     public static class CrashBoxOffsetExtensions
     {

@@ -11,7 +11,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Shapes;
-using _3dTesting.Helpers;
 using static Domain._3dSpecificsImplementations;
 
 namespace GameAiAndControls.Controls

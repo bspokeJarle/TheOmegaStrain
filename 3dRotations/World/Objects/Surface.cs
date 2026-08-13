@@ -1,5 +1,4 @@
 using _3dRotations.Helpers;
-using _3dTesting.Helpers;
 using CommonUtilities._3DHelpers;
 using Domain;
 using System;

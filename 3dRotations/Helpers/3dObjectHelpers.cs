@@ -1,11 +1,11 @@
-﻿using CommonUtilities.CommonSetup;
+using CommonUtilities.CommonSetup;
 using Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3dTesting.Helpers
+namespace _3dRotations.Helpers
 {
     public static class _3dObjectHelpers
     {

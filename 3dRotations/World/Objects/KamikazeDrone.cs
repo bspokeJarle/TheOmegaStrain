@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using _3dRotations.World;
-using _3dTesting.Helpers;
+using _3dRotations.Helpers;
 using CommonUtilities.CommonGlobalState;
 using Domain;
 using GameAiAndControls.Controls;
 using GameAiAndControls.Controls.KamikazeDroneControls;
 using static Domain._3dSpecificsImplementations;
-using static _3dTesting.Helpers._3dObjectHelpers;
+using static _3dRotations.Helpers._3dObjectHelpers;
 
 namespace _3dRotations.World.Objects
 {

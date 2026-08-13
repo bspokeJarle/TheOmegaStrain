@@ -1,11 +1,11 @@
-﻿using _3dTesting.Helpers;
+using _3dRotations.Helpers;
 using CommonUtilities.CommonGlobalState;
 using Domain;
 using GameAiAndControls.Controls;
 using System.Collections.Generic;
 using System.Linq;
 using static Domain._3dSpecificsImplementations;
-using static _3dTesting.Helpers._3dObjectHelpers;
+using static _3dRotations.Helpers._3dObjectHelpers;
 
 namespace _3dRotations.World.Objects
 {

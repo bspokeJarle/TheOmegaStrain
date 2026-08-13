@@ -1,6 +1,5 @@
 using _3dRotations.Helpers;
 using _3dRotations.World.Objects;
-using _3dTesting.Helpers;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;

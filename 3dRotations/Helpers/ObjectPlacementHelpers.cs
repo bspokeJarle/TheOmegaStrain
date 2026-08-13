@@ -7,7 +7,7 @@ using System.Globalization;
 using System.Linq;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3dTesting.Helpers
+namespace _3dRotations.Helpers
 {
     public static class ObjectPlacementHelpers
     {

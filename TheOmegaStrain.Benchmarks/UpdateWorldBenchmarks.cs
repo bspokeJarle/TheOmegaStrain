@@ -3,7 +3,7 @@ using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
 using _3dTesting.MainWindowClasses;
 using _3dRotations.World;
-using _3dTesting.Helpers;
+using _3dRotations.Helpers;
 using Domain;
 using static Domain._3dSpecificsImplementations;
 

@@ -4,7 +4,7 @@ using CommonUtilities.CommonSetup;
 using Domain;
 using GameAiAndControls.Controls;
 using _3dRotations.World.Objects;
-using _3dTesting.Helpers;
+using _3dRotations.Helpers;
 using static CommonUtilities.WeaponHelpers.WeaponHelpers;
 using static Domain._3dSpecificsImplementations;
 

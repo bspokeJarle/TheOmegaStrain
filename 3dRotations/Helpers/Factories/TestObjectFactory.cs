@@ -4,7 +4,7 @@ using Domain;
 using System.Collections.Generic;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3dTesting.Helpers
+namespace _3dRotations.Helpers
 {
     public static class TestObjectFactory
     {

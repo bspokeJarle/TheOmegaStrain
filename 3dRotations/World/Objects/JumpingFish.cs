@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using _3dRotations.World;
-using _3dTesting.Helpers;
+using _3dRotations.Helpers;
 using CommonUtilities.CommonGlobalState;
 using Domain;
 using static Domain._3dSpecificsImplementations;

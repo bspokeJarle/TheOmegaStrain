@@ -1,6 +1,6 @@
 using Domain;
 
-namespace _3dTesting.Helpers
+namespace _3dRotations.Helpers
 {
     public class Colors
     {
