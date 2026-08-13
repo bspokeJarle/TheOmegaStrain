@@ -44,12 +44,7 @@ namespace CommonUtilities._3DHelpers
         /// </summary>
         public static (float X, float Y, float Z) GetHeadingFromDirection(float dx, float dz)
         {
-            float len = MathF.Sqrt(dx * dx + dz * dz);
-            if (len < 1e-4f)
-                return (WorldViewSetup.CameraPitchDegrees, 0f, 0f);
-
-            float headingDeg = MathF.Atan2(dz, dx) * (180f / MathF.PI);
-            return (WorldViewSetup.CameraPitchDegrees, 0f, headingDeg);
+            return GeometryMath.GetHeadingFromDirection(dx, dz, WorldViewSetup.CameraPitchDegrees);
         }
 
         /// <summary>
@@ -59,7 +54,7 @@ namespace CommonUtilities._3DHelpers
         /// </summary>
         public static (float X, float Y, float Z) GetHeadingToTarget(IVector3 source, IVector3 target)
         {
-            return GetHeadingFromDirection(target.x - source.x, target.z - source.z);
+            return GeometryMath.GetHeadingToTarget(source, target, WorldViewSetup.CameraPitchDegrees);
         }
 
         /// <summary>
@@ -67,10 +62,7 @@ namespace CommonUtilities._3DHelpers
         /// </summary>
         public static float NormalizeAngle(float angle)
         {
-            angle %= 360f;
-            if (angle > 180f) angle -= 360f;
-            if (angle < -180f) angle += 360f;
-            return angle;
+            return GeometryMath.NormalizeAngle(angle);
         }
 
         /// <summary>
@@ -78,22 +70,12 @@ namespace CommonUtilities._3DHelpers
         /// </summary>
         public static float MoveAngleTowards(float current, float target, float maxDelta)
         {
-            float delta = NormalizeAngle(target - current);
-            if (MathF.Abs(delta) <= maxDelta)
-                return current + delta;
-            return current + MathF.Sign(delta) * maxDelta;
+            return GeometryMath.MoveAngleTowards(current, target, maxDelta);
         }
 
         public static float DotNormalized(IVector3 a, IVector3 b)
         {
-            //Returns 1.0 if the vectors are perfectly aligned
-            float magA = (float)Math.Sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
-            float magB = (float)Math.Sqrt(b.x * b.x + b.y * b.y + b.z * b.z);
-
-            if (magA < 1e-6f || magB < 1e-6f)
-                return 0f;
-
-            return (a.x * b.x + a.y * b.y + a.z * b.z) / (magA * magB);
+            return GeometryMath.DotNormalized(a, b);
         }
         public static IVector3 GetLocalWorldPosition(this _3dObject inhabitant)
         {
@@ -157,20 +139,12 @@ namespace CommonUtilities._3DHelpers
 
         public static double GetDistance(Vector3 point1, Vector3 point2)
         {
-            float dx = point1.x - point2.x;
-            float dy = point1.y - point2.y;
-            float dz = point1.z - point2.z;
-
-            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
+            return GeometryMath.GetDistance(point1, point2);
         }
 
         public static float GetDistanceSquared(IVector3 point1, IVector3 point2)
         {
-            float dx = point1.x - point2.x;
-            float dy = point1.y - point2.y;
-            float dz = point1.z - point2.z;
-
-            return dx * dx + dy * dy + dz * dz;
+            return GeometryMath.GetDistanceSquared(point1, point2);
         }
 
         public struct CosSin
@@ -180,10 +154,8 @@ namespace CommonUtilities._3DHelpers
         }
         public static CosSin ConvertFromAngleToCosSin(this float angle)
         {
-            var radian = Math.PI * angle / 180.0;
-            var sinRes = Math.Sin(radian);
-            var cosRes = Math.Cos(radian);
-            return new CosSin { CosRes = (float)cosRes, SinRes = (float)sinRes };
+            var cosSin = GeometryMath.ConvertFromAngleToCosSin(angle);
+            return new CosSin { CosRes = cosSin.CosRes, SinRes = cosSin.SinRes };
         }
 
         public static List<ITriangleMeshWithColor> ConvertToTrianglesWithColor(List<TriangleMesh> triangles, string color)
@@ -261,202 +233,69 @@ namespace CommonUtilities._3DHelpers
 
         private static _3dObject DeepCopyObject(_3dObject original, bool copyCrashboxes)
         {
-            var copy = new _3dObject
-            {
-                ObjectId = original.ObjectId,
-                ObjectOffsets = CopyRequiredVector(original.ObjectOffsets),
-                Rotation = CopyRequiredVector(original.Rotation),
-                WorldPosition = CopyRequiredVector(original.WorldPosition),
-                ObjectParts = CopyObjectParts(original.ObjectParts),
-                Movement = original.Movement,
-                Particles = original.Particles,
-                ImpactStatus = original.ImpactStatus,
-                Mass = original.Mass,
-                ObjectName = original.ObjectName,
-                ParentSurface = original.ParentSurface,
-                RotationOffsetX = original.RotationOffsetX,
-                RotationOffsetY = original.RotationOffsetY,
-                RotationOffsetZ = original.RotationOffsetZ,
-                SurfaceBasedId = original.SurfaceBasedId,
-                CrashBoxDebugMode = original.CrashBoxDebugMode,
-                WeaponSystems = original.WeaponSystems,
-                CrashBoxes = copyCrashboxes ? CopyCrashboxes(original.CrashBoxes) : original.CrashBoxes,
-                CrashBoxNames = original.CrashBoxNames,
-                CrashBoxesFollowRotation = original.CrashBoxesFollowRotation,
-                CalculatedCrashOffset = CopyVector(original.CalculatedCrashOffset),
-                HasShadow = original.HasShadow,
-                ShadowOffset = CopyVector(original.ShadowOffset),
-                UseSurfaceFootprintPivot = original.UseSurfaceFootprintPivot,
-                HasPowerUp = original.HasPowerUp,
-                PowerUpType = original.PowerUpType,
-                ZSortBias = original.ZSortBias
-            };
-
+            var copy = CreateEngineCopy(original, copyCrashboxes);
+            CopyGameObjectFields(original, copy);
             return copy;
         }
 
         private static _3dObject DeepCopyObject(I3dObject original, bool copyCrashboxes)
         {
-            var copy = new _3dObject
-            {
-                ObjectId = original.ObjectId,
-                ObjectOffsets = CopyRequiredVector(original.ObjectOffsets),
-                Rotation = CopyRequiredVector(original.Rotation),
-                WorldPosition = CopyRequiredVector(original.WorldPosition),
-                ObjectParts = CopyObjectParts(original.ObjectParts),
-                Movement = original.Movement,
-                Particles = original.Particles,
-                ImpactStatus = original.ImpactStatus,
-                Mass = original.Mass,
-                ObjectName = original.ObjectName,
-                ParentSurface = original.ParentSurface,
-                RotationOffsetX = original.RotationOffsetX,
-                RotationOffsetY = original.RotationOffsetY,
-                RotationOffsetZ = original.RotationOffsetZ,
-                SurfaceBasedId = original.SurfaceBasedId,
-                CrashBoxDebugMode = original.CrashBoxDebugMode,
-                WeaponSystems = original.WeaponSystems,
-                CrashBoxes = copyCrashboxes ? CopyCrashboxes(original.CrashBoxes) : original.CrashBoxes,
-                CrashBoxNames = original.CrashBoxNames,
-                CrashBoxesFollowRotation = original.CrashBoxesFollowRotation,
-                CalculatedCrashOffset = CopyVector(original.CalculatedCrashOffset),
-                HasShadow = original.HasShadow,
-                ShadowOffset = CopyVector(original.ShadowOffset),
-                UseSurfaceFootprintPivot = original.UseSurfaceFootprintPivot,
-                HasPowerUp = original.HasPowerUp,
-                PowerUpType = original.PowerUpType,
-                ZSortBias = original.ZSortBias
-            };
-
+            var copy = CreateEngineCopy(original, copyCrashboxes);
+            CopyGameObjectFields(original, copy);
             return copy;
+        }
+
+        private static _3dObject CreateEngineCopy(IRenderable3dObject original, bool copyCrashboxes)
+        {
+            return EngineObjectCloner.CopyRenderableObject(
+                original,
+                static objectId => new _3dObject { ObjectId = objectId },
+                static () => new _3dObjectPart(),
+                static () => new TriangleMeshWithColor(),
+                CopyRequiredVector,
+                copyCrashboxes);
+        }
+
+        private static void CopyGameObjectFields(I3dObject original, _3dObject copy)
+        {
+            copy.Movement = original.Movement;
+            copy.Particles = original.Particles;
+            copy.ImpactStatus = original.ImpactStatus;
+            copy.Mass = original.Mass;
+            copy.ParentSurface = original.ParentSurface;
+            copy.SurfaceBasedId = original.SurfaceBasedId;
+            copy.CrashBoxDebugMode = original.CrashBoxDebugMode;
+            copy.WeaponSystems = original.WeaponSystems;
+            copy.HasPowerUp = original.HasPowerUp;
+            copy.PowerUpType = original.PowerUpType;
         }
 
         private static List<I3dObjectPart> CopyObjectParts(List<I3dObjectPart> originalParts)
         {
-            var objectParts = new List<I3dObjectPart>(originalParts.Count);
-
-            for (int partIndex = 0; partIndex < originalParts.Count; partIndex++)
-            {
-                var part = originalParts[partIndex];
-                var triangles = part.Triangles;
-                var copiedTriangles = new List<ITriangleMeshWithColor>(triangles.Count);
-
-                for (int triangleIndex = 0; triangleIndex < triangles.Count; triangleIndex++)
-                {
-                    copiedTriangles.Add(CopyTriangle(triangles[triangleIndex]));
-                }
-
-                objectParts.Add(new _3dObjectPart
-                {
-                    PartName = part.PartName,
-                    Triangles = copiedTriangles,
-                    IsVisible = part.IsVisible
-                });
-            }
-
-            return objectParts;
+            return EngineObjectCloner.CopyObjectParts(
+                originalParts,
+                static () => new _3dObjectPart(),
+                static () => new TriangleMeshWithColor(),
+                CopyRequiredVector);
         }
 
         private static TriangleMeshWithColor CopyTriangle(ITriangleMeshWithColor triangle)
         {
-            var mesh = triangle as TriangleMesh;
-            var triangleCopy = new TriangleMeshWithColor
-            {
-                landBasedPosition = triangle.landBasedPosition,
-                angle = triangle.angle,
-                Color = triangle.Color,
-                noHidden = triangle.noHidden
-            };
-
-            var vert1 = CopyVector(mesh != null ? mesh.Vert1Raw : triangle.vert1);
-            if (vert1 != null)
-            {
-                triangleCopy.vert1 = vert1;
-            }
-
-            var vert2 = CopyVector(mesh != null ? mesh.Vert2Raw : triangle.vert2);
-            if (vert2 != null)
-            {
-                triangleCopy.vert2 = vert2;
-            }
-
-            var vert3 = CopyVector(mesh != null ? mesh.Vert3Raw : triangle.vert3);
-            if (vert3 != null)
-            {
-                triangleCopy.vert3 = vert3;
-            }
-
-            var normal1 = CopyVector(mesh != null ? mesh.Normal1Raw : triangle.normal1);
-            if (normal1 != null)
-            {
-                triangleCopy.normal1 = normal1;
-            }
-
-            var normal2 = CopyVector(mesh != null ? mesh.Normal2Raw : triangle.normal2);
-            if (normal2 != null)
-            {
-                triangleCopy.normal2 = normal2;
-            }
-
-            var normal3 = CopyVector(mesh != null ? mesh.Normal3Raw : triangle.normal3);
-            if (normal3 != null)
-            {
-                triangleCopy.normal3 = normal3;
-            }
-
-            return triangleCopy;
+            return (TriangleMeshWithColor)EngineObjectCloner.CopyTriangle(
+                triangle,
+                static () => new TriangleMeshWithColor(),
+                CopyRequiredVector);
         }
 
         public static List<List<IVector3>> CopyCrashboxes(List<List<IVector3>> original)
         {
-            if (original == null || original.Count == 0)
-                return new List<List<IVector3>>();
-
-            var result = new List<List<IVector3>>(original.Count);
-
-            for (int boxIndex = 0; boxIndex < original.Count; boxIndex++)
-            {
-                var box = original[boxIndex];
-                var copiedBox = new List<IVector3>(box.Count);
-
-                for (int pointIndex = 0; pointIndex < box.Count; pointIndex++)
-                {
-                    copiedBox.Add(CopyRequiredVector(box[pointIndex]));
-                }
-
-                result.Add(copiedBox);
-            }
-
-            return result;
+            return GeometryMath.CopyCrashboxes(original, CopyRequiredVector);
         }
 
         public static Vector3 GetCenterOfBox(List<Vector3> points)
         {
-            if (points == null || points.Count == 0)
-                return new Vector3();
-
-            float minX = float.MaxValue, maxX = float.MinValue;
-            float minY = float.MaxValue, maxY = float.MinValue;
-            float minZ = float.MaxValue, maxZ = float.MinValue;
-
-            foreach (var p in points)
-            {
-                minX = Math.Min(minX, p.x);
-                maxX = Math.Max(maxX, p.x);
-
-                minY = Math.Min(minY, p.y);
-                maxY = Math.Max(maxY, p.y);
-
-                minZ = Math.Min(minZ, p.z);
-                maxZ = Math.Max(maxZ, p.z);
-            }
-
-            return new Vector3
-            {
-                x = (minX + maxX) / 2f,
-                y = (minY + maxY) / 2f,
-                z = (minZ + maxZ) / 2f
-            };
+            var center = GeometryMath.GetCenterOfBox(points);
+            return new Vector3(center.x, center.y, center.z);
         }
 
     }
