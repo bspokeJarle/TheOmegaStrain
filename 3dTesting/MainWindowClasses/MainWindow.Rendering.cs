@@ -2,6 +2,7 @@
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
+using Domain;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,7 +12,7 @@ using System.Windows.Media;
 
 namespace _3dTesting.Rendering
 {
-    public class WorldRenderer
+    public class WorldRenderer : IProjectedTriangleRenderer<_2dTriangleMesh>
     {
         private readonly DrawingVisualHost visualHost;
         private readonly DrawingVisual visual = new DrawingVisual();

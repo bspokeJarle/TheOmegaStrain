@@ -60,7 +60,7 @@ namespace _3dTesting
 
         private Grid mainGrid;
         private GameWorldManager gameWorldManager = new GameWorldManager();
-        private WorldRenderer worldRenderer;
+        private IProjectedTriangleRenderer<_Coordinates._2dTriangleMesh> worldRenderer;
 
         public _3dWorld._3dWorld world = new();
         public MediaPlayer player = new MediaPlayer();

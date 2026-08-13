@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Domain;
 
 namespace _3dTesting._Coordinates
 {
@@ -15,7 +16,7 @@ namespace _3dTesting._Coordinates
         }
     }
 
-    public struct _2dTriangleMesh
+    public struct _2dTriangleMesh : IProjectedTriangle
     {
         public string PartName { get; set; }
         public bool UseEffectRenderingPipeline { get; set; }

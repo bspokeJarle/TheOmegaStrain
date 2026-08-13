@@ -1,6 +1,7 @@
 using Domain;
 using _3dTesting._3dRotation;
 using _3dTesting._Coordinates;
+using _3dTesting.Rendering;
 using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.Architecture;
@@ -123,6 +124,38 @@ public class EngineObjectCompatibilityTests
         Assert.IsInstanceOfType(
             new _3dTo2d(),
             typeof(IWorldProjector<_3dObject, _2dTriangleMesh>));
+    }
+
+    [TestMethod]
+    public void ProjectedTriangleMesh_ImplementsEngineProjectedTriangleContract()
+    {
+        IProjectedTriangle triangle = new _2dTriangleMesh
+        {
+            PartName = "Main",
+            Color = "00FFFF",
+            X1 = 1,
+            Y1 = 2,
+            X2 = 3,
+            Y2 = 4,
+            X3 = 5,
+            Y3 = 6,
+            CalculatedZ = 7,
+            TriangleAngle = 0.5f,
+            Normal = 1f,
+            UseEffectRenderingPipeline = true
+        };
+
+        Assert.AreEqual("Main", triangle.PartName);
+        Assert.AreEqual("00FFFF", triangle.Color);
+        Assert.IsTrue(triangle.UseEffectRenderingPipeline);
+        Assert.AreEqual(7, triangle.CalculatedZ);
+    }
+
+    [TestMethod]
+    public void WorldRenderer_ImplementsEngineProjectedTriangleRendererContract()
+    {
+        Assert.IsTrue(
+            typeof(IProjectedTriangleRenderer<_2dTriangleMesh>).IsAssignableFrom(typeof(WorldRenderer)));
     }
 
     private sealed class TestWorld : I3dWorld
