@@ -1240,7 +1240,7 @@ namespace _3dRotations.SceneManagement
 
         private static void ResetSurfaceState()
         {
-            GameState.SurfaceState.GlobalMapBitmap = null;
+            GameState.SurfaceState.GlobalMapPixels = null;
             GameState.SurfaceState.SurfaceViewportObject = null;
             GameState.SurfaceState.GlobalMapPosition = new Vector3
             {

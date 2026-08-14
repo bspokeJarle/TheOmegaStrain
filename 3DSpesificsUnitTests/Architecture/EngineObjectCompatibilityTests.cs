@@ -241,6 +241,15 @@ public class EngineObjectCompatibilityTests
         Assert.AreEqual(0, forbiddenHits.Count, string.Join(Environment.NewLine, forbiddenHits));
     }
 
+    [TestMethod]
+    public void CommonUtilitiesSource_DoesNotUseWpfApisDirectly()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var forbiddenHits = FindForbiddenSourceHits(repositoryRoot, Path.Combine(repositoryRoot, "CommonUtilities"));
+
+        Assert.AreEqual(0, forbiddenHits.Count, string.Join(Environment.NewLine, forbiddenHits));
+    }
+
     private static List<string> FindForbiddenSourceHits(string repositoryRoot, string projectDirectory)
     {
         return Directory

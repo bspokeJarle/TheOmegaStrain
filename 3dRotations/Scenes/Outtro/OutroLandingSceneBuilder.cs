@@ -197,7 +197,7 @@ namespace _3dRotations.Scenes.Outro
 
             GameState.SurfaceState.Global2DMap = map;
             GameState.SurfaceState.GlobalMapPosition = CreateInitialMapPosition(map);
-            GameState.SurfaceState.GlobalMapBitmap = null;
+            GameState.SurfaceState.GlobalMapPixels = null;
             GameState.SurfaceState.SurfaceHash = 0;
             GameState.SurfaceState.SurfaceFilePath = null;
             GameState.SurfaceState.SurfaceViewportObject = null;

@@ -1,5 +1,6 @@
 using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
+using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
 using CommonUtilities.GamePlayHelpers;
 using Domain;
@@ -50,13 +51,13 @@ namespace _3dTesting.Helpers
             }
         }
 
-        public static void UpdateDirtyTilesInMap(BitmapSource surfaceMapBitmap)
+        public static void UpdateDirtyTilesInMap(SurfaceMapPixelBuffer? surfaceMapPixels)
         {
             var state = GameState.SurfaceState;
             if (state == null) return;
 
-            // Scene reset: bitmap can be null or not ready
-            if (surfaceMapBitmap is not WriteableBitmap wb)
+            // Scene reset: pixel buffer can be null or not ready.
+            if (surfaceMapPixels == null)
             {
                 state.DirtyTiles?.Clear();
                 return;
@@ -67,11 +68,8 @@ namespace _3dTesting.Helpers
 
             try
             {
-                int w = wb.PixelWidth;
-                int h = wb.PixelHeight;
-
-                // BGRA (pure red)
-                byte[] infectedPx = { 0, 0, 255, 255 };
+                int w = surfaceMapPixels.Width;
+                int h = surfaceMapPixels.Height;
 
                 // Thread-safe snapshot + clear to prevent corruption from background thread
                 List<IVector3> dirtySnapshot;
@@ -81,19 +79,28 @@ namespace _3dTesting.Helpers
                     state.DirtyTiles.Clear();
                 }
 
-                foreach (var dirty in dirtySnapshot)
+                lock (surfaceMapPixels.SyncRoot)
                 {
-                    int x = (int)dirty.x;
-                    int z = (int)dirty.z;
-
-                    if (x < 0 || z < 0 || x >= w || z >= h)
+                    foreach (var dirty in dirtySnapshot)
                     {
-                        if (Logger.ShouldLog(enableLogging)) Logger.Log($"UpdateDirtyTilesInMap: skip OOB ({x},{z})");
-                        continue;
+                        int x = (int)dirty.x;
+                        int z = (int)dirty.z;
+
+                        if (x < 0 || z < 0 || x >= w || z >= h)
+                        {
+                            if (Logger.ShouldLog(enableLogging)) Logger.Log($"UpdateDirtyTilesInMap: skip OOB ({x},{z})");
+                            continue;
+                        }
+
+                        if (Logger.ShouldLog(enableLogging)) Logger.Log($"UpdateDirtyTilesInMap: Infect pixel ({x},{z})");
+                        int offset = z * surfaceMapPixels.Stride + x * 4;
+                        surfaceMapPixels.Pixels[offset] = 0;
+                        surfaceMapPixels.Pixels[offset + 1] = 0;
+                        surfaceMapPixels.Pixels[offset + 2] = 255;
+                        surfaceMapPixels.Pixels[offset + 3] = 255;
                     }
 
-                    if (Logger.ShouldLog(enableLogging)) Logger.Log($"UpdateDirtyTilesInMap: Infect pixel ({x},{z})");
-                    wb.WritePixels(new Int32Rect(x, z, 1, 1), infectedPx, 4, 0);
+                    surfaceMapPixels.Version++;
                 }
             }
             catch (Exception ex)
@@ -104,7 +111,7 @@ namespace _3dTesting.Helpers
         }
 
         // -----------------------------------------------------------------
-        //  MINIMAP MARKERS  (overlay approach – never touches source bitmap)
+        //  MINIMAP MARKERS  (overlay approach - never touches source pixels)
         // -----------------------------------------------------------------
 
         private static int _markerFrame;
@@ -116,11 +123,11 @@ namespace _3dTesting.Helpers
         /// </summary>
         public static void UpdateMapOverlayWithMarkers(
             System.Windows.Controls.Image mapOverlay,
-            BitmapSource surfaceMapBitmap,
+            SurfaceMapPixelBuffer? surfaceMapPixels,
             int mapX, int mapZ)
         {
             if (mapX == 0 || mapZ == 0) return;
-            if (surfaceMapBitmap == null || mapOverlay == null) return;
+            if (surfaceMapPixels == null || mapOverlay == null) return;
 
             try
             {
@@ -130,8 +137,8 @@ namespace _3dTesting.Helpers
                 int cropW = MapSetup.bitmapSize * 2;
                 int cropH = MapSetup.bitmapSize;
 
-                int srcW = surfaceMapBitmap.PixelWidth;
-                int srcH = surfaceMapBitmap.PixelHeight;
+                int srcW = surfaceMapPixels.Width;
+                int srcH = surfaceMapPixels.Height;
 
                 cropW = Math.Min(cropW, srcW);
                 cropH = Math.Min(cropH, srcH);
@@ -140,7 +147,7 @@ namespace _3dTesting.Helpers
                 // 2. Copy crop pixels into a writable bitmap, wrapping around the
                 // planet map instead of clamping at bitmap edges.
                 int stride = cropW * 4; // Bgra32 = 4 bytes per pixel
-                byte[] pixels = CopyWrappedPixels(surfaceMapBitmap, cropX, cropZ, cropW, cropH, stride);
+                byte[] pixels = CopyWrappedPixels(surfaceMapPixels, cropX, cropZ, cropW, cropH, stride);
 
                 // 3. Draw markers onto the pixel buffer (positions relative to crop)
                 DrawMarkersOnBuffer(pixels, cropW, cropH, stride, cropX, cropZ, srcW, srcH);
@@ -182,7 +189,7 @@ namespace _3dTesting.Helpers
             byte[] swanPx    = { 240, 240, 240, 255 }; // SpaceSwan (white)
             byte[] zeppelinPx = { 0, 200, 200, 255 };   // ZeppelinBomber (yellow-green, BGRA)
 
-            // Mothership — large marker flashing red/strong-red independently
+            // Mothership - large marker flashing red/strong-red independently
             bool mothershipFlashRed = (_markerFrame % 20) < 10;
             byte[] mothershipPx = GetMinimapMarkerBlinkBgra(
                 biome,
@@ -191,7 +198,7 @@ namespace _3dTesting.Helpers
 
             bool powerupPrimaryColor = (_markerFrame % 8) < 5;
 
-            // Ship marker — always visible at viewport center
+            // Ship marker - always visible at viewport center
             var mapPos = GameState.SurfaceState.GlobalMapPosition;
             if (mapPos != null)
             {
@@ -203,7 +210,7 @@ namespace _3dTesting.Helpers
                 StampMarker(pixels, cropW, cropH, stride, shipBx, shipBz, greyPx);
             }
 
-            // Mothership marker — always drawn with its own red/black flash cycle
+            // Mothership marker - always drawn with its own red/black flash cycle
             {
                 var aiObjects = GameState.SurfaceState?.AiObjects;
                 _3dObject[]? msSnapshot = null;
@@ -235,7 +242,7 @@ namespace _3dTesting.Helpers
                 }
             }
 
-            // AI objects — always visible, blinking between their own marker color
+            // AI objects - always visible, blinking between their own marker color
             // and a stronger variant of the same color family.
             {
                 var aiObjects = GameState.SurfaceState?.AiObjects;
@@ -381,47 +388,60 @@ namespace _3dTesting.Helpers
         }
 
         private static byte[] CopyWrappedPixels(
-            BitmapSource source,
+            SurfaceMapPixelBuffer source,
             int cropX,
             int cropZ,
             int cropW,
             int cropH,
             int stride)
         {
-            int srcW = source.PixelWidth;
-            int srcH = source.PixelHeight;
+            int srcW = source.Width;
+            int srcH = source.Height;
             byte[] pixels = new byte[stride * cropH];
 
-            if (cropX >= 0 && cropZ >= 0 && cropX + cropW <= srcW && cropZ + cropH <= srcH)
+            lock (source.SyncRoot)
             {
-                source.CopyPixels(new Int32Rect(cropX, cropZ, cropW, cropH), pixels, stride, 0);
+                if (cropX >= 0 && cropZ >= 0 && cropX + cropW <= srcW && cropZ + cropH <= srcH)
+                {
+                    for (int z = 0; z < cropH; z++)
+                    {
+                        Buffer.BlockCopy(
+                            source.Pixels,
+                            ((cropZ + z) * source.Stride) + (cropX * 4),
+                            pixels,
+                            z * stride,
+                            stride);
+                    }
+
+                    return pixels;
+                }
+
+                for (int z = 0; z < cropH; z++)
+                {
+                    int srcZ = MapCoordinateHelpers.WrapIndex(cropZ + z, srcH);
+                    int targetRow = z * stride;
+                    int remaining = cropW;
+                    int targetX = 0;
+                    int srcX = MapCoordinateHelpers.WrapIndex(cropX, srcW);
+
+                    while (remaining > 0)
+                    {
+                        int width = Math.Min(remaining, srcW - srcX);
+                        Buffer.BlockCopy(
+                            source.Pixels,
+                            (srcZ * source.Stride) + (srcX * 4),
+                            pixels,
+                            targetRow + (targetX * 4),
+                            width * 4);
+
+                        targetX += width;
+                        remaining -= width;
+                        srcX = 0;
+                    }
+                }
+
                 return pixels;
             }
-
-            for (int z = 0; z < cropH; z++)
-            {
-                int srcZ = MapCoordinateHelpers.WrapIndex(cropZ + z, srcH);
-                int targetRow = z * stride;
-                int remaining = cropW;
-                int targetX = 0;
-                int srcX = MapCoordinateHelpers.WrapIndex(cropX, srcW);
-
-                while (remaining > 0)
-                {
-                    int width = Math.Min(remaining, srcW - srcX);
-                    source.CopyPixels(
-                        new Int32Rect(srcX, srcZ, width, 1),
-                        pixels,
-                        stride,
-                        targetRow + (targetX * 4));
-
-                    targetX += width;
-                    remaining -= width;
-                    srcX = 0;
-                }
-            }
-
-            return pixels;
         }
 
         /// <summary>

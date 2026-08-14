@@ -411,7 +411,7 @@ namespace _3dRotations.World.Objects
             if (Logger.ShouldLog(enableLogging)) Logger.Log($"[Surface] Create2DMap complete: mode={gameMode} TotalBioTiles={GameState.GamePlayState.TotalBioTiles} maxHeight={MapSetup.maxHeight} InfectionCriticalMass={GameState.GamePlayState.InfectionCriticalMass}", "Surface");
 
             int mapSize = GameState.SurfaceState.Global2DMap.GetLength(0); // siden kartet er square
-            MapHelpers.UpdateTerrainBitmap(
+            MapHelpers.UpdateTerrainMapPixels(
                 GameState.SurfaceState.Global2DMap,
                 mapSize,
                 MapSetup.maxHeight,

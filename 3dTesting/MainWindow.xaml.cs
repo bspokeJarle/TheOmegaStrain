@@ -200,7 +200,6 @@ namespace _3dTesting
             };
             mainGrid.Children.Add(FpsText);
 
-            //surfaceMapBitmap = GameState.SurfaceState.GlobalMapBitmap;
 
             // Overlay handlers must be put in the grid
             _overlayManager = new OverlayManager(mainGrid);
@@ -677,7 +676,7 @@ namespace _3dTesting
         {
             var surfaceState = GameState.SurfaceState;
             return GameState.ScreenOverlayState.Type == ScreenOverlayType.Game &&
-                   surfaceState?.GlobalMapBitmap != null &&
+                   surfaceState?.GlobalMapPixels != null &&
                    surfaceState.GlobalMapPosition != null &&
                    surfaceState.SurfaceViewportObject != null;
         }
@@ -970,13 +969,13 @@ namespace _3dTesting
                 _minimapFrameSkip = 0;
                 if (GameState.SurfaceState.GlobalMapPosition != null)
                 {
-                    GameHelpers.UpdateDirtyTilesInMap(GameState.SurfaceState.GlobalMapBitmap);
+                    GameHelpers.UpdateDirtyTilesInMap(GameState.SurfaceState.GlobalMapPixels);
 
                     // Crop the source bitmap, draw markers on the copy, display it.
                     // Markers never touch the source bitmap — no save/restore needed.
                     GameHelpers.UpdateMapOverlayWithMarkers(
                         _overlayManager.GetMinimapImage(),
-                        GameState.SurfaceState.GlobalMapBitmap,
+                        GameState.SurfaceState.GlobalMapPixels,
                         Convert.ToInt32(GameState.SurfaceState.GlobalMapPosition.x),
                         Convert.ToInt32(GameState.SurfaceState.GlobalMapPosition.z)
                     );

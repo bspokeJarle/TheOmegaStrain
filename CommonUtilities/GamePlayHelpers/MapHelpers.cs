@@ -1,82 +1,66 @@
 using CommonUtilities.CommonGlobalState;
+using CommonUtilities.CommonGlobalState.States;
 using Domain;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 
 namespace CommonUtilities.GamePlayHelpers
 {
     public static class MapHelpers
     {
-        public static void UpdateTilePixel(WriteableBitmap bitmap, int tileX, int tileZ, Color color)
+        public static void UpdateTilePixel(SurfaceMapPixelBuffer buffer, int tileX, int tileZ, byte blue, byte green, byte red, byte alpha = 255)
         {
-            // 1 pixel (BGRA)
-            byte[] px = { color.B, color.G, color.R, 255 };
+            if (buffer == null)
+                return;
 
-            // NB: Int32Rect(x,y,w,h) -> x=tileX, y=tileZ
-            bitmap.WritePixels(new Int32Rect(tileX, tileZ, 1, 1), px, 4, 0);
+            if (tileX < 0 || tileZ < 0 || tileX >= buffer.Width || tileZ >= buffer.Height)
+                return;
+
+            lock (buffer.SyncRoot)
+            {
+                int index = (tileZ * buffer.Stride) + (tileX * 4);
+                buffer.Pixels[index] = blue;
+                buffer.Pixels[index + 1] = green;
+                buffer.Pixels[index + 2] = red;
+                buffer.Pixels[index + 3] = alpha;
+                buffer.Version++;
+            }
         }
 
-        public static void UpdateTerrainBitmap(SurfaceData[,] terrainMap, int mapSize, int maxHeight, bool enableLogging = false)
+        public static void UpdateTerrainMapPixels(SurfaceData[,] terrainMap, int mapSize, int maxHeight, bool enableLogging = false)
         {
-            WriteableBitmap wb = GameState.SurfaceState.GlobalMapBitmap as WriteableBitmap;
-
-            try
+            SurfaceMapPixelBuffer? buffer = GameState.SurfaceState.GlobalMapPixels;
+            if (buffer == null || !buffer.HasSize(mapSize, mapSize))
             {
-                if (wb == null || wb.PixelWidth != mapSize || wb.PixelHeight != mapSize)
-                {
-                    if (Logger.ShouldLog(enableLogging))
-                        Logger.Log($"UpdateTerrainBitmap: recreating bitmap (existing={(wb == null ? "null" : $"{wb.PixelWidth}x{wb.PixelHeight}")})", "MapHelpers");
+                if (Logger.ShouldLog(enableLogging))
+                    Logger.Log($"UpdateTerrainMapPixels: recreating pixel buffer (existing={(buffer == null ? "null" : $"{buffer.Width}x{buffer.Height}")})", "MapHelpers");
 
-                    Application.Current.Dispatcher.Invoke(() =>
+                buffer = new SurfaceMapPixelBuffer(mapSize, mapSize);
+                GameState.SurfaceState.GlobalMapPixels = buffer;
+            }
+
+            lock (buffer.SyncRoot)
+            {
+                for (int z = 0; z < mapSize; z++)
+                {
+                    for (int x = 0; x < mapSize; x++)
                     {
-                        wb = new WriteableBitmap(mapSize, mapSize, 96, 96, PixelFormats.Bgra32, null);
-                        GameState.SurfaceState.GlobalMapBitmap = wb;
-                    });
+                        TerrainPaletteHelpers.GetTerrainColorRgb(
+                            terrainMap[z, x].mapDepth,
+                            maxHeight,
+                            GameState.SurfaceState.SceneBiome,
+                            out int red,
+                            out int green,
+                            out int blue);
+
+                        int index = (z * buffer.Stride) + (x * 4);
+                        buffer.Pixels[index] = (byte)blue;
+                        buffer.Pixels[index + 1] = (byte)green;
+                        buffer.Pixels[index + 2] = (byte)red;
+                        buffer.Pixels[index + 3] = 255;
+                    }
                 }
+
+                buffer.Version++;
             }
-            catch (Exception ex)
-            {
-                if (Logger.ShouldLog(enableLogging)) Logger.Log($"Error creating WriteableBitmap: {ex.Message}", "MapHelpers");
-                return;
-            }
-
-            int stride = mapSize * 4;
-            byte[] pixelData = new byte[mapSize * mapSize * 4];
-
-            for (int i = 0; i < mapSize; i++)
-            {
-                for (int j = 0; j < mapSize; j++)
-                {
-                    TerrainPaletteHelpers.GetTerrainColorRgb(
-                        terrainMap[i, j].mapDepth,
-                        maxHeight,
-                        GameState.SurfaceState.SceneBiome,
-                        out int red,
-                        out int green,
-                        out int blue);
-
-                    int index = (i * mapSize + j) * 4;
-                    pixelData[index] = (byte)blue;
-                    pixelData[index + 1] = (byte)green;
-                    pixelData[index + 2] = (byte)red;
-                    pixelData[index + 3] = 255;
-                }
-            }
-
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                var currentWb = GameState.SurfaceState.GlobalMapBitmap as WriteableBitmap;
-                if (currentWb != null && currentWb.PixelWidth == mapSize && currentWb.PixelHeight == mapSize)
-                {
-                    currentWb.WritePixels(new Int32Rect(0, 0, mapSize, mapSize), pixelData, stride, 0);
-                }
-                else if (Logger.ShouldLog(enableLogging))
-                {
-                    Logger.Log("UpdateTerrainBitmap: bitmap size mismatch; skipping WritePixels", "MapHelpers");
-                }
-            }), DispatcherPriority.Render);
         }
     }
 }
