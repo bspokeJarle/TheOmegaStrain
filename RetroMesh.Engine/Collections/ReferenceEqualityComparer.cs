@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace Domain
+namespace RetroMesh.Engine
 {
     public sealed class ReferenceEqualityComparer : IEqualityComparer<object>
     {

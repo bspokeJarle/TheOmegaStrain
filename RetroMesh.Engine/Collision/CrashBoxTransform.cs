@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Domain
+namespace RetroMesh.Engine
 {
     public static class CrashBoxTransform
     {

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Domain
+namespace RetroMesh.Engine
 {
     public interface IWorldFrameLoop<TWorld, TTriangle>
     {

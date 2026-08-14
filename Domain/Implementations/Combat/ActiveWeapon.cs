@@ -1,5 +1,5 @@
 using System;
-using static CommonUtilities.WeaponHelpers.WeaponHelpers;
+using static Domain.WeaponHelpers;
 
 namespace Domain
 {

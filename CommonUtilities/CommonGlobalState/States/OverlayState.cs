@@ -2,7 +2,7 @@
 using CommonUtilities.Persistence;
 using System.Collections.Generic;
 
-namespace Domain
+namespace CommonUtilities.CommonGlobalState.States
 {
     public enum ScreenOverlayType
     {

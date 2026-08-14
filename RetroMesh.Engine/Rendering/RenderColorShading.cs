@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Domain
+namespace RetroMesh.Engine
 {
     public static class RenderColorShading
     {

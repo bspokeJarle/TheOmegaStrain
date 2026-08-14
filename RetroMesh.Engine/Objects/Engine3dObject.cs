@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Domain
+namespace RetroMesh.Engine
 {
     public class Engine3dObject : IRenderable3dObject
     {

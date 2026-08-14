@@ -8,6 +8,7 @@
     <PackageReference Include="MouseKeyHook" Version="5.7.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\RetroMesh.Engine\RetroMesh.Engine.csproj" />
     <ProjectReference Include="..\CommonUtilities\CommonUtilities.csproj" />
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>

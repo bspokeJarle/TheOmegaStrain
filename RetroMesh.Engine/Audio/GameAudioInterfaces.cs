@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace Domain
+namespace RetroMesh.Engine
 {
     /// <summary>
     /// Abstraction for looking up sound definitions by id.

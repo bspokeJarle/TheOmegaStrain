@@ -1,6 +1,7 @@
 using Domain;
 using System.Linq;
 using System.Text;
+using CommonUtilities.CommonGlobalState.States;
 
 namespace CommonUtilities.Persistence
 {

@@ -1,8 +1,9 @@
 using System;
 using CommonUtilities.CommonSetup;
-using static CommonUtilities.WeaponHelpers.WeaponHelpers;
+using Domain;
+using static Domain.WeaponHelpers;
 
-namespace Domain
+namespace CommonUtilities.CommonGlobalState.States
 {
     public enum GamePhase
     {

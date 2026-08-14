@@ -1,6 +1,6 @@
 using System;
 
-namespace Domain;
+namespace RetroMesh.Engine;
 
 public interface IAudioVolumeProfile
 {

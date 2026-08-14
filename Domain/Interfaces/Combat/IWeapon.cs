@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using static CommonUtilities.WeaponHelpers.WeaponHelpers;
+using static Domain.WeaponHelpers;
 
 namespace Domain
 {

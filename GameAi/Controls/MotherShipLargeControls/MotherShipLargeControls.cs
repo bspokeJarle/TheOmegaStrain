@@ -6,7 +6,7 @@ using GameAiAndControls.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static CommonUtilities.WeaponHelpers.WeaponHelpers;
+using static Domain.WeaponHelpers;
 using static Domain._3dSpecificsImplementations;
 
 namespace GameAiAndControls.Controls.MotherShipMediumControls

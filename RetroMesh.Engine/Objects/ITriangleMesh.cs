@@ -1,4 +1,4 @@
-namespace Domain
+namespace RetroMesh.Engine
 {
     public interface ITriangleMesh
     {

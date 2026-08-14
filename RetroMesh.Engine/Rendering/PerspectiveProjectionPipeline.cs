@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Domain
+namespace RetroMesh.Engine
 {
     public sealed class PerspectiveProjectionPipeline<TTriangle>
         where TTriangle : IProjectedTriangle

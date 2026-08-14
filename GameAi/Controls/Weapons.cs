@@ -3,10 +3,11 @@ using Domain;
 using System;
 using System.Collections.Generic;
 using System.Net.Security;
-using static CommonUtilities.WeaponHelpers.WeaponHelpers;
+using static Domain.WeaponHelpers;
 using static Domain._3dSpecificsImplementations;
 using CommonUtilities.CommonSetup;
 using CommonUtilities.CommonGlobalState;
+using CommonUtilities.CommonGlobalState.States;
 
 namespace GameAiAndControls.Controls
 {

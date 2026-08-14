@@ -16,7 +16,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using static CommonUtilities.WeaponHelpers.WeaponHelpers;
+using static Domain.WeaponHelpers;
 using static Domain._3dSpecificsImplementations;
 
 namespace GameAiAndControls.Controls

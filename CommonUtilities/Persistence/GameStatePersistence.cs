@@ -3,6 +3,7 @@ using Domain;
 using System;
 using System.IO;
 using System.Text.Json;
+using CommonUtilities.CommonGlobalState.States;
 
 namespace CommonUtilities.Persistence
 {

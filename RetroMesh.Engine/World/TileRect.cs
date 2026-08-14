@@ -1,4 +1,4 @@
-namespace Domain
+namespace RetroMesh.Engine
 {
     public readonly record struct TileRect(int MinX, int MinZ, int MaxX, int MaxZ)
     {
