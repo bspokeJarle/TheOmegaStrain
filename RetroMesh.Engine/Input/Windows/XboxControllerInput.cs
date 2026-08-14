@@ -1,10 +1,9 @@
-using CommonUtilities.CommonGlobalState.States;
 using SharpDX.DirectInput;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace CommonUtilities.Input
+namespace RetroMesh.Engine
 {
     public readonly struct XboxControllerSnapshot
     {

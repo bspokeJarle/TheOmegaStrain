@@ -1,4 +1,4 @@
-namespace CommonUtilities.CommonSetup
+namespace RetroMesh.Engine
 {
     public static class WorldViewSetup
     {

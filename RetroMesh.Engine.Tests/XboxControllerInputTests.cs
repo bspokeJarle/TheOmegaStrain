@@ -1,7 +1,4 @@
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.Input;
-
-namespace _3DSpesificsUnitTests.Controls;
+namespace RetroMesh.Engine.Tests;
 
 [TestClass]
 public class XboxControllerInputTests

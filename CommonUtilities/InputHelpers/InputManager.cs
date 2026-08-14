@@ -1,4 +1,5 @@
 using Gma.System.MouseKeyHook;
+using System.Diagnostics;
 
 namespace CommonUtilities.Input
 {
@@ -17,7 +18,7 @@ namespace CommonUtilities.Input
             {
                 if (_sharedHook == null)
                 {
-                    if (Logger.ShouldLog(enableLogging)) Logger.Log("InputManager: Initializing global hook.", "Input");
+                    Log("InputManager: Initializing global hook.");
                     _sharedHook = Hook.GlobalEvents();
                 }
                 return _sharedHook;
@@ -32,10 +33,16 @@ namespace CommonUtilities.Input
         {
             if (_sharedHook != null)
             {
-                if (Logger.ShouldLog(enableLogging)) Logger.Log("InputManager: Disposing global hook.", "Input");
+                Log("InputManager: Disposing global hook.");
                 _sharedHook.Dispose();
                 _sharedHook = null;
             }
+        }
+
+        private static void Log(string message)
+        {
+            if (enableLogging)
+                Debug.WriteLine($"[Input] {message}");
         }
     }
 }

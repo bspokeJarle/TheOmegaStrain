@@ -239,7 +239,7 @@ namespace TheOmegaStrain.Runtime.Rendering
                 ShadowLift = ParticleShadowLift,
                 ShadowSlopeX = slopeX,
                 ShadowSlopeY = slopeY,
-                SurfaceTiltDegrees = CommonUtilities.CommonSetup.WorldViewSetup.SurfacePitchDegrees
+                SurfaceTiltDegrees = WorldViewSetup.SurfacePitchDegrees
             };
         }
 

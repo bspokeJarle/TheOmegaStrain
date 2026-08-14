@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace CommonUtilities.Input
+namespace RetroMesh.Engine
 {
     public static class RawMouseInput
     {
