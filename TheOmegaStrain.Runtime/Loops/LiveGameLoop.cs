@@ -2,6 +2,7 @@ using _3dRotations.Helpers;
 using _3dRotations.Projection;
 using _3dRotations.World.Objects;
 using TheOmegaStrain.Runtime.Collision;
+using TheOmegaStrain.Runtime.Rendering;
 using CommonUtilities._3DHelpers;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
@@ -21,7 +22,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3dTesting.MainWindowClasses.Loops
+namespace TheOmegaStrain.Runtime.Loops
 {
     public class LiveGameLoop : IGameLoop<ProjectedTriangleMesh>
     {

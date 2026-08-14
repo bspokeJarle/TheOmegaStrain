@@ -1,8 +1,7 @@
-using _3dTesting.MainWindowClasses.Loops;
 using Domain;
 using System.Collections.Generic;
 
-namespace _3dTesting.MainWindowClasses
+namespace TheOmegaStrain.Runtime.Loops
 {
     public class GameWorldManager
     {

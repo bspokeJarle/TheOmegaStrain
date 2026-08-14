@@ -1,9 +1,9 @@
 using _3dTesting.Helpers;
 using _3dTesting.Input;
 using _3dTesting.MainWindowClasses;
-using _3dTesting.MainWindowClasses.Loops;
 using _3dTesting.MainWindowClasses.Overlays;
 using _3dTesting.Rendering;
+using TheOmegaStrain.Runtime.Loops;
 using _3dRotations.World;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;

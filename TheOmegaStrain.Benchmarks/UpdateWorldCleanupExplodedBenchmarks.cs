@@ -5,7 +5,7 @@ using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
 using Domain;
 using Microsoft.VSDiagnostics;
-using _3dTesting.MainWindowClasses;
+using TheOmegaStrain.Runtime.Loops;
 using _3dRotations.World;
 using _3dRotations.Helpers;
 using static Domain._3dSpecificsImplementations;

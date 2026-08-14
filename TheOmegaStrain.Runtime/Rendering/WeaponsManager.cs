@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Windows;
+using System.Collections.Generic;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3dTesting.MainWindowClasses
+namespace TheOmegaStrain.Runtime.Rendering
 {
     public class WeaponsManager
     {
@@ -30,3 +29,4 @@ namespace _3dTesting.MainWindowClasses
         }
     }
 }
+

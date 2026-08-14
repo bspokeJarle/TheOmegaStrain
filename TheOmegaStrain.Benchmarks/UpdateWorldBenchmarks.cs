@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
-using _3dTesting.MainWindowClasses;
+using TheOmegaStrain.Runtime.Loops;
 using _3dRotations.World;
 using _3dRotations.Helpers;
 using Domain;

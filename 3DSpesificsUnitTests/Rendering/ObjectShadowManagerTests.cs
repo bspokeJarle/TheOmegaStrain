@@ -1,8 +1,8 @@
 using _3dRotations.World.Objects;
-using _3dTesting.MainWindowClasses;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using Domain;
+using TheOmegaStrain.Runtime.Rendering;
 using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.Rendering;

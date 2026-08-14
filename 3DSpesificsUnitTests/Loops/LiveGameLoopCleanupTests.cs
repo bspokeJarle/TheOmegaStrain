@@ -1,4 +1,3 @@
-using _3dTesting.MainWindowClasses.Loops;
 using CommonUtilities._3DHelpers;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
@@ -8,6 +7,7 @@ using CommonUtilities.Persistence;
 using Domain;
 using System.Diagnostics;
 using System.Reflection;
+using TheOmegaStrain.Runtime.Loops;
 using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.Loops;

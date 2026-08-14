@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3dTesting.MainWindowClasses
+namespace TheOmegaStrain.Runtime.Rendering
 {
     using NumericsVector3 = System.Numerics.Vector3;
     using EngineVector3 = _3dSpecificsImplementations.Vector3;
