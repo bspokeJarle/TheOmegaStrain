@@ -1,9 +1,8 @@
-using System.Collections.Generic;
 using static Domain._3dSpecificsImplementations;
 
 namespace Domain
 {
-    public interface ISurface
+    public interface ISurface : ISurfaceGeometryCache
     {
         Vector3 GlobalMapRotation { get; set; }
         int SurfaceWidth();
@@ -11,9 +10,6 @@ namespace Domain
         int ViewPortSize();
         int TileSize();
         int MaxHeight();
-        List<ITriangleMeshWithColor> RotatedSurfaceTriangles { get; set; }
-        Dictionary<long, ITriangleMeshWithColor> RotatedSurfaceTriangleByLandId { get; set; }
-        HashSet<long?> LandBasedIds { get; set; }
         I3dObject GetSurfaceViewPort();
         void Create2DMap(int? maxTrees, int? maxHouses, GameModes gameMode, string? recordedSurface);
     }

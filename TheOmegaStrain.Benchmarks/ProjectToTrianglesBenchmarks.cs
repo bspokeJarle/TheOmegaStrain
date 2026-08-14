@@ -10,12 +10,12 @@ namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 public class ProjectToTrianglesBenchmarks
 {
-    private PerspectiveWorldProjector _converter = null !;
+    private IWorldProjector<_3dObject, ProjectedTriangleMesh> _converter = null !;
     private List<_3dObject> _objects = null !;
     [GlobalSetup]
     public void Setup()
     {
-        _converter = new PerspectiveWorldProjector();
+        _converter = OmegaPerspectiveProjectorFactory.Create();
         _objects = new List<_3dObject>(128);
         GameState.SurfaceState.GlobalMapPosition = new Vector3
         {

@@ -164,7 +164,7 @@ namespace RetroMesh.Engine
         void Update(double deltaTimeSeconds);
     }
 
-    // ---------- Domain objects for sounds (used by both game & implementation) ----------
+    // ---------- Audio models used by both game and implementation ----------
 
     public sealed class SoundDefinition
     {

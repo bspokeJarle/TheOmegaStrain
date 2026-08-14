@@ -38,5 +38,12 @@ namespace RetroMesh.Engine
                 perFrameDamping,
                 GetFrameScale(deltaTime, baselineFps, fallbackDeltaTime, maxDeltaTime));
         }
+
+        public static double TicksToMilliseconds(long ticks, long frequency)
+        {
+            return frequency > 0
+                ? ticks * 1000.0 / frequency
+                : 0d;
+        }
     }
 }

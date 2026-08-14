@@ -122,8 +122,9 @@ public class EngineObjectCompatibilityTests
     public void ProjectionConverter_ImplementsEngineProjectionContract()
     {
         Assert.IsInstanceOfType(
-            new PerspectiveWorldProjector(),
+            OmegaPerspectiveProjectorFactory.Create(),
             typeof(IWorldProjector<_3dObject, ProjectedTriangleMesh>));
+        Assert.AreEqual("RetroMesh.Engine", typeof(PerspectiveWorldProjector<,>).Namespace);
     }
 
     [TestMethod]

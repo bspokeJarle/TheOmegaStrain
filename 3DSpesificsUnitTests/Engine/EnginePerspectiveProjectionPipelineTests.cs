@@ -94,6 +94,40 @@ public class EnginePerspectiveProjectionPipelineTests
         Assert.AreEqual(4, capacity);
     }
 
+    [TestMethod]
+    public void PerspectiveWorldProjector_UsesInjectedVisibilityAndRenderPosition()
+    {
+        var projector = new PerspectiveWorldProjector<Engine3dObject, ProjectedTriangleMesh>(
+            new ProjectionViewport(
+                screenWidth: 1000,
+                screenHeight: 800,
+                perspectiveAdjustment: 1500,
+                objectZoom: 2),
+            static () => new ProjectedTriangleMesh(),
+            static (Engine3dObject obj, IProjectionViewport viewport, out RenderPosition position) =>
+            {
+                position = new RenderPosition(viewport.ScreenCenterX, viewport.ScreenCenterY, 0);
+                return true;
+            },
+            static obj => obj.ObjectName != "Hidden",
+            static _ => false);
+        var reusable = new List<ProjectedTriangleMesh>(capacity: 1);
+
+        var result = projector.ProjectToTriangles(
+            new List<Engine3dObject>
+            {
+                CreateRenderableObject(),
+                CreateRenderableObject("Hidden")
+            },
+            currentFrame: 1,
+            reusable);
+
+        Assert.AreSame(reusable, result);
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual("Main", result[0].PartName);
+        Assert.IsTrue(result.Capacity >= 2);
+    }
+
     private static PerspectiveProjectionPipeline<ProjectedTriangleMesh> CreatePipeline()
     {
         return new PerspectiveProjectionPipeline<ProjectedTriangleMesh>(

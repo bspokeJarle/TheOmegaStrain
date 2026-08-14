@@ -250,7 +250,7 @@ public class RenderSimpleOptimizationTests
     [TestMethod]
     public void ProjectToTriangles_ReusesProvidedResultList()
     {
-        var converter = new PerspectiveWorldProjector();
+        var converter = OmegaPerspectiveProjectorFactory.Create();
         var reusable = new List<ProjectedTriangleMesh>
         {
             new() { PartName = "Stale" }
@@ -274,7 +274,7 @@ public class RenderSimpleOptimizationTests
     [TestMethod]
     public void ProjectToTriangles_ReservesCapacityForVisibleTriangles()
     {
-        var converter = new PerspectiveWorldProjector();
+        var converter = OmegaPerspectiveProjectorFactory.Create();
         var reusable = new List<ProjectedTriangleMesh>(capacity: 1);
         var obj = CreateRenderableObject();
         var triangles = obj.ObjectParts[0].Triangles;
@@ -307,7 +307,7 @@ public class RenderSimpleOptimizationTests
     [TestMethod]
     public void ProjectToTriangles_MarksDynamicEffectsForEffectPipeline()
     {
-        var converter = new PerspectiveWorldProjector();
+        var converter = OmegaPerspectiveProjectorFactory.Create();
 
         var result = converter.ProjectToTriangles(
             new List<_3dObject> { CreateRenderableObject("ExplodingPart") },
@@ -323,7 +323,7 @@ public class RenderSimpleOptimizationTests
     [TestMethod]
     public void ProjectToTriangles_UsesInjectedProjectionViewport()
     {
-        var converter = new PerspectiveWorldProjector(new ProjectionViewport(
+        var converter = OmegaPerspectiveProjectorFactory.Create(new ProjectionViewport(
             screenWidth: 1000,
             screenHeight: 800,
             perspectiveAdjustment: 1500,
@@ -403,7 +403,7 @@ public class RenderSimpleOptimizationTests
     [TestMethod]
     public void ProjectToTriangles_ClampsCrashBoxDebugTrianglesToScreenMargin()
     {
-        var converter = new PerspectiveWorldProjector();
+        var converter = OmegaPerspectiveProjectorFactory.Create();
         var surface = CreateRenderableObject();
         surface.ObjectName = "Surface";
         surface.CrashBoxDebugMode = true;
@@ -430,7 +430,7 @@ public class RenderSimpleOptimizationTests
     [TestMethod]
     public void ProjectToTriangles_RendersSurfaceMainCrashBoxDebug()
     {
-        var converter = new PerspectiveWorldProjector();
+        var converter = OmegaPerspectiveProjectorFactory.Create();
         var surface = CreateRenderableObject();
         surface.ObjectName = "Surface";
         surface.CrashBoxDebugMode = true;

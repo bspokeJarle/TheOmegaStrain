@@ -237,7 +237,7 @@ public class OutroSceneTests
         ApplyLiveMeshRotation(earth);
 
         int triangleCount = earth.ObjectParts.Sum(p => p.Triangles.Count);
-        var converter = new PerspectiveWorldProjector();
+        var converter = OmegaPerspectiveProjectorFactory.Create();
         var projected = converter.ProjectToTriangles(new List<_3dObject> { earth }, currentFrame: 1);
 
         // Stars carry noHidden=true and always project; globe and miniatures use backface culling.
@@ -357,7 +357,7 @@ public class OutroSceneTests
         ship.Movement!.MoveObject(ship, null, null);
         ApplyLiveMeshRotation(ship);
 
-        var converter = new PerspectiveWorldProjector();
+        var converter = OmegaPerspectiveProjectorFactory.Create();
         var projected = converter.ProjectToTriangles(new List<_3dObject> { ship }, currentFrame: 1);
 
         Assert.IsTrue(projected.Count > 0, "Outro ship should be visible on the first rendered movement frame.");
@@ -735,7 +735,7 @@ public class OutroSceneTests
         ApplyLiveMeshRotation(earth);
         ApplyLiveMeshRotation(ship);
 
-        var converter = new PerspectiveWorldProjector();
+        var converter = OmegaPerspectiveProjectorFactory.Create();
         // Project both objects together, exactly as the renderer does
         var allTriangles = converter.ProjectToTriangles(new List<_3dObject> { earth, ship }, currentFrame: 1);
 
@@ -837,7 +837,7 @@ public class OutroSceneTests
         var earth = (_3dObject)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
         ApplyLiveMeshRotation(earth);
         int triangleCount = earth.ObjectParts.Sum(p => p.Triangles.Count);
-        var converter = new PerspectiveWorldProjector();
+        var converter = OmegaPerspectiveProjectorFactory.Create();
 
         var projected = converter.ProjectToTriangles(new List<_3dObject> { earth }, currentFrame: 1);
         var bounds = GetProjectedBounds(projected);
@@ -861,7 +861,7 @@ public class OutroSceneTests
         var earth = (_3dObject)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
         ApplyLiveMeshRotation(earth);
 
-        var converter = new PerspectiveWorldProjector();
+        var converter = OmegaPerspectiveProjectorFactory.Create();
         var projected = converter.ProjectToTriangles(new List<_3dObject> { earth }, currentFrame: 1);
         int renderable = WorldRenderer.ProcessTrianglesForRender(
             projected,
@@ -1659,7 +1659,7 @@ public class OutroSceneTests
         controls.MoveObject(ship, null, null);
         ApplyLiveMeshRotation(ship);
 
-        var converter = new PerspectiveWorldProjector();
+        var converter = OmegaPerspectiveProjectorFactory.Create();
         var projected = converter.ProjectToTriangles(new List<_3dObject> { ship }, currentFrame: 1)
             .Where(t => t.PartName == "UpperPart" || t.PartName == "LowerPart" || t.PartName == "RearPart" || t.PartName == "Winglets")
             .ToList();

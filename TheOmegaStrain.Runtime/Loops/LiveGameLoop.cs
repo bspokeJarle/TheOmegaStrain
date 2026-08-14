@@ -30,23 +30,14 @@ namespace TheOmegaStrain.Runtime.Loops
         private const bool EnableAdaptiveGc = true;
         private static int PerfLogInterval => ScreenSetup.RuntimeTargetFps;
         private static int AdaptiveGcMinFrameInterval => ScreenSetup.RuntimeTargetFps;
-        private const int adaptiveGcGen1EveryAttempts = 6;
-        private const double adaptiveGcMinHeadroomMs = 5.0;
-        private const double adaptiveGcMinHeadroomPct = 45.0;
-        private const long adaptiveGcMinAllocatedBytes = 24L * 1024L * 1024L;
 
         private long FrameCounter = 0;
-        private readonly Stopwatch frameTimer = new();
-        private long performanceFrameCount = 0;
-        private double averageFrameMs = 0;
-        private double averageHeadroomMs = 0;
-        private long lastAdaptiveGcFrame = -AdaptiveGcMinFrameInterval;
-        private long lastAdaptiveGcAllocatedBytes = GC.GetTotalAllocatedBytes(precise: false);
-        private long adaptiveGcAttempts = 0;
+        private readonly FramePerformanceTracker framePerformanceTracker = new();
+        private readonly FramePhaseTimer phaseTimer = new();
         private int AiUpdateCounter = 0;
         private const int AiUpdateInterval = 5; // Update offscreen AI every 5 frames
-        private readonly IWorldProjector<_3dObject, ProjectedTriangleMesh> worldProjector = new PerspectiveWorldProjector();
-        private readonly OmegaMeshRotation Rotate3d = new();
+        private readonly IWorldProjector<_3dObject, ProjectedTriangleMesh> worldProjector = OmegaPerspectiveProjectorFactory.Create();
+        private readonly ObjectFrameTransformer objectFrameTransformer = new();
         private readonly ParticleManager particleManager = new();
         private readonly WeaponsManager weaponsManager = new();
         private readonly ObjectShadowManager objectShadowManager = new();
@@ -56,7 +47,7 @@ namespace TheOmegaStrain.Runtime.Loops
         private readonly List<_3dObject> weaponObjectBuffer = new();
         private readonly List<_3dObject> shadowObjectBuffer = new();
         private readonly List<_3dObject> renderedObjectBuffer = new();
-        private readonly Dictionary<int, _3dObject> aiByIdBuffer = new();
+        private readonly ObjectScreenStateTracker<_3dObject> aiScreenTracker = new();
         private readonly HashSet<int> pendingExplosionCleanupIds = new();
         private readonly HashSet<int> publishedExplosionIds = new();
         private IGameEventBus? explosionCleanupEventBus;
@@ -123,12 +114,12 @@ namespace TheOmegaStrain.Runtime.Loops
 
         public List<ProjectedTriangleMesh> UpdateWorld(I3dWorld world, ref List<ProjectedTriangleMesh> projectedCoordinates, ref List<ProjectedTriangleMesh> crashBoxCoordinates)
         {
-            frameTimer.Restart();
+            framePerformanceTracker.RestartFrame();
             FrameCounter++;
             GameState.WeatherVisualState.DecayImpactFlash(3.2f * GameState.ClampedDeltaTime);
             EnsureExplosionCleanupSubscription(world.EventBus);
             bool logPhaseTiming = Logger.ShouldLog(EnableCpuHeadroomLogging) && (FrameCounter % PerfLogInterval == 0);
-            long phaseTicks = logPhaseTiming ? Stopwatch.GetTimestamp() : 0;
+            phaseTimer.Restart(logPhaseTiming);
             double copyMs = 0;
             double starfieldMs = 0;
             double prepMs = 0;
@@ -142,17 +133,6 @@ namespace TheOmegaStrain.Runtime.Loops
             double directorHudMs = 0;
             double musicMs = 0;
 
-            double MarkPhase()
-            {
-                if (!logPhaseTiming)
-                    return 0;
-
-                long now = Stopwatch.GetTimestamp();
-                double elapsedMs = TicksToMs(now - phaseTicks);
-                phaseTicks = now;
-                return elapsedMs;
-            }
-
             List<_3dObject> deepCopiedWorld = deepCopiedWorldBuffer;
             List<_3dObject> activeWorld = activeWorldBuffer;
             lock (_lock)
@@ -165,7 +145,7 @@ namespace TheOmegaStrain.Runtime.Loops
 
                 var inhabitants = world.WorldInhabitants;
                 activeWorld.Clear();
-                EnsureListCapacity(activeWorld, inhabitants.Count);
+                ListCapacityHelper.EnsureCapacity(activeWorld, inhabitants.Count);
 
                 foreach (var inhabitant in inhabitants)
                 {
@@ -180,7 +160,7 @@ namespace TheOmegaStrain.Runtime.Loops
 
                 OmegaObjectHelpers.DeepCopy3dObjects(activeWorld, deepCopiedWorld);
             }
-            copyMs = MarkPhase();
+            copyMs = phaseTimer.Mark();
 
             if (StarFieldHandler == null)
             {
@@ -200,7 +180,7 @@ namespace TheOmegaStrain.Runtime.Loops
                 SandDriftControls.GlobalSandOpacity = weatherOpacity;
                 LeafDriftControls.GlobalLeafOpacity = weatherOpacity;
             }
-            starfieldMs = MarkPhase();
+            starfieldMs = phaseTimer.Mark();
 
             var particleObjectList = particleObjectBuffer;
             var weaponObjectList = weaponObjectBuffer;
@@ -210,19 +190,18 @@ namespace TheOmegaStrain.Runtime.Loops
             weaponObjectList.Clear();
             shadowObjectList.Clear();
             renderedList.Clear();
-            EnsureListCapacity(renderedList, deepCopiedWorld.Count);
+            ListCapacityHelper.EnsureCapacity(renderedList, deepCopiedWorld.Count);
             DebugMessage = string.Empty;
 
             AiUpdateCounter++;
             bool doAiMark = AiUpdateCounter >= AiUpdateInterval;
             if (doAiMark) AiUpdateCounter = 0;
 
-            Dictionary<int, _3dObject> aiById = null;
             if (doAiMark)
             {
-                aiById = InitializeAiOnScreenTracking();
+                aiScreenTracker.Reset(GameState.SurfaceState.AiObjects);
             }
-            prepMs = MarkPhase();
+            prepMs = phaseTimer.Mark();
 
             bool gameplayPausedForVictoryReward = GameState.GamePlayState.IsVictoryRewardPauseActive;
 
@@ -232,7 +211,7 @@ namespace TheOmegaStrain.Runtime.Loops
                 inhabitant.IsOnScreen = true;
                 if (doAiMark)
                 {
-                    SetAiIsOnScreen(aiById, inhabitant.ObjectId);
+                    aiScreenTracker.MarkOnScreen(inhabitant.ObjectId);
                 }
 
                 if (!gameplayPausedForVictoryReward)
@@ -241,7 +220,7 @@ namespace TheOmegaStrain.Runtime.Loops
                     PublishObjectExplodedIfNeeded(world, inhabitant);
                 }
 
-                if (inhabitant.CrashBoxesFollowRotation) inhabitant.CrashBoxes = RotateAllCrashboxes(inhabitant.CrashBoxes, (Vector3)inhabitant.Rotation);
+                objectFrameTransformer.RotateObjectGeometry(inhabitant);
                 if (inhabitant.ObjectName == "Ship")
                 {
                     ShipCopy = inhabitant;
@@ -253,26 +232,9 @@ namespace TheOmegaStrain.Runtime.Loops
 
                 foreach (var part in inhabitant.ObjectParts)
                 {
-                    part.Triangles = RotateMesh(part.Triangles, (Vector3)inhabitant.Rotation);
-
                     if (inhabitant.ObjectName == "Surface")
                     {
-                        inhabitant.ParentSurface.RotatedSurfaceTriangles = part.Triangles;
-
-                        var landBasedIds = inhabitant.ParentSurface.LandBasedIds;
-                        landBasedIds.Clear();
-
-                        var triangleByLandId = inhabitant.ParentSurface.RotatedSurfaceTriangleByLandId;
-                        triangleByLandId.Clear();
-
-                        foreach (var triangle in part.Triangles)
-                        {
-                            var landBasedPosition = triangle.landBasedPosition;
-                            landBasedIds.Add(landBasedPosition);
-
-                            if (landBasedPosition.HasValue)
-                                triangleByLandId[landBasedPosition.Value] = triangle;
-                        }
+                        SurfaceGeometryCache.Update(inhabitant.ParentSurface, part.Triangles);
                     }
 
                     SetMovementGuides(inhabitant, part, part.Triangles);
@@ -295,7 +257,7 @@ namespace TheOmegaStrain.Runtime.Loops
                 renderedList.Add(inhabitant);
 
             }
-            moveRotateMs = MarkPhase();
+            moveRotateMs = phaseTimer.Mark();
 
             if (shadowObjectList.Count > 0)
             {
@@ -311,7 +273,7 @@ namespace TheOmegaStrain.Runtime.Loops
                 renderedList.AddRange(weaponObjectList);
                 DebugMessage += $" Number of Weapons on screen {weaponObjectList.Count}";
             }
-            mergeMs = MarkPhase();
+            mergeMs = phaseTimer.Mark();
 
             var activeScene = world.SceneHandler.GetActiveScene();
 
@@ -386,7 +348,7 @@ namespace TheOmegaStrain.Runtime.Loops
                     }
                 }
             }
-            offscreenAiMs = MarkPhase();
+            offscreenAiMs = phaseTimer.Mark();
 
             // Process cascading local infection spread (seeder-infected tiles spread to neighbors after a delay)
             if (!gameplayPausedForVictoryReward)
@@ -394,18 +356,18 @@ namespace TheOmegaStrain.Runtime.Loops
                 SeederControls.ProcessLocalInfectionSpread(GameState.SurfaceState);
                 HandleBiomassWarnings();
             }
-            infectionMs = MarkPhase();
+            infectionMs = phaseTimer.Mark();
 
             projectedCoordinates = worldProjector.ProjectToTriangles(renderedList, FrameCounter, projectedCoordinates);
-            projectMs = MarkPhase();
+            projectMs = phaseTimer.Mark();
 
             if (!gameplayPausedForVictoryReward)
                 CrashDetection.HandleCrashboxes(renderedList, world.IsPaused);
-            crashMs = MarkPhase();
+            crashMs = phaseTimer.Mark();
 
             if (!gameplayPausedForVictoryReward)
                 CleanupExplodedObjects(world);
-            cleanupMs = MarkPhase();
+            cleanupMs = phaseTimer.Mark();
 
             // Scene director: centralizes drone activation, mothership activation,
             // victory/defeat conditions, and checkpoint logic per scene.
@@ -427,7 +389,7 @@ namespace TheOmegaStrain.Runtime.Loops
 
             // Victory timer: show overlay briefly then trigger scene transition
             UpdateVictoryRewardTimer();
-            directorHudMs = MarkPhase();
+            directorHudMs = phaseTimer.Mark();
 
             if (activeScene != null)
             {
@@ -437,7 +399,7 @@ namespace TheOmegaStrain.Runtime.Loops
                     audioPlayer,
                     soundRegistry);
             }
-            musicMs = MarkPhase();
+            musicMs = phaseTimer.Mark();
 
             if (logPhaseTiming)
             {
@@ -1108,43 +1070,6 @@ namespace TheOmegaStrain.Runtime.Loops
             GameState.WorldFade.RequestFadeIn(1.5f, "SceneReset");
         }
 
-        private Dictionary<int, _3dObject> InitializeAiOnScreenTracking()
-        {
-            var aiObjects = GameState.SurfaceState.AiObjects;
-            if (aiObjects == null || aiObjects.Count == 0)
-                return null;
-
-            var aiById = aiByIdBuffer;
-            aiById.Clear();
-            aiById.EnsureCapacity(aiObjects.Count);
-
-            foreach (var ai in aiObjects)
-            {
-                ai.IsOnScreen = false;
-                aiById[ai.ObjectId] = ai;
-            }
-
-            return aiById;
-        }
-
-        private static void EnsureListCapacity<T>(List<T> list, int capacity)
-        {
-            if (list.Capacity < capacity)
-                list.Capacity = capacity;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetAiIsOnScreen(
-            Dictionary<int, _3dObject> aiById,
-            int objectId
-        )
-        {
-            if (aiById != null && aiById.TryGetValue(objectId, out var aiObj))
-            {
-                aiObj.IsOnScreen = true;
-            }
-        }
-
         public void HandleMusic(List<_3dObject> renderedObjects, string sceneMusic)
         {
             if (string.IsNullOrWhiteSpace(sceneMusic))
@@ -1253,40 +1178,6 @@ namespace TheOmegaStrain.Runtime.Loops
             GameState.GamePlayState.Phase = GamePhase.Paused;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private List<List<IVector3>> RotateAllCrashboxes(List<List<IVector3>> crashboxes, Vector3 rotation)
-        {
-            var rotatedCrashboxes = new List<List<IVector3>>(crashboxes.Count);
-            foreach (var crashbox in crashboxes)
-            {
-                var rotated = new List<IVector3>(crashbox.Count);
-                foreach (var point in crashbox)
-                {
-                    rotated.Add(RotatePoint((Vector3)point, rotation));
-                }
-                rotatedCrashboxes.Add(rotated);
-            }
-            return rotatedCrashboxes;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private IVector3 RotatePoint(Vector3 point, Vector3 rotation)
-        {
-            var rotatedPoint = Rotate3d.RotatePoint(rotation.z, point, 'Z');
-            rotatedPoint = Rotate3d.RotatePoint(rotation.y, rotatedPoint, 'Y');
-            rotatedPoint = Rotate3d.RotatePoint(rotation.x, rotatedPoint, 'X');
-            return rotatedPoint;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private List<ITriangleMeshWithColor> RotateMesh(List<ITriangleMeshWithColor> mesh, Vector3 rotation)
-        {
-            var rotatedMesh = Rotate3d.RotateMesh(mesh, rotation.z, 'Z');
-            rotatedMesh = Rotate3d.RotateMesh(rotatedMesh, rotation.y, 'Y');
-            rotatedMesh = Rotate3d.RotateMesh(rotatedMesh, rotation.x, 'X');
-            return rotatedMesh;
-        }
-
         private void SetMovementGuides(_3dObject inhabitant, I3dObjectPart part, List<ITriangleMeshWithColor> rotatedMesh)
         {
             switch (part.PartName)
@@ -1345,114 +1236,32 @@ namespace TheOmegaStrain.Runtime.Loops
 
         private void TrackFrameTiming(int frameIndex)
         {
-            if (!frameTimer.IsRunning)
+            var result = framePerformanceTracker.CompleteFrame(
+                frameIndex,
+                new FramePerformanceOptions(
+                    Logger.ShouldLog(EnableCpuHeadroomLogging),
+                    ScreenSetup.TargetFrameIntervalMs,
+                    PerfLogInterval,
+                    AdaptiveGcOptions.CreateDefault(EnableAdaptiveGc, AdaptiveGcMinFrameInterval)));
+
+            if (!result.HasValue || !result.Value.ShouldLogFrameTiming)
                 return;
 
-            bool logFrameTiming = Logger.ShouldLog(EnableCpuHeadroomLogging);
-            if (!logFrameTiming && !EnableAdaptiveGc)
+            var frameTiming = result.Value;
+            DebugMessage += $" PerfHeadroom: {frameTiming.HeadroomPct:0.#}%";
+
+            if (frameTiming.AdaptiveGc.HasValue)
             {
-                frameTimer.Stop();
-                return;
-            }
-
-            var budgetMs = CommonUtilities.CommonSetup.ScreenSetup.TargetFrameIntervalMs;
-            var preGcElapsedMs = frameTimer.Elapsed.TotalMilliseconds;
-            var preGcHeadroomMs = budgetMs - preGcElapsedMs;
-            var preGcHeadroomPct = (preGcHeadroomMs / budgetMs) * 100.0;
-            var adaptiveGc = TryRunAdaptiveGc(frameIndex, preGcHeadroomMs, preGcHeadroomPct);
-
-            frameTimer.Stop();
-            var elapsedMs = frameTimer.Elapsed.TotalMilliseconds;
-            var headroomMs = budgetMs - elapsedMs;
-            var headroomPct = (headroomMs / budgetMs) * 100.0;
-
-            if (!logFrameTiming)
-                return;
-
-            performanceFrameCount++;
-            averageFrameMs += (elapsedMs - averageFrameMs) / performanceFrameCount;
-            averageHeadroomMs += (headroomMs - averageHeadroomMs) / performanceFrameCount;
-
-            DebugMessage += $" PerfHeadroom: {headroomPct:0.#}%";
-
-            if (adaptiveGc.HasValue)
-            {
-                var gc = adaptiveGc.Value;
+                var gc = frameTiming.AdaptiveGc.Value;
                 Logger.Log(
                     $"[IdleGc] frame={frameIndex} gen={gc.Generation} gcMs={gc.ElapsedMs:0.###} allocatedMb={gc.AllocatedSinceLastMb:0.###} " +
-                    $"preHeadroomPct={preGcHeadroomPct:0.#} postHeadroomPct={headroomPct:0.#} gen0Collections={gc.Gen0Collections} gen1Collections={gc.Gen1Collections}");
+                    $"preHeadroomPct={frameTiming.PreGcHeadroomPct:0.#} postHeadroomPct={frameTiming.HeadroomPct:0.#} gen0Collections={gc.Gen0Collections} gen1Collections={gc.Gen1Collections}");
             }
 
-            if (performanceFrameCount % PerfLogInterval == 0)
+            if (frameTiming.ShouldLogSummary)
             {
-                var avgHeadroomPct = (averageHeadroomMs / budgetMs) * 100.0;
-                Logger.Log($"[LivePerf] frame={frameIndex} frameMs={elapsedMs:0.###} headroomMs={headroomMs:0.###} headroomPct={headroomPct:0.#} avgFrameMs={averageFrameMs:0.###} avgHeadroomMs={averageHeadroomMs:0.###} avgHeadroomPct={avgHeadroomPct:0.#}");
+                Logger.Log($"[LivePerf] frame={frameIndex} frameMs={frameTiming.ElapsedMs:0.###} headroomMs={frameTiming.HeadroomMs:0.###} headroomPct={frameTiming.HeadroomPct:0.#} avgFrameMs={frameTiming.AverageFrameMs:0.###} avgHeadroomMs={frameTiming.AverageHeadroomMs:0.###} avgHeadroomPct={frameTiming.AverageHeadroomPct:0.#}");
             }
-        }
-
-        private AdaptiveGcResult? TryRunAdaptiveGc(int frameIndex, double headroomMs, double headroomPct)
-        {
-            if (!EnableAdaptiveGc)
-                return null;
-
-            if (headroomMs < adaptiveGcMinHeadroomMs || headroomPct < adaptiveGcMinHeadroomPct)
-                return null;
-
-            if (frameIndex - lastAdaptiveGcFrame < AdaptiveGcMinFrameInterval)
-                return null;
-
-            long allocatedBytes = GC.GetTotalAllocatedBytes(precise: false);
-            long allocatedSinceLast = allocatedBytes - lastAdaptiveGcAllocatedBytes;
-            if (allocatedSinceLast < adaptiveGcMinAllocatedBytes)
-                return null;
-
-            int generation = ((adaptiveGcAttempts + 1) % adaptiveGcGen1EveryAttempts == 0)
-                ? 1
-                : 0;
-
-            int gen0Before = GC.CollectionCount(0);
-            int gen1Before = GC.CollectionCount(1);
-            long startTicks = Stopwatch.GetTimestamp();
-
-            GC.Collect(generation, GCCollectionMode.Optimized, blocking: false, compacting: false);
-
-            double elapsedMs = TicksToMs(Stopwatch.GetTimestamp() - startTicks);
-            int gen0Collections = GC.CollectionCount(0) - gen0Before;
-            int gen1Collections = GC.CollectionCount(1) - gen1Before;
-
-            lastAdaptiveGcFrame = frameIndex;
-            lastAdaptiveGcAllocatedBytes = allocatedBytes;
-            adaptiveGcAttempts++;
-
-            return new AdaptiveGcResult(
-                generation,
-                elapsedMs,
-                allocatedSinceLast / (1024.0 * 1024.0),
-                gen0Collections,
-                gen1Collections);
-        }
-
-        private readonly struct AdaptiveGcResult
-        {
-            public AdaptiveGcResult(
-                int generation,
-                double elapsedMs,
-                double allocatedSinceLastMb,
-                int gen0Collections,
-                int gen1Collections)
-            {
-                Generation = generation;
-                ElapsedMs = elapsedMs;
-                AllocatedSinceLastMb = allocatedSinceLastMb;
-                Gen0Collections = gen0Collections;
-                Gen1Collections = gen1Collections;
-            }
-
-            public int Generation { get; }
-            public double ElapsedMs { get; }
-            public double AllocatedSinceLastMb { get; }
-            public int Gen0Collections { get; }
-            public int Gen1Collections { get; }
         }
 
         private static void LogUpdatePhaseTiming(
@@ -1482,12 +1291,6 @@ namespace TheOmegaStrain.Runtime.Loops
                 $"[UpdatePhasePerf] frame={frameIndex} reset={resetFrame} active={activeCount} copied={copiedCount} rendered={renderedCount} projected={projectedCount} particles={particleCount} weapons={weaponCount} shadows={shadowCount} " +
                 $"copyMs={copyMs:0.###} starfieldMs={starfieldMs:0.###} prepMs={prepMs:0.###} moveRotateMs={moveRotateMs:0.###} mergeMs={mergeMs:0.###} offscreenAiMs={offscreenAiMs:0.###} " +
                 $"infectionMs={infectionMs:0.###} projectMs={projectMs:0.###} crashMs={crashMs:0.###} cleanupMs={cleanupMs:0.###} directorHudMs={directorHudMs:0.###} musicMs={musicMs:0.###}");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double TicksToMs(long ticks)
-        {
-            return ticks * 1000.0 / Stopwatch.Frequency;
         }
 
     }
