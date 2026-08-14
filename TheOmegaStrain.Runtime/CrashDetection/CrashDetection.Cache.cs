@@ -9,10 +9,7 @@ namespace TheOmegaStrain.Runtime.Collision
 {
     public static partial class CrashDetection
     {
-        private static readonly Dictionary<_3dObject, Vector3> OffsetCache = new();
-        private static readonly Dictionary<_3dObject, List<Vector3>> WorldPointsCache = new();
-        private static readonly Dictionary<_3dObject, Vector3> CenterCache = new();
-        private static readonly Dictionary<(_3dObject obj, int boxIndex), List<Vector3>> WorldBoxCache = new();
+        private static readonly CollisionFrameCache<_3dObject, Vector3> FrameCache = new();
         private static readonly Dictionary<_3dObject, ObjectTypeFlags> TypeFlagCache = new();
         private static int _cacheFrame = -1;
 
@@ -55,10 +52,7 @@ namespace TheOmegaStrain.Runtime.Collision
             if (_cacheFrame == numFrame) return;
 
             _cacheFrame = numFrame;
-            OffsetCache.Clear();
-            WorldPointsCache.Clear();
-            CenterCache.Clear();
-            WorldBoxCache.Clear();
+            FrameCache.ResetFrame();
             TypeFlagCache.Clear();
         }
 
@@ -120,66 +114,30 @@ namespace TheOmegaStrain.Runtime.Collision
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Vector3 GetOffsetCached(_3dObject obj)
         {
-            if (OffsetCache.TryGetValue(obj, out var offset))
-            {
-                CacheHits++;
-                return offset;
-            }
-
-            CacheMisses++;
-            offset = CrashBoxTransform.GetEffectiveCrashOffset(obj, CreateVector);
-            OffsetCache[obj] = offset;
-            return offset;
+            return FrameCache.GetOffset(obj, CreateVector);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static List<Vector3> GetWorldPointsCached(_3dObject obj)
         {
-            if (WorldPointsCache.TryGetValue(obj, out var points))
-            {
-                CacheHits++;
-                return points;
-            }
-
-            CacheMisses++;
-            var offset = GetOffsetCached(obj);
-            points = CrashBoxTransform.GetAllCrashPointsWorld(obj, offset, CreateVector);
-            WorldPointsCache[obj] = points;
-            return points;
+            return FrameCache.GetWorldPoints(obj, CreateVector);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Vector3 GetCenterCached(_3dObject obj)
         {
-            if (CenterCache.TryGetValue(obj, out var center))
-            {
-                CacheHits++;
-                return center;
-            }
-
-            CacheMisses++;
-            var points = GetWorldPointsCached(obj);
-            center = GetCenterOfBox(points);
-            CenterCache[obj] = center;
-            return center;
+            return FrameCache.GetCenter(obj, CreateVector);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static List<Vector3> GetWorldBoxPointsCached(_3dObject obj, int boxIndex, List<IVector3> box)
         {
-            var key = (obj, boxIndex);
-            if (WorldBoxCache.TryGetValue(key, out var points))
-            {
-                CacheHits++;
-                return points;
-            }
-
-            CacheMisses++;
-            var offset = GetOffsetCached(obj);
-            points = CrashBoxTransform.ToCrashWorldPoints(box, offset, CreateVector);
-            WorldBoxCache[key] = points;
-            return points;
+            return FrameCache.GetWorldBoxPoints(obj, boxIndex, box, CreateVector);
         }
+
+        private static int TotalCacheHits => CacheHits + FrameCache.CacheHits;
+
+        private static int TotalCacheMisses => CacheMisses + FrameCache.CacheMisses;
 
         public static bool IsStatic(string objectName) =>
             IsStaticName(objectName);

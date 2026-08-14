@@ -23,8 +23,6 @@ namespace TheOmegaStrain.Runtime.Collision
                 var worldParticlePoints = GetWorldBoxPointsCached(particle, pb, particleBox);
                 if (worldParticlePoints.Count == 0) continue;
 
-                var center = GetCenterOfBox(worldParticlePoints);
-
                 for (int ob = 0; ob < other.CrashBoxes.Count; ob++)
                 {
                     var otherBox = other.CrashBoxes[ob];
@@ -32,15 +30,17 @@ namespace TheOmegaStrain.Runtime.Collision
                     var worldOtherPoints = GetWorldBoxPointsCached(other, ob, otherBox);
                     if (worldOtherPoints.Count == 0) continue;
 
-                    if (CollisionBoxMath.ContainsPoint(worldOtherPoints, center, out var otherBounds))
+                    if (CollisionPairMath.TryCreateParticleCollision(
+                        worldParticlePoints,
+                        worldOtherPoints,
+                        particle.ImpactStatus.SourceParticle?.Physics?.Velocity,
+                        out var collision))
                     {
-                        var min = new Vector3(otherBounds.MinX, otherBounds.MinY, otherBounds.MinZ);
-                        var max = new Vector3(otherBounds.MaxX, otherBounds.MaxY, otherBounds.MaxZ);
-
-                        var direction = CollisionDirectionMath.EstimateDirectionFromAabb(center, min, max);
-                        var particleDirection = CollisionDirectionMath.EstimateDirectionFromVisibleMovement(
-                            particle.ImpactStatus.SourceParticle?.Physics?.Velocity,
-                            direction);
+                        var center = CreateVector(collision.ParticleCenter.x, collision.ParticleCenter.y, collision.ParticleCenter.z);
+                        var min = CreateVector(collision.TargetMin.x, collision.TargetMin.y, collision.TargetMin.z);
+                        var max = CreateVector(collision.TargetMax.x, collision.TargetMax.y, collision.TargetMax.z);
+                        var direction = collision.TargetDirection;
+                        var particleDirection = collision.ParticleDirection;
 
                         particle.ImpactStatus.HasCrashed = true;
                         particle.ImpactStatus.ImpactDirection = particleDirection;
@@ -118,11 +118,18 @@ namespace TheOmegaStrain.Runtime.Collision
 
                     if (safeBoxB.Count == 0) continue;
 
-                    if (CheckCollisionBoxVsBox(safeBoxA, safeBoxB, a.ObjectName, b.ObjectName))
+                    var overlapCheck = CollisionPairMath.CheckBoxOverlap(
+                        safeBoxA,
+                        safeBoxB,
+                        GetCollisionMargins());
+                    LogCollisionBoxCheck(overlapCheck, a.ObjectName, b.ObjectName);
+
+                    if (overlapCheck.Overlaps)
                     {
-                        var centerA = GetCenterOfBox(safeBoxA);
-                        var centerB = GetCenterOfBox(safeBoxB);
-                        var centerDistance = (float)GeometryMath.GetDistance(centerA, centerB);
+                        var collision = CollisionPairMath.CreateBoxCollision(ai, bi, overlapCheck);
+                        var centerA = CreateVector(collision.CenterA.x, collision.CenterA.y, collision.CenterA.z);
+                        var centerB = CreateVector(collision.CenterB.x, collision.CenterB.y, collision.CenterB.z);
+                        var centerDistance = collision.CenterDistance;
                         bool isKamikazeShipPair =
                             (a.ObjectName == "KamikazeDrone" && b.ObjectName == "Ship") ||
                             (a.ObjectName == "Ship" && b.ObjectName == "KamikazeDrone");
@@ -148,14 +155,14 @@ namespace TheOmegaStrain.Runtime.Collision
                         if (!aWasAlreadyCrashed || !IsCombatCollisionName(a.ImpactStatus.ObjectName))
                         {
                             a.ImpactStatus.ObjectName = b.ObjectName;
-                            a.ImpactStatus.ImpactDirection = CollisionDirectionMath.EstimateDirection(centerA, centerB);
+                            a.ImpactStatus.ImpactDirection = collision.DirectionA;
                             a.ImpactStatus.CrashBoxName = a.CrashBoxNames != null && ai < a.CrashBoxNames.Count ? a.CrashBoxNames[ai] : null;
                         }
 
                         if (!bWasAlreadyCrashed || !IsCombatCollisionName(b.ImpactStatus.ObjectName))
                         {
                             b.ImpactStatus.ObjectName = a.ObjectName;
-                            b.ImpactStatus.ImpactDirection = CollisionDirectionMath.EstimateDirection(centerB, centerA);
+                            b.ImpactStatus.ImpactDirection = collision.DirectionB;
                             b.ImpactStatus.CrashBoxName = b.CrashBoxNames != null && bi < b.CrashBoxNames.Count ? b.CrashBoxNames[bi] : null;
                         }
 
@@ -344,37 +351,30 @@ namespace TheOmegaStrain.Runtime.Collision
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool CheckCollisionBoxVsBox(
-            List<Vector3> boxA,
-            List<Vector3> boxB,
+        private static CollisionMargins GetCollisionMargins()
+        {
+            return new CollisionMargins(
+                -GameSetup.CollisionMarginX,
+                GameSetup.CollisionMarginY,
+                GameSetup.CollisionMarginZ);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void LogCollisionBoxCheck(
+            CollisionBoxOverlapCheck check,
             string? nameA = null,
             string? nameB = null)
         {
-            float marginX = -GameSetup.CollisionMarginX;
-            float marginY = GameSetup.CollisionMarginY;
-            float marginZ = GameSetup.CollisionMarginZ;
-
-            bool overlaps = CollisionBoxMath.CheckAabbOverlap(
-                boxA,
-                boxB,
-                marginX,
-                marginY,
-                marginZ,
-                out var boundsA,
-                out var boundsB);
-
             if (Logger.ShouldLog(LocalEnableLogging) && nameA != null && nameB != null)
             {
                 Logger.Log(
                     $"AABBCHK {nameA} vs {nameB} | " +
-                    $"X:{CollisionBoxMath.RangesOverlap(boundsA.MinX, boundsA.MaxX, boundsB.MinX, boundsB.MaxX, marginX)} " +
-                    $"Y:{CollisionBoxMath.RangesOverlap(boundsA.MinY, boundsA.MaxY, boundsB.MinY, boundsB.MaxY, marginY)} " +
-                    $"Z:{CollisionBoxMath.RangesOverlap(boundsA.MinZ, boundsA.MaxZ, boundsB.MinZ, boundsB.MaxZ, marginZ)} | " +
-                    $"A[min=({boundsA.MinX:0.#},{boundsA.MinY:0.#},{boundsA.MinZ:0.#}) max=({boundsA.MaxX:0.#},{boundsA.MaxY:0.#},{boundsA.MaxZ:0.#})] " +
-                    $"B[min=({boundsB.MinX:0.#},{boundsB.MinY:0.#},{boundsB.MinZ:0.#}) max=({boundsB.MaxX:0.#},{boundsB.MaxY:0.#},{boundsB.MaxZ:0.#})]");
+                    $"X:{check.XOverlaps} " +
+                    $"Y:{check.YOverlaps} " +
+                    $"Z:{check.ZOverlaps} | " +
+                    $"A[min=({check.BoundsA.MinX:0.#},{check.BoundsA.MinY:0.#},{check.BoundsA.MinZ:0.#}) max=({check.BoundsA.MaxX:0.#},{check.BoundsA.MaxY:0.#},{check.BoundsA.MaxZ:0.#})] " +
+                    $"B[min=({check.BoundsB.MinX:0.#},{check.BoundsB.MinY:0.#},{check.BoundsB.MinZ:0.#}) max=({check.BoundsB.MaxX:0.#},{check.BoundsB.MaxY:0.#},{check.BoundsB.MaxZ:0.#})]");
             }
-
-            return overlaps;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

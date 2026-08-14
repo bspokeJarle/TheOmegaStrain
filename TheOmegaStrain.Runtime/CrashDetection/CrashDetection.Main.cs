@@ -212,7 +212,7 @@ namespace TheOmegaStrain.Runtime.Collision
 
             if (ShouldLogAny && !LogOnlyCollisions)
             {
-                Logger.Log($"[CACHE] Hits: {CacheHits}, Misses: {CacheMisses}, Efficiency: {(CacheHits + CacheMisses == 0 ? 0 : (int)(100.0 * CacheHits / (CacheHits + CacheMisses)))}%");
+                Logger.Log($"[CACHE] Hits: {TotalCacheHits}, Misses: {TotalCacheMisses}, Efficiency: {(TotalCacheHits + TotalCacheMisses == 0 ? 0 : (int)(100.0 * TotalCacheHits / (TotalCacheHits + TotalCacheMisses)))}%");
                 Logger.Log($"[DISTANCE SKIP] Skipped {SkippedByDistance} pairs due to distance > {MaxCrashDistance}");
             }
         }
