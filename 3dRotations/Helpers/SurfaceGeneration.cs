@@ -2,13 +2,8 @@ using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using CommonUtilities.GamePlayHelpers;
 using Domain;
-using _3dRotations.World.Objects;
 using System;
 using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 
 namespace _3dRotations.Helpers
 {
@@ -656,68 +651,6 @@ namespace _3dRotations.Helpers
                 }
             }
         }
-
-        public static void GenerateTerrainBitmapSource(SurfaceData[,] terrainMap, int mapSize, int maxHeight)
-        {
-            // Ensure we return a stable reference immediately
-            WriteableBitmap wb = GameState.SurfaceState.GlobalMapBitmap as WriteableBitmap;
-
-            try
-            {
-                if (wb == null || wb.PixelWidth != mapSize || wb.PixelHeight != mapSize)
-                {
-                    if (Logger.ShouldLog(enableLogging))
-                        Logger.Log($"GenerateTerrainBitmapSource: recreating bitmap (existing={(wb == null ? "null" : $"{wb.PixelWidth}x{wb.PixelHeight}")})", "SurfaceGeneration");
-
-                    // MUST be created on UI thread, so we do a safe sync create if needed
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        wb = new WriteableBitmap(mapSize, mapSize, 96, 96, PixelFormats.Bgra32, null);
-                        GameState.SurfaceState.GlobalMapBitmap = wb;
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                if (Logger.ShouldLog(enableLogging)) Logger.Log($"Error creating WriteableBitmap: {ex.Message}", "SurfaceGeneration");
-                return;
-            }
-
-            // Build pixelData on current thread
-            int stride = mapSize * 4;
-            byte[] pixelData = new byte[mapSize * mapSize * 4];
-
-            for (int i = 0; i < mapSize; i++)
-            {
-                for (int j = 0; j < mapSize; j++)
-                {
-                    int height = terrainMap[i, j].mapDepth;
-                    Color color = Surface.GetTileColorGradientColor(height, maxHeight);
-
-                    int index = (i * mapSize + j) * 4;
-                    pixelData[index] = color.B;
-                    pixelData[index + 1] = color.G;
-                    pixelData[index + 2] = color.R;
-                    pixelData[index + 3] = 255;
-                }
-            }
-
-            // Apply pixels on UI thread (async to avoid deadlock)
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                // Re-fetch wb in case it was replaced on the UI thread
-                var currentWb = GameState.SurfaceState.GlobalMapBitmap as WriteableBitmap;
-                if (currentWb != null && currentWb.PixelWidth == mapSize && currentWb.PixelHeight == mapSize)
-                {
-                    currentWb.WritePixels(new Int32Rect(0, 0, mapSize, mapSize), pixelData, stride, 0);
-                }
-                else if (Logger.ShouldLog(enableLogging))
-                {
-                    Logger.Log("GenerateTerrainBitmapSource: bitmap size mismatch; skipping WritePixels", "SurfaceGeneration");
-                }
-            }), DispatcherPriority.Render);
-        }
-
 
         public static SurfaceData[,] Return2DViewPort(int viewPortSize, int GlobalX, int GlobalZ, SurfaceData[,] Global2DMap, int tileSize)
         {

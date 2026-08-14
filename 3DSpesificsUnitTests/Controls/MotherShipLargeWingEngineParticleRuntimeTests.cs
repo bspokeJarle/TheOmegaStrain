@@ -1,5 +1,5 @@
 using _3dRotations.World.Objects;
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using Domain;
 using GameAiAndControls.Controls.MotherShipMediumControls;
@@ -10,7 +10,7 @@ namespace _3DSpesificsUnitTests.Controls;
 [TestClass]
 public class MotherShipLargeWingEngineParticleRuntimeTests
 {
-    private static readonly _3dRotationCommon Rotate = new();
+    private static readonly OmegaMeshRotation Rotate = new();
 
     private sealed class CapturingParticles : IParticles
     {

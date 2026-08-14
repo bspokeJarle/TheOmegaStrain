@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using Domain;
@@ -66,7 +66,7 @@ namespace GameAiAndControls.Controls.KamikazeDroneControls
 
         private void UpdateRotationTowardsTarget(Vector3 directionToTarget)
         {
-            var heading = Common3dObjectHelpers.GetHeadingFromDirection(directionToTarget.x, directionToTarget.z);
+            var heading = OmegaObjectHelpers.GetHeadingFromDirection(directionToTarget.x, directionToTarget.z);
             TargetXrotation = heading.X;
             TargetYrotation = heading.Y;
             TargetZrotation = heading.Z;
@@ -88,9 +88,9 @@ namespace GameAiAndControls.Controls.KamikazeDroneControls
                 return;
             }
 
-            Xrotation = Common3dObjectHelpers.MoveAngleTowards(Xrotation, TargetXrotation, maxDelta);
-            Yrotation = Common3dObjectHelpers.MoveAngleTowards(Yrotation, TargetYrotation, maxDelta);
-            Zrotation = Common3dObjectHelpers.MoveAngleTowards(Zrotation, TargetZrotation, maxDelta);
+            Xrotation = OmegaObjectHelpers.MoveAngleTowards(Xrotation, TargetXrotation, maxDelta);
+            Yrotation = OmegaObjectHelpers.MoveAngleTowards(Yrotation, TargetYrotation, maxDelta);
+            Zrotation = OmegaObjectHelpers.MoveAngleTowards(Zrotation, TargetZrotation, maxDelta);
         }
 
         private void SyncMovement(I3dObject theObject)
@@ -101,7 +101,7 @@ namespace GameAiAndControls.Controls.KamikazeDroneControls
                 _syncY = theObject.ObjectOffsets?.y ?? 0f;
             }
 
-            theObject.ObjectOffsets = CommonUtilities._3DHelpers.SurfacePositionSyncHelpers.GetSurfaceSyncedObjectOffsets(theObject, _syncY);
+            theObject.ObjectOffsets = SurfacePositionSyncHelpers.GetSurfaceSyncedObjectOffsets(theObject, _syncY);
         }
 
         private void HandleCrash(I3dObject theObject)
@@ -231,7 +231,7 @@ namespace GameAiAndControls.Controls.KamikazeDroneControls
 
                     if (globalPos != null && droneWorldPos != null)
                     {
-                        float distSq = Common3dObjectHelpers.GetDistanceSquared(globalPos, droneWorldPos);
+                        float distSq = OmegaObjectHelpers.GetDistanceSquared(globalPos, droneWorldPos);
                         float maxDist = AudioSetup.OffscreenAiAudioMaxDistance;
                         float maxDistSq = maxDist * maxDist;
 
@@ -358,7 +358,7 @@ namespace GameAiAndControls.Controls.KamikazeDroneControls
                     };
                 UpdateRotationTowardsTarget(headingDirection);
 
-                var distance = CommonUtilities._3DHelpers.Common3dObjectHelpers.GetDistance(parentWorldPosition, resolvedTargetWorldPosition);
+                var distance = OmegaObjectHelpers.GetDistance(parentWorldPosition, resolvedTargetWorldPosition);
 
                 shouldRecalculateDirection = !isOvershooting &&
                     (LastDirectionUpdateDateTime == DateTime.MinValue ||
@@ -398,7 +398,7 @@ namespace GameAiAndControls.Controls.KamikazeDroneControls
                         z = targetPosition.z - dronePosition.z
                     };
 
-                    float currentDistance = (float)CommonUtilities._3DHelpers.Common3dObjectHelpers.GetDistance(dronePosition, targetPosition);
+                    float currentDistance = (float)OmegaObjectHelpers.GetDistance(dronePosition, targetPosition);
                     speedPerSecond = KamikazeDroneMovementHelpers.Length((Vector3)DirectionVelocity);
 
                     if (speedPerSecond > 0f)
@@ -461,7 +461,7 @@ namespace GameAiAndControls.Controls.KamikazeDroneControls
                 {
                     var decoyCenter = KamikazeDroneMovementHelpers.GetCompensatedHuntTargetWorldPosition(theObject, closestDecoy);
                     float touchDistance = KamikazeDroneMovementHelpers.GetApproximateCrashRadius(theObject) + KamikazeDroneMovementHelpers.GetApproximateCrashRadius(closestDecoy);
-                    float currentDistanceToDecoy = (float)CommonUtilities._3DHelpers.Common3dObjectHelpers.GetDistance(dronePositionAfterMove, decoyCenter);
+                    float currentDistanceToDecoy = (float)OmegaObjectHelpers.GetDistance(dronePositionAfterMove, decoyCenter);
 
                     if (currentDistanceToDecoy <= touchDistance)
                     {
@@ -637,7 +637,7 @@ namespace GameAiAndControls.Controls.KamikazeDroneControls
                 return true;
             }
 
-            float distToShip = (float)Common3dObjectHelpers.GetDistance(
+            float distToShip = (float)OmegaObjectHelpers.GetDistance(
                 KamikazeDroneMovementHelpers.ToVector3(theObject.WorldPosition),
                 KamikazeDroneMovementHelpers.ToVector3(shipPos));
 

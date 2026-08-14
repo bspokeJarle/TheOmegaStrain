@@ -3,7 +3,6 @@
     <TargetFramework>net10.0-windows7.0</TargetFramework>
     <RootNamespace>_3dRotations</RootNamespace>
     <Nullable>enable</Nullable>
-    <UseWPF>true</UseWPF>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\RetroMesh.Engine\RetroMesh.Engine.csproj" />

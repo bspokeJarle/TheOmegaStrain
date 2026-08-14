@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using Domain;
@@ -72,7 +72,7 @@ namespace GameAiAndControls.Controls.ZeppelinBomberControls
         private IAudioInstance? _propellerInstance;
         private SoundDefinition? _explosionSound;
 
-        private readonly _3dRotationCommon _rotate = new();
+        private readonly OmegaMeshRotation _rotate = new();
 
         public ITriangleMeshWithColor? StartCoordinates { get; set; }
         public ITriangleMeshWithColor? GuideCoordinates { get; set; }
@@ -150,7 +150,7 @@ namespace GameAiAndControls.Controls.ZeppelinBomberControls
             }
 
             // Heading rotation from AI direction
-            var heading = Common3dObjectHelpers.GetHeadingFromDirection(_aiState.DirectionX, _aiState.DirectionZ);
+            var heading = OmegaObjectHelpers.GetHeadingFromDirection(_aiState.DirectionX, _aiState.DirectionZ);
             TargetXrotation = heading.X;
             TargetYrotation = heading.Y;
             TargetZrotation = heading.Z;
@@ -158,9 +158,9 @@ namespace GameAiAndControls.Controls.ZeppelinBomberControls
             float maxDelta = RotationDegreesPerSecond * deltaSeconds;
             if (maxDelta > 0f)
             {
-                Xrotation = Common3dObjectHelpers.MoveAngleTowards(Xrotation, TargetXrotation, maxDelta);
-                Yrotation = Common3dObjectHelpers.MoveAngleTowards(Yrotation, TargetYrotation, maxDelta);
-                Zrotation = Common3dObjectHelpers.MoveAngleTowards(Zrotation, TargetZrotation, maxDelta);
+                Xrotation = OmegaObjectHelpers.MoveAngleTowards(Xrotation, TargetXrotation, maxDelta);
+                Yrotation = OmegaObjectHelpers.MoveAngleTowards(Yrotation, TargetYrotation, maxDelta);
+                Zrotation = OmegaObjectHelpers.MoveAngleTowards(Zrotation, TargetZrotation, maxDelta);
             }
 
             if (theObject.Rotation != null)
@@ -533,7 +533,7 @@ namespace GameAiAndControls.Controls.ZeppelinBomberControls
 
                 if (globalPos != null && bomberWorldPos != null)
                 {
-                    float distSq = Common3dObjectHelpers.GetDistanceSquared(globalPos, bomberWorldPos);
+                    float distSq = OmegaObjectHelpers.GetDistanceSquared(globalPos, bomberWorldPos);
                     float maxDist = AudioSetup.OffscreenAiAudioMaxDistance;
                     float maxDistSq = maxDist * maxDist;
 

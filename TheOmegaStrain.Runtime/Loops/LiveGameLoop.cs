@@ -3,7 +3,7 @@ using _3dRotations.Projection;
 using _3dRotations.World.Objects;
 using TheOmegaStrain.Runtime.Collision;
 using TheOmegaStrain.Runtime.Rendering;
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
@@ -46,7 +46,7 @@ namespace TheOmegaStrain.Runtime.Loops
         private int AiUpdateCounter = 0;
         private const int AiUpdateInterval = 5; // Update offscreen AI every 5 frames
         private readonly IWorldProjector<_3dObject, ProjectedTriangleMesh> worldProjector = new PerspectiveWorldProjector();
-        private readonly _3dRotationCommon Rotate3d = new();
+        private readonly OmegaMeshRotation Rotate3d = new();
         private readonly ParticleManager particleManager = new();
         private readonly WeaponsManager weaponsManager = new();
         private readonly ObjectShadowManager objectShadowManager = new();
@@ -178,7 +178,7 @@ namespace TheOmegaStrain.Runtime.Loops
                     }
                 }
 
-                Common3dObjectHelpers.DeepCopy3dObjects(activeWorld, deepCopiedWorld);
+                OmegaObjectHelpers.DeepCopy3dObjects(activeWorld, deepCopiedWorld);
             }
             copyMs = MarkPhase();
 

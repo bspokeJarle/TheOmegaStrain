@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using Domain;
 using static Domain._3dSpecificsImplementations;
 
@@ -16,7 +16,7 @@ public class DeepCopy3dObjectTests
             CreateObject()
         };
 
-        Common3dObjectHelpers.DeepCopy3dObjects(new List<_3dObject> { source }, result);
+        OmegaObjectHelpers.DeepCopy3dObjects(new List<_3dObject> { source }, result);
 
         Assert.AreEqual(1, result.Count);
         var copy = result[0];
@@ -46,7 +46,7 @@ public class DeepCopy3dObjectTests
         triangle.normal2 = null!;
         triangle.normal3 = null!;
 
-        var copy = (_3dObject)Common3dObjectHelpers.DeepCopySingleObject(source);
+        var copy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(source);
         var copiedTriangle = (TriangleMeshWithColor)copy.ObjectParts[0].Triangles[0];
 
         Assert.IsNull(copiedTriangle.Normal2Raw);

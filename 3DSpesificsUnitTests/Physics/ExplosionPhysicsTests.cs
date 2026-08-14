@@ -1,5 +1,5 @@
 using Domain;
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using GameAiAndControls.Physics;
@@ -51,11 +51,11 @@ public class ExplosionPhysicsTests
     {
         var physics = new GameAiAndControls.Physics.Physics();
         var original = CreateTwoPartObject();
-        var firstFrameCopy = (_3dObject)Common3dObjectHelpers.DeepCopySingleObject(original);
+        var firstFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
 
         physics.ExplodeObject(firstFrameCopy, explosionForce: 200f);
 
-        var nextFrameCopy = (_3dObject)Common3dObjectHelpers.DeepCopySingleObject(original);
+        var nextFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
         physics.UpdateExplosion(nextFrameCopy, DateTime.Now.AddMilliseconds(-100));
 
         Assert.IsTrue(nextFrameCopy.ObjectParts.All(part => part.PartName == "ExplodingPart"),
@@ -67,12 +67,12 @@ public class ExplosionPhysicsTests
     {
         var physics = new GameAiAndControls.Physics.Physics();
         var original = CreateTwoPartObject();
-        var firstFrameCopy = (_3dObject)Common3dObjectHelpers.DeepCopySingleObject(original);
+        var firstFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
 
         physics.ExplodeObject(firstFrameCopy, explosionForce: 0f);
         MutateAllGeometry(firstFrameCopy, 99999f);
 
-        var nextFrameCopy = (_3dObject)Common3dObjectHelpers.DeepCopySingleObject(original);
+        var nextFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
         physics.UpdateExplosion(nextFrameCopy, DateTime.Now);
 
         Assert.IsTrue(
@@ -88,14 +88,14 @@ public class ExplosionPhysicsTests
     {
         var physics = new GameAiAndControls.Physics.Physics();
         var original = CreateTwoPartObject();
-        var firstFrameCopy = (_3dObject)Common3dObjectHelpers.DeepCopySingleObject(original);
+        var firstFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
 
         physics.ExplodeObject(firstFrameCopy, explosionForce: 0f);
         physics.UpdateExplosion(firstFrameCopy, DateTime.Now.AddSeconds(1));
 
-        new _3dRotationCommon().RotateMesh(firstFrameCopy.ObjectParts[0].Triangles, 90f, 'Z');
+        new OmegaMeshRotation().RotateMesh(firstFrameCopy.ObjectParts[0].Triangles, 90f, 'Z');
 
-        var nextFrameCopy = (_3dObject)Common3dObjectHelpers.DeepCopySingleObject(original);
+        var nextFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
         physics.UpdateExplosion(nextFrameCopy, DateTime.Now.AddSeconds(1));
 
         var v = nextFrameCopy.ObjectParts[0].Triangles[0].vert1;

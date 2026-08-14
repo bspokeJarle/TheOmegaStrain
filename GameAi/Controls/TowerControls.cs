@@ -1,4 +1,4 @@
-﻿using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using Domain;
@@ -24,7 +24,7 @@ namespace GameAiAndControls.Controls
         private bool _baseOffsetInitialized;
         private float _baseOffsetY;
 
-        private readonly _3dRotationCommon _rotate = new(); // Rotation fra CommonHelpers
+        private readonly OmegaMeshRotation _rotate = new(); // Rotation fra OmegaEngineAdapters
         private readonly Dictionary<string, List<ITriangleMeshWithColor>> _originalTopPartMeshes = new();
 
         // Shared XY pivots for the rotating head clusters. The whole tower is shifted by

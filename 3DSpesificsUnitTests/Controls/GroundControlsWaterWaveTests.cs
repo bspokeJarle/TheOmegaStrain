@@ -2,6 +2,7 @@ using _3dRotations.World.Objects;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
+using CommonUtilities.GamePlayHelpers;
 using Domain;
 using GameAiAndControls.Controls;
 using static Domain._3dSpecificsImplementations;
@@ -149,9 +150,15 @@ public class GroundControlsWaterWaveTests
         var viewport = new Surface().GetSurfaceViewPort();
         string shorelineColor = GetFirstSurfaceColorForTile(viewport, map[4, 5].mapId);
         int renderDepth = (map[4, 5].mapDepth + map[4, 6].mapDepth) / 2;
-        var expectedPaletteColor = Surface.GetTileColorGradientColor(renderDepth, MapSetup.maxHeight);
+        TerrainPaletteHelpers.GetTerrainColorRgb(
+            renderDepth,
+            MapSetup.maxHeight,
+            GameState.SurfaceState.SceneBiome,
+            out int expectedRed,
+            out int expectedGreen,
+            out int expectedBlue);
 
-        Assert.AreEqual(ToHex(expectedPaletteColor), shorelineColor,
+        Assert.AreEqual(ToHex(expectedRed, expectedGreen, expectedBlue), shorelineColor,
             "Winter shoreline rendering should still use the normal depth-based palette calculation.");
         Assert.IsTrue(IsColdShorelineNotSnowWhite(shorelineColor),
             $"Winter low-depth shoreline should not jump to the snow-white land color. Color was {shorelineColor}.");
@@ -303,9 +310,9 @@ public class GroundControlsWaterWaveTests
         return red < 180 && green < 210 && blue > red;
     }
 
-    private static string ToHex(System.Windows.Media.Color color)
+    private static string ToHex(int red, int green, int blue)
     {
-        return $"{color.R:X2}{color.G:X2}{color.B:X2}";
+        return $"{red:X2}{green:X2}{blue:X2}";
     }
 
     private static void AssertMapDepthsAre(int expectedDepth)

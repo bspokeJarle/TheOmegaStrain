@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using Domain;
@@ -179,7 +179,7 @@ namespace GameAiAndControls.Controls.MotherShipSmallControls
 
                     if (globalPos != null && mothershipWorldPos != null)
                     {
-                        float distSq = Common3dObjectHelpers.GetDistanceSquared(globalPos, mothershipWorldPos);
+                        float distSq = OmegaObjectHelpers.GetDistanceSquared(globalPos, mothershipWorldPos);
                         float maxDist = AudioSetup.OffscreenAiAudioMaxDistance;
                         float maxDistSq = maxDist * maxDist;
 
@@ -280,9 +280,9 @@ namespace GameAiAndControls.Controls.MotherShipSmallControls
             float maxDelta = MotherShipDifficultySetup.ScaleTurnSpeed(
                 RotationDegreesPerSecond,
                 GameState.GamePlayState.MotherShipSmallAggression) * (float)deltaSeconds;
-            Xrotation = Common3dObjectHelpers.MoveAngleTowards(Xrotation, TargetXrotation, maxDelta);
-            Yrotation = Common3dObjectHelpers.MoveAngleTowards(Yrotation, TargetYrotation, maxDelta);
-            Zrotation = Common3dObjectHelpers.MoveAngleTowards(Zrotation, TargetZrotation, maxDelta);
+            Xrotation = OmegaObjectHelpers.MoveAngleTowards(Xrotation, TargetXrotation, maxDelta);
+            Yrotation = OmegaObjectHelpers.MoveAngleTowards(Yrotation, TargetYrotation, maxDelta);
+            Zrotation = OmegaObjectHelpers.MoveAngleTowards(Zrotation, TargetZrotation, maxDelta);
 
             if (theObject.Rotation != null)
             {
@@ -333,7 +333,7 @@ namespace GameAiAndControls.Controls.MotherShipSmallControls
 
             if (MathF.Abs(dx) < 1f && MathF.Abs(dz) < 1f) return;
 
-            var heading = Common3dObjectHelpers.GetHeadingFromDirection(dx, dz);
+            var heading = OmegaObjectHelpers.GetHeadingFromDirection(dx, dz);
             TargetXrotation = heading.X;
             TargetYrotation = heading.Y;
             TargetZrotation = heading.Z;

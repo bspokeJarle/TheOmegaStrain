@@ -1,4 +1,4 @@
-﻿using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using Domain;
 using CommonUtilities.CommonSetup;
@@ -64,16 +64,16 @@ namespace GameAiAndControls.Controls
             if (closestSeederWorld != null)
             {
                 var shipWorld = GetShipWorldPosition();
-                var heading = Common3dObjectHelpers.GetHeadingToTarget(shipWorld, closestSeederWorld);
+                var heading = OmegaObjectHelpers.GetHeadingToTarget(shipWorld, closestSeederWorld);
                 TargetXrotation = heading.X;
                 TargetYrotation = heading.Y;
                 TargetZrotation = heading.Z;
             }
             // Smoothly rotate toward target
             float maxDelta = RotationDegreesPerSecond * (float)deltaSeconds;
-            Xrotation = Common3dObjectHelpers.MoveAngleTowards(Xrotation, TargetXrotation, maxDelta);
-            Yrotation = Common3dObjectHelpers.MoveAngleTowards(Yrotation, TargetYrotation, maxDelta);
-            Zrotation = Common3dObjectHelpers.MoveAngleTowards(Zrotation, TargetZrotation, maxDelta);
+            Xrotation = OmegaObjectHelpers.MoveAngleTowards(Xrotation, TargetXrotation, maxDelta);
+            Yrotation = OmegaObjectHelpers.MoveAngleTowards(Yrotation, TargetYrotation, maxDelta);
+            Zrotation = OmegaObjectHelpers.MoveAngleTowards(Zrotation, TargetZrotation, maxDelta);
 
             if (theObject.Rotation != null)
             {

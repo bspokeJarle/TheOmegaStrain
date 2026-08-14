@@ -1,9 +1,9 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonSetup;
 using Domain;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests._3DHelpers;
+namespace _3DSpesificsUnitTests.OmegaEngineAdapters;
 
 [TestClass]
 public class SurfacePositionSyncHelpersTests

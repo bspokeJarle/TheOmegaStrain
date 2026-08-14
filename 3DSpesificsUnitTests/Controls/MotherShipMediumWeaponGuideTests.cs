@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using Domain;
 using GameAiAndControls.Controls.MotherShipMediumControls;
 using _3dRotations.World.Objects;

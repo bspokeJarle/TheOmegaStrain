@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using Domain;
@@ -41,7 +41,7 @@ namespace GameAiAndControls.Controls.SpaceSwanControls
 
         private float _flapPhase = 0f;
         private int _lastFlapSinSign = 0;
-        private readonly _3dRotationCommon _rotate = new();
+        private readonly OmegaMeshRotation _rotate = new();
 
         public ITriangleMeshWithColor? StartCoordinates { get; set; }
         public ITriangleMeshWithColor? GuideCoordinates { get; set; }
@@ -171,7 +171,7 @@ namespace GameAiAndControls.Controls.SpaceSwanControls
             }
 
             // Compute heading from movement direction
-            var heading = Common3dObjectHelpers.GetHeadingFromDirection(_aiState.DirectionX, _aiState.DirectionZ);
+            var heading = OmegaObjectHelpers.GetHeadingFromDirection(_aiState.DirectionX, _aiState.DirectionZ);
             TargetXrotation = heading.X;
             TargetYrotation = heading.Y;
             TargetZrotation = heading.Z;
@@ -180,9 +180,9 @@ namespace GameAiAndControls.Controls.SpaceSwanControls
             float maxDelta = RotationDegreesPerSecond * deltaSeconds;
             if (maxDelta > 0f)
             {
-                Xrotation = Common3dObjectHelpers.MoveAngleTowards(Xrotation, TargetXrotation, maxDelta);
-                Yrotation = Common3dObjectHelpers.MoveAngleTowards(Yrotation, TargetYrotation, maxDelta);
-                Zrotation = Common3dObjectHelpers.MoveAngleTowards(Zrotation, TargetZrotation, maxDelta);
+                Xrotation = OmegaObjectHelpers.MoveAngleTowards(Xrotation, TargetXrotation, maxDelta);
+                Yrotation = OmegaObjectHelpers.MoveAngleTowards(Yrotation, TargetYrotation, maxDelta);
+                Zrotation = OmegaObjectHelpers.MoveAngleTowards(Zrotation, TargetZrotation, maxDelta);
             }
 
             if (theObject.Rotation != null) theObject.Rotation.x = Xrotation;
@@ -322,7 +322,7 @@ namespace GameAiAndControls.Controls.SpaceSwanControls
                 var swanWorldPos = theObject.WorldPosition;
                 if (globalPos == null || swanWorldPos == null) return;
 
-                float distSq = Common3dObjectHelpers.GetDistanceSquared(globalPos, swanWorldPos);
+                float distSq = OmegaObjectHelpers.GetDistanceSquared(globalPos, swanWorldPos);
                 float maxDist = AudioSetup.OffscreenAiAudioMaxDistance;
                 if (distSq > maxDist * maxDist) return;
 

@@ -1,13 +1,13 @@
-﻿using CommonUtilities.CommonGlobalState;
+using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using Domain;
 using System.Runtime.CompilerServices;
 using static Domain._3dSpecificsImplementations;
 
 
-namespace CommonUtilities._3DHelpers
+namespace CommonUtilities.OmegaEngineAdapters
 {
-    public static class Common3dObjectHelpers
+    public static class OmegaObjectHelpers
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Vector3? CopyVector(IVector3? vector)
@@ -36,9 +36,9 @@ namespace CommonUtilities._3DHelpers
         //  HEADING HELPERS
         //  Shared heading logic for pointing objects toward a target.
         //  Z rotation is applied first to geometry (+X forward).
-        //  After Z rotation by θ: tip at (cosθ, sinθ, 0).
-        //  After X=WorldViewSetup.CameraPitchDegrees camera tilt: screenX ∝ cosθ, screenY ∝ sinθ.
-        //  Z=0→right, Z=90→down, Z=180→left, Z=270→up.
+        //  After Z rotation by angle: tip at (cos(angle), sin(angle), 0).
+        //  After X=WorldViewSetup.CameraPitchDegrees camera tilt: screenX follows cos(angle), screenY follows sin(angle).
+        //  Z=0 -> right, Z=90 -> down, Z=180 -> left, Z=270 -> up.
         //  World-to-screen: screen right = world +X, screen down = world +Z.
         //  Therefore heading Z = atan2(dz, dx).
         // -----------------------------------------------------------------

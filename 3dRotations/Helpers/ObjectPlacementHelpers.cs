@@ -1,5 +1,5 @@
 using _3dRotations.World;
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using Domain;
 using System;
 using System.Collections.Generic;

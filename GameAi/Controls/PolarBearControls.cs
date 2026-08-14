@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using Domain;
@@ -33,7 +33,7 @@ namespace GameAiAndControls.Controls
         private static float TerrainLiftYScaled => TerrainLiftY * ScreenSetup.ScreenScaleY;
         private static int _visibleOnScreenBearId = -1;
 
-        private readonly _3dRotationCommon _rotate = new();
+        private readonly OmegaMeshRotation _rotate = new();
         private readonly Dictionary<string, List<ITriangleMeshWithColor>> _baseTrianglesByPart = new();
         private readonly bool _hasPathBounds;
         private readonly float _minPathOffsetX;

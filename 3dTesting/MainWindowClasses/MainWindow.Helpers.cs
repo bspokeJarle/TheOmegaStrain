@@ -1,4 +1,4 @@
-ï»¿using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using CommonUtilities.GamePlayHelpers;
@@ -14,7 +14,7 @@ namespace _3dTesting.Helpers
 {
     public static class GameHelpers
     {
-        private static _3dRotationCommon Rotate3d = new _3dRotationCommon();
+        private static OmegaMeshRotation Rotate3d = new OmegaMeshRotation();
         private static bool enableLogging = false;
         /// <summary>
         /// Applies the rotation offset to prevent flipping when rotating.
@@ -104,7 +104,7 @@ namespace _3dTesting.Helpers
         }
 
         // -----------------------------------------------------------------
-        //  MINIMAP MARKERS  (overlay approach â€“ never touches source bitmap)
+        //  MINIMAP MARKERS  (overlay approach – never touches source bitmap)
         // -----------------------------------------------------------------
 
         private static int _markerFrame;
@@ -182,7 +182,7 @@ namespace _3dTesting.Helpers
             byte[] swanPx    = { 240, 240, 240, 255 }; // SpaceSwan (white)
             byte[] zeppelinPx = { 0, 200, 200, 255 };   // ZeppelinBomber (yellow-green, BGRA)
 
-            // Mothership â€” large marker flashing red/strong-red independently
+            // Mothership — large marker flashing red/strong-red independently
             bool mothershipFlashRed = (_markerFrame % 20) < 10;
             byte[] mothershipPx = GetMinimapMarkerBlinkBgra(
                 biome,
@@ -191,7 +191,7 @@ namespace _3dTesting.Helpers
 
             bool powerupPrimaryColor = (_markerFrame % 8) < 5;
 
-            // Ship marker â€” always visible at viewport center
+            // Ship marker — always visible at viewport center
             var mapPos = GameState.SurfaceState.GlobalMapPosition;
             if (mapPos != null)
             {
@@ -203,7 +203,7 @@ namespace _3dTesting.Helpers
                 StampMarker(pixels, cropW, cropH, stride, shipBx, shipBz, greyPx);
             }
 
-            // Mothership marker â€” always drawn with its own red/black flash cycle
+            // Mothership marker — always drawn with its own red/black flash cycle
             {
                 var aiObjects = GameState.SurfaceState?.AiObjects;
                 _3dObject[]? msSnapshot = null;
@@ -235,7 +235,7 @@ namespace _3dTesting.Helpers
                 }
             }
 
-            // AI objects â€” always visible, blinking between their own marker color
+            // AI objects — always visible, blinking between their own marker color
             // and a stronger variant of the same color family.
             {
                 var aiObjects = GameState.SurfaceState?.AiObjects;

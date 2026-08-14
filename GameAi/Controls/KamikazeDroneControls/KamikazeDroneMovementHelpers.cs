@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using Domain;
 using System;
@@ -9,7 +9,7 @@ namespace GameAiAndControls.Helpers
 {
     internal static class KamikazeDroneMovementHelpers
     {
-        private static readonly _3dRotationCommon Rotate3d = new();
+        private static readonly OmegaMeshRotation Rotate3d = new();
 
         internal static Vector3 ToVector3(IVector3? v)
         {
@@ -70,7 +70,7 @@ namespace GameAiAndControls.Helpers
             }
 
             return localPoints.Count > 0
-                ? Common3dObjectHelpers.GetCenterOfBox(localPoints)
+                ? OmegaObjectHelpers.GetCenterOfBox(localPoints)
                 : new Vector3();
         }
 

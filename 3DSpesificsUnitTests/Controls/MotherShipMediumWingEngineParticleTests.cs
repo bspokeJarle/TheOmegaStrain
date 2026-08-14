@@ -1,5 +1,5 @@
 using _3dRotations.World.Objects;
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
@@ -32,7 +32,7 @@ namespace _3DSpesificsUnitTests.Controls;
 public class MotherShipMediumWingEngineParticleTests
 {
     private const float Life = 60f; // arbitrary non-zero life value
-    private static readonly _3dRotationCommon Rotate = new();
+    private static readonly OmegaMeshRotation Rotate = new();
 
     private sealed class CapturingParticles : IParticles
     {

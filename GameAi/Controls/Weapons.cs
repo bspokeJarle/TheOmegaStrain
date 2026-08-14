@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using Domain;
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ namespace GameAiAndControls.Controls
         private IAudioInstance? _lazerInstance;
 
         private readonly List<I3dObject> _weaponObjects;
-        private readonly _3dRotationCommon _rotate = new(); // Rotation fra CommonHelpers
+        private readonly OmegaMeshRotation _rotate = new(); // Rotation fra OmegaEngineAdapters
 
         public IObjectMovement ParentShip { get; set; }
         public _3dObject ParentShipObject { get; set; }
@@ -85,7 +85,7 @@ namespace GameAiAndControls.Controls
                     ? _weaponObjects[0]
                     : new _3dObject { ObjectName = "Lazer", ObjectId = GameState.ObjectIdCounter++ };
 
-                I3dObject instance = Common3dObjectHelpers.DeepCopySingleObject(template);
+                I3dObject instance = OmegaObjectHelpers.DeepCopySingleObject(template);
                 if (FireAsEnemyWeapon) instance.ObjectName = EnemyLazerName;
                 instance.ImpactStatus = new ImpactStatus
                 {
@@ -166,7 +166,7 @@ namespace GameAiAndControls.Controls
                 if (template == null)
                     template = new _3dObject { ObjectName = "Bullet", ObjectId = GameState.ObjectIdCounter++ };
 
-                I3dObject instance = Common3dObjectHelpers.DeepCopySingleObject(template);
+                I3dObject instance = OmegaObjectHelpers.DeepCopySingleObject(template);
                 instance.ImpactStatus = new ImpactStatus
                 {
                     HasExploded = false,

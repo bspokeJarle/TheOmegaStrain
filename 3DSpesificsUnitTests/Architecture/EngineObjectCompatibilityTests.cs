@@ -1,5 +1,6 @@
 using Domain;
 using _3dRotations.Projection;
+using _3dRotations.World.Objects;
 using _3dTesting.Rendering;
 using static Domain._3dSpecificsImplementations;
 
@@ -218,6 +219,58 @@ public class EngineObjectCompatibilityTests
     {
         Assert.IsTrue(
             typeof(IProjectedTriangleRenderer<ProjectedTriangleMesh>).IsAssignableFrom(typeof(WorldRenderer)));
+    }
+
+    [TestMethod]
+    public void ThreeDRotationsSource_DoesNotUseWpfApisDirectly()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var forbiddenHits = FindForbiddenSourceHits(repositoryRoot, Path.Combine(repositoryRoot, "3dRotations"));
+
+        Assert.AreEqual(0, forbiddenHits.Count, string.Join(Environment.NewLine, forbiddenHits));
+    }
+
+    [TestMethod]
+    public void OmegaEngineAdaptersSource_DoesNotUseWpfApisDirectly()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var forbiddenHits = FindForbiddenSourceHits(
+            repositoryRoot,
+            Path.Combine(repositoryRoot, "CommonUtilities", "OmegaEngineAdapters"));
+
+        Assert.AreEqual(0, forbiddenHits.Count, string.Join(Environment.NewLine, forbiddenHits));
+    }
+
+    private static List<string> FindForbiddenSourceHits(string repositoryRoot, string projectDirectory)
+    {
+        return Directory
+            .EnumerateFiles(projectDirectory, "*.*", SearchOption.AllDirectories)
+            .Where(path => path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) ||
+                           path.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
+                           !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .SelectMany(path => File
+                .ReadLines(path)
+                .Select((line, index) => new { path, line, lineNumber = index + 1 }))
+            .Where(hit =>
+                hit.line.Contains("System.Windows", StringComparison.Ordinal) ||
+                hit.line.Contains("WriteableBitmap", StringComparison.Ordinal) ||
+                hit.line.Contains("BitmapSource", StringComparison.Ordinal) ||
+                hit.line.Contains("<UseWPF>", StringComparison.Ordinal))
+            .Select(hit => $"{Path.GetRelativePath(repositoryRoot, hit.path)}:{hit.lineNumber}: {hit.line.Trim()}")
+            .ToList();
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory != null && !File.Exists(Path.Combine(directory.FullName, "TheOmegaStrain.sln")))
+        {
+            directory = directory.Parent;
+        }
+
+        Assert.IsNotNull(directory, "Could not locate repository root from test output directory.");
+        return directory.FullName;
     }
 
     private sealed class TestWorld : I3dWorld

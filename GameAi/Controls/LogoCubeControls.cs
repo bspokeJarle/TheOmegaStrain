@@ -1,4 +1,4 @@
-﻿using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
@@ -22,7 +22,7 @@ namespace GameAiAndControls.Controls
         private bool introStarted = false;
         private DateTime introStartTime;
 
-        private readonly _3dRotationCommon _rotate = new(); // Rotation fra CommonHelpers (not used here)
+        private readonly OmegaMeshRotation _rotate = new(); // Rotation fra OmegaEngineAdapters (not used here)
 
         public I3dObject MoveObject(I3dObject theObject, IAudioPlayer? audioPlayer, ISoundRegistry? soundRegistry)
         {
@@ -74,9 +74,9 @@ namespace GameAiAndControls.Controls
             const float ZoomSpinZ = 360f;
 
             // --- NEW: pause + timing knobs ---
-            const float Pause047Seconds = 1.5f;      // <--- juster denne for å holde 047 litt
+            const float Pause047Seconds = 1.5f;      // <--- juster denne for � holde 047 litt
             const float ZoomSeconds = 4.0f;           // zoom-lengde (var 14-18)
-            const float ExplodeAtSeconds = 3.0f;     // når i zoom (0..ZoomSeconds) eksplosjonen skal trigges
+            const float ExplodeAtSeconds = 3.0f;     // n�r i zoom (0..ZoomSeconds) eksplosjonen skal trigges
 
             // Optional: if you want explode by Z instead, keep this:
             const float ExplodeAtZ = 800f;

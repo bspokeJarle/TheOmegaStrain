@@ -1,6 +1,6 @@
 using Domain;
 
-namespace CommonUtilities._3DHelpers
+namespace CommonUtilities.OmegaEngineAdapters
 {
     public static class SurfaceGroundProjectionHelpers
     {

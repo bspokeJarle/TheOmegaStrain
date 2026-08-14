@@ -2,9 +2,9 @@ using Domain;
 using System.Collections;
 using static Domain._3dSpecificsImplementations;
 
-namespace CommonUtilities._3DHelpers
+namespace CommonUtilities.OmegaEngineAdapters
 {
-    public static class CrashBoxOffsetExtensions
+    public static class OmegaCrashBoxOffsetExtensions
     {
         public static Vector3 ToLocalPoint(this Vector3 worldPoint, _3dObject obj)
         {

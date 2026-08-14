@@ -1,9 +1,9 @@
 using Domain;
 using static Domain._3dSpecificsImplementations;
 
-namespace CommonUtilities._3DHelpers
+namespace CommonUtilities.OmegaEngineAdapters
 {
-    public class _3dRotationCommon : MeshRotation
+    public class OmegaMeshRotation : MeshRotation
     {
         public new IVector3 RotatePoint(double angleInDegrees, IVector3 coord, char axis)
         {

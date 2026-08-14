@@ -1,5 +1,5 @@
 using _3dRotations.Helpers;
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using Domain;
 using System;
 using System.Collections.Generic;
@@ -280,16 +280,6 @@ namespace _3dRotations.World.Objects
             return $"{r:X2}{g:X2}{b:X2}";
         }
 
-        public static System.Windows.Media.Color GetTileColorGradientColor(int height, int maxHeight)
-        {
-            GetTileColorGradientRgb(height, maxHeight, out int r, out int g, out int b);
-            return System.Windows.Media.Color.FromArgb(
-                255,
-                (byte)Math.Clamp(r, 0, 255),
-                (byte)Math.Clamp(g, 0, 255),
-                (byte)Math.Clamp(b, 0, 255));
-        }
-
         private static bool IsInfectableTerrain(int height, int maxHeight)
         {
             return TerrainPaletteHelpers.IsInfectableTerrain(height, maxHeight);
@@ -421,10 +411,11 @@ namespace _3dRotations.World.Objects
             if (Logger.ShouldLog(enableLogging)) Logger.Log($"[Surface] Create2DMap complete: mode={gameMode} TotalBioTiles={GameState.GamePlayState.TotalBioTiles} maxHeight={MapSetup.maxHeight} InfectionCriticalMass={GameState.GamePlayState.InfectionCriticalMass}", "Surface");
 
             int mapSize = GameState.SurfaceState.Global2DMap.GetLength(0); // siden kartet er square
-            SurfaceGeneration.GenerateTerrainBitmapSource(
+            MapHelpers.UpdateTerrainBitmap(
                 GameState.SurfaceState.Global2DMap,
                 mapSize,
-                MapSetup.maxHeight);
+                MapSetup.maxHeight,
+                enableLogging);
         }
 
         private static int GetActualMaxHeight(SurfaceData[,] map)

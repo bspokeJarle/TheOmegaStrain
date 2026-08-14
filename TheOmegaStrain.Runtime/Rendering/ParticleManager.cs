@@ -1,5 +1,5 @@
 using _3dRotations.World;
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using Domain;
 using System;
@@ -11,7 +11,7 @@ namespace TheOmegaStrain.Runtime.Rendering
 {
     public class ParticleManager
     {
-        private readonly _3dRotationCommon Rotate3d = new();
+        private readonly OmegaMeshRotation Rotate3d = new();
 
         // =====================================================================
         // PARTICLE SHADOW TUNING KNOBS — mirrors the pattern used by

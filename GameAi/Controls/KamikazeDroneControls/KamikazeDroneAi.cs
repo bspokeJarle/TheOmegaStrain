@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using Domain;
 using GameAiAndControls.Helpers;
@@ -59,7 +59,7 @@ namespace GameAiAndControls.Controls.KamikazeDroneControls
                 }
 
                 var candidateCenter = KamikazeDroneMovementHelpers.GetCompensatedHuntTargetWorldPosition(currentDrone, candidate);
-                double distance = Common3dObjectHelpers.GetDistance(droneCenter, candidateCenter);
+                double distance = OmegaObjectHelpers.GetDistance(droneCenter, candidateCenter);
                 if (distance < closestDistance)
                 {
                     closestDistance = distance;

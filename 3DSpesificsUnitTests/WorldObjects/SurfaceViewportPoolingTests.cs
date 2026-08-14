@@ -1,6 +1,6 @@
 using _3dRotations.World.Objects;
 using _3dRotations.Helpers;
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;

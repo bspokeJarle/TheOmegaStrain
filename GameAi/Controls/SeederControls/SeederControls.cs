@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using Domain;
@@ -161,7 +161,7 @@ namespace GameAiAndControls.Controls.SeederControls
 
                     if (globalPos != null && seederWorldPos != null)
                     {
-                        float distSq = Common3dObjectHelpers.GetDistanceSquared(globalPos, seederWorldPos);
+                        float distSq = OmegaObjectHelpers.GetDistanceSquared(globalPos, seederWorldPos);
                         float maxDist = AudioSetup.OffscreenAiAudioMaxDistance;
                         float maxDistSq = maxDist * maxDist;
 
@@ -360,7 +360,7 @@ namespace GameAiAndControls.Controls.SeederControls
                 _syncY = theObject.ObjectOffsets.y;
             }
 
-            theObject.ObjectOffsets = CommonUtilities._3DHelpers.SurfacePositionSyncHelpers.GetSurfaceSyncedObjectOffsets(theObject, _syncY, SyncFactorY);
+            theObject.ObjectOffsets = SurfacePositionSyncHelpers.GetSurfaceSyncedObjectOffsets(theObject, _syncY, SyncFactorY);
         }
 
         private void EnsureVisualPhase(I3dObject theObject)

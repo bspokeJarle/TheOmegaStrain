@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using Domain;
@@ -17,8 +17,8 @@ namespace GameAiAndControls.Controls
 {
     public class DecoyBeaconControls : IObjectMovement
     {
-        private static readonly CommonUtilities._3DHelpers._3dRotationCommon Rotate3d = new();
-        private readonly CommonUtilities._3DHelpers._3dRotationCommon _rotate = new();
+        private static readonly OmegaMeshRotation Rotate3d = new();
+        private readonly OmegaMeshRotation _rotate = new();
         private const bool enableLogging = false;
         private const string WheelPartName = "DecoyFrontPulsePanel";
         private const float WheelRotationDegreesPerSecond = 540f;
@@ -290,7 +290,7 @@ namespace GameAiAndControls.Controls
             }
 
             return localPoints.Count > 0
-                ? CommonUtilities._3DHelpers.Common3dObjectHelpers.GetCenterOfBox(localPoints)
+                ? OmegaObjectHelpers.GetCenterOfBox(localPoints)
                 : new Vector3();
         }
 
@@ -389,7 +389,7 @@ namespace GameAiAndControls.Controls
                 _syncY = theObject.ObjectOffsets?.y ?? 0f;
             }
 
-            theObject.ObjectOffsets = CommonUtilities._3DHelpers.SurfacePositionSyncHelpers.GetSurfaceSyncedObjectOffsets(theObject, _syncY);
+            theObject.ObjectOffsets = SurfacePositionSyncHelpers.GetSurfaceSyncedObjectOffsets(theObject, _syncY);
         }
 
         private void HandleCrash(I3dObject theObject)

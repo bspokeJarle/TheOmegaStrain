@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using Domain;
@@ -100,7 +100,7 @@ namespace GameAiAndControls.Controls.JumpingFishControls
         private const float RightFinPivotY = 7.2f;
         private const float FinPivotZ = -1.6f;
 
-        private readonly _3dRotationCommon _rotate = new();
+        private readonly OmegaMeshRotation _rotate = new();
         private readonly Dictionary<string, List<ITriangleMeshWithColor>> _baseTrianglesByPart = new();
         private readonly float _jumpHorizontalSpan;
         private readonly bool _hasPathBounds;

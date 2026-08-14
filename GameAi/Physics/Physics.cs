@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq;
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using Domain;
@@ -21,7 +21,7 @@ namespace GameAiAndControls.Physics
         private const float BalancedDebrisShimmerStrength = 0.16f;
         private const float HighDebrisShimmerStrength = 0.30f;
 
-        // ── General physics ──────────────────────────────────────────
+        // -- General physics ------------------------------------------
         public float Mass { get; set; } = 1.0f;
         public IVector3 Velocity { get; set; } = new Vector3(0, -90f, 0);
         public float Thrust { get; set; }
@@ -30,14 +30,14 @@ namespace GameAiAndControls.Physics
         public float MaxThrust { get; set; } = 20.0f;
         public IVector3 Acceleration { get; set; } = new Vector3(0, 0, 0);
 
-        // ── Gravity & bounce (used by particle/object physics) ───────
+        // -- Gravity & bounce (used by particle/object physics) -------
         public float GravityStrength { get; set; } = 1f;
         public IVector3 GravitySource { get; set; } = new Vector3 { x = 0, y = -10f, z = 0 };
         public float BounceHeightMultiplier { get; set; } = 0.8f;
         public float EnergyLossFactor { get; set; } = 0.2f;
         public int BounceCooldownFrames { get; set; } = 0;
 
-        // ── Flight inertia state (reset between thrust activations) ──
+        // -- Flight inertia state (reset between thrust activations) --
         public float FallVelocity { get; set; } = 0f;
         public float InertiaX { get; set; } = 0f;
         public float InertiaY { get; set; } = 0f;
@@ -45,7 +45,7 @@ namespace GameAiAndControls.Physics
         public float ThrustEffect { get; set; } = 0f;
         public float VerticalLiftFactor { get; set; } = 0f;
 
-        // ── Flight tuning constants ──────────────────────────────────
+        // -- Flight tuning constants ----------------------------------
         private const float DefaultCeilingHeightScreenFactor = 1.6f;
         private const float DefaultCeilingHeightReduction = 200f;
         private float? _ceilingHeightOverride;
@@ -61,7 +61,7 @@ namespace GameAiAndControls.Physics
         public float VerticalThrustSmoothing { get; set; } = 0.6f;
         public float VerticalLiftRate { get; set; } = 3.0f;
 
-        // ── Height limits ────────────────────────────────────────────
+        // -- Height limits --------------------------------------------
         public float CeilingHeight
         {
             get => _ceilingHeightOverride ?? (ScreenSetup.screenSizeY * DefaultCeilingHeightScreenFactor - DefaultCeilingHeightReduction);
@@ -77,7 +77,7 @@ namespace GameAiAndControls.Physics
             set { }
         }
 
-        // ── Hover/float after thrust release ─────────────────────────
+        // -- Hover/float after thrust release -------------------------
         // When thrust stops, gravity stays at HoverMinGravityScale for
         // HoverFloatDuration seconds, then ramps linearly to full over
         // HoverRampDuration seconds.
@@ -86,7 +86,7 @@ namespace GameAiAndControls.Physics
         public float HoverRampDuration { get; set; } = 0.75f;
         public float HoverMinGravityScale { get; set; } = 0.05f;
 
-        // ── Airborne settle (return-to-rest while not thrusting) ─────
+        // -- Airborne settle (return-to-rest while not thrusting) -----
         // Gentle spring rate that pulls the surface back toward its
         // resting screen position and zero altitude when airborne.
         // Scaled by 1/ScreenScaleY so the gravity-settle equilibrium
@@ -100,7 +100,7 @@ namespace GameAiAndControls.Physics
             set { }
         }
 
-        // Applies speed-dependent drag (Aviator-inspired v² scaling) and clamps inertia.
+        // Applies speed-dependent drag (Aviator-inspired v� scaling) and clamps inertia.
         // At low speeds the drag factor is close to InertiaDrag (0.92); at MaxInertia the
         // effective multiplier drops to ~0.85, giving a natural top-speed feel.
         private const float DragSpeedScaling = 0.08f;
@@ -271,7 +271,7 @@ namespace GameAiAndControls.Physics
             };
         }
 
-        // Gently returns tilt toward neutral (x→0) when no pitch input is applied.
+        // Gently returns tilt toward neutral (x?0) when no pitch input is applied.
         // StabilizationRate controls how quickly the tilt decays per call.
         private const float StabilizationRate = 0.03f;
 
@@ -312,7 +312,7 @@ namespace GameAiAndControls.Physics
 
         public void ResetHover() => HoverElapsed = 0f;
 
-        // Retained for IPhysics contract — no longer called by ship controls
+        // Retained for IPhysics contract � no longer called by ship controls
         public void ReduceFallWithThrust(float thrust, float rotationDegrees, float deltaTime)
         {
             float upwardFactor = MathF.Cos(rotationDegrees * DEG2RAD);
@@ -322,7 +322,7 @@ namespace GameAiAndControls.Physics
 
         // Calculates thrust on all three axes with continuous gravity. Returns updated InertiaY.
         // Tilt controls vertical/forward split; rotation controls heading.
-        // When inverted (tilt ~180°), upwardFactor goes negative — thrust pushes into the ground.
+        // When inverted (tilt ~180�), upwardFactor goes negative � thrust pushes into the ground.
         // Gravity scales in with VerticalLiftFactor to prevent an initial dip at thrust start.
         public float CalculateThrustForces(float thrust, float tiltDegrees, float rotationDegrees, float deltaTime)
         {
@@ -340,12 +340,12 @@ namespace GameAiAndControls.Physics
             float dirX = MathF.Sin(rotationRad);
             float dirZ = MathF.Cos(rotationRad);
 
-            // Horizontal forces — projected onto world X/Z axes
+            // Horizontal forces � projected onto world X/Z axes
             float horizontalForce = effectiveThrust * ThrustEffect * ThrustSpeedMultiplier * forwardFactor * deltaTime;
             InertiaX = ApplyDragAndClamp(InertiaX + horizontalForce * dirX, deltaTime);
             InertiaZ = ApplyDragAndClamp(InertiaZ - horizontalForce * dirZ, deltaTime);
 
-            // Vertical thrust — angle-dependent (negative when inverted pushes into ground)
+            // Vertical thrust � angle-dependent (negative when inverted pushes into ground)
             float verticalThrust = effectiveThrust * ThrustEffect * VerticalLiftFactor * ThrustHeightMultiplier
                                  * upwardFactor * VerticalThrustSmoothing * deltaTime;
             float gravityPull = GravityAcceleration * GravityPullMultiplier * VerticalLiftFactor * deltaTime;
@@ -405,7 +405,7 @@ namespace GameAiAndControls.Physics
             _isExploding = true;
             RaiseExplosionFlash(explosionForce);
 
-            var explodingObject = Common3dObjectHelpers.DeepCopySingleObject(originalObject);
+            var explodingObject = OmegaObjectHelpers.DeepCopySingleObject(originalObject);
             var center = CalculateTriangleGeometryCenter(explodingObject);
 
             int partIndex = 0;
@@ -603,13 +603,13 @@ namespace GameAiAndControls.Physics
             }
 
             if (progress < 0.10f)
-                return LerpColorHex(originalHex, "ffff00", progress / 0.10f); // original → yellow
+                return LerpColorHex(originalHex, "ffff00", progress / 0.10f); // original ? yellow
             else if (progress < 0.35f)
-                return LerpColorHex("ffff00", "ff0000", (progress - 0.10f) / 0.25f); // yellow → red
+                return LerpColorHex("ffff00", "ff0000", (progress - 0.10f) / 0.25f); // yellow ? red
             else if (progress < 0.7f)
-                return LerpColorHex("ff0000", "330000", (progress - 0.35f) / 0.35f); // red → dark red
+                return LerpColorHex("ff0000", "330000", (progress - 0.35f) / 0.35f); // red ? dark red
             else
-                return LerpColorHex("330000", "000000", (progress - 0.7f) / 0.3f); // dark red → black
+                return LerpColorHex("330000", "000000", (progress - 0.7f) / 0.3f); // dark red ? black
         }
 
         private static string ApplyDebrisShimmer(string baseColor, ExplodingTriangle exploding, float progress)

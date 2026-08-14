@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using Domain;
@@ -84,7 +84,7 @@ namespace GameAiAndControls.Controls.MotherShipMediumControls
         private const float EngineGimbalSpeed = 90f;      // degrees of phase per second for the sine oscillation
         private float _engineTiltAngle = 0f;              // current animated rotation angle (0..360)
         private float _prevMovementSpeed = 0f;
-        private readonly _3dRotationCommon _rotate = new();
+        private readonly OmegaMeshRotation _rotate = new();
 
         // Original (unrotated) triangle baselines for engine + pod parts — captured once on first AnimateEngines call.
         // The whole pod assembly (pod housing, connector, nacelle vents, engine + engine guide) rotates together
@@ -282,9 +282,9 @@ namespace GameAiAndControls.Controls.MotherShipMediumControls
                 UpdateFacingBetweenShots(theObject);
 
                 float maxDelta = GetRotationDegreesPerSecond() * (float)deltaSeconds;
-                Xrotation = Common3dObjectHelpers.MoveAngleTowards(Xrotation, TargetXrotation, maxDelta);
-                Yrotation = Common3dObjectHelpers.MoveAngleTowards(Yrotation, TargetYrotation, maxDelta);
-                Zrotation = Common3dObjectHelpers.MoveAngleTowards(Zrotation, TargetZrotation, maxDelta);
+                Xrotation = OmegaObjectHelpers.MoveAngleTowards(Xrotation, TargetXrotation, maxDelta);
+                Yrotation = OmegaObjectHelpers.MoveAngleTowards(Yrotation, TargetYrotation, maxDelta);
+                Zrotation = OmegaObjectHelpers.MoveAngleTowards(Zrotation, TargetZrotation, maxDelta);
 
                 // Engines tilt based on ship motion
                 AnimateEngines(theObject, (float)deltaSeconds, ComputeTargetTilt((float)deltaSeconds, theObject));
@@ -478,7 +478,7 @@ namespace GameAiAndControls.Controls.MotherShipMediumControls
 
                 if (globalPos != null && mothershipWorldPos != null)
                 {
-                    float distSq = Common3dObjectHelpers.GetDistanceSquared(globalPos, mothershipWorldPos);
+                    float distSq = OmegaObjectHelpers.GetDistanceSquared(globalPos, mothershipWorldPos);
                     float maxDist = AudioSetup.OffscreenAiAudioMaxDistance;
                     float maxDistSq = maxDist * maxDist;
 
@@ -558,7 +558,7 @@ namespace GameAiAndControls.Controls.MotherShipMediumControls
             float dz = shipPos.z - wp.z;
             if (MathF.Abs(dx) < 1f && MathF.Abs(dz) < 1f) return;
 
-            var heading = Common3dObjectHelpers.GetHeadingFromDirection(dx, dz);
+            var heading = OmegaObjectHelpers.GetHeadingFromDirection(dx, dz);
             TargetXrotation = heading.X;
             TargetYrotation = heading.Y;
             TargetZrotation = heading.Z;
@@ -581,7 +581,7 @@ namespace GameAiAndControls.Controls.MotherShipMediumControls
 
             if (MathF.Abs(dx) < 1f && MathF.Abs(dz) < 1f) return;
 
-            var heading = Common3dObjectHelpers.GetHeadingFromDirection(dx, dz);
+            var heading = OmegaObjectHelpers.GetHeadingFromDirection(dx, dz);
             TargetXrotation = heading.X;
             TargetYrotation = heading.Y;
             TargetZrotation = heading.Z;

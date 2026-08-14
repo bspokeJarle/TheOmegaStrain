@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
 using Domain;
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using static Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Benchmarks;
@@ -50,6 +50,6 @@ public class DeepCopySingleObjectBenchmarks
     [Benchmark]
     public I3dObject DeepCopySingleObject()
     {
-        return Common3dObjectHelpers.DeepCopySingleObject(_source);
+        return OmegaObjectHelpers.DeepCopySingleObject(_source);
     }
 }

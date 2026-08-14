@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using Domain;
 using static Domain._3dSpecificsImplementations;
 using Microsoft.VSDiagnostics;
@@ -10,7 +10,7 @@ namespace TheOmegaStrain.Benchmarks;
 public class RotateMeshBenchmarks
 {
     private const int TriangleCount = 2048;
-    private readonly _3dRotationCommon _rotation = new();
+    private readonly OmegaMeshRotation _rotation = new();
     private List<ITriangleMeshWithColor> _mesh = new();
     [GlobalSetup]
     public void Setup()

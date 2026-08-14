@@ -3,7 +3,7 @@ using CommonUtilities.CommonSetup;
 using Domain;
 using static Domain._3dSpecificsImplementations;
 
-namespace CommonUtilities._3DHelpers
+namespace CommonUtilities.OmegaEngineAdapters
 {
     public static class SurfacePositionSyncHelpers
     {

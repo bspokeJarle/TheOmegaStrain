@@ -5,7 +5,7 @@ using _3dRotations.SceneManagement;
 using _3dRotations.World.Objects;
 using _3dRotations.World.Objects.EarthObject;
 using _3dRotations.Scenes.Outro;
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using CommonUtilities.CommonSetup;
@@ -1622,7 +1622,7 @@ public class OutroSceneTests
 
     private static void ApplyLiveMeshRotation(_3dObject obj)
     {
-        var rotate = new _3dRotationCommon();
+        var rotate = new OmegaMeshRotation();
         var rotation = (Vector3)obj.Rotation;
 
         foreach (var part in obj.ObjectParts)

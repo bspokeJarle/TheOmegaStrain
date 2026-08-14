@@ -1,4 +1,4 @@
-using CommonUtilities._3DHelpers;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using Domain;
@@ -102,7 +102,7 @@ public class TutorialSeederControlsTests
         original.Movement = controls;
         GameState.SurfaceState.AiObjects.Add(original);
 
-        var visibleFrameCopy = (_3dObject)Common3dObjectHelpers.DeepCopySingleObject(original);
+        var visibleFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
         controls.MoveObject(visibleFrameCopy, audioPlayer: null, soundRegistry: null);
 
         Assert.AreEqual(visibleFrameCopy.ObjectOffsets!.y, original.ObjectOffsets!.y, 0.001f,
@@ -111,7 +111,7 @@ public class TutorialSeederControlsTests
         visibleFrameCopy.ImpactStatus!.HasCrashed = true;
         visibleFrameCopy.ImpactStatus.ObjectName = "Lazer";
 
-        var nextFrameCopy = (_3dObject)Common3dObjectHelpers.DeepCopySingleObject(original);
+        var nextFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
         controls.MoveObject(nextFrameCopy, audioPlayer: null, soundRegistry: null);
 
         Assert.IsTrue(IsUsingCombatControls(controls));
