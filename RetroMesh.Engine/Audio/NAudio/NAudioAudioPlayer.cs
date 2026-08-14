@@ -1,8 +1,9 @@
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
-
 using System.Collections.Concurrent;
 using System.Threading;
+
+namespace RetroMesh.Engine;
 
 /// <summary>
 /// NAudio-based implementation of IAudioPlayer.

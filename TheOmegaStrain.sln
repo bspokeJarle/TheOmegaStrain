@@ -27,21 +27,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "3DSpesificsUnitTests", "3DS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtilities", "CommonUtilities\CommonUtilities.csproj", "{8D3F087E-742C-403A-97F2-E95BA74595D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameAudio", "GameAudio\GameAudio.csproj", "{568C8E62-ADEF-4FDF-B7A6-27FF04A3F293}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamIntegration", "SteamIntegration\SteamIntegration.csproj", "{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetroMesh.Engine", "RetroMesh.Engine\RetroMesh.Engine.csproj", "{B529BB92-B73F-4037-BAAD-135C5E67B7CA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheOmegaStrain.Benchmarks", "TheOmegaStrain.Benchmarks\TheOmegaStrain.Benchmarks.csproj", "{AA96E246-B22A-4E90-846A-12059132CA0A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3dTesting", "3dTesting", "{992AD986-0BB2-428D-B9D8-BD8462B1EF3A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheOmegaStrain.Runtime", "TheOmegaStrain.Runtime\TheOmegaStrain.Runtime.csproj", "{895DF255-46C1-4ED3-987D-5CD88069A7F6}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GameAi", "GameAi", "{6A11ADCA-25AE-C2D5-7629-22EC30612372}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3dRotations", "3dRotations", "{5496AD57-20C2-7729-479B-9825B93373D8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetroMesh.Engine.Tests", "RetroMesh.Engine.Tests\RetroMesh.Engine.Tests.csproj", "{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -125,18 +119,6 @@ Global
 		{8D3F087E-742C-403A-97F2-E95BA74595D5}.Release|x64.Build.0 = Release|Any CPU
 		{8D3F087E-742C-403A-97F2-E95BA74595D5}.Release|x86.ActiveCfg = Release|Any CPU
 		{8D3F087E-742C-403A-97F2-E95BA74595D5}.Release|x86.Build.0 = Release|Any CPU
-		{568C8E62-ADEF-4FDF-B7A6-27FF04A3F293}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{568C8E62-ADEF-4FDF-B7A6-27FF04A3F293}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{568C8E62-ADEF-4FDF-B7A6-27FF04A3F293}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{568C8E62-ADEF-4FDF-B7A6-27FF04A3F293}.Debug|x64.Build.0 = Debug|Any CPU
-		{568C8E62-ADEF-4FDF-B7A6-27FF04A3F293}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{568C8E62-ADEF-4FDF-B7A6-27FF04A3F293}.Debug|x86.Build.0 = Debug|Any CPU
-		{568C8E62-ADEF-4FDF-B7A6-27FF04A3F293}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{568C8E62-ADEF-4FDF-B7A6-27FF04A3F293}.Release|Any CPU.Build.0 = Release|Any CPU
-		{568C8E62-ADEF-4FDF-B7A6-27FF04A3F293}.Release|x64.ActiveCfg = Release|Any CPU
-		{568C8E62-ADEF-4FDF-B7A6-27FF04A3F293}.Release|x64.Build.0 = Release|Any CPU
-		{568C8E62-ADEF-4FDF-B7A6-27FF04A3F293}.Release|x86.ActiveCfg = Release|Any CPU
-		{568C8E62-ADEF-4FDF-B7A6-27FF04A3F293}.Release|x86.Build.0 = Release|Any CPU
 		{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -185,6 +167,18 @@ Global
 		{895DF255-46C1-4ED3-987D-5CD88069A7F6}.Release|x64.Build.0 = Release|Any CPU
 		{895DF255-46C1-4ED3-987D-5CD88069A7F6}.Release|x86.ActiveCfg = Release|Any CPU
 		{895DF255-46C1-4ED3-987D-5CD88069A7F6}.Release|x86.Build.0 = Release|Any CPU
+		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Debug|x64.Build.0 = Debug|Any CPU
+		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Debug|x86.Build.0 = Debug|Any CPU
+		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Release|x64.ActiveCfg = Release|Any CPU
+		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Release|x64.Build.0 = Release|Any CPU
+		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Release|x86.ActiveCfg = Release|Any CPU
+		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

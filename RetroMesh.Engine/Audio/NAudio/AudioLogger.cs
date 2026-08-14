@@ -1,5 +1,8 @@
 using System.Diagnostics;
 
+
+namespace RetroMesh.Engine;
+
 internal static class Logger
 {
     public static bool ShouldLog(bool enableLocalLogging) => enableLocalLogging;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
-namespace GameAudioInstances
+namespace RetroMesh.Engine
 {
     /// <summary>
     /// Simple ISoundRegistry implementation that loads all sound definitions

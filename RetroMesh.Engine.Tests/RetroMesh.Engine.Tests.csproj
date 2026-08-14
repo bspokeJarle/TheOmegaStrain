@@ -1,14 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>net10.0-windows7.0</TargetFramework>
-    <RootNamespace>_3DSpesificsUnitTests</RootNamespace>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>RetroMesh.Engine.Tests</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <OutputType>WinExe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,15 +17,5 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RetroMesh.Engine\RetroMesh.Engine.csproj" />
-    <ProjectReference Include="..\TheOmegaStrain.Runtime\TheOmegaStrain.Runtime.csproj" />
-    <ProjectReference Include="..\3dTesting\Frontend.csproj" />
-    <ProjectReference Include="..\3dRotations\3dSpesifics.csproj" />
-    <ProjectReference Include="..\GameAi\GameAiAndControls.csproj" />
-    <ProjectReference Include="..\SteamIntegration\SteamIntegration.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="MapAndOverlay\" />
-  </ItemGroup>
-
 </Project>

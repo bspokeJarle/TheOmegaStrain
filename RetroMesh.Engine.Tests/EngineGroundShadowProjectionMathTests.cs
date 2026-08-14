@@ -1,6 +1,5 @@
-using Domain;
 
-namespace _3DSpesificsUnitTests.Engine;
+namespace RetroMesh.Engine.Tests;
 
 [TestClass]
 public class EngineGroundShadowProjectionMathTests

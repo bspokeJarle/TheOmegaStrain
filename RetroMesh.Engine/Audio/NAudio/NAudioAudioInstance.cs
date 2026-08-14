@@ -3,6 +3,9 @@ using NAudio.Wave.SampleProviders;
 using System;
 using System.Numerics;
 
+
+namespace RetroMesh.Engine;
+
 /// <summary>
 /// NAudio-based implementation of IAudioInstance.
 /// Represents one active playback chain inside the mixer.

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="RetroMesh.Engine.Tests/RetroMesh.Engine.Tests.csproj" />
+  <Project Path="RetroMesh.Engine/RetroMesh.Engine.csproj" />
+</Solution>

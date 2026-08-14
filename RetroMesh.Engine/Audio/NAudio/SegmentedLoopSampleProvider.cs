@@ -1,5 +1,8 @@
 using NAudio.Wave;
 
+
+namespace RetroMesh.Engine;
+
 /// <summary>
 /// Plays a sound that has three conceptual sections: intro, loop, and end tail.
 /// The provider starts at <see cref="SoundSegments.Start"/>, loops between

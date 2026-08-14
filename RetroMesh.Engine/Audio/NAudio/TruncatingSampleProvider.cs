@@ -1,6 +1,9 @@
 using NAudio.Wave;
 using System;
 
+
+namespace RetroMesh.Engine;
+
 /// <summary>
 /// Wraps a sample provider and stops returning samples after a specified duration.
 /// Used by OneShot mode to play only a specific segment of an audio file.

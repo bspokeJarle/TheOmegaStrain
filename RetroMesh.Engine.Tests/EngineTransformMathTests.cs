@@ -1,7 +1,5 @@
-using Domain;
-using static Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Engine;
+namespace RetroMesh.Engine.Tests;
 
 [TestClass]
 public class EngineTransformMathTests
@@ -9,11 +7,11 @@ public class EngineTransformMathTests
     [TestMethod]
     public void GroundProjectionMath_InterpolatesYInsideTriangle()
     {
-        var triangle = new TriangleMeshWithColor
+        var triangle = new EngineTriangleMeshWithColor
         {
-            vert1 = new Vector3(0f, 10f, 0f),
-            vert2 = new Vector3(10f, 20f, 0f),
-            vert3 = new Vector3(0f, 30f, 10f)
+            vert1 = new EngineVector3(0f, 10f, 0f),
+            vert2 = new EngineVector3(10f, 20f, 0f),
+            vert3 = new EngineVector3(0f, 30f, 10f)
         };
 
         bool found = GroundProjectionMath.TryGetSurfaceGroundPoint(

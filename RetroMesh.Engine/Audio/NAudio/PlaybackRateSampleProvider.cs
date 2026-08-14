@@ -2,6 +2,9 @@ using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System;
 
+
+namespace RetroMesh.Engine;
+
 internal sealed class PlaybackRateSampleProvider : ISampleProvider
 {
     private const float MinPlaybackRate = 0.25f;

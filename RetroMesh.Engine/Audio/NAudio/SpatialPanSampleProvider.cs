@@ -1,6 +1,9 @@
 using System;
 using NAudio.Wave;
 
+
+namespace RetroMesh.Engine;
+
 /// <summary>
 /// Applies a simple stereo balance to an already-stereo sample stream.
 /// NAudio's built-in PanningSampleProvider expects mono input, while this project
