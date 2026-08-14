@@ -1,8 +1,8 @@
-using _3dRotations.Helpers;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using Domain;
 using GameAiAndControls.Helpers;
+using RetroMesh.Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -140,7 +140,7 @@ namespace TheOmegaStrain.Runtime.Collision
                     var centerA = GetCenterCached(inhabitant);
                     var centerB = GetCenterCached(otherInhabitant);
 
-                    double distance = _3dObjectHelpers.GetDistance(centerA, centerB);
+                    double distance = GeometryMath.GetDistance(centerA, centerB);
 
                     if (CommonUtilities.CommonSetup.EnemySetup.IsEnemyTypeValid(inhabitant.ObjectName) && distance < MaxCrashDistance * 2)
                     {

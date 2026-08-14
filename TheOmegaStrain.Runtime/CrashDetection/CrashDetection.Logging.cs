@@ -1,9 +1,9 @@
-using _3dRotations.Helpers;
-using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using Domain;
+using RetroMesh.Engine;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using static Domain._3dSpecificsImplementations;
 
@@ -64,30 +64,16 @@ namespace TheOmegaStrain.Runtime.Collision
         {
             if (!ShouldLogAny || points == null || points.Count == 0) return;
 
-            float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
-            float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
-
-            for (int i = 0; i < points.Count; i++)
-            {
-                var p = points[i];
-                if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
-                if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
-                if (p.z < minZ) minZ = p.z; if (p.z > maxZ) maxZ = p.z;
-            }
-
-            var center = new Vector3(
-                (minX + maxX) / 2f,
-                (minY + maxY) / 2f,
-                (minZ + maxZ) / 2f
-            );
+            var bounds = AabbBounds.FromPoints(points);
+            var center = CollisionBoxMath.GetCenter(bounds);
 
             static string F(float v) =>
                 v.ToString("0.##", CultureInfo.InvariantCulture);
 
             Logger.Log(title);
             Logger.Log(
-                $"  AABB Min=({F(minX)},{F(minY)},{F(minZ)}) " +
-                $"Max=({F(maxX)},{F(maxY)},{F(maxZ)}) " +
+                $"  AABB Min=({F(bounds.MinX)},{F(bounds.MinY)},{F(bounds.MinZ)}) " +
+                $"Max=({F(bounds.MaxX)},{F(bounds.MaxY)},{F(bounds.MaxZ)}) " +
                 $"Center=({F(center.x)},{F(center.y)},{F(center.z)})"
             );
 
@@ -126,7 +112,7 @@ namespace TheOmegaStrain.Runtime.Collision
             var calculated = obj.CalculatedCrashOffset ?? new Vector3(0, 0, 0);
             Logger.Log($"[SNAPSHOT] CalculatedCrashOffset: (x={calculated.x:0.##}, y={calculated.y:0.##}, z={calculated.z:0.##})");
 
-            var effectiveOffset = obj.GetEffectiveCrashOffset();
+            var effectiveOffset = CrashBoxTransform.GetEffectiveCrashOffset(obj, CreateVector);
             Logger.Log($"[SNAPSHOT] EffectiveCrashOffset: (x={effectiveOffset.x:0.##}, y={effectiveOffset.y:0.##}, z={effectiveOffset.z:0.##})");
 
             var crashBoxes = obj.CrashBoxes;
@@ -149,15 +135,15 @@ namespace TheOmegaStrain.Runtime.Collision
 
                 Logger.Log($"[SNAPSHOT] CrashBox[{i}] LOCAL:");
 
-                var localBox = ((System.Collections.IEnumerable)box).ToCrashWorldPoints(new Vector3(0, 0, 0));
-                ObjectPlacementHelpers.LogCrashboxAnalysis(
+                var localBox = CrashBoxTransform.ToCrashWorldPoints(box, new Vector3(0, 0, 0), CreateVector);
+                LogCrashboxAnalysis(
                     $"[SNAPSHOT] [FRAME:{numFrame}] {role}:{obj.ObjectName} Box[{i}] LOCAL",
                     localBox
                 );
 
-                var worldBox = ((System.Collections.IEnumerable)box).ToCrashWorldPoints(effectiveOffset);
+                var worldBox = CrashBoxTransform.ToCrashWorldPoints(box, effectiveOffset, CreateVector);
 
-                ObjectPlacementHelpers.LogCrashboxAnalysis(
+                LogCrashboxAnalysis(
                     $"[SNAPSHOT] [FRAME:{numFrame}] {role}:{obj.ObjectName} Box[{i}] WORLD (EffectiveCrashOffset)",
                     worldBox
                 );
@@ -165,6 +151,30 @@ namespace TheOmegaStrain.Runtime.Collision
                 var center = GetCenterOfBox(worldBox);
                 Logger.Log($"[SNAPSHOT] CrashBox[{i}] WORLD Center: (x={center.x:0.##}, y={center.y:0.##}, z={center.z:0.##})");
             }
+        }
+
+        private static void LogCrashboxAnalysis(string label, List<Vector3> box)
+        {
+            if (!ShouldLogAny || box == null || box.Count == 0)
+                return;
+
+            var bounds = AabbBounds.FromPoints(box);
+            var aabbCenter = CollisionBoxMath.GetCenter(bounds);
+            float avgX = box.Average(p => p.x);
+            float avgY = box.Average(p => p.y);
+            float avgZ = box.Average(p => p.z);
+
+            static string F(float v) => v.ToString("0.00", CultureInfo.InvariantCulture);
+
+            Logger.Log("--- " + label + " ---");
+            Logger.Log("Y-range: [" + F(bounds.MinY) + "-" + F(bounds.MaxY) + "], X-range: [" + F(bounds.MinX) + "-" + F(bounds.MaxX) + "], Z-range: [" + F(bounds.MinZ) + "-" + F(bounds.MaxZ) + "]");
+            Logger.Log("Center(AABB): (x=" + F(aabbCenter.x) + ", y=" + F(aabbCenter.y) + ", z=" + F(aabbCenter.z) + ")");
+            Logger.Log("Center(AVG):  (x=" + F(avgX) + ", y=" + F(avgY) + ", z=" + F(avgZ) + ")");
+
+            foreach (var p in box)
+                Logger.Log("(x=" + F(p.x) + ", y=" + F(p.y) + ", z=" + F(p.z) + ")");
+
+            Logger.Log("--- End of " + label + "---\n");
         }
     }
 }

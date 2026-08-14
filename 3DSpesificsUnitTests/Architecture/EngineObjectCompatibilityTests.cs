@@ -250,6 +250,38 @@ public class EngineObjectCompatibilityTests
         Assert.AreEqual(0, forbiddenHits.Count, string.Join(Environment.NewLine, forbiddenHits));
     }
 
+    [TestMethod]
+    public void RuntimeCrashDetectionSource_DoesNotUseRotationHelperMathDirectly()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var crashDetectionDirectory = Path.Combine(repositoryRoot, "TheOmegaStrain.Runtime", "CrashDetection");
+        var forbiddenHits = Directory
+            .EnumerateFiles(crashDetectionDirectory, "*.cs", SearchOption.AllDirectories)
+            .SelectMany(path => File
+                .ReadLines(path)
+                .Select((line, index) => new { path, line, lineNumber = index + 1 }))
+            .Where(hit =>
+                hit.line.Contains("using _3dRotations.Helpers", StringComparison.Ordinal) ||
+                hit.line.Contains("CommonUtilities.OmegaEngineAdapters", StringComparison.Ordinal) ||
+                hit.line.Contains("_3dObjectHelpers", StringComparison.Ordinal) ||
+                hit.line.Contains("ObjectPlacementHelpers", StringComparison.Ordinal) ||
+                IsForbiddenCrashExtensionCall(hit.line))
+            .Select(hit => $"{Path.GetRelativePath(repositoryRoot, hit.path)}:{hit.lineNumber}: {hit.line.Trim()}")
+            .ToList();
+
+        Assert.AreEqual(0, forbiddenHits.Count, string.Join(Environment.NewLine, forbiddenHits));
+    }
+
+    private static bool IsForbiddenCrashExtensionCall(string line)
+    {
+        if (line.Contains("CrashBoxTransform.", StringComparison.Ordinal))
+            return false;
+
+        return line.Contains(".GetEffectiveCrashOffset(", StringComparison.Ordinal) ||
+               line.Contains(".ToCrashWorldPoints(", StringComparison.Ordinal) ||
+               line.Contains(".GetAllCrashPointsWorld(", StringComparison.Ordinal);
+    }
+
     private static List<string> FindForbiddenSourceHits(string repositoryRoot, string projectDirectory)
     {
         return Directory

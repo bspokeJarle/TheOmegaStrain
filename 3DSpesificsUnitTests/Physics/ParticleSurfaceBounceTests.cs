@@ -5,7 +5,7 @@ using Domain;
 using GameAiAndControls.Controls;
 using System.Reflection;
 using _3dRotations.Helpers;
-using TheOmegaStrain.Runtime.Collision;
+using RetroMesh.Engine;
 using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.Physics;
@@ -13,27 +13,6 @@ namespace _3DSpesificsUnitTests.Physics;
 [TestClass]
 public class ParticleSurfaceBounceTests
 {
-    // Mirror of CrashDetection.EstimateDirectionFromSurface for testability.
-    private static ImpactDirection EstimateDirectionFromSurface(Vector3 point, Vector3 min, Vector3 max)
-    {
-        var center = new Vector3
-        {
-            x = (min.x + max.x) / 2,
-            y = (min.y + max.y) / 2,
-            z = (min.z + max.z) / 2
-        };
-        float dx = point.x - center.x;
-        float dy = point.y - center.y;
-        float dz = point.z - center.z;
-
-        if (Math.Abs(dy) > Math.Abs(dx) && Math.Abs(dy) > Math.Abs(dz))
-            return dy < 0 ? ImpactDirection.Top : ImpactDirection.Bottom;
-        else if (Math.Abs(dx) > Math.Abs(dz))
-            return dx > 0 ? ImpactDirection.Right : ImpactDirection.Left;
-        else
-            return ImpactDirection.Center;
-    }
-
     /// <summary>
     /// Simulates a particle falling toward a surface crashbox using the real Physics engine.
     /// Returns the Y position at the moment the particle center enters the AABB (collision frame),
@@ -384,12 +363,12 @@ public class ParticleSurfaceBounceTests
 
         Assert.AreEqual(
             ImpactDirection.Top,
-            InvokeEstimateParticleDirectionFromVelocity(fallingParticle, ImpactDirection.Left),
+            CollisionDirectionMath.EstimateDirectionFromVisibleMovement(fallingParticle.Physics!.Velocity, ImpactDirection.Left),
             "A visibly falling particle should bounce from the top even if AABB penetration estimates a side.");
 
         Assert.AreEqual(
             ImpactDirection.Bottom,
-            InvokeEstimateParticleDirectionFromVelocity(upwardParticle, ImpactDirection.Left),
+            CollisionDirectionMath.EstimateDirectionFromVisibleMovement(upwardParticle.Physics!.Velocity, ImpactDirection.Left),
             "A visibly upward particle should bounce from the underside.");
     }
 
@@ -419,18 +398,6 @@ public class ParticleSurfaceBounceTests
 
         Assert.IsNotNull(method);
         method!.Invoke(null, new object[] { particle, deltaTime, frameScale });
-    }
-
-    private static ImpactDirection InvokeEstimateParticleDirectionFromVelocity(
-        Particle particle,
-        ImpactDirection fallback)
-    {
-        var method = typeof(CrashDetection).GetMethod(
-            "EstimateParticleDirectionFromVelocity",
-            BindingFlags.NonPublic | BindingFlags.Static);
-
-        Assert.IsNotNull(method);
-        return (ImpactDirection)method!.Invoke(null, new object[] { particle, fallback })!;
     }
 
     private static ImpactDirection? InvokeResolveParticleBounceDirection(Particle particle)

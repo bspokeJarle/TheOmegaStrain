@@ -8,6 +8,7 @@ using _3dRotations.World.Objects;
 using _3dRotations.Helpers;
 using TheOmegaStrain.Runtime.Collision;
 using GameAiAndControls.Controls;
+using RetroMesh.Engine;
 using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.Physics;
@@ -20,15 +21,11 @@ public class ShipSurfaceLandingTests
         "_lastStaticCheck",
         BindingFlags.Static | BindingFlags.NonPublic)!;
 
-    // Mirror of CrashDetection.EstimateDirection (private) for testability.
     private static ImpactDirection EstimateDirection(float dx, float dy, float dz)
     {
-        if (Math.Abs(dy) > Math.Abs(dx) && Math.Abs(dy) > Math.Abs(dz))
-            return dy < 0 ? ImpactDirection.Top : ImpactDirection.Bottom;
-        else if (Math.Abs(dx) > Math.Abs(dz))
-            return dx > 0 ? ImpactDirection.Right : ImpactDirection.Left;
-        else
-            return ImpactDirection.Center;
+        return CollisionDirectionMath.EstimateDirection(
+            new Vector3 { x = dx, y = dy, z = dz },
+            new Vector3());
     }
 
     // ShipRestingScreenY mirrors the formula in ShipControls.

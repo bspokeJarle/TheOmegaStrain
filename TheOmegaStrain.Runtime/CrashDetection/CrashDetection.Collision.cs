@@ -1,9 +1,6 @@
-using _3dRotations.Helpers;
-using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using Domain;
 using RetroMesh.Engine;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -35,32 +32,14 @@ namespace TheOmegaStrain.Runtime.Collision
                     var worldOtherPoints = GetWorldBoxPointsCached(other, ob, otherBox);
                     if (worldOtherPoints.Count == 0) continue;
 
-                    float oMinX = float.MaxValue, oMinY = float.MaxValue, oMinZ = float.MaxValue;
-                    float oMaxX = float.MinValue, oMaxY = float.MinValue, oMaxZ = float.MinValue;
-
-                    for (int i = 0; i < worldOtherPoints.Count; i++)
+                    if (CollisionBoxMath.ContainsPoint(worldOtherPoints, center, out var otherBounds))
                     {
-                        var p = worldOtherPoints[i];
+                        var min = new Vector3(otherBounds.MinX, otherBounds.MinY, otherBounds.MinZ);
+                        var max = new Vector3(otherBounds.MaxX, otherBounds.MaxY, otherBounds.MaxZ);
 
-                        float x = p.x;
-                        float y = p.y;
-                        float z = p.z;
-
-                        if (x < oMinX) oMinX = x; if (x > oMaxX) oMaxX = x;
-                        if (y < oMinY) oMinY = y; if (y > oMaxY) oMaxY = y;
-                        if (z < oMinZ) oMinZ = z; if (z > oMaxZ) oMaxZ = z;
-                    }
-
-                    if (center.x >= oMinX && center.x <= oMaxX &&
-                        center.y >= oMinY && center.y <= oMaxY &&
-                        center.z >= oMinZ && center.z <= oMaxZ)
-                    {
-                        var min = new Vector3(oMinX, oMinY, oMinZ);
-                        var max = new Vector3(oMaxX, oMaxY, oMaxZ);
-
-                        var direction = EstimateDirectionFromSurface(center, min, max);
-                        var particleDirection = EstimateParticleDirectionFromVelocity(
-                            particle.ImpactStatus.SourceParticle,
+                        var direction = CollisionDirectionMath.EstimateDirectionFromAabb(center, min, max);
+                        var particleDirection = CollisionDirectionMath.EstimateDirectionFromVisibleMovement(
+                            particle.ImpactStatus.SourceParticle?.Physics?.Velocity,
                             direction);
 
                         particle.ImpactStatus.HasCrashed = true;
@@ -139,11 +118,11 @@ namespace TheOmegaStrain.Runtime.Collision
 
                     if (safeBoxB.Count == 0) continue;
 
-                    if (_3dObjectHelpers.CheckCollisionBoxVsBox(safeBoxA, safeBoxB, a.ObjectName, b.ObjectName))
+                    if (CheckCollisionBoxVsBox(safeBoxA, safeBoxB, a.ObjectName, b.ObjectName))
                     {
                         var centerA = GetCenterOfBox(safeBoxA);
                         var centerB = GetCenterOfBox(safeBoxB);
-                        var centerDistance = (float)_3dObjectHelpers.GetDistance(centerA, centerB);
+                        var centerDistance = (float)GeometryMath.GetDistance(centerA, centerB);
                         bool isKamikazeShipPair =
                             (a.ObjectName == "KamikazeDrone" && b.ObjectName == "Ship") ||
                             (a.ObjectName == "Ship" && b.ObjectName == "KamikazeDrone");
@@ -169,14 +148,14 @@ namespace TheOmegaStrain.Runtime.Collision
                         if (!aWasAlreadyCrashed || !IsCombatCollisionName(a.ImpactStatus.ObjectName))
                         {
                             a.ImpactStatus.ObjectName = b.ObjectName;
-                            a.ImpactStatus.ImpactDirection = EstimateDirection(centerA, centerB);
+                            a.ImpactStatus.ImpactDirection = CollisionDirectionMath.EstimateDirection(centerA, centerB);
                             a.ImpactStatus.CrashBoxName = a.CrashBoxNames != null && ai < a.CrashBoxNames.Count ? a.CrashBoxNames[ai] : null;
                         }
 
                         if (!bWasAlreadyCrashed || !IsCombatCollisionName(b.ImpactStatus.ObjectName))
                         {
                             b.ImpactStatus.ObjectName = a.ObjectName;
-                            b.ImpactStatus.ImpactDirection = EstimateDirection(centerB, centerA);
+                            b.ImpactStatus.ImpactDirection = CollisionDirectionMath.EstimateDirection(centerB, centerA);
                             b.ImpactStatus.CrashBoxName = b.CrashBoxNames != null && bi < b.CrashBoxNames.Count ? b.CrashBoxNames[bi] : null;
                         }
 
@@ -247,7 +226,7 @@ namespace TheOmegaStrain.Runtime.Collision
             {
                 ai.ImpactStatus.HasCrashed = true;
                 ai.ImpactStatus.ObjectName = obstacle.ObjectName;
-                ai.ImpactStatus.ImpactDirection = EstimateDirection(aiCenter, obstacleCenter);
+                ai.ImpactStatus.ImpactDirection = CollisionDirectionMath.EstimateDirection(aiCenter, obstacleCenter);
                 ai.ImpactStatus.CrashBoxName = ai.CrashBoxNames != null && aiBoxIndex < ai.CrashBoxNames.Count ? ai.CrashBoxNames[aiBoxIndex] : null;
             }
 
@@ -292,7 +271,7 @@ namespace TheOmegaStrain.Runtime.Collision
 
                     var targetPos = target.WorldPosition as Vector3;
                     if (targetPos == null) continue;
-                    float distance = (float)_3dObjectHelpers.GetDistance(blastCenter, targetPos);
+                    float distance = (float)GeometryMath.GetDistance(blastCenter, targetPos);
 
                     if (distance <= blastRadius)
                     {
@@ -344,7 +323,7 @@ namespace TheOmegaStrain.Runtime.Collision
                     if (shipPosRaw == null) continue;
                     var shipPos = new Vector3 { x = shipPosRaw.x, y = shipPosRaw.y, z = shipPosRaw.z };
 
-                    float distance = (float)_3dObjectHelpers.GetDistance(blastCenter, shipPos);
+                    float distance = (float)GeometryMath.GetDistance(blastCenter, shipPos);
 
                     if (distance <= blastRadius)
                     {
@@ -360,97 +339,42 @@ namespace TheOmegaStrain.Runtime.Collision
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 GetCenterOfBox(List<Vector3> points)
         {
-            if (points == null || points.Count == 0)
-                return new Vector3();
+            var center = GeometryMath.GetCenterOfBox(points);
+            return new Vector3(center.x, center.y, center.z);
+        }
 
-            float minX = float.MaxValue, maxX = float.MinValue;
-            float minY = float.MaxValue, maxY = float.MinValue;
-            float minZ = float.MaxValue, maxZ = float.MinValue;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool CheckCollisionBoxVsBox(
+            List<Vector3> boxA,
+            List<Vector3> boxB,
+            string? nameA = null,
+            string? nameB = null)
+        {
+            float marginX = -GameSetup.CollisionMarginX;
+            float marginY = GameSetup.CollisionMarginY;
+            float marginZ = GameSetup.CollisionMarginZ;
 
-            foreach (var p in points)
+            bool overlaps = CollisionBoxMath.CheckAabbOverlap(
+                boxA,
+                boxB,
+                marginX,
+                marginY,
+                marginZ,
+                out var boundsA,
+                out var boundsB);
+
+            if (Logger.ShouldLog(LocalEnableLogging) && nameA != null && nameB != null)
             {
-                minX = Math.Min(minX, p.x);
-                maxX = Math.Max(maxX, p.x);
-
-                minY = Math.Min(minY, p.y);
-                maxY = Math.Max(maxY, p.y);
-
-                minZ = Math.Min(minZ, p.z);
-                maxZ = Math.Max(maxZ, p.z);
+                Logger.Log(
+                    $"AABBCHK {nameA} vs {nameB} | " +
+                    $"X:{CollisionBoxMath.RangesOverlap(boundsA.MinX, boundsA.MaxX, boundsB.MinX, boundsB.MaxX, marginX)} " +
+                    $"Y:{CollisionBoxMath.RangesOverlap(boundsA.MinY, boundsA.MaxY, boundsB.MinY, boundsB.MaxY, marginY)} " +
+                    $"Z:{CollisionBoxMath.RangesOverlap(boundsA.MinZ, boundsA.MaxZ, boundsB.MinZ, boundsB.MaxZ, marginZ)} | " +
+                    $"A[min=({boundsA.MinX:0.#},{boundsA.MinY:0.#},{boundsA.MinZ:0.#}) max=({boundsA.MaxX:0.#},{boundsA.MaxY:0.#},{boundsA.MaxZ:0.#})] " +
+                    $"B[min=({boundsB.MinX:0.#},{boundsB.MinY:0.#},{boundsB.MinZ:0.#}) max=({boundsB.MaxX:0.#},{boundsB.MaxY:0.#},{boundsB.MaxZ:0.#})]");
             }
 
-            return new Vector3
-            {
-                x = (minX + maxX) / 2f,
-                y = (minY + maxY) / 2f,
-                z = (minZ + maxZ) / 2f
-            };
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ImpactDirection EstimateDirectionFromSurface(Vector3 point, Vector3 min, Vector3 max)
-        {
-            var center = new Vector3
-            {
-                x = (min.x + max.x) / 2,
-                y = (min.y + max.y) / 2,
-                z = (min.z + max.z) / 2
-            };
-            float dx = point.x - center.x;
-            float dy = point.y - center.y;
-            float dz = point.z - center.z;
-
-            if (Math.Abs(dy) > Math.Abs(dx) && Math.Abs(dy) > Math.Abs(dz))
-                return dy < 0 ? ImpactDirection.Top : ImpactDirection.Bottom;
-            else if (Math.Abs(dx) > Math.Abs(dz))
-                return dx > 0 ? ImpactDirection.Right : ImpactDirection.Left;
-            else
-                return ImpactDirection.Center;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ImpactDirection EstimateParticleDirectionFromVelocity(
-            IParticle? sourceParticle,
-            ImpactDirection fallback)
-        {
-            var velocity = sourceParticle?.Physics?.Velocity;
-            if (velocity == null)
-                return fallback;
-
-            // Particle physics renders position movement as position -= velocity * frameScale.
-            // Use that visible movement direction instead of the already-penetrated AABB center.
-            float moveX = -velocity.x;
-            float moveY = -velocity.y;
-            float moveZ = -velocity.z;
-            float absX = Math.Abs(moveX);
-            float absY = Math.Abs(moveY);
-            float absZ = Math.Abs(moveZ);
-
-            if (absX < 0.001f && absY < 0.001f && absZ < 0.001f)
-                return fallback;
-
-            if (absY >= absX && absY >= absZ)
-                return moveY >= 0f ? ImpactDirection.Top : ImpactDirection.Bottom;
-
-            if (absX >= absZ)
-                return moveX >= 0f ? ImpactDirection.Left : ImpactDirection.Right;
-
-            return fallback;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ImpactDirection EstimateDirection(Vector3 from, Vector3 to)
-        {
-            float dx = from.x - to.x;
-            float dy = from.y - to.y;
-            float dz = from.z - to.z;
-
-            if (Math.Abs(dy) > Math.Abs(dx) && Math.Abs(dy) > Math.Abs(dz))
-                return dy < 0 ? ImpactDirection.Top : ImpactDirection.Bottom;
-            else if (Math.Abs(dx) > Math.Abs(dz))
-                return dx > 0 ? ImpactDirection.Right : ImpactDirection.Left;
-            else
-                return ImpactDirection.Center;
+            return overlaps;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

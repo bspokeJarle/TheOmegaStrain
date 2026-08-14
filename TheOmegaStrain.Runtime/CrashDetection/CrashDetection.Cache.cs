@@ -1,4 +1,3 @@
-using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonGlobalState;
 using Domain;
 using RetroMesh.Engine;
@@ -10,7 +9,6 @@ namespace TheOmegaStrain.Runtime.Collision
 {
     public static partial class CrashDetection
     {
-        private static readonly Dictionary<_3dObject, List<List<Vector3>>> RotatedBoxCache = new();
         private static readonly Dictionary<_3dObject, Vector3> OffsetCache = new();
         private static readonly Dictionary<_3dObject, List<Vector3>> WorldPointsCache = new();
         private static readonly Dictionary<_3dObject, Vector3> CenterCache = new();
@@ -117,6 +115,8 @@ namespace TheOmegaStrain.Runtime.Collision
             return false;
         }
 
+        private static Vector3 CreateVector(float x, float y, float z) => new(x, y, z);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Vector3 GetOffsetCached(_3dObject obj)
         {
@@ -127,7 +127,7 @@ namespace TheOmegaStrain.Runtime.Collision
             }
 
             CacheMisses++;
-            offset = obj.GetEffectiveCrashOffset();
+            offset = CrashBoxTransform.GetEffectiveCrashOffset(obj, CreateVector);
             OffsetCache[obj] = offset;
             return offset;
         }
@@ -143,7 +143,7 @@ namespace TheOmegaStrain.Runtime.Collision
 
             CacheMisses++;
             var offset = GetOffsetCached(obj);
-            points = obj.GetAllCrashPointsWorld(offset);
+            points = CrashBoxTransform.GetAllCrashPointsWorld(obj, offset, CreateVector);
             WorldPointsCache[obj] = points;
             return points;
         }
@@ -176,7 +176,7 @@ namespace TheOmegaStrain.Runtime.Collision
 
             CacheMisses++;
             var offset = GetOffsetCached(obj);
-            points = box.ToCrashWorldPoints(offset);
+            points = CrashBoxTransform.ToCrashWorldPoints(box, offset, CreateVector);
             WorldBoxCache[key] = points;
             return points;
         }
