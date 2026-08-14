@@ -9,6 +9,7 @@ using Domain;
 using GameAiAndControls.Audio.Services;
 using CommonUtilities.Input;
 using Gma.System.MouseKeyHook;
+using RetroMesh.Engine;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -1347,33 +1348,41 @@ namespace GameAiAndControls.Controls
             else
             {
                 var biomePhysics = BiomePhysicsSetup.CurrentProfile;
-                float rotationAcceleration = RotationAcceleration * biomePhysics.RotationAccelerationMultiplier;
-                if (_leftHeld) _yawVelocity -= rotationAcceleration * deltaTime;
-                if (_rightHeld) _yawVelocity += rotationAcceleration * deltaTime;
-                if (_upHeld) _pitchVelocity += rotationAcceleration * deltaTime;
-                if (_downHeld) _pitchVelocity -= rotationAcceleration * deltaTime;
-                float xboxRotationAcceleration = rotationAcceleration * XboxRotationAccelerationMultiplier;
-                if (_xboxYawInput != 0f) _yawVelocity += _xboxYawInput * xboxRotationAcceleration * deltaTime;
-                if (_xboxPitchInput != 0f) _pitchVelocity += _xboxPitchInput * xboxRotationAcceleration * deltaTime;
+                var rotationResult = PhysicsMotionMath.ApplyShipRotationInput(
+                    new ShipRotationInputState(
+                        _yawVelocity,
+                        _pitchVelocity,
+                        _yawAccumulator,
+                        _pitchAccumulator),
+                    new ShipRotationInputCommand(
+                        _leftHeld,
+                        _rightHeld,
+                        _upHeld,
+                        _downHeld,
+                        _xboxYawInput,
+                        _xboxPitchInput,
+                        inputSettings.ActiveControlScheme == ControlInputMode.XboxController),
+                    new ShipRotationInputSettings(
+                        RotationAcceleration,
+                        XboxRotationAccelerationMultiplier,
+                        RotationDrag,
+                        MaxRotationSpeed,
+                        XboxMaxRotationSpeedMultiplier),
+                    new PhysicsTuningProfile(
+                        biomePhysics.InertiaRetentionMultiplier,
+                        biomePhysics.ThrustMultiplier,
+                        biomePhysics.RotationAccelerationMultiplier,
+                        biomePhysics.RotationRetentionMultiplier),
+                    deltaTime,
+                    GameState.GameplayBaselineFps);
 
-                float rotationDragBase = Math.Clamp(
-                    RotationDrag * biomePhysics.RotationRetentionMultiplier,
-                    0.01f,
-                    0.999f);
-                float rotationDrag = GameState.ScaleDampingPer90Frame(rotationDragBase);
-                float maxRotationSpeed = inputSettings.ActiveControlScheme == ControlInputMode.XboxController
-                    ? MaxRotationSpeed * XboxMaxRotationSpeedMultiplier
-                    : MaxRotationSpeed;
-                _yawVelocity = MathF.Max(-maxRotationSpeed, MathF.Min(maxRotationSpeed, _yawVelocity)) * rotationDrag;
-                _pitchVelocity = MathF.Max(-maxRotationSpeed, MathF.Min(maxRotationSpeed, _pitchVelocity)) * rotationDrag;
+                _yawVelocity = rotationResult.State.YawVelocity;
+                _pitchVelocity = rotationResult.State.PitchVelocity;
+                _yawAccumulator = rotationResult.State.YawAccumulator;
+                _pitchAccumulator = rotationResult.State.PitchAccumulator;
 
-                _yawAccumulator += _yawVelocity * deltaTime;
-                _pitchAccumulator += _pitchVelocity * deltaTime;
-
-                int yawStep = (int)_yawAccumulator;
-                int pitchStep = (int)_pitchAccumulator;
-                if (yawStep != 0) { rotationZ += yawStep; _yawAccumulator -= yawStep; }
-                if (pitchStep != 0) { tilt += pitchStep; _pitchAccumulator -= pitchStep; }
+                if (rotationResult.YawStep != 0) rotationZ += rotationResult.YawStep;
+                if (rotationResult.PitchStep != 0) tilt += rotationResult.PitchStep;
             }
 
             // Gently return tilt toward level-flight angle when no pitch input is held.

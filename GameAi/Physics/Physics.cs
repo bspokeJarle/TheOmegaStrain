@@ -7,6 +7,7 @@ using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
 using Domain;
 using GameAiAndControls.Helpers;
+using RetroMesh.Engine;
 using static Domain._3dSpecificsImplementations;
 using CommonUtilities.CommonSetup;
 using static GameAiAndControls.Helpers.PhysicsHelpers;
@@ -64,7 +65,7 @@ namespace GameAiAndControls.Physics
         // -- Height limits --------------------------------------------
         public float CeilingHeight
         {
-            get => _ceilingHeightOverride ?? (ScreenSetup.screenSizeY * DefaultCeilingHeightScreenFactor - DefaultCeilingHeightReduction);
+            get => _ceilingHeightOverride ?? PhysicsMotionMath.CalculateCeilingHeight(ScreenSetup.screenSizeY, DefaultCeilingHeightScreenFactor, DefaultCeilingHeightReduction);
             set => _ceilingHeightOverride = value;
         }
 
@@ -73,7 +74,7 @@ namespace GameAiAndControls.Physics
         // when Physics is constructed before ScreenSetup.Initialize().
         public float MaxScreenDrop
         {
-            get => ScreenSetup.screenSizeY * 0.44f;
+            get => PhysicsMotionMath.CalculateMaxScreenDrop(ScreenSetup.screenSizeY, 0.44f);
             set { }
         }
 
@@ -96,7 +97,7 @@ namespace GameAiAndControls.Physics
         // when Physics is constructed before ScreenSetup.Initialize().
         public float AirborneSettleRate
         {
-            get => 2.0f / ScreenSetup.ScreenScaleY;
+            get => PhysicsMotionMath.CalculateAirborneSettleRate(ScreenSetup.ScreenScaleY);
             set { }
         }
 
@@ -109,145 +110,110 @@ namespace GameAiAndControls.Physics
         private float ApplyDragAndClamp(float inertia, float deltaTime)
         {
             var biomePhysics = BiomePhysicsSetup.CurrentProfile;
-            float speedRatio = MathF.Abs(inertia) / MaxInertia;
-            float drag = InertiaDrag * biomePhysics.InertiaRetentionMultiplier
-                         - DragSpeedScaling * speedRatio * speedRatio;
-            drag = Math.Clamp(drag, 0.01f, 0.99f);
-            float scaledDrag = MathF.Pow(drag, deltaTime * GameState.GameplayBaselineFps);
-            return Math.Clamp(inertia * scaledDrag, -MaxInertia, MaxInertia);
+            return PhysicsMotionMath.ApplyDragAndClamp(
+                inertia,
+                MaxInertia,
+                InertiaDrag,
+                biomePhysics.InertiaRetentionMultiplier,
+                deltaTime,
+                GameState.GameplayBaselineFps);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int ConsumeFrameCooldown(int frames, float deltaTime)
         {
-            float frameScale = deltaTime * GameState.GameplayBaselineFps;
-            return Math.Max(0, frames - Math.Max(1, (int)MathF.Round(frameScale)));
+            return PhysicsMotionMath.ConsumeFrameCooldown(
+                frames,
+                deltaTime,
+                GameState.GameplayBaselineFps);
+        }
+
+        private static Vector3 ToVector(IVector3 vector)
+        {
+            return new Vector3(vector.x, vector.y, vector.z);
         }
 
         // Applies drag to the current velocity and returns the updated position
         public IVector3 ApplyDragForce(IVector3 currentPosition, float deltaTime)
         {
-            float scaledDrag = MathF.Pow(1f - Friction, deltaTime * GameState.GameplayBaselineFps);
-            Velocity = PhysicsHelpers.Multiply(Velocity, scaledDrag);
-            return PhysicsHelpers.Add(currentPosition, PhysicsHelpers.Multiply(Velocity, deltaTime));
+            var step = PhysicsMotionMath.ApplyDragForce(
+                currentPosition,
+                Velocity,
+                Friction,
+                deltaTime,
+                GameState.GameplayBaselineFps);
+            Velocity = ToVector(step.Velocity);
+            return ToVector(step.Position);
         }
 
         // Applies gravity, acceleration and drag and returns the updated position
         public IVector3 ApplyForces(IVector3 currentPosition, float deltaTime)
         {
-            if (BounceCooldownFrames > 0)
-            {
-                BounceCooldownFrames = ConsumeFrameCooldown(BounceCooldownFrames, deltaTime);
-                return PhysicsHelpers.Add(currentPosition, PhysicsHelpers.Multiply(Velocity, deltaTime));
-            }
-
-            var gravityDir = new Vector3(0, 1, 0);
-            var gravityForce = PhysicsHelpers.Multiply(gravityDir, GravityStrength / Mass);
-            Velocity = PhysicsHelpers.Add(Velocity, PhysicsHelpers.Multiply(gravityForce, deltaTime));
-
-            Velocity = PhysicsHelpers.Add(Velocity, PhysicsHelpers.Multiply(Acceleration, deltaTime));
-            Velocity = PhysicsHelpers.Multiply(Velocity, MathF.Pow(1f - Friction, deltaTime * GameState.GameplayBaselineFps));
-
-            return PhysicsHelpers.Add(currentPosition, PhysicsHelpers.Multiply(Velocity, deltaTime));
+            var step = PhysicsMotionMath.ApplyForces(
+                currentPosition,
+                Velocity,
+                Acceleration,
+                BounceCooldownFrames,
+                GravityStrength,
+                Mass,
+                Friction,
+                deltaTime,
+                GameState.GameplayBaselineFps);
+            BounceCooldownFrames = step.BounceCooldownFrames;
+            Velocity = ToVector(step.Velocity);
+            return ToVector(step.Position);
         }
 
         // Applies only gravity to the object
         public IVector3 ApplyGravityForce(IVector3 currentPosition, float deltaTime)
         {
-            if (BounceCooldownFrames > 0)
-            {
-                BounceCooldownFrames = ConsumeFrameCooldown(BounceCooldownFrames, deltaTime);
-                return PhysicsHelpers.Add(currentPosition, PhysicsHelpers.Multiply(Velocity, deltaTime));
-            }
+            bool mutatesPosition = BounceCooldownFrames <= 0;
+            var step = PhysicsMotionMath.ApplyGravityForce(
+                currentPosition,
+                Velocity,
+                Acceleration,
+                BounceCooldownFrames,
+                GravityStrength,
+                deltaTime,
+                GameState.GameplayBaselineFps);
+            BounceCooldownFrames = step.BounceCooldownFrames;
+            Velocity = ToVector(step.Velocity);
 
-            float frameScale = deltaTime * GameState.GameplayBaselineFps;
+            if (!mutatesPosition)
+                return ToVector(step.Position);
 
-            // 1. Add acceleration (if the particle has it)
-            Velocity.x += Acceleration.x * frameScale;
-            Velocity.y += Acceleration.y * frameScale;
-            Velocity.z += Acceleration.z * frameScale;
-
-            // 2. Apply gravity on the Y axis (GravityStrength pulls down, minus since -Y is up)
-            Velocity.y -= GravityStrength * deltaTime;
-
-            // 3. Apply friction
-            float scaledFriction = MathF.Pow(0.95f, frameScale);
-            Velocity.x *= scaledFriction;
-            Velocity.y *= scaledFriction;
-            Velocity.z *= scaledFriction;
-
-            // 4. Move position opposite to velocity
-            currentPosition.x -= Velocity.x * frameScale;
-            currentPosition.y -= Velocity.y * frameScale;
-            currentPosition.z -= Velocity.z * frameScale;
-
+            currentPosition.x = step.Position.x;
+            currentPosition.y = step.Position.y;
+            currentPosition.z = step.Position.z;
             return currentPosition;
         }
 
         // Applies thrust to the object in a specific direction
         public IVector3 ApplyThrust(IVector3 currentPosition, IVector3 direction, float deltaTime)
         {
-            if (BounceCooldownFrames > 0)
-            {
-                BounceCooldownFrames = ConsumeFrameCooldown(BounceCooldownFrames, deltaTime);
-                return PhysicsHelpers.Add(currentPosition, PhysicsHelpers.Multiply(Velocity, deltaTime));
-            }
-
-            if (Thrust <= 0) return currentPosition;
-
-            var thrustDir = PhysicsHelpers.Normalize(direction);
-            var thrustForce = PhysicsHelpers.Multiply(thrustDir, Thrust / Mass);
-
-            Velocity = PhysicsHelpers.Add(
+            var step = PhysicsMotionMath.ApplyThrust(
+                currentPosition,
                 Velocity,
-                PhysicsHelpers.Multiply(thrustForce, deltaTime)
-            );
-
-            var speed = PhysicsHelpers.Length(Velocity);
-            if (speed > MaxSpeed)
-            {
-                Velocity = PhysicsHelpers.Multiply(
-                    PhysicsHelpers.Normalize(Velocity),
-                    MaxSpeed
-                );
-            }
-
-            return PhysicsHelpers.Add(currentPosition, PhysicsHelpers.Multiply(Velocity, deltaTime));
+                direction,
+                BounceCooldownFrames,
+                Thrust,
+                Mass,
+                MaxSpeed,
+                deltaTime,
+                GameState.GameplayBaselineFps);
+            BounceCooldownFrames = step.BounceCooldownFrames;
+            Velocity = ToVector(step.Velocity);
+            return ToVector(step.Position);
         }
 
         // Reflects velocity along a surface normal and applies energy loss
         public void Bounce(Vector3 normal, ImpactDirection? direction = null)
         {
-            if (direction.HasValue)
-            {
-                normal = direction.Value switch
-                {
-                    ImpactDirection.Top => new Vector3(0, -1, 0),
-                    ImpactDirection.Bottom => new Vector3(0, 1, 0),
-                    ImpactDirection.Left => new Vector3(-1, 0, 0),
-                    ImpactDirection.Right => new Vector3(1, 0, 0),
-                    ImpactDirection.Center => new Vector3(0, -1, 0),
-                    _ => normal
-                };
-            }
-
-            // Bounce on Y axis (Top/Bottom)
-            if (normal.y != 0)
-            {
-                Velocity.y = -Velocity.y * EnergyLossFactor;
-            }
-
-            // Bounce on X axis (Left/Right)
-            if (normal.x != 0)
-            {
-                Velocity.x = -Velocity.x * EnergyLossFactor;
-            }
-
-            // Bounce on Z axis (for front/back hits, if needed)
-            if (normal.z != 0)
-            {
-                Velocity.z = -Velocity.z * EnergyLossFactor;
-            }
+            Velocity = ToVector(PhysicsMotionMath.BounceVelocity(
+                Velocity,
+                normal,
+                direction,
+                EnergyLossFactor));
 
             BounceCooldownFrames = 3;
         }
@@ -257,18 +223,10 @@ namespace GameAiAndControls.Physics
         // Returns a damped copy of the input rotation vector.
         public IVector3 ApplyRotationDragForce(IVector3 rotationVector)
         {
-            const float RotationalDamping = 0.94f;
-            float biomeDamping = Math.Clamp(
-                RotationalDamping * BiomePhysicsSetup.CurrentProfile.RotationRetentionMultiplier,
-                0.01f,
-                0.999f);
-            float scaledDamping = GameState.ScaleDampingPer90Frame(biomeDamping);
-            return new Vector3
-            {
-                x = rotationVector.x * scaledDamping,
-                y = rotationVector.y * scaledDamping,
-                z = rotationVector.z * scaledDamping
-            };
+            return ToVector(PhysicsMotionMath.ApplyRotationDragForce(
+                rotationVector,
+                BiomePhysicsSetup.CurrentProfile.RotationRetentionMultiplier,
+                GameState.FrameScale90));
         }
 
         // Gently returns tilt toward neutral (x?0) when no pitch input is applied.
@@ -277,37 +235,32 @@ namespace GameAiAndControls.Physics
 
         public void TiltStabilization(ref IVector3 tiltState)
         {
-            float scaledRate = 1f - MathF.Pow(1f - StabilizationRate, GameState.FrameScale90);
-            tiltState.x -= tiltState.x * scaledRate;
+            tiltState.x = PhysicsMotionMath.StabilizeTiltX(tiltState.x, GameState.FrameScale90);
         }
 
         // Applies gravity when falling (no thrust). Returns updated InertiaY.
         // Gravity is scaled by the hover ramp: near-zero during float, then gradually increasing.
         public float ApplyFallGravity(float rotationDegrees, float deltaTime)
         {
-            HoverElapsed += deltaTime;
-            float gravityScale = GetHoverGravityScale();
+            var step = PhysicsMotionMath.ApplyFallGravity(
+                InertiaY,
+                HoverElapsed,
+                GravityAcceleration,
+                GravityPullMultiplier,
+                HoverFloatDuration,
+                HoverRampDuration,
+                HoverMinGravityScale,
+                InertiaDrag,
+                MaxInertia,
+                BiomePhysicsSetup.CurrentProfile.InertiaRetentionMultiplier,
+                rotationDegrees,
+                deltaTime,
+                GameState.GameplayBaselineFps);
 
-            float rotationRad = (rotationDegrees % 180) * DEG2RAD;
-            float gravityModifier = Math.Clamp(MathF.Sin(rotationRad), 0.3f, 1.0f);
-            float gravityPull = GravityAcceleration * gravityModifier * GravityPullMultiplier * gravityScale * deltaTime;
-
-            InertiaY = ApplyDragAndClamp(InertiaY - gravityPull, deltaTime);
-            FallVelocity = MathF.Max(-InertiaY, 0f);
+            InertiaY = step.InertiaY;
+            FallVelocity = step.FallVelocity;
+            HoverElapsed = step.HoverElapsed;
             return InertiaY;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private float GetHoverGravityScale()
-        {
-            if (HoverElapsed < HoverFloatDuration)
-                return HoverMinGravityScale;
-
-            float rampElapsed = HoverElapsed - HoverFloatDuration;
-            if (rampElapsed >= HoverRampDuration)
-                return 1f;
-
-            return HoverMinGravityScale + (1f - HoverMinGravityScale) * (rampElapsed / HoverRampDuration);
         }
 
         public void ResetHover() => HoverElapsed = 0f;
@@ -315,9 +268,11 @@ namespace GameAiAndControls.Physics
         // Retained for IPhysics contract — no longer called by ship controls
         public void ReduceFallWithThrust(float thrust, float rotationDegrees, float deltaTime)
         {
-            float upwardFactor = MathF.Cos(rotationDegrees * DEG2RAD);
-            float thrustLift = thrust * upwardFactor * 0.75f * deltaTime;
-            FallVelocity = Math.Max(FallVelocity - thrustLift, 0f);
+            FallVelocity = PhysicsMotionMath.ReduceFallWithThrust(
+                FallVelocity,
+                thrust,
+                rotationDegrees,
+                deltaTime);
         }
 
         // Calculates thrust on all three axes with continuous gravity. Returns updated InertiaY.
@@ -327,54 +282,53 @@ namespace GameAiAndControls.Physics
         public float CalculateThrustForces(float thrust, float tiltDegrees, float rotationDegrees, float deltaTime)
         {
             var biomePhysics = BiomePhysicsSetup.CurrentProfile;
-            float effectiveThrust = thrust * biomePhysics.ThrustMultiplier;
+            var step = PhysicsMotionMath.CalculateThrustForces(
+                InertiaX,
+                InertiaY,
+                InertiaZ,
+                ThrustEffect,
+                VerticalLiftFactor,
+                thrust,
+                tiltDegrees,
+                rotationDegrees,
+                biomePhysics.ThrustMultiplier,
+                GravityAcceleration,
+                GravityPullMultiplier,
+                ThrustSpeedMultiplier,
+                ThrustHeightMultiplier,
+                ThrustRampRate,
+                VerticalLiftRate,
+                VerticalThrustSmoothing,
+                InertiaDrag,
+                MaxInertia,
+                biomePhysics.InertiaRetentionMultiplier,
+                deltaTime,
+                GameState.GameplayBaselineFps);
 
-            ThrustEffect = MathF.Min(ThrustEffect + ThrustRampRate * deltaTime, 1f);
-            VerticalLiftFactor = MathF.Min(VerticalLiftFactor + VerticalLiftRate * deltaTime, 1f);
-
-            float tiltRad = tiltDegrees * DEG2RAD;
-            float rotationRad = rotationDegrees * DEG2RAD;
-
-            float upwardFactor = MathF.Cos(tiltRad);   // +1 upright, 0 sideways, -1 inverted
-            float forwardFactor = MathF.Sin(tiltRad);
-            float dirX = MathF.Sin(rotationRad);
-            float dirZ = MathF.Cos(rotationRad);
-
-            // Horizontal forces — projected onto world X/Z axes
-            float horizontalForce = effectiveThrust * ThrustEffect * ThrustSpeedMultiplier * forwardFactor * deltaTime;
-            InertiaX = ApplyDragAndClamp(InertiaX + horizontalForce * dirX, deltaTime);
-            InertiaZ = ApplyDragAndClamp(InertiaZ - horizontalForce * dirZ, deltaTime);
-
-            // Vertical thrust — angle-dependent (negative when inverted pushes into ground)
-            float verticalThrust = effectiveThrust * ThrustEffect * VerticalLiftFactor * ThrustHeightMultiplier
-                                 * upwardFactor * VerticalThrustSmoothing * deltaTime;
-            float gravityPull = GravityAcceleration * GravityPullMultiplier * VerticalLiftFactor * deltaTime;
-
-            InertiaY = ApplyDragAndClamp(InertiaY + verticalThrust - gravityPull, deltaTime);
-            FallVelocity = MathF.Max(-InertiaY, 0f);
+            InertiaX = step.InertiaX;
+            InertiaY = step.InertiaY;
+            InertiaZ = step.InertiaZ;
+            FallVelocity = step.FallVelocity;
+            ThrustEffect = step.ThrustEffect;
+            VerticalLiftFactor = step.VerticalLiftFactor;
             return InertiaY;
         }
 
         public float CalculateCurrentSpeed(bool isLanded)
         {
-            float horizontalSpeed = MathF.Sqrt(InertiaX * InertiaX + InertiaZ * InertiaZ);
-            float verticalSpeed = isLanded ? 0f : MathF.Abs(InertiaY);
-            return horizontalSpeed + verticalSpeed;
+            return PhysicsMotionMath.CalculateCurrentSpeed(InertiaX, InertiaY, InertiaZ, isLanded);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public float ClampToHeightRange(float value) => Math.Clamp(value, FloorHeight, CeilingHeight);
+        public float ClampToHeightRange(float value) => PhysicsMotionMath.ClampToHeightRange(value, FloorHeight, CeilingHeight);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public float ClampToScreenDrop(float value) => MathF.Min(value, MaxScreenDrop);
+        public float ClampToScreenDrop(float value) => PhysicsMotionMath.ClampToScreenDrop(value, MaxScreenDrop);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float WrapPosition(float position, float diff, float minValue, float maxValue)
         {
-            float newPos = position + diff;
-            if (newPos >= maxValue) return minValue;
-            if (newPos <= minValue) return maxValue;
-            return newPos;
+            return PhysicsMotionMath.WrapPosition(position, diff, minValue, maxValue);
         }
 
         private class ExplodingTriangle
