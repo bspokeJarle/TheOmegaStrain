@@ -5,7 +5,7 @@ using Domain;
 using GameAiAndControls.Controls.MotherShipSmallControls;
 using GameAiAndControls.Helpers;
 using _3dRotations.Helpers;
-using _3dTesting.Helpers;
+using TheOmegaStrain.Runtime.Collision;
 using System.Reflection;
 using static Domain._3dSpecificsImplementations;
 

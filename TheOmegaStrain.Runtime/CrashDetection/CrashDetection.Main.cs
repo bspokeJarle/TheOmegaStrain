@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3dTesting.Helpers
+namespace TheOmegaStrain.Runtime.Collision
 {
     public static partial class CrashDetection
     {

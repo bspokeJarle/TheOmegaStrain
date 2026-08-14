@@ -2,13 +2,14 @@ using _3dRotations.Helpers;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
 using Domain;
+using RetroMesh.Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using static Domain._3dSpecificsImplementations;
 
-namespace _3dTesting.Helpers
+namespace TheOmegaStrain.Runtime.Collision
 {
     public static partial class CrashDetection
     {

@@ -5,7 +5,7 @@ using Domain;
 using GameAiAndControls.Controls;
 using System.Reflection;
 using _3dRotations.Helpers;
-using _3dTesting.Helpers;
+using TheOmegaStrain.Runtime.Collision;
 using static Domain._3dSpecificsImplementations;
 
 namespace _3DSpesificsUnitTests.Physics;

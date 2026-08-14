@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RetroMesh.Engine\RetroMesh.Engine.csproj" />
+    <ProjectReference Include="..\TheOmegaStrain.Runtime\TheOmegaStrain.Runtime.csproj" />
     <ProjectReference Include="..\3dTesting\Frontend.csproj" />
     <ProjectReference Include="..\3dRotations\3dSpesifics.csproj" />
     <ProjectReference Include="..\GameAi\GameAiAndControls.csproj" />

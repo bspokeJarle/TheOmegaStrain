@@ -1,7 +1,7 @@
 using _3dRotations.Helpers;
 using _3dRotations.Projection;
 using _3dRotations.World.Objects;
-using _3dTesting.Helpers;
+using TheOmegaStrain.Runtime.Collision;
 using CommonUtilities._3DHelpers;
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonGlobalState.States;
