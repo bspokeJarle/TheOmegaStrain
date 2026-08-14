@@ -105,8 +105,8 @@ namespace TheOmegaStrain.Runtime.Loops
         private const float VictoryRewardHoldSeconds = 1.25f;
         private PlanetRewardBreakdown? _victoryRewardBreakdown;
         private int _lastAppliedVictoryReward;
-        private static readonly HashSet<Type> movementDisposeNotImplementedTypes = new();
-        private static readonly object movementDisposeNotImplementedTypesLock = new();
+        private static readonly NotImplementedTypeDisposalGuard<IObjectMovement> movementDisposalGuard =
+            new(static movement => movement.Dispose());
 
         private readonly object _lock = new object();
         public I3dObject ShipCopy { get; set; }
@@ -734,31 +734,7 @@ namespace TheOmegaStrain.Runtime.Loops
 
         private static void CleanupWorldObjects(List<_3dObject> objects)
         {
-            foreach (var obj in objects)
-            {
-                TryDisposeMovement(obj);
-
-                if (obj.Particles != null)
-                {
-                    obj.Particles.Particles.Clear();
-                    obj.Particles = null;
-                }
-
-                if (obj.WeaponSystems != null)
-                {
-                    obj.WeaponSystems.ActiveWeapons.Clear();
-                    obj.WeaponSystems = null;
-                }
-
-                obj.CrashBoxes?.Clear();
-                obj.ObjectParts?.Clear();
-                obj.CalculatedCrashOffset = null;
-                obj.WorldPosition = null;
-                obj.ObjectOffsets = null;
-                obj.ParentSurface = null;
-                obj.Movement = null;
-                obj.ImpactStatus = null;
-            }
+            EngineObjectLifecycleCleaner.Cleanup(objects, ReleaseOmegaObjectResources);
         }
 
         public void StopNonMusicAudio()
@@ -798,34 +774,25 @@ namespace TheOmegaStrain.Runtime.Loops
             return $"liveSeeders={liveSeeders}; liveDrones={liveDrones}; liveMotherShips={liveMotherShips}; liveOtherEnemies={liveOtherEnemies}; gpsSeeders={gps.SeedersRemaining}; gpsDrones={gps.DronesRemaining}; gpsMotherShips={gps.MotherShipsRemaining}; initialSeeders={gps.InitialSeeders}; initialDrones={gps.InitialDrones}";
         }
 
-        private static void TryDisposeMovement(_3dObject obj)
+        private static void ReleaseOmegaObjectResources(_3dObject obj)
         {
-            var movement = obj?.Movement;
-            if (movement == null)
+            movementDisposalGuard.TryDispose(obj.Movement);
+
+            if (obj.Particles != null)
             {
-                return;
+                obj.Particles.Particles.Clear();
+                obj.Particles = null;
             }
 
-            var movementType = movement.GetType();
-            lock (movementDisposeNotImplementedTypesLock)
+            if (obj.WeaponSystems != null)
             {
-                if (movementDisposeNotImplementedTypes.Contains(movementType))
-                {
-                    return;
-                }
+                obj.WeaponSystems.ActiveWeapons.Clear();
+                obj.WeaponSystems = null;
             }
 
-            try
-            {
-                movement.Dispose();
-            }
-            catch (NotImplementedException)
-            {
-                lock (movementDisposeNotImplementedTypesLock)
-                {
-                    movementDisposeNotImplementedTypes.Add(movementType);
-                }
-            }
+            obj.ParentSurface = null;
+            obj.Movement = null;
+            obj.ImpactStatus = null;
         }
 
         /// <summary>

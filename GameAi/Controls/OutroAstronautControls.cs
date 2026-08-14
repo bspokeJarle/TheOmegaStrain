@@ -1,5 +1,6 @@
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
+using CommonUtilities.OmegaEngineAdapters;
 using Domain;
 using System;
 using System.Collections.Generic;
@@ -60,7 +61,7 @@ namespace GameAiAndControls.Controls
             _baseParts = new List<PartBasePose>(theObject.ObjectParts.Count);
             foreach (var part in theObject.ObjectParts)
             {
-                _baseParts.Add(new PartBasePose(part, CloneTriangles(part.Triangles)));
+                _baseParts.Add(new PartBasePose(part, OmegaObjectHelpers.CopyTriangles(part.Triangles)));
             }
 
             _revealCenter = CalculateCenter(_baseParts);
@@ -122,7 +123,7 @@ namespace GameAiAndControls.Controls
 
         private static List<ITriangleMeshWithColor> RotateAroundPivotY(List<ITriangleMeshWithColor> source, Vector3 pivot, float angleDegrees)
         {
-            var result = CloneTriangles(source);
+            var result = OmegaObjectHelpers.CopyTriangles(source);
             float radians = angleDegrees * MathF.PI / 180f;
             float cos = MathF.Cos(radians);
             float sin = MathF.Sin(radians);
@@ -198,29 +199,6 @@ namespace GameAiAndControls.Controls
                 return Math.Min(GameState.DeltaTime, 0.1f);
 
             return GameState.GameplayBaselineDeltaTime;
-        }
-
-        private static List<ITriangleMeshWithColor> CloneTriangles(List<ITriangleMeshWithColor> source)
-        {
-            var clone = new List<ITriangleMeshWithColor>(source.Count);
-            foreach (var triangle in source)
-            {
-                clone.Add(new TriangleMeshWithColor
-                {
-                    Color = triangle.Color,
-                    noHidden = triangle.noHidden,
-                    landBasedPosition = triangle.landBasedPosition,
-                    angle = triangle.angle,
-                    vert1 = CopyVector(triangle.vert1),
-                    vert2 = CopyVector(triangle.vert2),
-                    vert3 = CopyVector(triangle.vert3),
-                    normal1 = CopyVector(triangle.normal1),
-                    normal2 = CopyVector(triangle.normal2),
-                    normal3 = CopyVector(triangle.normal3)
-                });
-            }
-
-            return clone;
         }
 
         private static Vector3 CopyVector(IVector3 vector)

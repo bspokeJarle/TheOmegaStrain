@@ -75,4 +75,76 @@ public class EngineFrameRuntimeTests
         Assert.AreEqual(16d, FrameTimingMath.TicksToMilliseconds(16, 1000), 0.001d);
         Assert.AreEqual(0d, FrameTimingMath.TicksToMilliseconds(16, 0), 0.001d);
     }
+
+    [TestMethod]
+    public void CollisionPairScanner_CachesClassificationAndHandlesEachPair()
+    {
+        var scanner = new CollisionPairScanner<ScanObject, string>();
+        var objects = new List<ScanObject>
+        {
+            new("A"),
+            new("B"),
+            new("C")
+        };
+        int classifications = 0;
+        var handled = new List<string>();
+
+        scanner.Scan(
+            objects,
+            obj =>
+            {
+                classifications++;
+                return obj.Kind;
+            },
+            (in CollisionPairContext<ScanObject, string> context) =>
+                handled.Add(context.ClassificationA + context.ClassificationB));
+
+        CollectionAssert.AreEqual(new[] { "AB", "AC", "BC" }, handled);
+        Assert.AreEqual(3, classifications);
+        Assert.AreEqual(3, scanner.ClassificationCacheMisses);
+        Assert.AreEqual(3, scanner.ClassificationCacheHits);
+        Assert.AreEqual(3, scanner.PairsVisited);
+        Assert.AreEqual(3, scanner.PairsHandled);
+        Assert.AreEqual(0, scanner.PairsSkipped);
+    }
+
+    [TestMethod]
+    public void CollisionPairScanner_AppliesIncludePredicateAndPairFilter()
+    {
+        var scanner = new CollisionPairScanner<ScanObject, string>();
+        var objects = new List<ScanObject>
+        {
+            new("A"),
+            new("B", include: false),
+            new("C"),
+            new("D")
+        };
+        var handled = new List<string>();
+
+        scanner.Scan(
+            objects,
+            obj => obj.Kind,
+            (in CollisionPairContext<ScanObject, string> context) =>
+                handled.Add(context.ClassificationA + context.ClassificationB),
+            (in CollisionPairContext<ScanObject, string> context) =>
+                context.ClassificationA == "A" && context.ClassificationB == "D",
+            obj => obj.Include);
+
+        CollectionAssert.AreEqual(new[] { "AC", "CD" }, handled);
+        Assert.AreEqual(3, scanner.PairsVisited);
+        Assert.AreEqual(2, scanner.PairsHandled);
+        Assert.AreEqual(1, scanner.PairsSkipped);
+    }
+
+    private sealed class ScanObject
+    {
+        public ScanObject(string kind, bool include = true)
+        {
+            Kind = kind;
+            Include = include;
+        }
+
+        public string Kind { get; }
+        public bool Include { get; }
+    }
 }

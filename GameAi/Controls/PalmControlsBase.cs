@@ -1,5 +1,6 @@
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
+using CommonUtilities.OmegaEngineAdapters;
 using Domain;
 using System;
 using System.Collections.Generic;
@@ -127,7 +128,7 @@ namespace GameAiAndControls.Controls
                 if (part.PartName == null || !part.PartName.EndsWith("PalmLeaves", StringComparison.Ordinal))
                     continue;
 
-                var clone = CloneTriangles(part.Triangles);
+                var clone = OmegaObjectHelpers.CopyTriangles(part.Triangles);
                 _baseTrianglesByPart[part.PartName] = clone;
 
                 foreach (var triangle in clone)
@@ -146,30 +147,6 @@ namespace GameAiAndControls.Controls
             float radius = MathF.Sqrt(vertex.x * vertex.x + vertex.y * vertex.y);
             if (radius > _maxLeafRadius)
                 _maxLeafRadius = radius;
-        }
-
-        private static List<ITriangleMeshWithColor> CloneTriangles(List<ITriangleMeshWithColor> source)
-        {
-            var clone = new List<ITriangleMeshWithColor>(source.Count);
-
-            foreach (var triangle in source)
-            {
-                clone.Add(new TriangleMeshWithColor
-                {
-                    Color = triangle.Color,
-                    noHidden = triangle.noHidden,
-                    landBasedPosition = triangle.landBasedPosition,
-                    angle = triangle.angle,
-                    vert1 = CopyVector(triangle.vert1),
-                    vert2 = CopyVector(triangle.vert2),
-                    vert3 = CopyVector(triangle.vert3),
-                    normal1 = CopyVector(triangle.normal1),
-                    normal2 = CopyVector(triangle.normal2),
-                    normal3 = CopyVector(triangle.normal3)
-                });
-            }
-
-            return clone;
         }
 
         private static Vector3 CopyVector(IVector3 vector)

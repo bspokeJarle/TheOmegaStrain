@@ -1,5 +1,6 @@
 using CommonUtilities.CommonGlobalState;
 using CommonUtilities.CommonSetup;
+using CommonUtilities.OmegaEngineAdapters;
 using Domain;
 using System;
 using System.Collections.Generic;
@@ -134,7 +135,7 @@ namespace GameAiAndControls.Controls
                 if (part.PartName == null)
                     continue;
 
-                _baseTrianglesByPart[part.PartName] = CloneTriangles(part.Triangles);
+                _baseTrianglesByPart[part.PartName] = OmegaObjectHelpers.CopyTriangles(part.Triangles);
             }
 
             _baseInitialized = true;
@@ -146,29 +147,6 @@ namespace GameAiAndControls.Controls
                 return Math.Min(GameState.DeltaTime, 0.1f);
 
             return GameState.GameplayBaselineDeltaTime;
-        }
-
-        private static List<ITriangleMeshWithColor> CloneTriangles(List<ITriangleMeshWithColor> source)
-        {
-            var clone = new List<ITriangleMeshWithColor>(source.Count);
-            foreach (var triangle in source)
-            {
-                clone.Add(new TriangleMeshWithColor
-                {
-                    Color = triangle.Color,
-                    noHidden = triangle.noHidden,
-                    landBasedPosition = triangle.landBasedPosition,
-                    angle = triangle.angle,
-                    vert1 = CopyVector(triangle.vert1),
-                    vert2 = CopyVector(triangle.vert2),
-                    vert3 = CopyVector(triangle.vert3),
-                    normal1 = CopyVector(triangle.normal1),
-                    normal2 = CopyVector(triangle.normal2),
-                    normal3 = CopyVector(triangle.normal3)
-                });
-            }
-
-            return clone;
         }
 
         private static Vector3 CopyVector(IVector3 vector)

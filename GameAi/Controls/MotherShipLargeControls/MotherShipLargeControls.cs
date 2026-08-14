@@ -751,17 +751,17 @@ namespace GameAiAndControls.Controls.MotherShipMediumControls
             // Capture original (unrotated) triangle baselines on the very first call
             if (_leftEngineOriginalTris == null)
             {
-                _leftEngineOriginalTris  = CopyTriangles(theObject, "LeftEnginePod");
-                _rightEngineOriginalTris = CopyTriangles(theObject, "RightEnginePod");
-                _leftEngineGuideOriginalTris  = CopyTriangles(theObject, "LeftWingEngineGuide");
-                _rightEngineGuideOriginalTris = CopyTriangles(theObject, "RightWingEngineGuide");
-                _leftEngineStartOriginalTris  = CopyTriangles(theObject, "LeftWingEngineStart");
-                _rightEngineStartOriginalTris = CopyTriangles(theObject, "RightWingEngineStart");
-                _leftPodOriginalTris          = CopyTriangles(theObject, "LeftEnginePod");
-                _rightPodOriginalTris         = CopyTriangles(theObject, "RightEnginePod");
-                _leftConnectorOriginalTris    = CopyTriangles(theObject, "LeftPodConnector");
-                _rightConnectorOriginalTris   = CopyTriangles(theObject, "RightPodConnector");
-                _podNacelleVentsOriginalTris  = CopyTriangles(theObject, "PodNacelleVents");
+                _leftEngineOriginalTris  = OmegaObjectHelpers.CopyPartTriangles(theObject, "LeftEnginePod");
+                _rightEngineOriginalTris = OmegaObjectHelpers.CopyPartTriangles(theObject, "RightEnginePod");
+                _leftEngineGuideOriginalTris  = OmegaObjectHelpers.CopyPartTriangles(theObject, "LeftWingEngineGuide");
+                _rightEngineGuideOriginalTris = OmegaObjectHelpers.CopyPartTriangles(theObject, "RightWingEngineGuide");
+                _leftEngineStartOriginalTris  = OmegaObjectHelpers.CopyPartTriangles(theObject, "LeftWingEngineStart");
+                _rightEngineStartOriginalTris = OmegaObjectHelpers.CopyPartTriangles(theObject, "RightWingEngineStart");
+                _leftPodOriginalTris          = OmegaObjectHelpers.CopyPartTriangles(theObject, "LeftEnginePod");
+                _rightPodOriginalTris         = OmegaObjectHelpers.CopyPartTriangles(theObject, "RightEnginePod");
+                _leftConnectorOriginalTris    = OmegaObjectHelpers.CopyPartTriangles(theObject, "LeftPodConnector");
+                _rightConnectorOriginalTris   = OmegaObjectHelpers.CopyPartTriangles(theObject, "RightPodConnector");
+                _podNacelleVentsOriginalTris  = OmegaObjectHelpers.CopyPartTriangles(theObject, "PodNacelleVents");
 
                 // Pivot = centroid of the pod housing's own AABB — this is the wing-mount point.
                 if (_leftPodOriginalTris!.Count > 0)  _leftPodPivot  = GetPartCenter(_leftPodOriginalTris);
@@ -831,7 +831,7 @@ namespace GameAiAndControls.Controls.MotherShipMediumControls
         {
             if (_muzzleOriginalTris == null)
             {
-                _muzzleOriginalTris = CopyTriangles(theObject, "FrontCannonMuzzle");
+                _muzzleOriginalTris = OmegaObjectHelpers.CopyPartTriangles(theObject, "FrontCannonMuzzle");
             }
             if (_muzzleOriginalTris == null || _muzzleOriginalTris.Count == 0) return;
 
@@ -846,22 +846,6 @@ namespace GameAiAndControls.Controls.MotherShipMediumControls
             var atOrigin = TranslateMesh(_muzzleOriginalTris, new Vector3 { x = -pivot.x, y = -pivot.y, z = -pivot.z });
             var rotated  = _rotate.RotateXMesh(atOrigin, _muzzleSpinAngle);
             part.Triangles = TranslateMesh(rotated, pivot);
-        }
-
-        private static List<ITriangleMeshWithColor> CopyTriangles(I3dObject theObject, string partName)
-        {
-            var part = theObject.ObjectParts.Find(p => p.PartName == partName);
-            if (part?.Triangles == null) return new List<ITriangleMeshWithColor>();
-            var copy = new List<ITriangleMeshWithColor>(part.Triangles.Count);
-            foreach (var tri in part.Triangles)
-                copy.Add(new TriangleMeshWithColor
-                {
-                    Color = tri.Color, noHidden = tri.noHidden, angle = tri.angle,
-                    vert1 = new Vector3 { x = tri.vert1.x, y = tri.vert1.y, z = tri.vert1.z },
-                    vert2 = new Vector3 { x = tri.vert2.x, y = tri.vert2.y, z = tri.vert2.z },
-                    vert3 = new Vector3 { x = tri.vert3.x, y = tri.vert3.y, z = tri.vert3.z },
-                });
-            return copy;
         }
 
         private void ApplyEngineRotation(I3dObject theObject, string partName, List<ITriangleMeshWithColor>? originalTris)

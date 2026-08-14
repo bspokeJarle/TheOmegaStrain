@@ -9,6 +9,7 @@ namespace TheOmegaStrain.Runtime.Collision
 {
     public static partial class CrashDetection
     {
+        private static readonly CollisionPairScanner<_3dObject, ObjectTypeFlags> PairScanner = new();
         private static readonly CollisionFrameCache<_3dObject, Vector3> FrameCache = new();
         private static readonly Dictionary<_3dObject, ObjectTypeFlags> TypeFlagCache = new();
         private static int _cacheFrame = -1;
@@ -66,10 +67,14 @@ namespace TheOmegaStrain.Runtime.Collision
             }
 
             CacheMisses++;
-            var name = obj.ObjectName ?? string.Empty;
-            flags = new ObjectTypeFlags(name);
+            flags = CreateTypeFlags(obj);
             TypeFlagCache[obj] = flags;
             return flags;
+        }
+
+        private static ObjectTypeFlags CreateTypeFlags(_3dObject obj)
+        {
+            return new ObjectTypeFlags(obj.ObjectName ?? string.Empty);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -135,9 +140,11 @@ namespace TheOmegaStrain.Runtime.Collision
             return FrameCache.GetWorldBoxPoints(obj, boxIndex, box, CreateVector);
         }
 
-        private static int TotalCacheHits => CacheHits + FrameCache.CacheHits;
+        private static int TotalCacheHits =>
+            CacheHits + FrameCache.CacheHits + PairScanner.ClassificationCacheHits;
 
-        private static int TotalCacheMisses => CacheMisses + FrameCache.CacheMisses;
+        private static int TotalCacheMisses =>
+            CacheMisses + FrameCache.CacheMisses + PairScanner.ClassificationCacheMisses;
 
         public static bool IsStatic(string objectName) =>
             IsStaticName(objectName);

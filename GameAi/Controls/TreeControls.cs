@@ -1,4 +1,5 @@
 using Domain;
+using CommonUtilities.OmegaEngineAdapters;
 using CommonUtilities.CommonSetup;
 using System;
 using System.Collections.Generic;
@@ -128,7 +129,7 @@ namespace GameAiAndControls.Controls
             {
                 if (part.PartName != "TreeTrunk" && part.PartName != "TreeFoliage") continue;
 
-                var clone = CloneTriangles(part.Triangles);
+                var clone = OmegaObjectHelpers.CopyTriangles(part.Triangles);
                 _baseTrianglesByPart[part.PartName!] = clone;
 
                 foreach (var triangle in clone)
@@ -152,29 +153,6 @@ namespace GameAiAndControls.Controls
         {
             if (vertex.z < _minTreeZ) _minTreeZ = vertex.z;
             if (vertex.z > _maxTreeZ) _maxTreeZ = vertex.z;
-        }
-
-        private static List<ITriangleMeshWithColor> CloneTriangles(List<ITriangleMeshWithColor> source)
-        {
-            var clone = new List<ITriangleMeshWithColor>(source.Count);
-            foreach (var triangle in source)
-            {
-                clone.Add(new TriangleMeshWithColor
-                {
-                    Color = triangle.Color,
-                    noHidden = triangle.noHidden,
-                    landBasedPosition = triangle.landBasedPosition,
-                    angle = triangle.angle,
-                    vert1 = CopyVector(triangle.vert1),
-                    vert2 = CopyVector(triangle.vert2),
-                    vert3 = CopyVector(triangle.vert3),
-                    normal1 = CopyVector(triangle.normal1),
-                    normal2 = CopyVector(triangle.normal2),
-                    normal3 = CopyVector(triangle.normal3)
-                });
-            }
-
-            return clone;
         }
 
         private static Vector3 CopyVector(IVector3 vector)

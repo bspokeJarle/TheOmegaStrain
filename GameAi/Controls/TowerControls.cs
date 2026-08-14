@@ -151,7 +151,7 @@ namespace GameAiAndControls.Controls
             if (part == null)
                 return;
 
-            _originalTopPartMeshes[partName] = CloneTriangles(part.Triangles);
+            _originalTopPartMeshes[partName] = OmegaObjectHelpers.CopyTriangles(part.Triangles);
         }
 
         private void ApplyRotatedTriangles(I3dObjectPart part, Vector3 pivot)
@@ -161,7 +161,7 @@ namespace GameAiAndControls.Controls
             if (!_originalTopPartMeshes.TryGetValue(part.PartName, out var baseMesh))
                 return;
 
-            var source = CloneTriangles(baseMesh);
+            var source = OmegaObjectHelpers.CopyTriangles(baseMesh);
             TranslateMeshInPlace(source, -pivot.x, -pivot.y, 0f);
             var rotated = _rotate.RotateZMesh(source, TowerZRotation);
             TranslateMeshInPlace(rotated, pivot.x, pivot.y, 0f);
@@ -250,35 +250,6 @@ namespace GameAiAndControls.Controls
             vertex.x += shiftX;
             vertex.y += shiftY;
             vertex.z += shiftZ;
-        }
-
-        private static List<ITriangleMeshWithColor> CloneTriangles(List<ITriangleMeshWithColor> source)
-        {
-            var clone = new List<ITriangleMeshWithColor>(source.Count);
-            for (int i = 0; i < source.Count; i++)
-            {
-                var triangle = source[i];
-                clone.Add(new TriangleMeshWithColor
-                {
-                    Color = triangle.Color,
-                    noHidden = triangle.noHidden,
-                    landBasedPosition = triangle.landBasedPosition,
-                    angle = triangle.angle,
-                    vert1 = CopyVector(triangle.vert1),
-                    vert2 = CopyVector(triangle.vert2),
-                    vert3 = CopyVector(triangle.vert3),
-                    normal1 = CopyVector(triangle.normal1),
-                    normal2 = CopyVector(triangle.normal2),
-                    normal3 = CopyVector(triangle.normal3)
-                });
-            }
-
-            return clone;
-        }
-
-        private static Vector3 CopyVector(IVector3 vector)
-        {
-            return new Vector3 { x = vector.x, y = vector.y, z = vector.z };
         }
 
         public void ReleaseParticles()

@@ -5,6 +5,44 @@ namespace RetroMesh.Engine
 {
     public static class EngineObjectCloner
     {
+        public static void CopyRenderableObjects<TSource, TObject>(
+            IReadOnlyList<TSource> originals,
+            List<TObject> result,
+            Func<int, TObject> objectFactory,
+            Func<I3dObjectPart> objectPartFactory,
+            Func<ITriangleMeshWithColor> triangleFactory,
+            Func<IVector3, IVector3> vectorFactory,
+            bool copyCrashboxes,
+            Action<TSource, TObject>? copyAdditionalState = null)
+            where TSource : IRenderable3dObject
+            where TObject : IRenderable3dObject
+        {
+            if (originals == null)
+                throw new ArgumentNullException(nameof(originals));
+            if (result == null)
+                throw new ArgumentNullException(nameof(result));
+
+            result.Clear();
+
+            if (result.Capacity < originals.Count)
+                result.Capacity = originals.Count;
+
+            for (int i = 0; i < originals.Count; i++)
+            {
+                var original = originals[i];
+                var copy = CopyRenderableObject(
+                    original,
+                    objectFactory,
+                    objectPartFactory,
+                    triangleFactory,
+                    vectorFactory,
+                    copyCrashboxes);
+
+                copyAdditionalState?.Invoke(original, copy);
+                result.Add(copy);
+            }
+        }
+
         public static TObject CopyRenderableObject<TObject>(
             IRenderable3dObject original,
             Func<int, TObject> objectFactory,

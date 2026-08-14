@@ -10,17 +10,6 @@ namespace CommonUtilities.OmegaEngineAdapters
     public static class OmegaObjectHelpers
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Vector3? CopyVector(IVector3? vector)
-        {
-            if (vector == null)
-            {
-                return null;
-            }
-
-            return new Vector3(vector.x, vector.y, vector.z);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Vector3 CopyRequiredVector(IVector3 vector)
         {
             return new Vector3(vector.x, vector.y, vector.z);
@@ -140,48 +129,45 @@ namespace CommonUtilities.OmegaEngineAdapters
 
         public static List<ITriangleMeshWithColor> ConvertToTrianglesWithColor(List<TriangleMesh> triangles, string color)
         {
-            var triangleswithcolor = new List<ITriangleMeshWithColor>();
-            foreach (var triangle in triangles)
-            {
-                triangleswithcolor.Add(new TriangleMeshWithColor
-                {
-                    vert1 = new Vector3 { x = triangle.vert1.x, y = triangle.vert1.y, z = triangle.vert1.z },
-                    vert2 = new Vector3 { x = triangle.vert2.x, y = triangle.vert2.y, z = triangle.vert2.z },
-                    vert3 = new Vector3 { x = triangle.vert3.x, y = triangle.vert3.y, z = triangle.vert3.z },
-                    normal1 = new Vector3 { x = triangle.normal1.x, y = triangle.normal1.y, z = triangle.normal1.z },
-                    normal2 = new Vector3 { x = triangle.normal2.x, y = triangle.normal2.y, z = triangle.normal2.z },
-                    normal3 = new Vector3 { x = triangle.normal3.x, y = triangle.normal3.y, z = triangle.normal3.z },
-                    angle = triangle.angle,
-                    Color = color
-                });
-            }
-            return triangleswithcolor;
+            return MeshGeometryOperations.ConvertToTrianglesWithColor(
+                triangles,
+                color,
+                static () => new TriangleMeshWithColor(),
+                CopyRequiredVector);
         }
 
         public static List<TriangleMeshWithColor> DeepCopyTriangles(List<TriangleMeshWithColor> originalList)
         {
-            List<TriangleMeshWithColor> copiedList = new List<TriangleMeshWithColor>();
+            var copiedTriangles = EngineObjectCloner.CopyTriangles(
+                originalList,
+                static () => new TriangleMeshWithColor(),
+                CopyRequiredVector);
 
-            foreach (var original in originalList)
-            {
-                var copy = new TriangleMeshWithColor
-                {
-                    Color = original.Color,
-                    normal1 = new Vector3 { x = original.normal1.x, y = original.normal1.y, z = original.normal1.z },
-                    normal2 = new Vector3 { x = original.normal2.x, y = original.normal2.y, z = original.normal2.z },
-                    normal3 = new Vector3 { x = original.normal3.x, y = original.normal3.y, z = original.normal3.z },
-                    vert1 = new Vector3 { x = original.vert1.x, y = original.vert1.y, z = original.vert1.z },
-                    vert2 = new Vector3 { x = original.vert2.x, y = original.vert2.y, z = original.vert2.z },
-                    vert3 = new Vector3 { x = original.vert3.x, y = original.vert3.y, z = original.vert3.z },
-                    landBasedPosition = original.landBasedPosition,
-                    angle = original.angle,
-                    noHidden = original.noHidden
-                };
+            return copiedTriangles.Cast<TriangleMeshWithColor>().ToList();
+        }
 
-                copiedList.Add(copy);
-            }
+        public static List<ITriangleMeshWithColor> CopyTriangles(IReadOnlyList<ITriangleMeshWithColor> source)
+        {
+            return EngineObjectCloner.CopyTriangles(
+                source,
+                static () => new TriangleMeshWithColor(),
+                CopyRequiredVector);
+        }
 
-            return copiedList;
+        public static TriangleMeshWithColor CopyTriangle(ITriangleMeshWithColor triangle)
+        {
+            return (TriangleMeshWithColor)EngineObjectCloner.CopyTriangle(
+                triangle,
+                static () => new TriangleMeshWithColor(),
+                CopyRequiredVector);
+        }
+
+        public static List<ITriangleMeshWithColor> CopyPartTriangles(I3dObject obj, string partName)
+        {
+            var part = obj.ObjectParts.Find(part => part.PartName == partName);
+            return part?.Triangles == null
+                ? new List<ITriangleMeshWithColor>()
+                : CopyTriangles(part.Triangles);
         }
 
         public static List<_3dObject> DeepCopy3dObjects(List<_3dObject> inhabitants)
@@ -193,15 +179,15 @@ namespace CommonUtilities.OmegaEngineAdapters
 
         public static void DeepCopy3dObjects(List<_3dObject> inhabitants, List<_3dObject> result)
         {
-            result.Clear();
-
-            if (result.Capacity < inhabitants.Count)
-                result.Capacity = inhabitants.Count;
-
-            for (int i = 0; i < inhabitants.Count; i++)
-            {
-                result.Add(DeepCopyObject(inhabitants[i], copyCrashboxes: true));
-            }
+            EngineObjectCloner.CopyRenderableObjects(
+                inhabitants,
+                result,
+                static objectId => new _3dObject { ObjectId = objectId },
+                static () => new _3dObjectPart(),
+                static () => new TriangleMeshWithColor(),
+                CopyRequiredVector,
+                copyCrashboxes: true,
+                static (original, copy) => CopyGameObjectFields(original, copy));
         }
 
         public static I3dObject DeepCopySingleObject(I3dObject original)
@@ -248,23 +234,6 @@ namespace CommonUtilities.OmegaEngineAdapters
             copy.WeaponSystems = original.WeaponSystems;
             copy.HasPowerUp = original.HasPowerUp;
             copy.PowerUpType = original.PowerUpType;
-        }
-
-        private static List<I3dObjectPart> CopyObjectParts(List<I3dObjectPart> originalParts)
-        {
-            return EngineObjectCloner.CopyObjectParts(
-                originalParts,
-                static () => new _3dObjectPart(),
-                static () => new TriangleMeshWithColor(),
-                CopyRequiredVector);
-        }
-
-        private static TriangleMeshWithColor CopyTriangle(ITriangleMeshWithColor triangle)
-        {
-            return (TriangleMeshWithColor)EngineObjectCloner.CopyTriangle(
-                triangle,
-                static () => new TriangleMeshWithColor(),
-                CopyRequiredVector);
         }
 
         public static List<List<IVector3>> CopyCrashboxes(List<List<IVector3>> original)
