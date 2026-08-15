@@ -1,9 +1,9 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.4.11605.240
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Frontend", "3dTesting\Frontend.csproj", "{035F226A-F07C-44F1-87CF-5B35A3351108}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheOmegaStrain.Wpf", "TheOmegaStrain.Wpf\TheOmegaStrain.Wpf.csproj", "{035F226A-F07C-44F1-87CF-5B35A3351108}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{098E60BA-0020-4ECE-B255-925164831E12}"
 	ProjectSection(SolutionItems) = preProject
@@ -17,17 +17,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Installer", "Installer", "{
 		installer\TheOmegaStrain.iss = installer\TheOmegaStrain.iss
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "3dSpesifics", "3dRotations\3dSpesifics.csproj", "{DEE6A875-DA07-4B8F-8D17-7158CF17334E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheOmegaStrain.Game", "TheOmegaStrain.Game\TheOmegaStrain.Game.csproj", "{DEE6A875-DA07-4B8F-8D17-7158CF17334E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameAiAndControls", "GameAi\GameAiAndControls.csproj", "{F5594282-CC6B-415B-855B-C940DDF54AD0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheOmegaStrain.Gameplay", "TheOmegaStrain.Gameplay\TheOmegaStrain.Gameplay.csproj", "{F5594282-CC6B-415B-855B-C940DDF54AD0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain", "Domain\Domain.csproj", "{D5F25B1D-887E-4601-AC03-6B0182D5B48A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheOmegaStrain.Domain", "TheOmegaStrain.Domain\TheOmegaStrain.Domain.csproj", "{D5F25B1D-887E-4601-AC03-6B0182D5B48A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "3DSpesificsUnitTests", "3DSpesificsUnitTests\3DSpesificsUnitTests.csproj", "{36DEC7E9-CCED-4ED7-974E-5C95CBBD1492}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheOmegaStrain.Tests", "TheOmegaStrain.Tests\TheOmegaStrain.Tests.csproj", "{36DEC7E9-CCED-4ED7-974E-5C95CBBD1492}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtilities", "CommonUtilities\CommonUtilities.csproj", "{8D3F087E-742C-403A-97F2-E95BA74595D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheOmegaStrain.Common", "TheOmegaStrain.Common\TheOmegaStrain.Common.csproj", "{8D3F087E-742C-403A-97F2-E95BA74595D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamIntegration", "SteamIntegration\SteamIntegration.csproj", "{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheOmegaStrain.Steam", "TheOmegaStrain.Steam\TheOmegaStrain.Steam.csproj", "{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetroMesh.Engine", "RetroMesh.Engine\RetroMesh.Engine.csproj", "{B529BB92-B73F-4037-BAAD-135C5E67B7CA}"
 EndProject

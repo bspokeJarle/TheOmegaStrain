@@ -9,6 +9,6 @@
     <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\CommonUtilities\CommonUtilities.csproj" />
+    <ProjectReference Include="..\..\TheOmegaStrain.Common\TheOmegaStrain.Common.csproj" />
   </ItemGroup>
 </Project>
