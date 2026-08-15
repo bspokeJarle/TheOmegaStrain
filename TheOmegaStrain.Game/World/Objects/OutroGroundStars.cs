@@ -2,7 +2,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -23,9 +22,9 @@ namespace TheOmegaStrain.Game.World.Objects
             (-390f, -160f, 3f), (570f, -165f, 3f)
         ];
 
-        public static _3dObject CreateStarField()
+        public static OmegaObject3D CreateStarField()
         {
-            var starField = new _3dObject { ObjectId = GameState.ObjectIdCounter++ };
+            var starField = new OmegaObject3D { ObjectId = GameState.ObjectIdCounter++ };
             starField.ObjectName = "OutroGroundStars";
             starField.WorldPosition = new Vector3();
             starField.ObjectOffsets = new Vector3();
@@ -37,7 +36,7 @@ namespace TheOmegaStrain.Game.World.Objects
             starField.Movement = new OutroGroundStarsControls();
             starField.ZSortBias = -60f;
 
-            starField.ObjectParts.Add(new _3dObjectPart
+            starField.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = "OutroGroundStarField",
                 Triangles = CreateStars(),

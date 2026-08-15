@@ -2,13 +2,12 @@ using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Helpers;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
 {
     internal static class KamikazeDroneAi
     {
-        internal static _3dObject? GetAuthoritativeDrone(I3dObject obj)
+        internal static OmegaObject3D? GetAuthoritativeDrone(I3dObject obj)
         {
             var aiObjects = GameState.SurfaceState?.AiObjects;
             if (aiObjects == null)
@@ -28,7 +27,7 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
             return null;
         }
 
-        internal static _3dObject? GetClosestActiveDecoy(I3dObject currentDrone)
+        internal static OmegaObject3D? GetClosestActiveDecoy(I3dObject currentDrone)
         {
             var aiObjects = GameState.SurfaceState?.AiObjects;
             if (aiObjects == null || aiObjects.Count == 0)
@@ -37,7 +36,7 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
             }
 
             var droneCenter = KamikazeDroneMovementHelpers.GetNavigationCrashCenterWorldPosition(currentDrone);
-            _3dObject? closestDecoy = null;
+            OmegaObject3D? closestDecoy = null;
             double closestDistance = double.MaxValue;
 
             for (int i = 0; i < aiObjects.Count; i++)
@@ -78,7 +77,7 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
                 : KamikazeDroneMovementHelpers.GetCompensatedHuntTargetWorldPosition(currentDrone, closestDecoy);
         }
 
-        internal static void TriggerDecoyCollision(I3dObject droneObject, _3dObject decoyObject)
+        internal static void TriggerDecoyCollision(I3dObject droneObject, OmegaObject3D decoyObject)
         {
             if (droneObject?.ImpactStatus != null)
             {

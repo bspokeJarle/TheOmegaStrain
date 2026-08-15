@@ -6,7 +6,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -28,9 +27,9 @@ namespace TheOmegaStrain.Game.World.Objects
         private static string noseColor = "1A1A1A";
         private static string eyeColor = "070707";
 
-        public static _3dObject CreateSeal(ISurface parentSurface)
+        public static OmegaObject3D CreateSeal(ISurface parentSurface)
         {
-            var seal = new _3dObject
+            var seal = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "Seal",
@@ -68,14 +67,14 @@ namespace TheOmegaStrain.Game.World.Objects
             };
 
             AddShadow(seal);
-            _3dObjectHelpers.ApplyScaleToObject(seal, Scale * LandBasedObjectSetup.WinterSurfaceObjectScale);
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(seal);
+            OmegaObject3DHelpers.ApplyScaleToObject(seal, Scale * LandBasedObjectSetup.WinterSurfaceObjectScale);
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(seal);
             seal.Movement = new SealControls();
 
             return seal;
         }
 
-        public static void SetSwimFrame(_3dObject seal, int frame)
+        public static void SetSwimFrame(OmegaObject3D seal, int frame)
         {
             int normalized = ((frame % AnimationFrames) + AnimationFrames) % AnimationFrames;
 
@@ -344,16 +343,16 @@ namespace TheOmegaStrain.Game.World.Objects
         {
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -34f, y = -13f, z = -6f },
                     new Vector3 { x = 39f, y = 13f, z = 19f })
             };
         }
 
-        private static void AddShadow(_3dObject seal)
+        private static void AddShadow(OmegaObject3D seal)
         {
             var shadow = new List<ITriangleMeshWithColor>();
-            string sc = _3dObjectHelpers.ShadowColorHex;
+            string sc = OmegaObject3DHelpers.ShadowColorHex;
 
             shadow.Add(new TriangleMeshWithColor
             {
@@ -371,7 +370,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 vert3 = new Vector3 { x = -12f, y = 0f, z = 12f }
             });
 
-            _3dObjectHelpers.AddCustomShadowPart(seal, shadow);
+            OmegaObject3DHelpers.AddCustomShadowPart(seal, shadow);
         }
 
         // ----------------------------------------------------
@@ -428,11 +427,11 @@ namespace TheOmegaStrain.Game.World.Objects
             }
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

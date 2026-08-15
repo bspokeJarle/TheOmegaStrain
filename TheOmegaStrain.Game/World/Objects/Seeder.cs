@@ -6,8 +6,7 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Gameplay.Controls.SeederControls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
-using static TheOmegaStrain.Game.Helpers._3dObjectHelpers;
+using static TheOmegaStrain.Game.Helpers.OmegaObject3DHelpers;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -52,7 +51,7 @@ namespace TheOmegaStrain.Game.World.Objects
         // Center of the main saucer body (used for outward normals)
         private static readonly Vector3 BodyCenter = new Vector3 { x = 0, y = 0, z = 0 };
 
-        public static _3dObject CreateSeeder(ISurface parentSurface)
+        public static OmegaObject3D CreateSeeder(ISurface parentSurface)
         {
             // Build each visible part of the saucer
             var topHull = SeederTopHull();
@@ -68,14 +67,14 @@ namespace TheOmegaStrain.Game.World.Objects
             var seederGuide = ParticlesDirectionGuide();
             var seederStartGuide = ParticlesStartGuide();
 
-            var seeder = new _3dObject
+            var seeder = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++ // Set to a valid unique ID as appropriate for your application
             };
 
             // Visible parts
             if (topHull != null)
-                seeder.ObjectParts.Add(new _3dObjectPart
+                seeder.ObjectParts.Add(new OmegaObjectPart3D
                 {
                     PartName = "SeederTopHull",
                     Triangles = topHull,
@@ -83,7 +82,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 });
 
             if (bottomHull != null)
-                seeder.ObjectParts.Add(new _3dObjectPart
+                seeder.ObjectParts.Add(new OmegaObjectPart3D
                 {
                     PartName = "SeederBottomHull",
                     Triangles = bottomHull,
@@ -91,7 +90,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 });
 
             if (rimRing != null)
-                seeder.ObjectParts.Add(new _3dObjectPart
+                seeder.ObjectParts.Add(new OmegaObjectPart3D
                 {
                     PartName = "SeederRimRing",
                     Triangles = rimRing,
@@ -99,7 +98,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 });
 
             if (centerModule != null)
-                seeder.ObjectParts.Add(new _3dObjectPart
+                seeder.ObjectParts.Add(new OmegaObjectPart3D
                 {
                     PartName = "SeederCenterModule",
                     Triangles = centerModule,
@@ -107,7 +106,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 });
 
             if (undersidePanels != null)
-                seeder.ObjectParts.Add(new _3dObjectPart
+                seeder.ObjectParts.Add(new OmegaObjectPart3D
                 {
                     PartName = "SeederPanels",
                     Triangles = undersidePanels,
@@ -115,7 +114,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 });
 
             if (alienBall != null)
-                seeder.ObjectParts.Add(new _3dObjectPart
+                seeder.ObjectParts.Add(new OmegaObjectPart3D
                 {
                     PartName = "SeederAlienBall",
                     Triangles = alienBall,
@@ -123,7 +122,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 });
 
             if (sideWindows != null)
-                seeder.ObjectParts.Add(new _3dObjectPart
+                seeder.ObjectParts.Add(new OmegaObjectPart3D
                 {
                     PartName = "SeederSideWindows",
                     Triangles = sideWindows,
@@ -131,7 +130,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 });
 
             if (sideDoor != null)
-                seeder.ObjectParts.Add(new _3dObjectPart
+                seeder.ObjectParts.Add(new OmegaObjectPart3D
                 {
                     PartName = "SeederDoor",
                     Triangles = sideDoor,
@@ -140,7 +139,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
             // Invisible helper parts for particles
             if (seederGuide != null)
-                seeder.ObjectParts.Add(new _3dObjectPart
+                seeder.ObjectParts.Add(new OmegaObjectPart3D
                 {
                     PartName = "SeederParticlesGuide",
                     Triangles = seederGuide,
@@ -148,7 +147,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 });
 
             if (seederStartGuide != null)
-                seeder.ObjectParts.Add(new _3dObjectPart
+                seeder.ObjectParts.Add(new OmegaObjectPart3D
                 {
                     PartName = "SeederParticlesStartGuide",
                     Triangles = seederStartGuide,
@@ -173,9 +172,9 @@ namespace TheOmegaStrain.Game.World.Objects
             seeder.ParentSurface = parentSurface;
             seeder.HasShadow = true;
 
-            _3dObjectHelpers.ApplyScaleToObject(seeder, ZoomRatio);
+            OmegaObject3DHelpers.ApplyScaleToObject(seeder, ZoomRatio);
 
-            _3dObjectHelpers.AddSimplifiedShadowPart(seeder, useFlatQuad: true);
+            OmegaObject3DHelpers.AddSimplifiedShadowPart(seeder, useFlatQuad: true);
 
             return seeder;
         }
@@ -569,7 +568,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 z = zMax
             };
 
-            var crashBoxCorners = _3dObjectHelpers.GenerateCrashBoxCorners(min, max);
+            var crashBoxCorners = OmegaObject3DHelpers.GenerateCrashBoxCorners(min, max);
 
             return new List<List<IVector3>> { crashBoxCorners };
         }

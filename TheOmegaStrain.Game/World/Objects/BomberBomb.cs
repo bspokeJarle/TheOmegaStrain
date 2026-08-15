@@ -5,7 +5,6 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -64,7 +63,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
         private static readonly Vector3 BodyCenter = new Vector3 { x = 0f, y = 0f, z = 0f };
 
-        public static _3dObject CreateBomberBomb(ISurface parentSurface)
+        public static OmegaObject3D CreateBomberBomb(ISurface parentSurface)
         {
             var nose = BombNose();
             var body = BombBody();
@@ -73,7 +72,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
             var crashBoxes = BombCrashBoxes();
 
-            var bomb = new _3dObject
+            var bomb = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "BomberBomb"
@@ -92,8 +91,8 @@ namespace TheOmegaStrain.Game.World.Objects
             if (crashBoxes != null)
                 bomb.CrashBoxes = crashBoxes;
 
-            _3dObjectHelpers.ApplyScaleToObject(bomb, ZoomRatio);
-            _3dObjectHelpers.AddSimplifiedShadowPart(bomb, useFlatQuad: true);
+            OmegaObject3DHelpers.ApplyScaleToObject(bomb, ZoomRatio);
+            OmegaObject3DHelpers.AddSimplifiedShadowPart(bomb, useFlatQuad: true);
 
             return bomb;
         }
@@ -287,12 +286,12 @@ namespace TheOmegaStrain.Game.World.Objects
             var mainBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = bodyBackX, y = -bodyRadiusY - 0.25f, z = -bodyRadiusZ - 0.25f },
                 new Vector3 { x = noseTipX, y = bodyRadiusY + 0.25f, z = bodyRadiusZ + 0.25f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(mainBounds.min, mainBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(mainBounds.min, mainBounds.max));
 
             var tailBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = finTipX - 0.2f, y = -finTipOffset - finHeight, z = -finTipOffset - finHeight },
                 new Vector3 { x = finRootX + 0.4f, y = finTipOffset + finHeight, z = finTipOffset + finHeight });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(tailBounds.min, tailBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(tailBounds.min, tailBounds.max));
 
             return boxes;
         }
@@ -334,11 +333,11 @@ namespace TheOmegaStrain.Game.World.Objects
             return midColor;
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

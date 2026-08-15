@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.GamePlayHelpers;
 using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {

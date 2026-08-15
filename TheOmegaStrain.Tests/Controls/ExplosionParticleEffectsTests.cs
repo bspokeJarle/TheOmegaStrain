@@ -6,7 +6,6 @@ using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls;
 using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Runtime.Collision;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -20,7 +19,7 @@ public class ExplosionParticleEffectsTests
         GameState.ShipState = new ShipState();
         GameState.SurfaceState = new SurfaceState
         {
-            AiObjects = new List<_3dObject>(),
+            AiObjects = new List<OmegaObject3D>(),
             GlobalMapPosition = new Vector3 { x = 0f, y = 0f, z = 0f }
         };
     }
@@ -31,7 +30,7 @@ public class ExplosionParticleEffectsTests
         var ship = CreateCollisionObject("Ship", 7201);
         var decoy = CreateCollisionObject("DroneDecoy", 7202);
 
-        CrashDetection.HandleCrashboxes(new List<_3dObject> { ship, decoy }, isPaused: false);
+        CrashDetection.HandleCrashboxes(new List<OmegaObject3D> { ship, decoy }, isPaused: false);
 
         Assert.IsFalse(ship.ImpactStatus!.HasCrashed, "Decoy should not collide with the player ship.");
         Assert.IsFalse(decoy.ImpactStatus!.HasCrashed, "Decoy should not be destroyed by touching the player ship.");
@@ -49,8 +48,8 @@ public class ExplosionParticleEffectsTests
             ObjectName = "KamikazeDrone"
         };
 
-        CrashDetection.HandleCrashboxes(new List<_3dObject> { particle, decoy }, isPaused: false);
-        CrashDetection.HandleCrashboxes(new List<_3dObject> { particle, decoy }, isPaused: false);
+        CrashDetection.HandleCrashboxes(new List<OmegaObject3D> { particle, decoy }, isPaused: false);
+        CrashDetection.HandleCrashboxes(new List<OmegaObject3D> { particle, decoy }, isPaused: false);
 
         Assert.IsFalse(particle.ImpactStatus!.HasCrashed, "Particles should ignore decoys instead of treating them as collision targets.");
         Assert.IsFalse(decoy.ImpactStatus!.HasCrashed, "Decoys should not be detonated by explosion particles.");
@@ -178,9 +177,9 @@ public class ExplosionParticleEffectsTests
         field.SetValue(instance, value);
     }
 
-    private static _3dObject CreateExplodingDecoy()
+    private static OmegaObject3D CreateExplodingDecoy()
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 7101,
             ObjectName = "DroneDecoy",
@@ -201,9 +200,9 @@ public class ExplosionParticleEffectsTests
         };
     }
 
-    private static _3dObject CreateCollisionObject(string objectName, int objectId)
+    private static OmegaObject3D CreateCollisionObject(string objectName, int objectId)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = objectId,
             ObjectName = objectName,
@@ -217,14 +216,14 @@ public class ExplosionParticleEffectsTests
         };
     }
 
-    private static _3dObject CreateNavigationDecoy()
+    private static OmegaObject3D CreateNavigationDecoy()
     {
         return CreateNavigationDecoy(7102, worldX: 300f, worldZ: 300f, offsetX: 0f, offsetZ: 1000f);
     }
 
-    private static _3dObject CreateNavigationDecoy(int objectId, float worldX, float worldZ, float offsetX, float offsetZ)
+    private static OmegaObject3D CreateNavigationDecoy(int objectId, float worldX, float worldZ, float offsetX, float offsetZ)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = objectId,
             ObjectName = "DroneDecoy",
@@ -240,9 +239,9 @@ public class ExplosionParticleEffectsTests
         };
     }
 
-    private static _3dObject CreateHuntingDrone()
+    private static OmegaObject3D CreateHuntingDrone()
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 7103,
             ObjectName = "KamikazeDrone",
@@ -258,9 +257,9 @@ public class ExplosionParticleEffectsTests
         };
     }
 
-    private static _3dObject CreateExplodingDrone()
+    private static OmegaObject3D CreateExplodingDrone()
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 7001,
             ObjectName = "KamikazeDrone",
@@ -296,7 +295,7 @@ public class ExplosionParticleEffectsTests
     {
         return
         [
-            new _3dObjectPart
+            new OmegaObjectPart3D
             {
                 PartName = "Body",
                 IsVisible = true,

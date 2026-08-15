@@ -5,7 +5,6 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Game.World.Objects;
 using TheOmegaStrain.Gameplay.Controls;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.Scenes.Tutorial
 {
@@ -137,7 +136,7 @@ namespace TheOmegaStrain.Game.Scenes.Tutorial
 
         private void AddSurfaceViewport(I3dWorld world)
         {
-            var surfaceObject = (_3dObject)Surface.GetSurfaceViewPort();
+            var surfaceObject = (OmegaObject3D)Surface.GetSurfaceViewPort();
             surfaceObject.ObjectName = "Surface";
             surfaceObject.ObjectOffsets = new Vector3 { x = 70 * ScreenSetup.ScreenScaleX, y = 500 * ScreenSetup.ScreenScaleY, z = 400 };
             surfaceObject.Rotation = new Vector3 { x = WorldViewSetup.SurfacePitchDegrees, y = 0, z = 0 };
@@ -152,9 +151,9 @@ namespace TheOmegaStrain.Game.Scenes.Tutorial
             GameState.SurfaceState.SurfaceViewportObject = surfaceObject;
         }
 
-        private static _3dObject CreateTutorialVoicePromptObject()
+        private static OmegaObject3D CreateTutorialVoicePromptObject()
         {
-            return new _3dObject
+            return new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "TutorialVoicePrompt",
@@ -166,7 +165,7 @@ namespace TheOmegaStrain.Game.Scenes.Tutorial
                 CrashBoxes = new List<List<IVector3>>(),
                 ObjectParts = new List<I3dObjectPart>
                 {
-                    new _3dObjectPart
+                    new OmegaObjectPart3D
                     {
                         PartName = "TutorialVoicePromptMarker",
                         IsVisible = true,

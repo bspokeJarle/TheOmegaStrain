@@ -5,7 +5,6 @@ using TheOmegaStrain.Runtime.Loops;
 using TheOmegaStrain.Game.World;
 using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]

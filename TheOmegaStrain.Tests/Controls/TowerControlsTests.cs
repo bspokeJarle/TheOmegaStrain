@@ -2,7 +2,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -37,9 +36,9 @@ public class TowerControlsTests
         control.Dispose();
     }
 
-    private static _3dObject CreateTower()
+    private static OmegaObject3D CreateTower()
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 101,
             ObjectName = "Tower",

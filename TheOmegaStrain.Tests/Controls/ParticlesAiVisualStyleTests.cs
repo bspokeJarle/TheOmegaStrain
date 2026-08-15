@@ -4,7 +4,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System.Linq;
 using System.Reflection;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -78,7 +77,7 @@ public class ParticlesAiVisualStyleTests
         };
         var controls = new ShipControls
         {
-            ParentObject = new _3dObject
+            ParentObject = new OmegaObject3D
             {
                 ObjectId = 1,
                 Particles = particles
@@ -111,7 +110,7 @@ public class ParticlesAiVisualStyleTests
         var particles = new ParticlesAI();
         var controls = new ShipControls
         {
-            ParentObject = new _3dObject
+            ParentObject = new OmegaObject3D
             {
                 ObjectId = 2,
                 Particles = particles

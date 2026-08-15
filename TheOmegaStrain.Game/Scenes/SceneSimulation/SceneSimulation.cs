@@ -14,7 +14,6 @@ using TheOmegaStrain.Gameplay.Controls.JumpingFishControls;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.Scenes.SceneSimulation
 {
@@ -200,7 +199,7 @@ namespace TheOmegaStrain.Game.Scenes.SceneSimulation
                 motherShipLarge.Movement = new MotherShipLargeControls();
                 var lazer = Lazer.CreateLazer(Surface, scaleMultiplier: 2.5f);
                 lazer.CrashBoxDebugMode = false;
-                motherShipLarge.WeaponSystems = new Weapons(new List<I3dObject> { lazer }, motherShipLarge.Movement!, (_3dObject)motherShipLarge)
+                motherShipLarge.WeaponSystems = new Weapons(new List<I3dObject> { lazer }, motherShipLarge.Movement!, (OmegaObject3D)motherShipLarge)
                 {
                     ShowAimAssist = false,
                     FireAsEnemyWeapon = true,
@@ -226,7 +225,7 @@ namespace TheOmegaStrain.Game.Scenes.SceneSimulation
                     scaleMultiplier: 2.0f,
                     crashBoxScaleMultiplier: WeaponSetup.EnemyLazerMediumCrashBoxScale);
                 lazer.CrashBoxDebugMode = false;
-                motherShipMedium.WeaponSystems = new Weapons(new List<I3dObject> { lazer }, motherShipMedium.Movement!, (_3dObject)motherShipMedium)
+                motherShipMedium.WeaponSystems = new Weapons(new List<I3dObject> { lazer }, motherShipMedium.Movement!, (OmegaObject3D)motherShipMedium)
                 {
                     ShowAimAssist = false,
                     FireAsEnemyWeapon = true,
@@ -259,7 +258,7 @@ namespace TheOmegaStrain.Game.Scenes.SceneSimulation
             }
 
             // Surface
-            var surfaceObject = (_3dObject)Surface.GetSurfaceViewPort();
+            var surfaceObject = (OmegaObject3D)Surface.GetSurfaceViewPort();
             surfaceObject.ObjectName = "Surface";
             surfaceObject.ObjectOffsets = new Vector3 { x = 105 * ScreenSetup.ScreenScaleX, y = 500 * ScreenSetup.ScreenScaleY, z = 400 };
             surfaceObject.Rotation = new Vector3 { x = WorldViewSetup.SurfacePitchDegrees, y = 0, z = 0 };
@@ -506,7 +505,7 @@ namespace TheOmegaStrain.Game.Scenes.SceneSimulation
             foreach (var treePlacement in treePlacements)
             {
                 var tree = Tree.CreateTree(Surface);
-                _3dObjectHelpers.ApplyScaleToObject(tree, LandBasedObjectSetup.WinterSurfaceObjectScale);
+                OmegaObject3DHelpers.ApplyScaleToObject(tree, LandBasedObjectSetup.WinterSurfaceObjectScale);
                 tree.WorldPosition = new Vector3 { x = 0, y = 0, z = 0 };
                 tree.SurfaceBasedId = map[treePlacement.y, treePlacement.x].mapId;
                 map[treePlacement.y, treePlacement.x].hasLandbasedObject = true;

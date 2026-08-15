@@ -5,7 +5,6 @@ using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Helpers
 {

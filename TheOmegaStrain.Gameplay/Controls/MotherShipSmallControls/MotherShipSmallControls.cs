@@ -6,7 +6,6 @@ using TheOmegaStrain.Gameplay.Audio.Services;
 using TheOmegaStrain.Gameplay.Helpers;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls.MotherShipSmallControls
 {
@@ -156,7 +155,7 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipSmallControls
             {
                 if (theObject.IsOnScreen)
                 {
-                    var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                    var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
 
                     if (_engineInstance == null || !_engineInstance.IsPlaying)
                     {
@@ -457,7 +456,7 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipSmallControls
         {
             if (_audio != null && _thudSound != null)
             {
-                var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
                 _audio.Play(
                     _thudSound,
                     AudioPlayMode.OneShot,
@@ -496,7 +495,7 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipSmallControls
         {
             if (_audio != null && _explosionSound != null)
             {
-                var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
                 _audio.Play(
                     _explosionSound,
                     AudioPlayMode.OneShot,
@@ -511,7 +510,7 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipSmallControls
         {
             if (_audio != null && _attackSound != null)
             {
-                var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
                 _audio.Play(
                     _attackSound,
                     AudioPlayMode.OneShot,

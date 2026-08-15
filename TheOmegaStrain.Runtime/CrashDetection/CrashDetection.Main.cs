@@ -6,7 +6,6 @@ using RetroMesh.Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Runtime.Collision
 {
@@ -18,7 +17,7 @@ namespace TheOmegaStrain.Runtime.Collision
         private static bool _shouldCheckStaticObjectsThisFrame;
         private static bool _isPausedThisFrame;
 
-        public static void HandleCrashboxes(List<_3dObject> activeWorld, bool isPaused)
+        public static void HandleCrashboxes(List<OmegaObject3D> activeWorld, bool isPaused)
         {
             numFrame++;
             ResetFrameCachesIfNeeded();
@@ -46,7 +45,7 @@ namespace TheOmegaStrain.Runtime.Collision
             }
         }
 
-        private static bool CanParticipateInCollision(_3dObject obj)
+        private static bool CanParticipateInCollision(OmegaObject3D obj)
         {
             return obj.CrashBoxes != null &&
                    obj.CrashBoxes.Count != 0 &&
@@ -54,7 +53,7 @@ namespace TheOmegaStrain.Runtime.Collision
         }
 
         private static bool ShouldSkipCollisionPair(
-            in CollisionPairContext<_3dObject, ObjectTypeFlags> context)
+            in CollisionPairContext<OmegaObject3D, ObjectTypeFlags> context)
         {
             var flagsA = context.ClassificationA;
             var flagsB = context.ClassificationB;
@@ -139,7 +138,7 @@ namespace TheOmegaStrain.Runtime.Collision
         }
 
         private static void HandleCollisionPair(
-            in CollisionPairContext<_3dObject, ObjectTypeFlags> context)
+            in CollisionPairContext<OmegaObject3D, ObjectTypeFlags> context)
         {
             var inhabitant = context.A;
             var otherInhabitant = context.B;
@@ -233,8 +232,8 @@ namespace TheOmegaStrain.Runtime.Collision
         }
 
         private static bool TryStartTerrainProximityRecovery(
-            _3dObject a,
-            _3dObject b,
+            OmegaObject3D a,
+            OmegaObject3D b,
             ObjectTypeFlags flagsA,
             ObjectTypeFlags flagsB,
             Vector3 centerA,
@@ -246,8 +245,8 @@ namespace TheOmegaStrain.Runtime.Collision
             bool aIsProactiveObstacle = TheOmegaStrain.Common.CommonSetup.TerrainAvoidanceSetup.IsProactiveTerrainObstacle(flagsA.Name);
             bool bIsProactiveObstacle = TheOmegaStrain.Common.CommonSetup.TerrainAvoidanceSetup.IsProactiveTerrainObstacle(flagsB.Name);
 
-            _3dObject? ai = null;
-            _3dObject? obstacle = null;
+            OmegaObject3D? ai = null;
+            OmegaObject3D? obstacle = null;
             Vector3 aiCenter = new();
             Vector3 obstacleCenter = new();
 

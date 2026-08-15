@@ -6,7 +6,6 @@ using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Game.World.Objects;
 using TheOmegaStrain.Game.Helpers;
 using static TheOmegaStrain.Domain.WeaponHelpers;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -22,7 +21,7 @@ public class WeaponsAimAssistTests
         GameState.ShipState = new ShipState();
         GameState.SurfaceState = new SurfaceState
         {
-            AiObjects = new List<_3dObject>(),
+            AiObjects = new List<OmegaObject3D>(),
             GlobalMapPosition = new Vector3 { x = 0f, y = 0f, z = 0f }
         };
     }
@@ -86,7 +85,7 @@ public class WeaponsAimAssistTests
         Assert.AreEqual(ScreenSetup.screenSizeY / 2f + visibleEnemy.WorldPosition.y, GameState.GamePlayState.AimAssistTargetScreenY, 1f);
     }
 
-    private static Weapons CreateWeapons(_3dObject ship)
+    private static Weapons CreateWeapons(OmegaObject3D ship)
     {
         return new Weapons(new List<I3dObject> { Lazer.CreateLazer(parentSurface: null!) }, new NoopMovement(), ship)
         {
@@ -94,7 +93,7 @@ public class WeaponsAimAssistTests
         };
     }
 
-    private static ActiveWeapon FireStraightLazer(Weapons weapons, _3dObject ship)
+    private static ActiveWeapon FireStraightLazer(Weapons weapons, OmegaObject3D ship)
     {
         weapons.FireWeapon(
             new Vector3 { x = 0f, y = -1000f, z = 0f },
@@ -108,9 +107,9 @@ public class WeaponsAimAssistTests
         return (ActiveWeapon)weapons.ActiveWeapons[0];
     }
 
-    private static _3dObject CreateShip()
+    private static OmegaObject3D CreateShip()
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 9001,
             ObjectName = "Ship",
@@ -123,9 +122,9 @@ public class WeaponsAimAssistTests
         };
     }
 
-    private static _3dObject CreateEnemy(string objectName, float x, float y, float z)
+    private static OmegaObject3D CreateEnemy(string objectName, float x, float y, float z)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = GameState.ObjectIdCounter++,
             ObjectName = objectName,
@@ -144,7 +143,7 @@ public class WeaponsAimAssistTests
         var max = new Vector3 { x = 20f, y = 20f, z = 20f };
         return new List<List<IVector3>>
         {
-            _3dObjectHelpers.GenerateCrashBoxCorners(min, max)
+            OmegaObject3DHelpers.GenerateCrashBoxCorners(min, max)
         };
     }
 
@@ -152,7 +151,7 @@ public class WeaponsAimAssistTests
     {
         return new List<I3dObjectPart>
         {
-            new _3dObjectPart
+            new OmegaObjectPart3D
             {
                 PartName = "Body",
                 IsVisible = true,

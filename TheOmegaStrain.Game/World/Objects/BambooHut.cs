@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -43,9 +42,9 @@ namespace TheOmegaStrain.Game.World.Objects
         private static string insideDark = "11100C";
         private static string lanternGlow = "FFB347";
 
-        public static _3dObject CreateBambooHut(ISurface parentSurface)
+        public static OmegaObject3D CreateBambooHut(ISurface parentSurface)
         {
-            var hut = new _3dObject
+            var hut = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "BambooHut",
@@ -67,9 +66,9 @@ namespace TheOmegaStrain.Game.World.Objects
             hut.CrashBoxes = BambooHutCrashBoxes();
             hut.CrashBoxNames = new List<string?> { "HutBody", "Roof" };
 
-            _3dObjectHelpers.AddCustomShadowPart(hut, BambooHutShadow());
-            _3dObjectHelpers.ApplyScaleToObject(hut, HutScale);
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(hut);
+            OmegaObject3DHelpers.AddCustomShadowPart(hut, BambooHutShadow());
+            OmegaObject3DHelpers.ApplyScaleToObject(hut, HutScale);
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(hut);
 
             return hut;
         }
@@ -398,12 +397,12 @@ namespace TheOmegaStrain.Game.World.Objects
         {
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -hutWidth / 2 - 3f, y = -hutDepth / 2 - 3f, z = 0f },
                     new Vector3 { x = hutWidth / 2 + 3f, y = hutDepth / 2 + 3f, z = floorHeight + wallHeight }
                 ),
 
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -hutWidth / 2 - roofOverhang, y = -hutDepth / 2 - roofOverhang, z = floorHeight + wallHeight },
                     new Vector3 { x = hutWidth / 2 + roofOverhang, y = hutDepth / 2 + roofOverhang, z = floorHeight + wallHeight + roofHeight }
                 )
@@ -417,7 +416,7 @@ namespace TheOmegaStrain.Game.World.Objects
         private static List<ITriangleMeshWithColor> BambooHutShadow()
         {
             var tris = new List<ITriangleMeshWithColor>(10);
-            const string sc = _3dObjectHelpers.ShadowColorHex;
+            const string sc = OmegaObject3DHelpers.ShadowColorHex;
 
             // Body
             var a = new Vector3 { x = -18f, y = 0f, z = 0f };
@@ -569,11 +568,11 @@ namespace TheOmegaStrain.Game.World.Objects
             return a + (b - a) * t;
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

@@ -5,7 +5,6 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -108,9 +107,9 @@ namespace TheOmegaStrain.Game.World.Objects
         private static string accentTealDk = "17555A";
         private static string accentStripe = "FFFFFF";   // white seam
 
-        public static _3dObject CreateMotherShipLarge(ISurface parentSurface)
+        public static OmegaObject3D CreateMotherShipLarge(ISurface parentSurface)
         {
-            var ship = new _3dObject
+            var ship = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "MotherShipLarge"
@@ -152,8 +151,8 @@ namespace TheOmegaStrain.Game.World.Objects
             ship.CrashBoxes = MotherShipLargeCrashBoxes();
             ship.CrashBoxNames = MotherShipLargeCrashBoxNames();
 
-            _3dObjectHelpers.ApplyScaleToObject(ship, ZoomRatio);
-            _3dObjectHelpers.AddSimplifiedShadowPart(ship, useFlatQuad: true);
+            OmegaObject3DHelpers.ApplyScaleToObject(ship, ZoomRatio);
+            OmegaObject3DHelpers.AddSimplifiedShadowPart(ship, useFlatQuad: true);
 
             return ship;
         }
@@ -822,7 +821,7 @@ namespace TheOmegaStrain.Game.World.Objects
         private static void AddCrashBox(List<List<IVector3>> boxes, Vector3 min, Vector3 max)
         {
             var bounds = ScaleCrashBoxBounds(min, max);
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(bounds.min, bounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(bounds.min, bounds.max));
         }
 
         public static List<string?> MotherShipLargeCrashBoxNames()
@@ -843,11 +842,11 @@ namespace TheOmegaStrain.Game.World.Objects
         //  HELPERS
         // ----------------------------------------------------
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

@@ -4,7 +4,6 @@ using TheOmegaStrain.Game.World;
 using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -31,9 +30,9 @@ namespace TheOmegaStrain.Game.World.Objects
         private static string eyeBlack = "050607";
         private static string mouthDark = "120C0A";
 
-        public static _3dObject CreateJumpingFish(ISurface parentSurface)
+        public static OmegaObject3D CreateJumpingFish(ISurface parentSurface)
         {
-            var fish = new _3dObject
+            var fish = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "JumpingFish"
@@ -74,8 +73,8 @@ namespace TheOmegaStrain.Game.World.Objects
             fish.CrashBoxes = FishCrashBoxes();
             fish.CrashBoxNames = new List<string?> { "FishBody" };
 
-            _3dObjectHelpers.ApplyScaleToObject(fish, Scale);
-            _3dObjectHelpers.AddSimplifiedShadowPart(fish, useFlatQuad: true);
+            OmegaObject3DHelpers.ApplyScaleToObject(fish, Scale);
+            OmegaObject3DHelpers.AddSimplifiedShadowPart(fish, useFlatQuad: true);
 
             return fish;
         }
@@ -84,7 +83,7 @@ namespace TheOmegaStrain.Game.World.Objects
         //  ANIMATION CONTROL
         // ----------------------------------------------------
 
-        public static void SetSwimFrame(_3dObject fish, int frame)
+        public static void SetSwimFrame(OmegaObject3D fish, int frame)
         {
             int normalizedFrame = ((frame % AnimationFrames) + AnimationFrames) % AnimationFrames;
 
@@ -395,7 +394,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 new Vector3 { x = -24f, y = -10f, z = -8f },
                 new Vector3 { x = 28f, y = 10f, z = 9f });
 
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(bounds.min, bounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(bounds.min, bounds.max));
 
             return boxes;
         }
@@ -448,11 +447,11 @@ namespace TheOmegaStrain.Game.World.Objects
             return avgY > 6f ? sideGreen : sideLight;
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

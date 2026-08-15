@@ -4,8 +4,7 @@ using TheOmegaStrain.Game.World;
 using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
-using static TheOmegaStrain.Game.Helpers._3dObjectHelpers;
+using static TheOmegaStrain.Game.Helpers.OmegaObject3DHelpers;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -204,7 +203,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
         private static readonly Vector3 BodyCenter = new Vector3 { x = 0, y = 0, z = 0 };
 
-        public static _3dObject CreateMotherShipMedium(ISurface parentSurface)
+        public static OmegaObject3D CreateMotherShipMedium(ISurface parentSurface)
         {
             var hammerTop = HammerHeadTop();
             var hammerBottom = HammerHeadBottom();
@@ -251,7 +250,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
             var crashBoxes = MotherShipCrashBoxes();
 
-            var ship = new _3dObject
+            var ship = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "MotherShipMedium"
@@ -310,8 +309,8 @@ namespace TheOmegaStrain.Game.World.Objects
 
             ship.CrashBoxNames = MotherShipCrashBoxNames();
 
-            _3dObjectHelpers.ApplyScaleToObject(ship, ZoomRatio);
-            _3dObjectHelpers.AddSimplifiedShadowPart(ship, useFlatQuad: true);
+            OmegaObject3DHelpers.ApplyScaleToObject(ship, ZoomRatio);
+            OmegaObject3DHelpers.AddSimplifiedShadowPart(ship, useFlatQuad: true);
 
             return ship;
         }
@@ -1334,37 +1333,37 @@ namespace TheOmegaStrain.Game.World.Objects
             var hammerBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = neckFrontX, y = -jawHalfWidth, z = noseBottom - 2f },
                 new Vector3 { x = noseTipX, y = jawHalfWidth, z = noseTop + 4f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(hammerBounds.min, hammerBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(hammerBounds.min, hammerBounds.max));
 
             var bodyBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = tailX, y = -rearBodyHalfWidth, z = bodyBottom - 2f },
                 new Vector3 { x = bodyMidX + 6f, y = rearBodyHalfWidth, z = rearBodyTop + 5f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(bodyBounds.min, bodyBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(bodyBounds.min, bodyBounds.max));
 
             var leftPodBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = podBackX, y = -podOuterY, z = podHalfHeightBottom - 2f },
                 new Vector3 { x = podFrontX, y = -podInnerYFront, z = podHalfHeightTop + 3f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(leftPodBounds.min, leftPodBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(leftPodBounds.min, leftPodBounds.max));
 
             var rightPodBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = podBackX, y = podInnerYFront, z = podHalfHeightBottom - 2f },
                 new Vector3 { x = podFrontX, y = podOuterY, z = podHalfHeightTop + 3f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(rightPodBounds.min, rightPodBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(rightPodBounds.min, rightPodBounds.max));
 
             var spineBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = spineBackX - 2f, y = -spineHalfWidthFront - 2f, z = spineBaseTopBack },
                 new Vector3 { x = spineFrontX + 2f, y = spineHalfWidthFront + 2f, z = spineTopMid + 4f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(spineBounds.min, spineBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(spineBounds.min, spineBounds.max));
 
             var weakSpotBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = weakSpotBackX - 3f, y = -weakSpotHalfWidth - 2f, z = weakSpotCenterZ - weakSpotHalfHeight - 2f },
                 new Vector3 { x = weakSpotFrontX + 3f, y = weakSpotHalfWidth + 2f, z = weakSpotCenterZ + weakSpotHalfHeight + 2f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(weakSpotBounds.min, weakSpotBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(weakSpotBounds.min, weakSpotBounds.max));
 
             var cannonBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = cannonBackX, y = -cannonBackHalfWidth - 2f, z = cannonBottomBack - 2f },
                 new Vector3 { x = muzzleX + 2f, y = cannonBackHalfWidth + 2f, z = cannonTopBack + 2f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(cannonBounds.min, cannonBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(cannonBounds.min, cannonBounds.max));
 
             return boxes;
         }
@@ -1387,11 +1386,11 @@ namespace TheOmegaStrain.Game.World.Objects
         //  HELPERS
         // ----------------------------------------------------
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

@@ -1,13 +1,12 @@
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
     public static class DesertTower
     {
-        public static _3dObject CreateDesertTower(ISurface parentSurface)
+        public static OmegaObject3D CreateDesertTower(ISurface parentSurface)
         {
             var tower = Tower.CreateTower(parentSurface);
             RecolorTower(tower);
@@ -15,7 +14,7 @@ namespace TheOmegaStrain.Game.World.Objects
             return tower;
         }
 
-        private static void RecolorTower(_3dObject tower)
+        private static void RecolorTower(OmegaObject3D tower)
         {
             foreach (var part in tower.ObjectParts)
             {

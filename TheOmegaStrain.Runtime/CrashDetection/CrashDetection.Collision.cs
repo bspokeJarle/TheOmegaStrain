@@ -4,14 +4,13 @@ using RetroMesh.Engine;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Runtime.Collision
 {
     public static partial class CrashDetection
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool HandleParticleCollision(_3dObject a, _3dObject b)
+        private static bool HandleParticleCollision(OmegaObject3D a, OmegaObject3D b)
         {
             var particle = a.ObjectName == "Particle" ? a : b;
             var other = particle == a ? b : a;
@@ -21,7 +20,7 @@ namespace TheOmegaStrain.Runtime.Collision
                     other,
                     particle.ImpactStatus.SourceParticle?.Physics?.Velocity,
                     GetWorldBoxPointsCached,
-                    out ParticleCollisionScanResult<_3dObject, Vector3> scanResult))
+                    out ParticleCollisionScanResult<OmegaObject3D, Vector3> scanResult))
             {
                 return false;
             }
@@ -85,7 +84,7 @@ namespace TheOmegaStrain.Runtime.Collision
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool HandleGeneralCollision(_3dObject a, _3dObject b)
+        private static bool HandleGeneralCollision(OmegaObject3D a, OmegaObject3D b)
         {
             return CollisionBoxScanner.ScanBoxCollisions(
                 a,
@@ -96,7 +95,7 @@ namespace TheOmegaStrain.Runtime.Collision
                 LogGeneralBoxPair,
                 LogGeneralOverlapCheck);
 
-            void LogGeneralBoxPair(in CollisionBoxPairContext<_3dObject, Vector3> context)
+            void LogGeneralBoxPair(in CollisionBoxPairContext<OmegaObject3D, Vector3> context)
             {
                 if (ShouldLogAny && !LogOnlyCollisions && CheckLogFilter(a, b) && LogCollisionDetails)
                 {
@@ -104,12 +103,12 @@ namespace TheOmegaStrain.Runtime.Collision
                 }
             }
 
-            void LogGeneralOverlapCheck(in CollisionBoxOverlapContext<_3dObject, Vector3> context)
+            void LogGeneralOverlapCheck(in CollisionBoxOverlapContext<OmegaObject3D, Vector3> context)
             {
                 LogCollisionBoxCheck(context.OverlapCheck, a.ObjectName, b.ObjectName);
             }
 
-            bool HandleGeneralBoxCollision(in CollisionBoxScanResult<_3dObject, Vector3> scanResult)
+            bool HandleGeneralBoxCollision(in CollisionBoxScanResult<OmegaObject3D, Vector3> scanResult)
             {
                 int ai = scanResult.BoxIndexA;
                 int bi = scanResult.BoxIndexB;
@@ -177,8 +176,8 @@ namespace TheOmegaStrain.Runtime.Collision
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryMarkTerrainAvoidanceContact(
-            _3dObject a,
-            _3dObject b,
+            OmegaObject3D a,
+            OmegaObject3D b,
             int boxIndexA,
             int boxIndexB,
             Vector3 centerA,
@@ -220,7 +219,7 @@ namespace TheOmegaStrain.Runtime.Collision
             return true;
         }
 
-        private static void HandleDecoyBlastDamage(List<_3dObject> activeWorld)
+        private static void HandleDecoyBlastDamage(List<OmegaObject3D> activeWorld)
         {
             float blastRadius = TheOmegaStrain.Common.CommonSetup.GameSetup.DecoyBlastRadius;
 
@@ -233,7 +232,7 @@ namespace TheOmegaStrain.Runtime.Collision
                 GetObjectWorldPosition,
                 HandleDecoyBlastHit);
 
-            bool IsDecoyBlastSource(_3dObject candidate)
+            bool IsDecoyBlastSource(OmegaObject3D candidate)
             {
                 if (candidate.ObjectName != "DroneDecoy") return false;
                 if (candidate.ImpactStatus?.HasExploded == true) return false;
@@ -243,7 +242,7 @@ namespace TheOmegaStrain.Runtime.Collision
                 return _processedDecoyBlasts.Add(candidate.ObjectId);
             }
 
-            bool IsDecoyBlastTarget(_3dObject source, _3dObject target)
+            bool IsDecoyBlastTarget(OmegaObject3D source, OmegaObject3D target)
             {
                 if (target.CrashBoxes == null || target.CrashBoxes.Count == 0) return false;
                 if (target.ImpactStatus?.HasExploded == true) return false;
@@ -257,7 +256,7 @@ namespace TheOmegaStrain.Runtime.Collision
                        !flags.IsStatic;
             }
 
-            void HandleDecoyBlastHit(in RadialHitContext<_3dObject, Vector3> context)
+            void HandleDecoyBlastHit(in RadialHitContext<OmegaObject3D, Vector3> context)
             {
                 if (context.Target.ImpactStatus != null)
                 {
@@ -272,7 +271,7 @@ namespace TheOmegaStrain.Runtime.Collision
             }
         }
 
-        private static void HandleBomberBombBlastDamage(List<_3dObject> activeWorld)
+        private static void HandleBomberBombBlastDamage(List<OmegaObject3D> activeWorld)
         {
             float blastRadius = TheOmegaStrain.Common.CommonSetup.GameSetup.BomberBombBlastRadius;
             float blastDamage = TheOmegaStrain.Common.CommonSetup.GameSetup.BomberBombBlastDamage;
@@ -286,7 +285,7 @@ namespace TheOmegaStrain.Runtime.Collision
                 GetShipCrashCenterWorldPosition,
                 HandleBombBlastHit);
 
-            bool IsBombBlastSource(_3dObject bomb)
+            bool IsBombBlastSource(OmegaObject3D bomb)
             {
                 if (bomb.ObjectName != "BomberBomb") return false;
                 if (bomb.ImpactStatus?.HasExploded == true) return false;
@@ -297,12 +296,12 @@ namespace TheOmegaStrain.Runtime.Collision
                 return _processedBombBlasts.Add(bomb.ObjectId);
             }
 
-            static bool IsBombBlastTarget(_3dObject source, _3dObject target)
+            static bool IsBombBlastTarget(OmegaObject3D source, OmegaObject3D target)
             {
                 return target.ObjectName == "Ship";
             }
 
-            void HandleBombBlastHit(in RadialHitContext<_3dObject, Vector3> context)
+            void HandleBombBlastHit(in RadialHitContext<OmegaObject3D, Vector3> context)
             {
                 TheOmegaStrain.Common.CommonGlobalState.GameState.GamePlayState?.ApplyDamage(blastDamage);
 
@@ -311,12 +310,12 @@ namespace TheOmegaStrain.Runtime.Collision
             }
         }
 
-        private static Vector3? GetObjectWorldPosition(_3dObject obj)
+        private static Vector3? GetObjectWorldPosition(OmegaObject3D obj)
         {
             return obj.WorldPosition as Vector3;
         }
 
-        private static Vector3? GetShipCrashCenterWorldPosition(_3dObject obj)
+        private static Vector3? GetShipCrashCenterWorldPosition(OmegaObject3D obj)
         {
             var shipPosRaw = TheOmegaStrain.Common.CommonGlobalState.GameState.ShipState?.ShipCrashCenterWorldPosition;
             return shipPosRaw == null
@@ -324,7 +323,7 @@ namespace TheOmegaStrain.Runtime.Collision
                 : new Vector3 { x = shipPosRaw.x, y = shipPosRaw.y, z = shipPosRaw.z };
         }
 
-        private static IImpactState? GetImpactState(_3dObject obj)
+        private static IImpactState? GetImpactState(OmegaObject3D obj)
         {
             return obj.ImpactStatus;
         }

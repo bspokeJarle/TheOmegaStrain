@@ -5,8 +5,7 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
-using static TheOmegaStrain.Game.Helpers._3dObjectHelpers;
+using static TheOmegaStrain.Game.Helpers.OmegaObject3DHelpers;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -140,7 +139,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
         private static readonly Vector3 BodyCenter = new Vector3 { x = 0, y = 0, z = 0 };
 
-        public static _3dObject CreateSpaceSwan(ISurface parentSurface)
+        public static OmegaObject3D CreateSpaceSwan(ISurface parentSurface)
         {
             var nose = SwanBeakNose();
             var noseTransition = SwanNoseTransition();
@@ -165,7 +164,7 @@ namespace TheOmegaStrain.Game.World.Objects
             var guide = ParticlesDirectionGuide();
             var startGuide = ParticlesStartGuide();
 
-            var swan = new _3dObject
+            var swan = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "SpaceSwan"
@@ -201,9 +200,9 @@ namespace TheOmegaStrain.Game.World.Objects
             if (crashBoxes != null)
                 swan.CrashBoxes = crashBoxes;
 
-            _3dObjectHelpers.ApplyScaleToObject(swan, ZoomRatio);
+            OmegaObject3DHelpers.ApplyScaleToObject(swan, ZoomRatio);
 
-            _3dObjectHelpers.AddSimplifiedShadowPart(swan, useFlatQuad: true);
+            OmegaObject3DHelpers.AddSimplifiedShadowPart(swan, useFlatQuad: true);
 
             return swan;
         }
@@ -799,27 +798,27 @@ namespace TheOmegaStrain.Game.World.Objects
             var noseBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = noseBaseX, y = -6.0f, z = -3.2f },
                 new Vector3 { x = noseTipX, y = 6.0f, z = 4.0f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(noseBounds.min, noseBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(noseBounds.min, noseBounds.max));
 
             var bodyBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = bodyBackX, y = -bodyHalfWidthMid, z = keelDepthMid },
                 new Vector3 { x = bodyFrontX + 3f, y = bodyHalfWidthMid, z = bodyTopMid + canopyBaseLiftMid + canopyHeightMid });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(bodyBounds.min, bodyBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(bodyBounds.min, bodyBounds.max));
 
             var rearBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = tailRootX, y = -tailTipY, z = bodyBottomBack - 1.0f },
                 new Vector3 { x = tailTipX + 2f, y = tailTipY, z = bodyTopBack + verticalFinHeight });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(rearBounds.min, rearBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(rearBounds.min, rearBounds.max));
 
             var leftWingBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = wingSeg2TipX, y = -wingSeg3TipY - 2f, z = wingSeg3TipZ - 1.8f },
                 new Vector3 { x = wingRootX + wingChordRoot, y = -wingRootY + 2f, z = wingRootZ + 2.2f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(leftWingBounds.min, leftWingBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(leftWingBounds.min, leftWingBounds.max));
 
             var rightWingBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = wingSeg2TipX, y = wingRootY - 2f, z = wingSeg3TipZ - 1.8f },
                 new Vector3 { x = wingRootX + wingChordRoot, y = wingSeg3TipY + 2f, z = wingRootZ + 2.2f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(rightWingBounds.min, rightWingBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(rightWingBounds.min, rightWingBounds.max));
 
             return boxes;
         }
@@ -828,11 +827,11 @@ namespace TheOmegaStrain.Game.World.Objects
         //  HELPERS
         // ----------------------------------------------------
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

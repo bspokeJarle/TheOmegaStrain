@@ -4,15 +4,14 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
     public static class BedouinTent
     {
-        public static _3dObject CreateBedouinTent(ISurface parentSurface)
+        public static OmegaObject3D CreateBedouinTent(ISurface parentSurface)
         {
-            var tent = new _3dObject
+            var tent = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "BedouinTent",
@@ -33,21 +32,21 @@ namespace TheOmegaStrain.Game.World.Objects
 
             tent.CrashBoxes = new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -36f, y = -15f, z = 1f },
                     new Vector3 { x = 36f, y = 15f, z = 17f })
             };
             tent.CrashBoxNames = new List<string?> { "BedouinTentBody" };
 
-            _3dObjectHelpers.AddCustomShadowPart(tent, TentShadow());
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(tent);
+            OmegaObject3DHelpers.AddCustomShadowPart(tent, TentShadow());
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(tent);
 
             return tent;
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor> triangles, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor> triangles, bool visible)
         {
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = triangles,
@@ -74,10 +73,10 @@ namespace TheOmegaStrain.Game.World.Objects
             var backLeftTop = new Vector3 { x = -12f, y = 20f, z = 18f };
             var backRightTop = new Vector3 { x = 12f, y = 20f, z = 18f };
 
-            _3dObjectHelpers.AddQuadOutward(tris, frontLeftGround, backLeftGround, backLeftTop, frontLeftTop, center, light);
-            _3dObjectHelpers.AddQuadOutward(tris, frontLeftTop, backLeftTop, backRightTop, frontRightTop, center, mid);
-            _3dObjectHelpers.AddQuadOutward(tris, frontRightTop, backRightTop, backRightGround, frontRightGround, center, dark);
-            _3dObjectHelpers.AddQuadOutward(tris, backLeftGround, backLeftTop, backRightTop, backRightGround, center, back);
+            OmegaObject3DHelpers.AddQuadOutward(tris, frontLeftGround, backLeftGround, backLeftTop, frontLeftTop, center, light);
+            OmegaObject3DHelpers.AddQuadOutward(tris, frontLeftTop, backLeftTop, backRightTop, frontRightTop, center, mid);
+            OmegaObject3DHelpers.AddQuadOutward(tris, frontRightTop, backRightTop, backRightGround, frontRightGround, center, dark);
+            OmegaObject3DHelpers.AddQuadOutward(tris, backLeftGround, backLeftTop, backRightTop, backRightGround, center, back);
 
             return tris;
         }
@@ -155,7 +154,7 @@ namespace TheOmegaStrain.Game.World.Objects
             var center = new Vector3 { x = 0f, y = -24f, z = 6f };
             return new List<ITriangleMeshWithColor>
             {
-                _3dObjectHelpers.CreateTriangleOutward(
+                OmegaObject3DHelpers.CreateTriangleOutward(
                     new Vector3 { x = -8f, y = -23f, z = 0f },
                     new Vector3 { x = 8f, y = -23f, z = 0f },
                     new Vector3 { x = 0f, y = -22f, z = 13f },
@@ -171,21 +170,21 @@ namespace TheOmegaStrain.Game.World.Objects
             var center = new Vector3 { x = 0f, y = -23f, z = 8f };
             return new List<ITriangleMeshWithColor>
             {
-                _3dObjectHelpers.CreateTriangleOutward(
+                OmegaObject3DHelpers.CreateTriangleOutward(
                     new Vector3 { x = -50f, y = -23f, z = 0f },
                     new Vector3 { x = -13f, y = -20f, z = 18f },
                     new Vector3 { x = -8f, y = -23f, z = 0f },
                     center,
                     flap,
                     noHidden: true),
-                _3dObjectHelpers.CreateTriangleOutward(
+                OmegaObject3DHelpers.CreateTriangleOutward(
                     new Vector3 { x = 8f, y = -23f, z = 0f },
                     new Vector3 { x = 13f, y = -20f, z = 18f },
                     new Vector3 { x = 50f, y = -23f, z = 0f },
                     center,
                     flap,
                     noHidden: true),
-                _3dObjectHelpers.CreateTriangleOutward(
+                OmegaObject3DHelpers.CreateTriangleOutward(
                     new Vector3 { x = -13f, y = -20f, z = 18f },
                     new Vector3 { x = 13f, y = -20f, z = 18f },
                     new Vector3 { x = 0f, y = -22f, z = 13f },
@@ -264,7 +263,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 z = (start.z + end.z) * 0.5f
             };
 
-            _3dObjectHelpers.AddQuadOutward(
+            OmegaObject3DHelpers.AddQuadOutward(
                 tris,
                 new Vector3 { x = start.x + nx, y = start.y + ny, z = start.z + 1.3f },
                 new Vector3 { x = end.x + nx, y = end.y + ny, z = end.z + 1.3f },
@@ -286,7 +285,7 @@ namespace TheOmegaStrain.Game.World.Objects
             float offset)
         {
             var normal = GetOutwardNormal(v1, v2, v3, center);
-            _3dObjectHelpers.AddQuadOutward(
+            OmegaObject3DHelpers.AddQuadOutward(
                 tris,
                 Offset(v1, normal, offset),
                 Offset(v2, normal, offset),
@@ -299,17 +298,17 @@ namespace TheOmegaStrain.Game.World.Objects
 
         private static Vector3 GetOutwardNormal(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 center)
         {
-            var edge1 = _3dObjectHelpers.Subtract(v2, v1);
-            var edge2 = _3dObjectHelpers.Subtract(v3, v1);
-            var normal = _3dObjectHelpers.Normalize(_3dObjectHelpers.Cross(edge1, edge2));
+            var edge1 = OmegaObject3DHelpers.Subtract(v2, v1);
+            var edge2 = OmegaObject3DHelpers.Subtract(v3, v1);
+            var normal = OmegaObject3DHelpers.Normalize(OmegaObject3DHelpers.Cross(edge1, edge2));
             var mid = new Vector3
             {
                 x = (v1.x + v2.x + v3.x) / 3f,
                 y = (v1.y + v2.y + v3.y) / 3f,
                 z = (v1.z + v2.z + v3.z) / 3f
             };
-            var desired = _3dObjectHelpers.Normalize(_3dObjectHelpers.Subtract(mid, center));
-            if (_3dObjectHelpers.Dot(normal, desired) < 0f)
+            var desired = OmegaObject3DHelpers.Normalize(OmegaObject3DHelpers.Subtract(mid, center));
+            if (OmegaObject3DHelpers.Dot(normal, desired) < 0f)
                 normal = new Vector3 { x = -normal.x, y = -normal.y, z = -normal.z };
 
             return normal;
@@ -349,7 +348,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
         private static List<ITriangleMeshWithColor> TentShadow()
         {
-            const string sc = _3dObjectHelpers.ShadowColorHex;
+            const string sc = OmegaObject3DHelpers.ShadowColorHex;
             var a = new Vector3 { x = -50f, y = -23f, z = 0f };
             var b = new Vector3 { x = 50f, y = -23f, z = 0f };
             var c = new Vector3 { x = 44f, y = 22f, z = 0f };

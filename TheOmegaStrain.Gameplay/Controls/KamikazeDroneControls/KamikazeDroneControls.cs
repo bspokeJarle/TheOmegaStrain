@@ -5,7 +5,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Helpers;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
 {
@@ -136,7 +135,7 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
 
             if (_audio != null && _explosionSound != null)
             {
-                var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
                 _audio.Play(
                     _explosionSound,
                     AudioPlayMode.OneShot,
@@ -208,7 +207,7 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
             {
                 if (theObject.IsOnScreen)
                 {
-                    var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                    var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
 
                     if (_droneFlyingInstance == null || !_droneFlyingInstance.IsPlaying)
                     {

@@ -89,7 +89,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
         private void ApplyIdlePose(I3dObject theObject)
         {
-            theObject.Rotation ??= new _3dSpecificsImplementations.Vector3();
+            theObject.Rotation ??= new Vector3();
             float dt = GameState.DeltaTime > 0f ? GameState.DeltaTime : GameState.GameplayBaselineDeltaTime;
             _zRotation += IdleSpinDegreesPerSecond * dt;
 
@@ -121,13 +121,13 @@ namespace TheOmegaStrain.Gameplay.Controls
                     var original = aiObjects[i];
                     if (ReferenceEquals(original, deepCopy)) return;
 
-                    original.WorldPosition = new _3dSpecificsImplementations.Vector3
+                    original.WorldPosition = new Vector3
                     {
                         x = deepCopy.WorldPosition.x,
                         y = deepCopy.WorldPosition.y,
                         z = deepCopy.WorldPosition.z
                     };
-                    original.ObjectOffsets = new _3dSpecificsImplementations.Vector3
+                    original.ObjectOffsets = new Vector3
                     {
                         x = deepCopy.ObjectOffsets.x,
                         y = deepCopy.ObjectOffsets.y,

@@ -19,7 +19,6 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Runtime.Loops
 {
@@ -35,18 +34,18 @@ namespace TheOmegaStrain.Runtime.Loops
         private readonly FramePhaseTimer phaseTimer = new();
         private int AiUpdateCounter = 0;
         private const int AiUpdateInterval = 5; // Update offscreen AI every 5 frames
-        private readonly IWorldProjector<_3dObject, ProjectedTriangleMesh> worldProjector = OmegaPerspectiveProjectorFactory.Create();
+        private readonly IWorldProjector<OmegaObject3D, ProjectedTriangleMesh> worldProjector = OmegaPerspectiveProjectorFactory.Create();
         private readonly ObjectFrameTransformer objectFrameTransformer = new();
         private readonly ParticleManager particleManager = new();
         private readonly WeaponsManager weaponsManager = new();
         private readonly ObjectShadowManager objectShadowManager = new();
-        private readonly List<_3dObject> activeWorldBuffer = new();
-        private readonly List<_3dObject> deepCopiedWorldBuffer = new();
-        private readonly List<_3dObject> particleObjectBuffer = new();
-        private readonly List<_3dObject> weaponObjectBuffer = new();
-        private readonly List<_3dObject> shadowObjectBuffer = new();
-        private readonly List<_3dObject> renderedObjectBuffer = new();
-        private readonly ObjectScreenStateTracker<_3dObject> aiScreenTracker = new();
+        private readonly List<OmegaObject3D> activeWorldBuffer = new();
+        private readonly List<OmegaObject3D> deepCopiedWorldBuffer = new();
+        private readonly List<OmegaObject3D> particleObjectBuffer = new();
+        private readonly List<OmegaObject3D> weaponObjectBuffer = new();
+        private readonly List<OmegaObject3D> shadowObjectBuffer = new();
+        private readonly List<OmegaObject3D> renderedObjectBuffer = new();
+        private readonly ObjectScreenStateTracker<OmegaObject3D> aiScreenTracker = new();
         private readonly HashSet<int> pendingExplosionCleanupIds = new();
         private readonly HashSet<int> publishedExplosionIds = new();
         private IGameEventBus? explosionCleanupEventBus;
@@ -132,8 +131,8 @@ namespace TheOmegaStrain.Runtime.Loops
             double directorHudMs = 0;
             double musicMs = 0;
 
-            List<_3dObject> deepCopiedWorld = deepCopiedWorldBuffer;
-            List<_3dObject> activeWorld = activeWorldBuffer;
+            List<OmegaObject3D> deepCopiedWorld = deepCopiedWorldBuffer;
+            List<OmegaObject3D> activeWorld = activeWorldBuffer;
             lock (_lock)
             {
                 if (GameState.PendingWorldObjects.Count > 0)
@@ -151,7 +150,7 @@ namespace TheOmegaStrain.Runtime.Loops
                     if (inhabitant.ObjectParts.Count == 0) continue;
                     if (!inhabitant.IsActive) continue;
 
-                    if (inhabitant is _3dObject concreteInhabitant && concreteInhabitant.CheckInhabitantVisibility())
+                    if (inhabitant is OmegaObject3D concreteInhabitant && concreteInhabitant.CheckInhabitantVisibility())
                     {
                         activeWorld.Add(concreteInhabitant);
                     }
@@ -454,7 +453,7 @@ namespace TheOmegaStrain.Runtime.Loops
 
         private void QueueExplosionCleanup(IGameEvent gameEvent)
         {
-            if (gameEvent.Source is not _3dObject obj || obj.ObjectName == "Ship")
+            if (gameEvent.Source is not OmegaObject3D obj || obj.ObjectName == "Ship")
             {
                 return;
             }
@@ -462,7 +461,7 @@ namespace TheOmegaStrain.Runtime.Loops
             pendingExplosionCleanupIds.Add(obj.ObjectId);
         }
 
-        private void PublishObjectExplodedIfNeeded(I3dWorld world, _3dObject obj)
+        private void PublishObjectExplodedIfNeeded(I3dWorld world, OmegaObject3D obj)
         {
             if (obj.ObjectName == "Ship" || obj.ImpactStatus?.HasExploded != true)
             {
@@ -493,14 +492,14 @@ namespace TheOmegaStrain.Runtime.Loops
 
             lock (_lock)
             {
-                List<_3dObject>? explodedObjects = null;
+                List<OmegaObject3D>? explodedObjects = null;
                 HashSet<int>? explodedIds = null;
                 HashSet<int>? observedPendingIds = useEventDrivenCleanup ? new HashSet<int>() : null;
 
                 var inhabitants = world.WorldInhabitants;
                 for (int i = 0; i < inhabitants.Count; i++)
                 {
-                    if (inhabitants[i] is not _3dObject obj)
+                    if (inhabitants[i] is not OmegaObject3D obj)
                     {
                         continue;
                     }
@@ -520,7 +519,7 @@ namespace TheOmegaStrain.Runtime.Loops
                         continue;
                     }
 
-                    explodedObjects ??= new List<_3dObject>();
+                    explodedObjects ??= new List<OmegaObject3D>();
                     explodedIds ??= new HashSet<int>(inhabitants.Count);
                     explodedObjects.Add(obj);
                     explodedIds.Add(obj.ObjectId);
@@ -676,7 +675,7 @@ namespace TheOmegaStrain.Runtime.Loops
             }
         }
 
-        private static _3dObject CreatePowerUpDrop(_3dObject source)
+        private static OmegaObject3D CreatePowerUpDrop(OmegaObject3D source)
         {
             var powerup = PowerUp.CreatePowerup(source.ParentSurface, source.PowerUpType);
             var sourceWorld = source.WorldPosition ?? new Vector3();
@@ -731,7 +730,7 @@ namespace TheOmegaStrain.Runtime.Loops
             }
         }
 
-        private static void CleanupWorldObjects(List<_3dObject> objects)
+        private static void CleanupWorldObjects(List<OmegaObject3D> objects)
         {
             EngineObjectLifecycleCleaner.Cleanup(objects, ReleaseOmegaObjectResources);
         }
@@ -742,7 +741,7 @@ namespace TheOmegaStrain.Runtime.Loops
             audioPlayer.StopNonMusic();
         }
 
-        private static string GetEnemyStatusSnapshot(List<_3dObject> aiObjects, HashSet<int> pendingRemovalIds)
+        private static string GetEnemyStatusSnapshot(List<OmegaObject3D> aiObjects, HashSet<int> pendingRemovalIds)
         {
             int liveSeeders = 0;
             int liveDrones = 0;
@@ -773,7 +772,7 @@ namespace TheOmegaStrain.Runtime.Loops
             return $"liveSeeders={liveSeeders}; liveDrones={liveDrones}; liveMotherShips={liveMotherShips}; liveOtherEnemies={liveOtherEnemies}; gpsSeeders={gps.SeedersRemaining}; gpsDrones={gps.DronesRemaining}; gpsMotherShips={gps.MotherShipsRemaining}; initialSeeders={gps.InitialSeeders}; initialDrones={gps.InitialDrones}";
         }
 
-        private static void ReleaseOmegaObjectResources(_3dObject obj)
+        private static void ReleaseOmegaObjectResources(OmegaObject3D obj)
         {
             movementDisposalGuard.TryDispose(obj.Movement);
 
@@ -1005,7 +1004,7 @@ namespace TheOmegaStrain.Runtime.Loops
         private void CompleteWorldFadeReset(I3dWorld world)
         {
             StopNonMusicAudio();
-            CleanupWorldObjects(world.WorldInhabitants.OfType<_3dObject>().ToList());
+            CleanupWorldObjects(world.WorldInhabitants.OfType<OmegaObject3D>().ToList());
             world.WorldInhabitants.Clear();
             GameState.SurfaceState.AiObjects.Clear();
             GameState.SurfaceState.DirtyTiles.Clear();
@@ -1036,7 +1035,7 @@ namespace TheOmegaStrain.Runtime.Loops
             GameState.WorldFade.RequestFadeIn(1.5f, "SceneReset");
         }
 
-        public void HandleMusic(List<_3dObject> renderedObjects, string sceneMusic)
+        public void HandleMusic(List<OmegaObject3D> renderedObjects, string sceneMusic)
         {
             if (string.IsNullOrWhiteSpace(sceneMusic))
             {
@@ -1144,7 +1143,7 @@ namespace TheOmegaStrain.Runtime.Loops
             GameState.GamePlayState.Phase = GamePhase.Paused;
         }
 
-        private void SetMovementGuides(_3dObject inhabitant, I3dObjectPart part, List<ITriangleMeshWithColor> rotatedMesh)
+        private void SetMovementGuides(OmegaObject3D inhabitant, I3dObjectPart part, List<ITriangleMeshWithColor> rotatedMesh)
         {
             switch (part.PartName)
             {

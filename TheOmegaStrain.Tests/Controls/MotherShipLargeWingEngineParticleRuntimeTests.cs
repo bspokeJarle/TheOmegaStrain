@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 

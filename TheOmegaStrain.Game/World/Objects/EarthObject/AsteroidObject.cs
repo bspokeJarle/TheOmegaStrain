@@ -3,17 +3,16 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects.EarthObject
 {
     public static class AsteroidObject
     {
-        public static _3dObject CreateAsteroid(string[] colorPalette, float size, float startOffsetX, float startOffsetY, float depth, Random rng)
+        public static OmegaObject3D CreateAsteroid(string[] colorPalette, float size, float startOffsetX, float startOffsetY, float depth, Random rng)
         {
             var tris = BuildAsteroidGeometry(colorPalette, size, rng);
 
-            var obj = new _3dObject
+            var obj = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "Asteroid",
@@ -24,7 +23,7 @@ namespace TheOmegaStrain.Game.World.Objects.EarthObject
                 IsActive = true
             };
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = "AsteroidBody",
                 Triangles = tris,

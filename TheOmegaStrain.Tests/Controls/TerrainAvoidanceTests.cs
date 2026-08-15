@@ -7,7 +7,6 @@ using TheOmegaStrain.Gameplay.Helpers;
 using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Runtime.Collision;
 using System.Reflection;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -21,7 +20,7 @@ public class TerrainAvoidanceTests
         GameState.SurfaceState = new SurfaceState
         {
             GlobalMapPosition = new Vector3 { x = 0, y = 0, z = 0 },
-            AiObjects = new List<_3dObject>()
+            AiObjects = new List<OmegaObject3D>()
         };
     }
 
@@ -113,7 +112,7 @@ public class TerrainAvoidanceTests
         GameState.SurfaceState.AiObjects.Add(motherShip);
         float originalWorldX = motherShip.WorldPosition!.x;
 
-        CrashDetection.HandleCrashboxes(new List<_3dObject> { motherShip, tower }, isPaused: false);
+        CrashDetection.HandleCrashboxes(new List<OmegaObject3D> { motherShip, tower }, isPaused: false);
         var applied = TerrainAvoidanceHelpers.ApplyTerrainRecovery(motherShip, 0.1f);
 
         Assert.IsFalse(motherShip.ImpactStatus!.HasCrashed, "Proximity avoidance should not create a combat crash.");
@@ -129,7 +128,7 @@ public class TerrainAvoidanceTests
         GameState.SurfaceState.AiObjects.Add(motherShip);
         float originalWorldX = motherShip.WorldPosition!.x;
 
-        CrashDetection.HandleCrashboxes(new List<_3dObject> { motherShip, tower }, isPaused: false);
+        CrashDetection.HandleCrashboxes(new List<OmegaObject3D> { motherShip, tower }, isPaused: false);
         var applied = TerrainAvoidanceHelpers.ApplyTerrainRecovery(motherShip, 0.1f);
 
         Assert.IsFalse(motherShip.ImpactStatus!.HasCrashed, "Distant proximity should not create a combat crash.");
@@ -207,9 +206,9 @@ public class TerrainAvoidanceTests
         Assert.IsTrue(motherShip.ObjectOffsets!.y < 75f, "Recovery should still lift the MotherShip away from terrain.");
     }
 
-    private static _3dObject CreateAiObject(int objectId, string objectName, string contactName)
+    private static OmegaObject3D CreateAiObject(int objectId, string objectName, string contactName)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = objectId,
             ObjectName = objectName,
@@ -233,7 +232,7 @@ public class TerrainAvoidanceTests
             },
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "Body",
                     IsVisible = true,
@@ -252,9 +251,9 @@ public class TerrainAvoidanceTests
         };
     }
 
-    private static _3dObject CreateProximityObject(int objectId, string objectName, float centerX)
+    private static OmegaObject3D CreateProximityObject(int objectId, string objectName, float centerX)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = objectId,
             ObjectName = objectName,
@@ -265,7 +264,7 @@ public class TerrainAvoidanceTests
             Rotation = new Vector3(),
             CrashBoxes = new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -10f, y = -10f, z = -10f },
                     new Vector3 { x = 10f, y = 10f, z = 10f })
             },
@@ -276,7 +275,7 @@ public class TerrainAvoidanceTests
             },
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "Body",
                     IsVisible = true,

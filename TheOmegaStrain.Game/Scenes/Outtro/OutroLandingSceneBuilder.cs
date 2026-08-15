@@ -7,7 +7,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.Scenes.Outro
 {
@@ -285,9 +284,9 @@ namespace TheOmegaStrain.Game.Scenes.Outro
             return total;
         }
 
-        private static _3dObject CreateSurfaceObject(Surface surface)
+        private static OmegaObject3D CreateSurfaceObject(Surface surface)
         {
-            var surfaceObject = (_3dObject)surface.GetSurfaceViewPort();
+            var surfaceObject = (OmegaObject3D)surface.GetSurfaceViewPort();
             surfaceObject.ObjectName = "Surface";
             surfaceObject.ObjectOffsets = CreateInitialSurfaceOffset();
             surfaceObject.Rotation = new Vector3 { x = WorldViewSetup.SurfacePitchDegrees, y = 0, z = 0 };
@@ -318,7 +317,7 @@ namespace TheOmegaStrain.Game.Scenes.Outro
             world.WorldInhabitants.Add(platform);
         }
 
-        private static void SeedVisibleLandBasedIds(Surface surface, _3dObject surfaceObject)
+        private static void SeedVisibleLandBasedIds(Surface surface, OmegaObject3D surfaceObject)
         {
             surface.LandBasedIds.Clear();
             surface.RotatedSurfaceTriangleByLandId.Clear();

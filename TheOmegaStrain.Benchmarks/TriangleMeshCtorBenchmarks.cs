@@ -1,6 +1,5 @@
 using BenchmarkDotNet.Attributes;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 using Microsoft.VSDiagnostics;
 
 namespace TheOmegaStrain.Benchmarks;

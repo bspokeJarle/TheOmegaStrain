@@ -3,7 +3,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -19,9 +18,9 @@ namespace TheOmegaStrain.Game.World.Objects
         public const string VisorColor = "14334A";
         private const string GloveColor = "FFFFFF";
 
-        public static _3dObject CreateAstronaut(ISurface? parentSurface)
+        public static OmegaObject3D CreateAstronaut(ISurface? parentSurface)
         {
-            var astronaut = new _3dObject { ObjectId = GameState.ObjectIdCounter++ };
+            var astronaut = new OmegaObject3D { ObjectId = GameState.ObjectIdCounter++ };
             astronaut.ObjectName = ObjectName;
             astronaut.ParentSurface = parentSurface;
             astronaut.WorldPosition = new Vector3();
@@ -136,9 +135,9 @@ namespace TheOmegaStrain.Game.World.Objects
             };
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor> triangles, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor> triangles, bool visible)
         {
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = triangles,

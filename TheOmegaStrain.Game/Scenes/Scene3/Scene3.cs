@@ -12,7 +12,6 @@ using TheOmegaStrain.Gameplay.Controls.JumpingFishControls;
 using TheOmegaStrain.Gameplay.Controls.SpaceSwanControls;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.Scenes.Scene3
 {
@@ -147,7 +146,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene3
             }
 
             // Surface
-            var surfaceObject = (_3dObject)Surface.GetSurfaceViewPort();
+            var surfaceObject = (OmegaObject3D)Surface.GetSurfaceViewPort();
             surfaceObject.ObjectName = "Surface";
             surfaceObject.ObjectOffsets = new Vector3 { x = 105 * ScreenSetup.ScreenScaleX, y = 500 * ScreenSetup.ScreenScaleY, z = 400 };
             surfaceObject.Rotation = new Vector3 { x = WorldViewSetup.SurfacePitchDegrees, y = 0, z = 0 };

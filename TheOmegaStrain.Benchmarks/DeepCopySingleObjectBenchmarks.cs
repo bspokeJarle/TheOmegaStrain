@@ -3,13 +3,12 @@ using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Common.OmegaEngineAdapters;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 public class DeepCopySingleObjectBenchmarks
 {
-    private _3dObject _source = null !;
+    private OmegaObject3D _source = null !;
     [GlobalSetup]
     public void Setup()
     {
@@ -20,7 +19,7 @@ public class DeepCopySingleObjectBenchmarks
             triangles.Add(new TriangleMeshWithColor { vert1 = new Vector3(offset, offset + 1f, offset + 2f), vert2 = new Vector3(offset + 3f, offset + 4f, offset + 5f), vert3 = new Vector3(offset + 6f, offset + 7f, offset + 8f), normal1 = new Vector3(0.1f, 0.2f, 0.3f), normal2 = new Vector3(0.2f, 0.3f, 0.4f), normal3 = new Vector3(0.3f, 0.4f, 0.5f), angle = 0.5f, Color = "FFFFFF", noHidden = false, landBasedPosition = i });
         }
 
-        _source = new _3dObject
+        _source = new OmegaObject3D
         {
             ObjectId = 1,
             ObjectName = "BenchmarkObject",
@@ -37,7 +36,7 @@ public class DeepCopySingleObjectBenchmarks
             },
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "Main",
                     IsVisible = true,

@@ -7,7 +7,6 @@ using TheOmegaStrain.Game.World.Objects;
 using System.Reflection;
 using System.Windows.Forms;
 using static TheOmegaStrain.Domain.WeaponHelpers;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -25,7 +24,7 @@ public class ShipWeaponAudioTests
         GameState.TutorialState = new TutorialRuntimeState();
         GameState.SurfaceState = new SurfaceState
         {
-            AiObjects = new List<_3dObject>(),
+            AiObjects = new List<OmegaObject3D>(),
             GlobalMapPosition = new Vector3 { x = 0f, y = 0f, z = 0f }
         };
         GameState.ShipState = new ShipState();
@@ -554,7 +553,7 @@ public class ShipWeaponAudioTests
     private static ShipFixture CreateReadyShip(bool withWeaponGuides, ISurface? parentSurface = null)
     {
         var controls = new ShipControls();
-        var ship = new _3dObject
+        var ship = new OmegaObject3D
         {
             ObjectId = GameState.ObjectIdCounter++,
             ObjectName = "Ship",
@@ -565,7 +564,7 @@ public class ShipWeaponAudioTests
             CrashBoxes = new List<List<IVector3>>(),
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "MuzzleFlash",
                     IsVisible = false,
@@ -672,7 +671,7 @@ public class ShipWeaponAudioTests
 
     private sealed class ShipFixture : IDisposable
     {
-        public ShipFixture(_3dObject ship, ShipControls controls, Weapons weapons, CapturingAudioPlayer audio)
+        public ShipFixture(OmegaObject3D ship, ShipControls controls, Weapons weapons, CapturingAudioPlayer audio)
         {
             Ship = ship;
             Controls = controls;
@@ -680,7 +679,7 @@ public class ShipWeaponAudioTests
             Audio = audio;
         }
 
-        public _3dObject Ship { get; }
+        public OmegaObject3D Ship { get; }
         public ShipControls Controls { get; }
         public Weapons Weapons { get; }
         public CapturingAudioPlayer Audio { get; }

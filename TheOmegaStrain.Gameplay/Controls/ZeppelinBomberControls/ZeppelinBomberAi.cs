@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using System;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls
 {

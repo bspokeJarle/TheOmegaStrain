@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System.Threading;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -233,9 +232,9 @@ public class SeederGuidanceArrowControlTests
             "Snap must preserve the original ship->seeder direction.");
     }
 
-    private static _3dObject CreateArrow()
+    private static OmegaObject3D CreateArrow()
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 1001,
             ObjectName = "SeederGuidanceArrow",
@@ -246,9 +245,9 @@ public class SeederGuidanceArrowControlTests
         };
     }
 
-    private static _3dObject CreateAi(string name, float x, float y, float z, bool isActive)
+    private static OmegaObject3D CreateAi(string name, float x, float y, float z, bool isActive)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = ++GameState.ObjectIdCounter,
             ObjectName = name,

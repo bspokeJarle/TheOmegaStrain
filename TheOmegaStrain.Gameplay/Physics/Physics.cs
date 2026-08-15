@@ -8,7 +8,6 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Helpers;
 using RetroMesh.Engine;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 using TheOmegaStrain.Common.CommonSetup;
 using static TheOmegaStrain.Gameplay.Helpers.PhysicsHelpers;
 
@@ -101,7 +100,7 @@ namespace TheOmegaStrain.Gameplay.Physics
             set { }
         }
 
-        // Applies speed-dependent drag (Aviator-inspired v² scaling) and clamps inertia.
+        // Applies speed-dependent drag (Aviator-inspired vï¿½ scaling) and clamps inertia.
         // At low speeds the drag factor is close to InertiaDrag (0.92); at MaxInertia the
         // effective multiplier drops to ~0.85, giving a natural top-speed feel.
         private const float DragSpeedScaling = 0.08f;
@@ -265,7 +264,7 @@ namespace TheOmegaStrain.Gameplay.Physics
 
         public void ResetHover() => HoverElapsed = 0f;
 
-        // Retained for IPhysics contract — no longer called by ship controls
+        // Retained for IPhysics contract ï¿½ no longer called by ship controls
         public void ReduceFallWithThrust(float thrust, float rotationDegrees, float deltaTime)
         {
             FallVelocity = PhysicsMotionMath.ReduceFallWithThrust(
@@ -277,7 +276,7 @@ namespace TheOmegaStrain.Gameplay.Physics
 
         // Calculates thrust on all three axes with continuous gravity. Returns updated InertiaY.
         // Tilt controls vertical/forward split; rotation controls heading.
-        // When inverted (tilt ~180°), upwardFactor goes negative — thrust pushes into the ground.
+        // When inverted (tilt ~180ï¿½), upwardFactor goes negative ï¿½ thrust pushes into the ground.
         // Gravity scales in with VerticalLiftFactor to prevent an initial dip at thrust start.
         public float CalculateThrustForces(float thrust, float tiltDegrees, float rotationDegrees, float deltaTime)
         {

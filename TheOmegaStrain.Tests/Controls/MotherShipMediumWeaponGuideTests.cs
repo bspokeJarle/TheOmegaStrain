@@ -2,7 +2,6 @@ using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls;
 using TheOmegaStrain.Game.World.Objects;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 

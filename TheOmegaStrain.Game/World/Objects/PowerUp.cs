@@ -5,8 +5,7 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Ai;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
-using static TheOmegaStrain.Game.Helpers._3dObjectHelpers;
+using static TheOmegaStrain.Game.Helpers.OmegaObject3DHelpers;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -27,7 +26,7 @@ namespace TheOmegaStrain.Game.World.Objects
         private const string SideLightColor = "5599EE";
         private const string SideDarkColor = "2266DD";
 
-        public static _3dObject CreatePowerup(
+        public static OmegaObject3D CreatePowerup(
             ISurface parentSurface,
             PowerUpType powerUpType = PowerUpType.Standard)
         {
@@ -36,7 +35,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 : TravelSpeedBody(powerUpType == PowerUpType.TravelSpeedLevel2 ? 3 : 2);
             var crash = PlusSignCrashBoxes();
 
-            var powerup = new _3dObject
+            var powerup = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectOffsets = new Vector3 { x = 0, y = 0, z = 0 },
@@ -53,7 +52,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
             if (body != null)
             {
-                powerup.ObjectParts.Add(new _3dObjectPart
+                powerup.ObjectParts.Add(new OmegaObjectPart3D
                 {
                     PartName = powerUpType == PowerUpType.Standard ? "PowerUpBody" : "TravelSpeedPowerUpBody",
                     Triangles = body,
@@ -64,8 +63,8 @@ namespace TheOmegaStrain.Game.World.Objects
             if (crash != null)
                 powerup.CrashBoxes = crash;
 
-            _3dObjectHelpers.ApplyScaleToObject(powerup, ZoomRatio);
-            _3dObjectHelpers.AddSimplifiedShadowPart(powerup, useFlatQuad: true);
+            OmegaObject3DHelpers.ApplyScaleToObject(powerup, ZoomRatio);
+            OmegaObject3DHelpers.AddSimplifiedShadowPart(powerup, useFlatQuad: true);
 
             return powerup;
         }
@@ -85,7 +84,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(min, max)
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(min, max)
             };
         }
 

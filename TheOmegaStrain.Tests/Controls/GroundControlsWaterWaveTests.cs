@@ -5,7 +5,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.GamePlayHelpers;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -35,7 +34,7 @@ public class GroundControlsWaterWaveTests
         GameState.GamePlayState = new GamePlayState();
         GameState.SurfaceState = new SurfaceState
         {
-            AiObjects = new List<_3dObject>(),
+            AiObjects = new List<OmegaObject3D>(),
             DirtyTiles = new List<IVector3>(),
             GlobalMapPosition = new Vector3 { x = 0f, y = 0f, z = 0f }
         };
@@ -226,9 +225,9 @@ public class GroundControlsWaterWaveTests
         return map;
     }
 
-    private static _3dObject CreateGround()
+    private static OmegaObject3D CreateGround()
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 100,
             ObjectName = "Surface",

@@ -1,7 +1,6 @@
 using TheOmegaStrain.Steam;
 using TheOmegaStrain.Common.Events;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Steam;
 
@@ -108,7 +107,7 @@ public sealed class SteamTests
     [TestMethod]
     public void SteamGameplaySync_DetectsDecoyKillFromEnemyImpactSource()
     {
-        var seeder = new _3dObject
+        var seeder = new OmegaObject3D
         {
             ObjectId = 1,
             ObjectName = "Seeder",
@@ -130,7 +129,7 @@ public sealed class SteamTests
     [TestMethod]
     public void SteamGameplaySync_DoesNotTreatNormalWeaponKillAsDecoyKill()
     {
-        var seeder = new _3dObject
+        var seeder = new OmegaObject3D
         {
             ObjectId = 1,
             ObjectName = "Seeder",

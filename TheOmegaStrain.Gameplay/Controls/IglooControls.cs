@@ -1,6 +1,5 @@
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {

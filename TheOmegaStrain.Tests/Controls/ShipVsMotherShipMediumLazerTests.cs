@@ -4,7 +4,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Game.World.Objects;
 using static TheOmegaStrain.Domain.WeaponHelpers;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -50,7 +49,7 @@ public class ShipVsMotherShipMediumLazerTests
         public void Dispose() { }
     }
 
-    private static _3dObject BuildLazerTemplate(string name = "Lazer", float scaleMultiplier = 1f, float crashBoxScaleMultiplier = 1f)
+    private static OmegaObject3D BuildLazerTemplate(string name = "Lazer", float scaleMultiplier = 1f, float crashBoxScaleMultiplier = 1f)
     {
         // Use the real factory so DeepCopySingleObject has every field it expects
         // (ObjectOffsets, Rotation, WorldPosition, etc.). Surface can be null for this test.
@@ -62,7 +61,7 @@ public class ShipVsMotherShipMediumLazerTests
         return beam;
     }
 
-    private static Vector3 GetCrashBoxSize(_3dObject obj)
+    private static Vector3 GetCrashBoxSize(OmegaObject3D obj)
     {
         Assert.IsNotNull(obj.CrashBoxes, $"{obj.ObjectName}: expected crashboxes.");
         Assert.AreEqual(1, obj.CrashBoxes.Count, $"{obj.ObjectName}: expected one lazer crashbox.");
@@ -96,9 +95,9 @@ public class ShipVsMotherShipMediumLazerTests
         };
     }
 
-    private static _3dObject BuildShooter(string objectName, Vector3 objectOffsets, Vector3 worldPosition)
+    private static OmegaObject3D BuildShooter(string objectName, Vector3 objectOffsets, Vector3 worldPosition)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = GameState.ObjectIdCounter++,
             ObjectName = objectName,
@@ -110,7 +109,7 @@ public class ShipVsMotherShipMediumLazerTests
         };
     }
 
-    private static Weapons BuildShipLikeWeapons(_3dObject ship)
+    private static Weapons BuildShipLikeWeapons(OmegaObject3D ship)
     {
         var template = BuildLazerTemplate("Lazer");
         return new Weapons(new List<I3dObject> { template }, new NoopMovement(), ship)
@@ -120,7 +119,7 @@ public class ShipVsMotherShipMediumLazerTests
         };
     }
 
-    private static Weapons BuildMotherShipMediumLikeWeapons(_3dObject mother)
+    private static Weapons BuildMotherShipMediumLikeWeapons(OmegaObject3D mother)
     {
         // Match Scene5 EXACTLY (after we reverted the velocity/range/lifetime overrides).
         var template = BuildLazerTemplate(
@@ -135,7 +134,7 @@ public class ShipVsMotherShipMediumLazerTests
         };
     }
 
-    private static ActiveWeapon FireOnce(Weapons weapons, _3dObject shooter)
+    private static ActiveWeapon FireOnce(Weapons weapons, OmegaObject3D shooter)
     {
         // Same trajectory/start/world triple for both shooters so differences are
         // purely a function of the Weapons-instance configuration.

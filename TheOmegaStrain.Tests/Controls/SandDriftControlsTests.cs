@@ -5,7 +5,6 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System.Linq;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 

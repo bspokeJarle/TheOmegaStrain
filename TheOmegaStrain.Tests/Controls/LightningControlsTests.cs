@@ -9,7 +9,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -22,7 +21,7 @@ public class LightningControlsTests
         GameState.GamePlayState = new GamePlayState();
         GameState.SurfaceState = new SurfaceState
         {
-            SurfaceViewportObject = new _3dObject
+            SurfaceViewportObject = new OmegaObject3D
             {
                 ObjectId = -1,
                 ObjectOffsets = new Vector3 { x = 0f, y = 500f, z = 400f }

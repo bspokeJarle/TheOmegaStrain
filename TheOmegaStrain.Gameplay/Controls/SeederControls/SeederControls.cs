@@ -5,7 +5,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Helpers;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls.SeederControls
 {
@@ -138,7 +137,7 @@ namespace TheOmegaStrain.Gameplay.Controls.SeederControls
             {
                 if (theObject.IsOnScreen)
                 {
-                    var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                    var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
 
                     if (_seederEngineInstance == null || !_seederEngineInstance.IsPlaying)
                     {
@@ -208,7 +207,7 @@ namespace TheOmegaStrain.Gameplay.Controls.SeederControls
 
                 if (hasActiveParticles && theObject.IsOnScreen)
                 {
-                    var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                    var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
 
                     if (_seederSeedingInstance == null || !_seederSeedingInstance.IsPlaying)
                     {
@@ -312,7 +311,7 @@ namespace TheOmegaStrain.Gameplay.Controls.SeederControls
                 }
                 if (_audio != null && _explosionSound != null)
                 {
-                    var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                    var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
                     //Play the explosion sound
                     _audio.Play(
                         _explosionSound,

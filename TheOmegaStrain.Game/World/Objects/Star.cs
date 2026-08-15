@@ -2,7 +2,6 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -29,7 +28,7 @@ namespace TheOmegaStrain.Game.World.Objects
         /// The star is centered around local origin (0,0,0).
         /// StarFieldHandler owns world-space placement and fading.
         /// </summary>
-        public static _3dObject CreateStar(
+        public static OmegaObject3D CreateStar(
             ISurface parentSurface,
             IVector3 randomOffset,
             float size = 4f,
@@ -39,15 +38,15 @@ namespace TheOmegaStrain.Game.World.Objects
             var chosenColor = GetRandomStarColor();
 
             var starTriangles = BuildStarGeometry(size, chosenColor);
-            _3dObjectHelpers.ApplyScaleToTriangles(starTriangles, ZoomRatio);
+            OmegaObject3DHelpers.ApplyScaleToTriangles(starTriangles, ZoomRatio);
 
-            var star = new _3dObject { ObjectId = GameState.ObjectIdCounter++ };
+            var star = new OmegaObject3D { ObjectId = GameState.ObjectIdCounter++ };
 
             // If something goes wrong, just return an empty object (safe fallback).
             if (starTriangles == null || starTriangles.Count == 0)
                 return star;
 
-            star.ObjectParts.Add(new _3dObjectPart
+            star.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = "Star_Core",
                 Triangles = starTriangles,

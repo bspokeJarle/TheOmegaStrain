@@ -16,7 +16,6 @@ using TheOmegaStrain.Gameplay.Controls;
 using System.IO;
 using System.Windows.Media;
 using NumericsVector3 = System.Numerics.Vector3;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.SceneManagement;
 
@@ -233,12 +232,12 @@ public class OutroSceneTests
     public void OutroScene_EarthGlobeVisibleTriangles_AreCulledToRoughlyFrontHalf()
     {
         var world = CreateWorldAtOutro();
-        var earth = (_3dObject)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
+        var earth = (OmegaObject3D)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
         ApplyLiveMeshRotation(earth);
 
         int triangleCount = earth.ObjectParts.Sum(p => p.Triangles.Count);
         var converter = OmegaPerspectiveProjectorFactory.Create();
-        var projected = converter.ProjectToTriangles(new List<_3dObject> { earth }, currentFrame: 1);
+        var projected = converter.ProjectToTriangles(new List<OmegaObject3D> { earth }, currentFrame: 1);
 
         // Stars carry noHidden=true and always project; globe and miniatures use backface culling.
         int starTriangleCount = earth.ObjectParts.Where(IsOutroStarPart).Sum(p => p.Triangles.Count);
@@ -269,7 +268,7 @@ public class OutroSceneTests
     public void OutroScene_EarthWorldPosition_IsAlwaysVisibleOrigin()
     {
         var world = CreateWorldAtOutro();
-        var earth = (_3dObject)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
+        var earth = (OmegaObject3D)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
 
         Assert.IsNotNull(earth.WorldPosition, "Earth must have a WorldPosition so the render loop can test visibility.");
         Assert.AreEqual(0f, earth.WorldPosition.x);
@@ -352,13 +351,13 @@ public class OutroSceneTests
     public void OutroShipControls_FirstMove_ProjectsVisibleShipTriangles()
     {
         var world = CreateWorldAtOutro();
-        var ship = (_3dObject)world.WorldInhabitants.First(o => o.ObjectName == "Ship");
+        var ship = (OmegaObject3D)world.WorldInhabitants.First(o => o.ObjectName == "Ship");
 
         ship.Movement!.MoveObject(ship, null, null);
         ApplyLiveMeshRotation(ship);
 
         var converter = OmegaPerspectiveProjectorFactory.Create();
-        var projected = converter.ProjectToTriangles(new List<_3dObject> { ship }, currentFrame: 1);
+        var projected = converter.ProjectToTriangles(new List<OmegaObject3D> { ship }, currentFrame: 1);
 
         Assert.IsTrue(projected.Count > 0, "Outro ship should be visible on the first rendered movement frame.");
         Assert.IsTrue(projected.Any(t => t.PartName == "UpperPart" || t.PartName == "LowerPart" || t.PartName == "RearPart"),
@@ -726,8 +725,8 @@ public class OutroSceneTests
         //   3. Every ship hull triangle must have a higher CalculatedZ than
         //      every Earth globe triangle so that the ship is always painted last (on top).
         var world = CreateWorldAtOutro();
-        var earth = (_3dObject)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
-        var ship  = (_3dObject)world.WorldInhabitants.First(o => o.ObjectName == "Ship");
+        var earth = (OmegaObject3D)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
+        var ship  = (OmegaObject3D)world.WorldInhabitants.First(o => o.ObjectName == "Ship");
 
         // Run one movement tick � this sets ZSortBias and positions ship in Phase 1
         ship.Movement!.MoveObject(ship, null, null);
@@ -737,7 +736,7 @@ public class OutroSceneTests
 
         var converter = OmegaPerspectiveProjectorFactory.Create();
         // Project both objects together, exactly as the renderer does
-        var allTriangles = converter.ProjectToTriangles(new List<_3dObject> { earth, ship }, currentFrame: 1);
+        var allTriangles = converter.ProjectToTriangles(new List<OmegaObject3D> { earth, ship }, currentFrame: 1);
 
         // Renderer sort: ascending CalculatedZ ? highest = drawn last = on top
         allTriangles.Sort((a, b) => a.CalculatedZ.CompareTo(b.CalculatedZ));
@@ -834,12 +833,12 @@ public class OutroSceneTests
     public void OutroScene_EarthProjectsVisibleTriangles()
     {
         var world = CreateWorldAtOutro();
-        var earth = (_3dObject)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
+        var earth = (OmegaObject3D)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
         ApplyLiveMeshRotation(earth);
         int triangleCount = earth.ObjectParts.Sum(p => p.Triangles.Count);
         var converter = OmegaPerspectiveProjectorFactory.Create();
 
-        var projected = converter.ProjectToTriangles(new List<_3dObject> { earth }, currentFrame: 1);
+        var projected = converter.ProjectToTriangles(new List<OmegaObject3D> { earth }, currentFrame: 1);
         var bounds = GetProjectedBounds(projected);
         var brightestShade = projected.Max(CalculateRenderShadeFactor);
 
@@ -858,11 +857,11 @@ public class OutroSceneTests
     public void OutroScene_EarthSurvivesLiveRotationAndRenderFiltering()
     {
         var world = CreateWorldAtOutro();
-        var earth = (_3dObject)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
+        var earth = (OmegaObject3D)world.WorldInhabitants.First(o => o.ObjectName == "Earth");
         ApplyLiveMeshRotation(earth);
 
         var converter = OmegaPerspectiveProjectorFactory.Create();
-        var projected = converter.ProjectToTriangles(new List<_3dObject> { earth }, currentFrame: 1);
+        var projected = converter.ProjectToTriangles(new List<OmegaObject3D> { earth }, currentFrame: 1);
         int renderable = WorldRenderer.ProcessTrianglesForRender(
             projected,
             new Dictionary<(float, string), Color>(),
@@ -931,9 +930,9 @@ public class OutroSceneTests
     public void OutroLandingSceneBuilder_Build_ClearsSpaceObjectsAndCreatesLandingSurface()
     {
         var world = new TestWorld();
-        world.WorldInhabitants.Add(new _3dObject { ObjectId = 1, ObjectName = "Earth" });
-        world.WorldInhabitants.Add(new _3dObject { ObjectId = 2, ObjectName = "Asteroid" });
-        world.WorldInhabitants.Add(new _3dObject { ObjectId = 3, ObjectName = "Ship" });
+        world.WorldInhabitants.Add(new OmegaObject3D { ObjectId = 1, ObjectName = "Earth" });
+        world.WorldInhabitants.Add(new OmegaObject3D { ObjectId = 2, ObjectName = "Asteroid" });
+        world.WorldInhabitants.Add(new OmegaObject3D { ObjectId = 3, ObjectName = "Ship" });
 
         var builder = new OutroLandingSceneBuilder();
         builder.Build(world);
@@ -1620,7 +1619,7 @@ public class OutroSceneTests
             "Flat firework particles should render from both sides.");
     }
 
-    private static void ApplyLiveMeshRotation(_3dObject obj)
+    private static void ApplyLiveMeshRotation(OmegaObject3D obj)
     {
         var rotate = new OmegaMeshRotation();
         var rotation = (Vector3)obj.Rotation;
@@ -1660,7 +1659,7 @@ public class OutroSceneTests
         ApplyLiveMeshRotation(ship);
 
         var converter = OmegaPerspectiveProjectorFactory.Create();
-        var projected = converter.ProjectToTriangles(new List<_3dObject> { ship }, currentFrame: 1)
+        var projected = converter.ProjectToTriangles(new List<OmegaObject3D> { ship }, currentFrame: 1)
             .Where(t => t.PartName == "UpperPart" || t.PartName == "LowerPart" || t.PartName == "RearPart" || t.PartName == "Winglets")
             .ToList();
 

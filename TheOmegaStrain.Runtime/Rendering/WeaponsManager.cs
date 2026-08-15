@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Domain;
 
 namespace TheOmegaStrain.Runtime.Rendering
 {
     public class WeaponsManager
     {
-        public void HandleWeapons(_3dObject inhabitant, List<_3dObject> weaponObjectList)
+        public void HandleWeapons(OmegaObject3D inhabitant, List<OmegaObject3D> weaponObjectList)
         {
             if (inhabitant == null)
                 return;
@@ -18,7 +18,7 @@ namespace TheOmegaStrain.Runtime.Rendering
             //Get finished weapons from the weapon system
             foreach (var obj in weaponSystem.Get3DObjects())
             {
-                if (obj is not _3dObject weapon)
+                if (obj is not OmegaObject3D weapon)
                     continue;
                 // Match ParentSurface til skipet dersom den mangler
                 if (weapon.ParentSurface == null)

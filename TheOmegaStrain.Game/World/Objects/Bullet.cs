@@ -5,7 +5,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Ai;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -13,12 +12,12 @@ namespace TheOmegaStrain.Game.World.Objects
     {
         private const float ZoomRatio = 1f;
 
-        public static _3dObject CreateBullet(ISurface parentSurface)
+        public static OmegaObject3D CreateBullet(ISurface parentSurface)
         {
             var body = BulletBody();
             var crash = BulletCrashBoxes();
 
-            var bullet = new _3dObject
+            var bullet = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectOffsets = new Vector3 { x = 0, y = 0, z = 0 },
@@ -33,7 +32,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
             if (body != null)
             {
-                bullet.ObjectParts.Add(new _3dObjectPart
+                bullet.ObjectParts.Add(new OmegaObjectPart3D
                 {
                     PartName = "BulletBody",
                     Triangles = body,
@@ -44,7 +43,7 @@ namespace TheOmegaStrain.Game.World.Objects
             if (crash != null)
                 bullet.CrashBoxes = crash;
 
-            _3dObjectHelpers.ApplyScaleToObject(bullet, ZoomRatio);
+            OmegaObject3DHelpers.ApplyScaleToObject(bullet, ZoomRatio);
 
             return bullet;
         }
@@ -71,7 +70,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(min, max)
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(min, max)
             };
         }
 

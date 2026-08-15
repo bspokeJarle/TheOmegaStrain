@@ -2,7 +2,6 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -23,22 +22,22 @@ namespace TheOmegaStrain.Game.World.Objects
         private const float CrownRadius = 34f;
         private const float CrownHeight = 36f;
 
-        public static _3dObject CreateLeafTree(ISurface parentSurface)
+        public static OmegaObject3D CreateLeafTree(ISurface parentSurface)
         {
             var trunkAndBranches = TrunkTriangles();
             trunkAndBranches.AddRange(BranchTriangles());
 
-            var tree = new _3dObject { ObjectId = GameState.ObjectIdCounter++ };
+            var tree = new OmegaObject3D { ObjectId = GameState.ObjectIdCounter++ };
             tree.HasShadow = true;
 
-            tree.ObjectParts.Add(new _3dObjectPart
+            tree.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = "TreeTrunk",
                 Triangles = trunkAndBranches,
                 IsVisible = true
             });
 
-            tree.ObjectParts.Add(new _3dObjectPart
+            tree.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = "TreeFoliage",
                 Triangles = LeafTriangles(),
@@ -51,8 +50,8 @@ namespace TheOmegaStrain.Game.World.Objects
             tree.ShadowOffset = new Vector3 { x = -10, y = 0, z = -10 };
             tree.CrashBoxes = LeafTreeCrashBoxes();
 
-            _3dObjectHelpers.AddCustomShadowPart(tree, LeafTreeShadow());
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(tree);
+            OmegaObject3DHelpers.AddCustomShadowPart(tree, LeafTreeShadow());
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(tree);
 
             return tree;
         }
@@ -191,13 +190,13 @@ namespace TheOmegaStrain.Game.World.Objects
         {
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -11f, y = -11f, z = 0f },
                     new Vector3 { x = 11f, y = 11f, z = TrunkHeight }),
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -CrownRadius, y = -CrownRadius * 0.85f, z = TrunkHeight },
                     new Vector3 { x = CrownRadius, y = CrownRadius * 0.85f, z = TrunkHeight + CrownHeight * 0.65f }),
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -CrownRadius * 0.55f, y = -CrownRadius * 0.55f, z = TrunkHeight + CrownHeight * 0.55f },
                     new Vector3 { x = CrownRadius * 0.55f, y = CrownRadius * 0.55f, z = TrunkHeight + CrownHeight })
             };
@@ -206,7 +205,7 @@ namespace TheOmegaStrain.Game.World.Objects
         private static List<ITriangleMeshWithColor> LeafTreeShadow()
         {
             var shadow = new List<ITriangleMeshWithColor>();
-            const string sc = _3dObjectHelpers.ShadowColorHex;
+            const string sc = OmegaObject3DHelpers.ShadowColorHex;
 
             AddShadowQuad(shadow, V(-4f, 0f, 0f), V(4f, 0f, 0f), V(4f, 0f, 18f), V(-4f, 0f, 18f), sc);
 

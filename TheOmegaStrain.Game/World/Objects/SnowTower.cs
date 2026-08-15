@@ -5,7 +5,6 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -50,9 +49,9 @@ namespace TheOmegaStrain.Game.World.Objects
         private static string towerIceDark = "6EAFC5";
         private static string antennaRed = "FF3344";
 
-        public static _3dObject CreateSnowTower(ISurface parentSurface)
+        public static OmegaObject3D CreateSnowTower(ISurface parentSurface)
         {
-            var tower = new _3dObject
+            var tower = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "SnowTower",
@@ -76,9 +75,9 @@ namespace TheOmegaStrain.Game.World.Objects
             tower.CrashBoxes = SnowTowerCrashBoxes();
             tower.CrashBoxNames = new List<string?> { "IglooBase", "TowerShaft", "TowerHead" };
 
-            _3dObjectHelpers.AddCustomShadowPart(tower, SnowTowerShadow());
-            _3dObjectHelpers.ApplyScaleToObject(tower, LandBasedObjectSetup.WinterSurfaceObjectScale);
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(tower);
+            OmegaObject3DHelpers.AddCustomShadowPart(tower, SnowTowerShadow());
+            OmegaObject3DHelpers.ApplyScaleToObject(tower, LandBasedObjectSetup.WinterSurfaceObjectScale);
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(tower);
 
             return tower;
         }
@@ -327,15 +326,15 @@ namespace TheOmegaStrain.Game.World.Objects
         {
             var boxes = new List<List<IVector3>>();
 
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(
                 new Vector3 { x = -iglooRadius, y = -iglooRadius - entranceDepth, z = 0f },
                 new Vector3 { x = iglooRadius, y = iglooRadius, z = iglooHeight + 2f }));
 
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(
                 new Vector3 { x = -shaftBottomRadius - 2f, y = -shaftBottomRadius - 2f, z = iglooHeight },
                 new Vector3 { x = shaftBottomRadius + 2f, y = shaftBottomRadius + 2f, z = iglooHeight + shaftHeight }));
 
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(
                 new Vector3 { x = -headTopRadius - 6f, y = -headTopRadius - 6f, z = iglooHeight + shaftHeight },
                 new Vector3 { x = headTopRadius + 6f, y = headTopRadius + 6f, z = iglooHeight + shaftHeight + headHeight + snowLidHeight + mastHeight }));
 
@@ -345,7 +344,7 @@ namespace TheOmegaStrain.Game.World.Objects
         private static List<ITriangleMeshWithColor> SnowTowerShadow()
         {
             var tris = new List<ITriangleMeshWithColor>();
-            const string sc = _3dObjectHelpers.ShadowColorHex;
+            const string sc = OmegaObject3DHelpers.ShadowColorHex;
 
             var center = new Vector3 { x = 0f, y = 0f, z = 0f };
 
@@ -485,11 +484,11 @@ namespace TheOmegaStrain.Game.World.Objects
             return towerIceDark;
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

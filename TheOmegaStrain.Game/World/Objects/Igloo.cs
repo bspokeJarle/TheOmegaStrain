@@ -6,7 +6,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -24,9 +23,9 @@ namespace TheOmegaStrain.Game.World.Objects
         private static string entranceDark = "101820";
         private static string glowBlue = "78D8FF";
 
-        public static _3dObject CreateSmallIgloo(ISurface parentSurface)
+        public static OmegaObject3D CreateSmallIgloo(ISurface parentSurface)
         {
-            var igloo = new _3dObject
+            var igloo = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "SmallIgloo",
@@ -44,17 +43,17 @@ namespace TheOmegaStrain.Game.World.Objects
             igloo.CrashBoxes = IglooCrashBoxes(15f, 12f, 8f);
             igloo.CrashBoxNames = new List<string?> { "IglooDome", "Entrance" };
 
-            _3dObjectHelpers.AddCustomShadowPart(igloo, IglooShadow(15f, 12f));
-            _3dObjectHelpers.ApplyScaleToObject(igloo, SmallIglooScale * LandBasedObjectSetup.WinterSurfaceObjectScale);
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(igloo);
+            OmegaObject3DHelpers.AddCustomShadowPart(igloo, IglooShadow(15f, 12f));
+            OmegaObject3DHelpers.ApplyScaleToObject(igloo, SmallIglooScale * LandBasedObjectSetup.WinterSurfaceObjectScale);
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(igloo);
             igloo.Movement = new IglooControls();
 
             return igloo;
         }
 
-        public static _3dObject CreateLargeIgloo(ISurface parentSurface)
+        public static OmegaObject3D CreateLargeIgloo(ISurface parentSurface)
         {
-            var igloo = new _3dObject
+            var igloo = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "LargeIgloo",
@@ -74,9 +73,9 @@ namespace TheOmegaStrain.Game.World.Objects
             igloo.CrashBoxes = IglooCrashBoxes(25f, 20f, 13f);
             igloo.CrashBoxNames = new List<string?> { "IglooDome", "Entrance" };
 
-            _3dObjectHelpers.AddCustomShadowPart(igloo, IglooShadow(25f, 20f));
-            _3dObjectHelpers.ApplyScaleToObject(igloo, LargeIglooScale * LandBasedObjectSetup.WinterSurfaceObjectScale);
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(igloo);
+            OmegaObject3DHelpers.AddCustomShadowPart(igloo, IglooShadow(25f, 20f));
+            OmegaObject3DHelpers.ApplyScaleToObject(igloo, LargeIglooScale * LandBasedObjectSetup.WinterSurfaceObjectScale);
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(igloo);
             igloo.Movement = new IglooControls();
 
             return igloo;
@@ -254,12 +253,12 @@ namespace TheOmegaStrain.Game.World.Objects
         {
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -radius, y = -radius, z = 0f },
                     new Vector3 { x = radius, y = radius, z = height }
                 ),
 
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -radius * 0.35f, y = -radius - entranceDepth, z = 0f },
                     new Vector3 { x = radius * 0.35f, y = -radius * 0.4f, z = height * 0.55f }
                 )
@@ -269,7 +268,7 @@ namespace TheOmegaStrain.Game.World.Objects
         private static List<ITriangleMeshWithColor> IglooShadow(float radius, float height)
         {
             var tris = new List<ITriangleMeshWithColor>();
-            const string sc = _3dObjectHelpers.ShadowColorHex;
+            const string sc = OmegaObject3DHelpers.ShadowColorHex;
 
             var bottom = new Vector3 { x = 0f, y = 0f, z = 0f };
 
@@ -323,11 +322,11 @@ namespace TheOmegaStrain.Game.World.Objects
             return points;
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

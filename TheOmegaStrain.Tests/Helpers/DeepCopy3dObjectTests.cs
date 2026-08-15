@@ -1,6 +1,5 @@
 using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Helpers;
 
@@ -11,12 +10,12 @@ public class DeepCopy3dObjectTests
     public void DeepCopy3dObjects_ReusesProvidedResultListAndCopiesCrashBoxes()
     {
         var source = CreateObject();
-        var result = new List<_3dObject>
+        var result = new List<OmegaObject3D>
         {
             CreateObject()
         };
 
-        OmegaObjectHelpers.DeepCopy3dObjects(new List<_3dObject> { source }, result);
+        OmegaObjectHelpers.DeepCopy3dObjects(new List<OmegaObject3D> { source }, result);
 
         Assert.AreEqual(1, result.Count);
         var copy = result[0];
@@ -46,7 +45,7 @@ public class DeepCopy3dObjectTests
         triangle.normal2 = null!;
         triangle.normal3 = null!;
 
-        var copy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(source);
+        var copy = (OmegaObject3D)OmegaObjectHelpers.DeepCopySingleObject(source);
         var copiedTriangle = (TriangleMeshWithColor)copy.ObjectParts[0].Triangles[0];
 
         Assert.IsNull(copiedTriangle.Normal2Raw);
@@ -55,9 +54,9 @@ public class DeepCopy3dObjectTests
         Assert.AreNotSame(triangle.Vert1Raw, copiedTriangle.Vert1Raw);
     }
 
-    private static _3dObject CreateObject()
+    private static OmegaObject3D CreateObject()
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 7,
             ObjectName = "DeepCopyTarget",
@@ -77,7 +76,7 @@ public class DeepCopy3dObjectTests
             },
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "Main",
                     IsVisible = true,

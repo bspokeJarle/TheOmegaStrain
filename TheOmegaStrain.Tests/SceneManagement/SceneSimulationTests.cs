@@ -7,7 +7,6 @@ using TheOmegaStrain.Common.Events;
 using TheOmegaStrain.Common.Persistence;
 using TheOmegaStrain.Domain;
 using System.Reflection;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.SceneManagement;
 
@@ -211,7 +210,7 @@ public class SceneSimulationTests
         gps.InitialDrones = 2;
         gps.InitialMotherShips = 1;
 
-        var motherShip = new _3dObject
+        var motherShip = new OmegaObject3D
         {
             ObjectId = 42,
             ObjectName = "MotherShipLarge",

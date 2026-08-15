@@ -2,7 +2,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using System.Runtime.CompilerServices;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 
 namespace TheOmegaStrain.Common.OmegaEngineAdapters
@@ -72,18 +71,18 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters
         {
             return GeometryMath.DotNormalized(a, b);
         }
-        public static IVector3? GetLocalWorldPosition(this _3dObject inhabitant)
+        public static IVector3? GetLocalWorldPosition(this OmegaObject3D inhabitant)
         {
             var globalMapPosition = GameState.SurfaceState.GlobalMapPosition;
             return WorldPositionMath.GetLocalWorldPosition(inhabitant, globalMapPosition, CreateVector);
         }
 
-        public static Vector3 GetAudioPosition(this _3dObject inhabitant)
+        public static Vector3 GetAudioPosition(this OmegaObject3D inhabitant)
         {
             var localWorldPosition = inhabitant?.GetLocalWorldPosition();
             return WorldPositionMath.GetAudioPosition(inhabitant, localWorldPosition, CreateVector);
         }
-        public static bool CheckInhabitantVisibility(this _3dObject inhabitant)
+        public static bool CheckInhabitantVisibility(this OmegaObject3D inhabitant)
         {
             // 1. Land-based check
             if (inhabitant.SurfaceBasedId > 0 && inhabitant.ParentSurface?.LandBasedIds != null)
@@ -170,20 +169,20 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters
                 : CopyTriangles(part.Triangles);
         }
 
-        public static List<_3dObject> DeepCopy3dObjects(List<_3dObject> inhabitants)
+        public static List<OmegaObject3D> DeepCopy3dObjects(List<OmegaObject3D> inhabitants)
         {
-            var result = new List<_3dObject>(inhabitants.Count);
+            var result = new List<OmegaObject3D>(inhabitants.Count);
             DeepCopy3dObjects(inhabitants, result);
             return result;
         }
 
-        public static void DeepCopy3dObjects(List<_3dObject> inhabitants, List<_3dObject> result)
+        public static void DeepCopy3dObjects(List<OmegaObject3D> inhabitants, List<OmegaObject3D> result)
         {
             EngineObjectCloner.CopyRenderableObjects(
                 inhabitants,
                 result,
-                static objectId => new _3dObject { ObjectId = objectId },
-                static () => new _3dObjectPart(),
+                static objectId => new OmegaObject3D { ObjectId = objectId },
+                static () => new OmegaObjectPart3D(),
                 static () => new TriangleMeshWithColor(),
                 CopyRequiredVector,
                 copyCrashboxes: true,
@@ -192,37 +191,37 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters
 
         public static I3dObject DeepCopySingleObject(I3dObject original)
         {
-            return original is _3dObject concrete
+            return original is OmegaObject3D concrete
                 ? DeepCopyObject(concrete, copyCrashboxes: false)
                 : DeepCopyObject(original, copyCrashboxes: false);
         }
 
-        private static _3dObject DeepCopyObject(_3dObject original, bool copyCrashboxes)
+        private static OmegaObject3D DeepCopyObject(OmegaObject3D original, bool copyCrashboxes)
         {
             var copy = CreateEngineCopy(original, copyCrashboxes);
             CopyGameObjectFields(original, copy);
             return copy;
         }
 
-        private static _3dObject DeepCopyObject(I3dObject original, bool copyCrashboxes)
+        private static OmegaObject3D DeepCopyObject(I3dObject original, bool copyCrashboxes)
         {
             var copy = CreateEngineCopy(original, copyCrashboxes);
             CopyGameObjectFields(original, copy);
             return copy;
         }
 
-        private static _3dObject CreateEngineCopy(IRenderable3dObject original, bool copyCrashboxes)
+        private static OmegaObject3D CreateEngineCopy(IRenderable3dObject original, bool copyCrashboxes)
         {
             return EngineObjectCloner.CopyRenderableObject(
                 original,
-                static objectId => new _3dObject { ObjectId = objectId },
-                static () => new _3dObjectPart(),
+                static objectId => new OmegaObject3D { ObjectId = objectId },
+                static () => new OmegaObjectPart3D(),
                 static () => new TriangleMeshWithColor(),
                 CopyRequiredVector,
                 copyCrashboxes);
         }
 
-        private static void CopyGameObjectFields(I3dObject original, _3dObject copy)
+        private static void CopyGameObjectFields(I3dObject original, OmegaObject3D copy)
         {
             copy.Movement = original.Movement;
             copy.Particles = original.Particles;

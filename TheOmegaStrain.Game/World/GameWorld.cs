@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.Events;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Game.SceneManagement;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World
 {

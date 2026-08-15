@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {
@@ -267,7 +266,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             if (_audio == null || _bearGrowlSound == null)
                 return;
 
-            var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+            var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
             _audio.Play(
                 _bearGrowlSound,
                 AudioPlayMode.OneShot,

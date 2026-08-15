@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Runtime.Collision;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Physics;
 
@@ -17,7 +16,7 @@ public class LazerCrashDetectionTests
         GameState.ShipState = new ShipState();
         GameState.SurfaceState = new SurfaceState
         {
-            AiObjects = new List<_3dObject>(),
+            AiObjects = new List<OmegaObject3D>(),
             GlobalMapPosition = new Vector3 { x = 0f, y = 0f, z = 0f }
         };
     }
@@ -28,7 +27,7 @@ public class LazerCrashDetectionTests
         var lazer = CreateCrashObject("Lazer", 9101);
         var enemy = CreateCrashObject("KamikazeDrone", 9102);
 
-        CrashDetection.HandleCrashboxes(new List<_3dObject> { lazer, enemy }, isPaused: false);
+        CrashDetection.HandleCrashboxes(new List<OmegaObject3D> { lazer, enemy }, isPaused: false);
 
         Assert.IsTrue(lazer.ImpactStatus!.HasCrashed, "Player lazer should be allowed to hit enemies.");
         Assert.IsTrue(enemy.ImpactStatus!.HasCrashed, "Enemy should receive the player lazer collision.");
@@ -42,7 +41,7 @@ public class LazerCrashDetectionTests
         var lazer = CreateCrashObject("EnemyLazerMedium", 9201);
         var enemy = CreateCrashObject("KamikazeDrone", 9202);
 
-        CrashDetection.HandleCrashboxes(new List<_3dObject> { lazer, enemy }, isPaused: false);
+        CrashDetection.HandleCrashboxes(new List<OmegaObject3D> { lazer, enemy }, isPaused: false);
 
         Assert.IsFalse(lazer.ImpactStatus!.HasCrashed, "Enemy lazer should not collide with enemies.");
         Assert.IsFalse(enemy.ImpactStatus!.HasCrashed, "Enemies should ignore enemy lazer collisions.");
@@ -54,7 +53,7 @@ public class LazerCrashDetectionTests
         var lazer = CreateCrashObject("EnemyLazerMedium", 9301);
         var ship = CreateCrashObject("Ship", 9302);
 
-        CrashDetection.HandleCrashboxes(new List<_3dObject> { lazer, ship }, isPaused: false);
+        CrashDetection.HandleCrashboxes(new List<OmegaObject3D> { lazer, ship }, isPaused: false);
 
         Assert.IsTrue(lazer.ImpactStatus!.HasCrashed, "Enemy lazer should still be allowed to hit the player ship.");
         Assert.IsTrue(ship.ImpactStatus!.HasCrashed, "Ship should receive enemy lazer collisions.");
@@ -69,7 +68,7 @@ public class LazerCrashDetectionTests
         var lazer = CreateCrashObject("EnemyLazerMedium", 9401);
         var ship = CreateCrashObject("Ship", 9402);
 
-        CrashDetection.HandleCrashboxes(new List<_3dObject> { lazer, ship }, isPaused: false);
+        CrashDetection.HandleCrashboxes(new List<OmegaObject3D> { lazer, ship }, isPaused: false);
 
         Assert.IsFalse(lazer.ImpactStatus!.HasCrashed,
             "Suppression after overlay resume should skip collision pairs involving Ship.");
@@ -77,9 +76,9 @@ public class LazerCrashDetectionTests
             "Ship should not receive crash state during the short overlay resume grace window.");
     }
 
-    private static _3dObject CreateCrashObject(string objectName, int objectId)
+    private static OmegaObject3D CreateCrashObject(string objectName, int objectId)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = objectId,
             ObjectName = objectName,
@@ -97,7 +96,7 @@ public class LazerCrashDetectionTests
     {
         return new List<List<IVector3>>
         {
-            _3dObjectHelpers.GenerateCrashBoxCorners(
+            OmegaObject3DHelpers.GenerateCrashBoxCorners(
                 new Vector3 { x = -10f, y = -10f, z = -10f },
                 new Vector3 { x = 10f, y = 10f, z = 10f })
         };
@@ -107,7 +106,7 @@ public class LazerCrashDetectionTests
     {
         return new List<I3dObjectPart>
         {
-            new _3dObjectPart
+            new OmegaObjectPart3D
             {
                 PartName = "Body",
                 IsVisible = true,

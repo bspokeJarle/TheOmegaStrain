@@ -1,10 +1,7 @@
 namespace TheOmegaStrain.Domain
 {
-    public partial class _3dSpecificsImplementations
+    public class TriangleMesh : EngineTriangleMesh
     {
-        public class TriangleMesh : EngineTriangleMesh
-        {
-            protected override IVector3 CreateVector() => new Vector3();
-        }
+        protected override IVector3 CreateVector() => new Vector3();
     }
 }

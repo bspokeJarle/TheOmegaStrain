@@ -4,12 +4,11 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Runtime.Rendering
 {
     using NumericsVector3 = System.Numerics.Vector3;
-    using EngineVector3 = _3dSpecificsImplementations.Vector3;
+    using EngineVector3 = Vector3;
 
     public class StarFieldHandler
     {
@@ -37,7 +36,7 @@ namespace TheOmegaStrain.Runtime.Rendering
 
         private readonly Random random = new();
         private readonly List<StarState> stars = new(TargetStarCount);
-        private readonly List<_3dObject> renderableStars = new(TargetStarCount);
+        private readonly List<OmegaObject3D> renderableStars = new(TargetStarCount);
         private bool enableLogging = false;
         private bool hasLastWorldPosition;
         private bool isMoving;
@@ -145,7 +144,7 @@ namespace TheOmegaStrain.Runtime.Rendering
             };
         }
 
-        public List<_3dObject> GetStars()
+        public List<OmegaObject3D> GetStars()
         {
             if (renderableStars.Count == 0) return null;
             return renderableStars;
@@ -434,7 +433,7 @@ namespace TheOmegaStrain.Runtime.Rendering
             return $"{(int)(r * opacity):X2}{(int)(g * opacity):X2}{(int)(b * opacity):X2}";
         }
 
-        private static string GetBaseColor(_3dObject star)
+        private static string GetBaseColor(OmegaObject3D star)
         {
             if (star.ObjectParts.Count == 0)
                 return "ffffff";
@@ -461,7 +460,7 @@ namespace TheOmegaStrain.Runtime.Rendering
 
         private sealed class StarState
         {
-            public required _3dObject Star;
+            public required OmegaObject3D Star;
             public required string BaseColor;
             public float Opacity;
             public StarFadeMode FadeMode;

@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.GamePlayHelpers;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -18,7 +17,7 @@ public class GroundControlsCraterTests
         GameState.SurfaceState = new SurfaceState
         {
             Global2DMap = new SurfaceData[5, 5],
-            AiObjects = new List<_3dObject>()
+            AiObjects = new List<OmegaObject3D>()
         };
 
         for (int z = 0; z < 5; z++)
@@ -45,7 +44,7 @@ public class GroundControlsCraterTests
 
         GameState.SurfaceState.AiObjects.Add(CreateSurfaceBombAtTile(2, 2));
 
-        var ground = new _3dObject
+        var ground = new OmegaObject3D
         {
             ObjectId = 100,
             ObjectName = "Surface",
@@ -79,7 +78,7 @@ public class GroundControlsCraterTests
 
         SetTile(1, 1, 20);
 
-        GameState.SurfaceState.AiObjects.Add(new _3dObject
+        GameState.SurfaceState.AiObjects.Add(new OmegaObject3D
         {
             ObjectId = 9002,
             ObjectName = "BomberBomb",
@@ -96,7 +95,7 @@ public class GroundControlsCraterTests
             }
         });
 
-        var ground = new _3dObject
+        var ground = new OmegaObject3D
         {
             ObjectId = 100,
             ObjectName = "Surface",
@@ -115,7 +114,7 @@ public class GroundControlsCraterTests
     {
         GameState.SurfaceState.AiObjects.Add(CreateSurfaceBombAtTile(2, 2));
 
-        var ground = new _3dObject
+        var ground = new OmegaObject3D
         {
             ObjectId = 100,
             ObjectName = "Surface",
@@ -143,9 +142,9 @@ public class GroundControlsCraterTests
         };
     }
 
-    private static _3dObject CreateSurfaceBombAtTile(int x, int z)
+    private static OmegaObject3D CreateSurfaceBombAtTile(int x, int z)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 9001,
             ObjectName = "BomberBomb",

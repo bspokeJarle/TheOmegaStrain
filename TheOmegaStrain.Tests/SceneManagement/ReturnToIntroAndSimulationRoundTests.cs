@@ -9,7 +9,6 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.SceneManagement;
 
@@ -157,8 +156,8 @@ public class ReturnToIntroAndSimulationRoundTests
         var world = CreateMinimalWorld(handler);
 
         // Add some fake inhabitants simulating a live game scene
-        world.WorldInhabitants.Add(new _3dObject { ObjectId = 1, ObjectName = "Seeder" });
-        world.WorldInhabitants.Add(new _3dObject { ObjectId = 2, ObjectName = "Ship" });
+        world.WorldInhabitants.Add(new OmegaObject3D { ObjectId = 1, ObjectName = "Seeder" });
+        world.WorldInhabitants.Add(new OmegaObject3D { ObjectId = 2, ObjectName = "Ship" });
 
         SetCurrentSceneIndex(handler, 2);
         InvokeReturnToIntro(handler, world);
@@ -177,7 +176,7 @@ public class ReturnToIntroAndSimulationRoundTests
         var handler = new SceneHandler();
         var world = CreateMinimalWorld(handler);
         var movement = new CapturingMovement();
-        world.WorldInhabitants.Add(new _3dObject
+        world.WorldInhabitants.Add(new OmegaObject3D
         {
             ObjectId = 1,
             ObjectName = "Ship",

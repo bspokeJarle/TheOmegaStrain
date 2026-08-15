@@ -5,7 +5,6 @@ using TheOmegaStrain.Game.Scenes.Scene2;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.SceneManagement;
 

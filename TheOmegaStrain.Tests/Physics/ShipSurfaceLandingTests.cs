@@ -9,7 +9,6 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Runtime.Collision;
 using TheOmegaStrain.Gameplay.Controls;
 using RetroMesh.Engine;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Physics;
 
@@ -289,7 +288,7 @@ public class ShipSurfaceLandingTests
         var ship = CreateCrashObject(1, "Ship");
         var surface = CreateCrashObject(2, "Surface");
 
-        CrashDetection.HandleCrashboxes(new List<_3dObject> { ship, surface }, isPaused: false);
+        CrashDetection.HandleCrashboxes(new List<OmegaObject3D> { ship, surface }, isPaused: false);
 
         Assert.IsTrue(ship.ImpactStatus!.HasCrashed, "Ship -> Surface must be checked every frame, even while static collision checks are throttled.");
         Assert.AreEqual("Surface", ship.ImpactStatus.ObjectName);
@@ -807,9 +806,9 @@ public class ShipSurfaceLandingTests
         }
     }
 
-    private static _3dObject CreateCrashObject(int id, string name)
+    private static OmegaObject3D CreateCrashObject(int id, string name)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = id,
             ObjectName = name,

@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using static TheOmegaStrain.Common.GamePlayHelpers.GamePlayHelpers;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls.SeederControls
 {

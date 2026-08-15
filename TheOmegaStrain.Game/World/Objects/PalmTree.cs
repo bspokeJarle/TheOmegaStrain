@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -33,9 +32,9 @@ namespace TheOmegaStrain.Game.World.Objects
         //  PUBLIC FACTORIES
         // ----------------------------------------------------
 
-        public static _3dObject CreateLargePalm(ISurface parentSurface)
+        public static OmegaObject3D CreateLargePalm(ISurface parentSurface)
         {
-            var palm = new _3dObject
+            var palm = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "LargePalm",
@@ -86,16 +85,16 @@ namespace TheOmegaStrain.Game.World.Objects
 
             palm.CrashBoxNames = new List<string?> { "Trunk", "Crown" };
 
-            _3dObjectHelpers.AddCustomShadowPart(palm, LargePalmShadow());
+            OmegaObject3DHelpers.AddCustomShadowPart(palm, LargePalmShadow());
             ScalePalm(palm);
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(palm);
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(palm);
 
             return palm;
         }
 
-        public static _3dObject CreateSmallPalm(ISurface parentSurface)
+        public static OmegaObject3D CreateSmallPalm(ISurface parentSurface)
         {
-            var palm = new _3dObject
+            var palm = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "SmallPalm",
@@ -146,9 +145,9 @@ namespace TheOmegaStrain.Game.World.Objects
 
             palm.CrashBoxNames = new List<string?> { "Trunk", "Crown" };
 
-            _3dObjectHelpers.AddCustomShadowPart(palm, SmallPalmShadow());
+            OmegaObject3DHelpers.AddCustomShadowPart(palm, SmallPalmShadow());
             ScalePalm(palm);
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(palm);
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(palm);
 
             return palm;
         }
@@ -428,12 +427,12 @@ namespace TheOmegaStrain.Game.World.Objects
         {
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -trunkRadius, y = -trunkRadius, z = 0 },
                     new Vector3 { x = trunkRadius, y = trunkRadius, z = trunkHeight }
                 ),
 
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -crownRadius, y = -crownRadius, z = crownBottomZ },
                     new Vector3 { x = crownRadius, y = crownRadius, z = crownTopZ }
                 )
@@ -469,7 +468,7 @@ namespace TheOmegaStrain.Game.World.Objects
             float trunkWidth)
         {
             var tris = new List<ITriangleMeshWithColor>();
-            const string sc = _3dObjectHelpers.ShadowColorHex;
+            const string sc = OmegaObject3DHelpers.ShadowColorHex;
 
             var tA = new Vector3 { x = -trunkWidth, y = 0f, z = 0f };
             var tB = new Vector3 { x = trunkWidth, y = 0f, z = 0f };
@@ -548,11 +547,11 @@ namespace TheOmegaStrain.Game.World.Objects
             return a + (b - a) * t;
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,
@@ -560,9 +559,9 @@ namespace TheOmegaStrain.Game.World.Objects
             });
         }
 
-        private static void ScalePalm(_3dObject palm)
+        private static void ScalePalm(OmegaObject3D palm)
         {
-            _3dObjectHelpers.ApplyScaleToObject(palm, PalmScale);
+            OmegaObject3DHelpers.ApplyScaleToObject(palm, PalmScale);
 
             if (palm.ShadowOffset != null)
             {

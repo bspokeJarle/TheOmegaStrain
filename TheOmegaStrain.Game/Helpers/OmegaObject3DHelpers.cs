@@ -3,11 +3,10 @@ using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.Helpers
 {
-    public static class _3dObjectHelpers
+    public static class OmegaObject3DHelpers
     {
         public const string ShadowColorHex = MeshGeometryOperations.ShadowColorHex;
         public static bool _localLoggingEnabled = false;
@@ -31,7 +30,7 @@ namespace TheOmegaStrain.Game.Helpers
         {
             MeshGeometryOperations.AddSimplifiedShadowPart(
                 actualObject,
-                static () => new _3dObjectPart(),
+                static () => new OmegaObjectPart3D(),
                 static () => new TriangleMeshWithColor(),
                 static (x, y, z) => new Vector3(x, y, z),
                 useFlatQuad,
@@ -43,7 +42,7 @@ namespace TheOmegaStrain.Game.Helpers
             MeshGeometryOperations.AddCustomShadowPart(
                 actualObject,
                 triangles,
-                static () => new _3dObjectPart());
+                static () => new OmegaObjectPart3D());
         }
 
         public static List<IVector3> GenerateAabbCrashBoxFromRotated(List<IVector3> rotatedPoints)

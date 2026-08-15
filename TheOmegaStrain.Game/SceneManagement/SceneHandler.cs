@@ -23,7 +23,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.SceneManagement
 {
@@ -1211,7 +1210,7 @@ namespace TheOmegaStrain.Game.SceneManagement
 
         private static void DisposeWorldMovements(I3dWorld world)
         {
-            foreach (var obj in world.WorldInhabitants.OfType<_3dObject>())
+            foreach (var obj in world.WorldInhabitants.OfType<OmegaObject3D>())
             {
                 try
                 {

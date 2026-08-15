@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls.SeederControls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -176,7 +175,7 @@ public class SeederAiMovementTests
         SetMapTile(1, 0, mapDepth: 0, isInfected: true);
 
         GameState.GamePlayState.LocalInfectionSpreadDelaySec = 0.001f;
-        GameState.SurfaceState.AiObjects.Add(new _3dObject
+        GameState.SurfaceState.AiObjects.Add(new OmegaObject3D
         {
             ObjectId = 99,
             ObjectName = "Seeder",
@@ -205,7 +204,7 @@ public class SeederAiMovementTests
 
     private static Vector3 InvokeMove(bool isOnScreen, object state, Vector3 current, float step, int offscreenStepFactor, long? nowTicks = null)
     {
-        var seeder = new _3dObject
+        var seeder = new OmegaObject3D
         {
             ObjectId = 77,
             ObjectName = "Seeder",

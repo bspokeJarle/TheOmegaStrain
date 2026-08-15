@@ -4,7 +4,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Audio.Services;
 using System;
 using System.Linq;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {

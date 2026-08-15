@@ -8,7 +8,6 @@ using Microsoft.VSDiagnostics;
 using TheOmegaStrain.Runtime.Loops;
 using TheOmegaStrain.Game.World;
 using TheOmegaStrain.Game.Helpers;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
@@ -30,7 +29,7 @@ public class UpdateWorldCleanupExplodedBenchmarks
         GameState.PendingWorldObjects.Clear();
         GameState.SurfaceState = new SurfaceState
         {
-            AiObjects = new List<_3dObject>(ExplodedObjectCount),
+            AiObjects = new List<OmegaObject3D>(ExplodedObjectCount),
             DirtyTiles = new List<IVector3>(),
             ScreenEcoMetas = new ScreenEcoMeta[MapSetup.screensPrMap, MapSetup.screensPrMap]
         };

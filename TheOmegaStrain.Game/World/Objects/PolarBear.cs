@@ -6,7 +6,6 @@ using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -28,9 +27,9 @@ namespace TheOmegaStrain.Game.World.Objects
         private static string noseBlack = "111417";
         private static string eyeBlack = "050607";
 
-        public static _3dObject CreatePolarBear(ISurface parentSurface)
+        public static OmegaObject3D CreatePolarBear(ISurface parentSurface)
         {
-            var bear = new _3dObject
+            var bear = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "PolarBear",
@@ -63,11 +62,11 @@ namespace TheOmegaStrain.Game.World.Objects
             ScalePartUniform(bear, "PolarBearEars", HeadScale);
             ScalePartUniform(bear, "PolarBearEyesNose", HeadScale);
 
-            _3dObjectHelpers.ApplyScaleToObject(bear, Scale * LandBasedObjectSetup.WinterSurfaceObjectScale);
+            OmegaObject3DHelpers.ApplyScaleToObject(bear, Scale * LandBasedObjectSetup.WinterSurfaceObjectScale);
             var shadow = PolarBearShadow();
-            _3dObjectHelpers.ApplyScaleToTriangles(shadow, LandBasedObjectSetup.WinterSurfaceObjectScale);
-            _3dObjectHelpers.AddCustomShadowPart(bear, shadow);
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(bear);
+            OmegaObject3DHelpers.ApplyScaleToTriangles(shadow, LandBasedObjectSetup.WinterSurfaceObjectScale);
+            OmegaObject3DHelpers.AddCustomShadowPart(bear, shadow);
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(bear);
 
             return bear;
         }
@@ -317,17 +316,17 @@ namespace TheOmegaStrain.Game.World.Objects
         {
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -42f * CrashboxSize, y = -15f * CrashboxSize, z = 0f },
                     new Vector3 { x = 22f * CrashboxSize, y = 15f * CrashboxSize, z = 29f * CrashboxSize }
                 ),
 
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = 20f * CrashboxSize, y = -8f * CrashboxSize, z = 7f },
                     new Vector3 { x = 51f * CrashboxSize, y = 8f * CrashboxSize, z = 20f * CrashboxSize }
                 ),
 
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -28f * CrashboxSize, y = -12f * CrashboxSize, z = 0f },
                     new Vector3 { x = 16f * CrashboxSize, y = 12f * CrashboxSize, z = 8f * CrashboxSize }
                 )
@@ -337,7 +336,7 @@ namespace TheOmegaStrain.Game.World.Objects
         private static List<ITriangleMeshWithColor> PolarBearShadow()
         {
             var tris = new List<ITriangleMeshWithColor>();
-            const string sc = _3dObjectHelpers.ShadowColorHex;
+            const string sc = OmegaObject3DHelpers.ShadowColorHex;
 
             AddShadowRect(tris, -42f, 22f, 0f, 18f, sc);
             AddShadowRect(tris, 18f, 51f, 6f, 16f, sc);
@@ -429,11 +428,11 @@ namespace TheOmegaStrain.Game.World.Objects
             return tris;
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,
@@ -531,7 +530,7 @@ namespace TheOmegaStrain.Game.World.Objects
             };
         }
 
-        private static void ApplyAxisScaleToObject(_3dObject bear, float scaleX, float scaleY, float scaleZ)
+        private static void ApplyAxisScaleToObject(OmegaObject3D bear, float scaleX, float scaleY, float scaleZ)
         {
             var scaled = new HashSet<IVector3>(ReferenceComparer.Instance);
 
@@ -578,7 +577,7 @@ namespace TheOmegaStrain.Game.World.Objects
             }
         }
 
-        private static void ScalePartUniform(_3dObject bear, string partName, float scale)
+        private static void ScalePartUniform(OmegaObject3D bear, string partName, float scale)
         {
             var part = bear.ObjectParts.Find(p => p.PartName == partName);
             if (part == null || part.Triangles == null || part.Triangles.Count == 0)

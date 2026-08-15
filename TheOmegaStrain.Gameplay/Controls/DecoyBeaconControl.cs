@@ -11,7 +11,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Shapes;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {
@@ -103,7 +102,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             };
         }
 
-        private static _3dObject? GetAuthoritativeDrone(I3dObject obj)
+        private static OmegaObject3D? GetAuthoritativeDrone(I3dObject obj)
         {
             var aiObjects = GameState.SurfaceState?.AiObjects;
             if (aiObjects == null)
@@ -374,7 +373,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
             if (_audio != null && _explosionSound != null)
             {
-                var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
                 _audio.Play(
                     _explosionSound,
                     AudioPlayMode.OneShot,

@@ -1,6 +1,6 @@
 using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonSetup;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Domain;
 
 namespace TheOmegaStrain.Tests.SceneManagement;
 

@@ -2,20 +2,19 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.Projection
 {
     public static class OmegaPerspectiveProjectorFactory
     {
-        public static IWorldProjector<_3dObject, ProjectedTriangleMesh> Create()
+        public static IWorldProjector<OmegaObject3D, ProjectedTriangleMesh> Create()
         {
             return Create(new ScreenSetupProjectionViewport());
         }
 
-        public static IWorldProjector<_3dObject, ProjectedTriangleMesh> Create(IProjectionViewport viewport)
+        public static IWorldProjector<OmegaObject3D, ProjectedTriangleMesh> Create(IProjectionViewport viewport)
         {
-            return new PerspectiveWorldProjector<_3dObject, ProjectedTriangleMesh>(
+            return new PerspectiveWorldProjector<OmegaObject3D, ProjectedTriangleMesh>(
                 viewport,
                 static () => new ProjectedTriangleMesh(),
                 TryResolveRenderPosition,
@@ -24,7 +23,7 @@ namespace TheOmegaStrain.Game.Projection
         }
 
         private static bool TryResolveRenderPosition(
-            _3dObject obj,
+            OmegaObject3D obj,
             IProjectionViewport viewport,
             out RenderPosition position)
         {

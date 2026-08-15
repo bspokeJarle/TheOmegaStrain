@@ -1,4 +1,4 @@
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Domain;
 
 namespace TheOmegaStrain.Domain
 {

@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.Helpers
 {
@@ -15,7 +14,7 @@ namespace TheOmegaStrain.Game.Helpers
 
         private static Vector3 CreateVector(float x, float y, float z) => new(x, y, z);
 
-        private static ITriangleMeshWithColor? GetSurfaceTriangle(_3dObject obj)
+        private static ITriangleMeshWithColor? GetSurfaceTriangle(OmegaObject3D obj)
         {
             var surface = obj?.ParentSurface;
             if (surface == null || obj?.SurfaceBasedId == null)
@@ -33,7 +32,7 @@ namespace TheOmegaStrain.Game.Helpers
             return ObjectPlacementMath.GetCrashBoxCenter(crashBoxes);
         }
 
-        public static bool TryGetRenderPosition(_3dObject obj, int screenCenterX, int screenCenterY, out double x, out double y, out double z)
+        public static bool TryGetRenderPosition(OmegaObject3D obj, int screenCenterX, int screenCenterY, out double x, out double y, out double z)
         {
             x = y = z = 0;
             if (obj == null) return false;
@@ -66,7 +65,7 @@ namespace TheOmegaStrain.Game.Helpers
             ObjectPlacementMath.CenterObjectAt(obj, targetPosition, CreateVector);
         }
 
-        public static void CenterCrashBoxesAt(_3dObject obj, IVector3 targetPosition)
+        public static void CenterCrashBoxesAt(OmegaObject3D obj, IVector3 targetPosition)
         {
             ObjectPlacementMath.CenterCrashBoxesAt(obj, targetPosition, CreateVector);
         }

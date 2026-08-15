@@ -2,15 +2,14 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
     public static class SnowEmitter
     {
-        public static _3dObject CreateSnowEmitter(ISurface? parentSurface)
+        public static OmegaObject3D CreateSnowEmitter(ISurface? parentSurface)
         {
-            return new _3dObject
+            return new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "SnowEmitter",
@@ -28,7 +27,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 IsActive = true,
                 ObjectParts = new List<I3dObjectPart>
                 {
-                    new _3dObjectPart
+                    new OmegaObjectPart3D
                     {
                         PartName = "Snowflakes",
                         IsVisible = true,

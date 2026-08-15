@@ -7,7 +7,6 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using System.Windows.Media;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Rendering;
 
@@ -54,7 +53,7 @@ public class RenderSimpleOptimizationTests
     [TestMethod]
     public void SurfaceBasedPlacement_UsesBottomFootprintAsObjectAnchor()
     {
-        var obj = new _3dObject
+        var obj = new OmegaObject3D
         {
             ObjectId = 44,
             ObjectName = "FootprintObject",
@@ -63,7 +62,7 @@ public class RenderSimpleOptimizationTests
             WorldPosition = new Vector3(),
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     IsVisible = true,
                     PartName = "Main",
@@ -103,7 +102,7 @@ public class RenderSimpleOptimizationTests
             vert3 = new Vector3 { x = 25f, y = 25f, z = 5f }
         };
 
-        var obj = new _3dObject
+        var obj = new OmegaObject3D
         {
             ObjectId = 45,
             ObjectName = "PrebakedPivotObject",
@@ -115,7 +114,7 @@ public class RenderSimpleOptimizationTests
             UseSurfaceFootprintPivot = true,
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     IsVisible = true,
                     PartName = "Main",
@@ -152,7 +151,7 @@ public class RenderSimpleOptimizationTests
     [TestMethod]
     public void NormalizeSurfaceFootprintPivot_PinsModelSpaceFootprintAndCrashBoxes()
     {
-        var obj = new _3dObject
+        var obj = new OmegaObject3D
         {
             ObjectId = 46,
             ObjectName = "RawSurfaceObject",
@@ -161,7 +160,7 @@ public class RenderSimpleOptimizationTests
             WorldPosition = new Vector3(),
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     IsVisible = true,
                     PartName = "Main",
@@ -175,7 +174,7 @@ public class RenderSimpleOptimizationTests
                         }
                     }
                 },
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     IsVisible = false,
                     PartName = "Shadow",
@@ -200,7 +199,7 @@ public class RenderSimpleOptimizationTests
             }
         };
 
-        _3dObjectHelpers.NormalizeSurfaceFootprintPivot(obj);
+        OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(obj);
 
         Assert.IsTrue(obj.UseSurfaceFootprintPivot);
         Assert.AreEqual(-10f, obj.ObjectParts[0].Triangles[0].vert1.x, 0.001f);
@@ -257,7 +256,7 @@ public class RenderSimpleOptimizationTests
         };
 
         var result = converter.ProjectToTriangles(
-            new List<_3dObject> { CreateRenderableObject() },
+            new List<OmegaObject3D> { CreateRenderableObject() },
             1,
             reusable);
 
@@ -265,7 +264,7 @@ public class RenderSimpleOptimizationTests
         Assert.AreEqual(1, result.Count);
         Assert.AreEqual("Main", result[0].PartName);
 
-        var emptyResult = converter.ProjectToTriangles(new List<_3dObject>(), 2, reusable);
+        var emptyResult = converter.ProjectToTriangles(new List<OmegaObject3D>(), 2, reusable);
 
         Assert.AreSame(reusable, emptyResult);
         Assert.AreEqual(0, emptyResult.Count);
@@ -294,7 +293,7 @@ public class RenderSimpleOptimizationTests
         }
 
         var result = converter.ProjectToTriangles(
-            new List<_3dObject> { obj },
+            new List<OmegaObject3D> { obj },
             1,
             reusable);
 
@@ -310,7 +309,7 @@ public class RenderSimpleOptimizationTests
         var converter = OmegaPerspectiveProjectorFactory.Create();
 
         var result = converter.ProjectToTriangles(
-            new List<_3dObject> { CreateRenderableObject("ExplodingPart") },
+            new List<OmegaObject3D> { CreateRenderableObject("ExplodingPart") },
             1);
 
         Assert.AreEqual(1, result.Count);
@@ -330,7 +329,7 @@ public class RenderSimpleOptimizationTests
             objectZoom: 2));
 
         var result = converter.ProjectToTriangles(
-            new List<_3dObject> { CreateRenderableObject() },
+            new List<OmegaObject3D> { CreateRenderableObject() },
             1);
 
         Assert.AreEqual(1, result.Count);
@@ -409,13 +408,13 @@ public class RenderSimpleOptimizationTests
         surface.CrashBoxDebugMode = true;
         surface.CrashBoxes = new List<List<IVector3>>
         {
-            _3dObjectHelpers.GenerateCrashBoxCorners(
+            OmegaObject3DHelpers.GenerateCrashBoxCorners(
                 new Vector3 { x = -100000, y = -100000, z = 0 },
                 new Vector3 { x = 100000, y = 100000, z = 50 })
         };
         surface.CrashBoxNames = new List<string?> { "TerrainSurface" };
 
-        var result = converter.ProjectToTriangles(new List<_3dObject> { surface }, 1);
+        var result = converter.ProjectToTriangles(new List<OmegaObject3D> { surface }, 1);
         var crashTriangles = result.Where(t => t.PartName == "CrashBox-Surface").ToList();
 
         Assert.IsTrue(crashTriangles.Count > 0, "Expected debug crashbox triangles to be rendered.");
@@ -436,13 +435,13 @@ public class RenderSimpleOptimizationTests
         surface.CrashBoxDebugMode = true;
         surface.CrashBoxes = new List<List<IVector3>>
         {
-            _3dObjectHelpers.GenerateCrashBoxCorners(
+            OmegaObject3DHelpers.GenerateCrashBoxCorners(
                 new Vector3 { x = -50, y = -50, z = -50 },
                 new Vector3 { x = 50, y = 50, z = 50 })
         };
         surface.CrashBoxNames = new List<string?> { "MainSurface" };
 
-        var result = converter.ProjectToTriangles(new List<_3dObject> { surface }, 1);
+        var result = converter.ProjectToTriangles(new List<OmegaObject3D> { surface }, 1);
 
         Assert.IsTrue(result.Any(t => t.PartName == "CrashBox-Surface"),
             "MainSurface should still be visible when surface crashbox debug mode is enabled.");
@@ -596,9 +595,9 @@ public class RenderSimpleOptimizationTests
         Assert.IsTrue(y >= minY && y <= maxY, $"Expected debug Y coordinate {y} to be inside the crashbox debug screen margin.");
     }
 
-    private static _3dObject CreateRenderableObject(string partName = "Main")
+    private static OmegaObject3D CreateRenderableObject(string partName = "Main")
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 1,
             ObjectName = "Renderable",
@@ -608,7 +607,7 @@ public class RenderSimpleOptimizationTests
             CrashBoxes = new List<List<IVector3>>(),
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = partName,
                     IsVisible = true,

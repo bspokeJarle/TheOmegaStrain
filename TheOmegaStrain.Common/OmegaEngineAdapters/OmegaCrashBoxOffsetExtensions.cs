@@ -1,12 +1,11 @@
 using TheOmegaStrain.Domain;
 using System.Collections;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Common.OmegaEngineAdapters
 {
     public static class OmegaCrashBoxOffsetExtensions
     {
-        public static Vector3 ToLocalPoint(this Vector3 worldPoint, _3dObject obj)
+        public static Vector3 ToLocalPoint(this Vector3 worldPoint, OmegaObject3D obj)
         {
             if (obj == null)
                 return worldPoint;
@@ -17,7 +16,7 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters
                 static (x, y, z) => new Vector3(x, y, z));
         }
 
-        public static Vector3 ToWorldPoint(this Vector3 localPoint, _3dObject obj)
+        public static Vector3 ToWorldPoint(this Vector3 localPoint, OmegaObject3D obj)
         {
             if (obj == null)
                 return localPoint;
@@ -31,7 +30,7 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters
         // Keep this returning the SAME Vector3 type that crashboxes are made of.
         // CalculatedCrashOffset already includes ObjectOffsets for world objects.
         // Screen objects (Ship) fall back to ObjectOffsets.
-        public static Vector3 GetEffectiveCrashOffset(this _3dObject obj)
+        public static Vector3 GetEffectiveCrashOffset(this OmegaObject3D obj)
         {
             return CrashBoxTransform.GetEffectiveCrashOffset(
                 obj,
@@ -46,7 +45,7 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters
                 static (x, y, z) => new Vector3(x, y, z));
         }
 
-        public static List<Vector3> GetAllCrashPointsWorld(this _3dObject obj)
+        public static List<Vector3> GetAllCrashPointsWorld(this OmegaObject3D obj)
         {
             if (obj == null)
                 return new List<Vector3>();
@@ -54,7 +53,7 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters
             return obj.GetAllCrashPointsWorld(obj.GetEffectiveCrashOffset());
         }
 
-        public static List<Vector3> GetAllCrashPointsWorld(this _3dObject obj, Vector3 offset)
+        public static List<Vector3> GetAllCrashPointsWorld(this OmegaObject3D obj, Vector3 offset)
         {
             return CrashBoxTransform.GetAllCrashPointsWorld(
                 obj,

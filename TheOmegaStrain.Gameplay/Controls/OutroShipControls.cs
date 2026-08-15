@@ -5,7 +5,6 @@ using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using NumericsVector3 = System.Numerics.Vector3;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {
@@ -325,7 +324,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
         private void EnsureRocketLoop(I3dObject theObject)
         {
-            if (_audio == null || _rocketSound == null || theObject is not _3dObject concrete)
+            if (_audio == null || _rocketSound == null || theObject is not OmegaObject3D concrete)
                 return;
 
             var audioPosition = concrete.GetAudioPosition();

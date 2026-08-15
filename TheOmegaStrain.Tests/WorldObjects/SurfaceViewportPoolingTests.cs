@@ -5,7 +5,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.WorldObjects;
 
@@ -188,7 +187,7 @@ public class SurfaceViewportPoolingTests
     public void GetEffectiveCrashOffset_DoesNotApplySurfaceAltitudeTwice()
     {
         GameState.SurfaceState.GlobalMapPosition = new Vector3 { x = 0f, y = 120f, z = 0f };
-        var surfaceObject = new _3dObject
+        var surfaceObject = new OmegaObject3D
         {
             ObjectId = 1,
             ObjectName = "Surface",

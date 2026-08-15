@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Wpf.Helpers
 {
@@ -25,7 +24,7 @@ namespace TheOmegaStrain.Wpf.Helpers
             MeshGeometryOperations.ApplyPositiveRotationOffsetToTriangle(triangle, offsetX, offsetY, offsetZ);
         }
 
-        public static Vector3 ComputeCentroid(_3dObject inhabitant)
+        public static Vector3 ComputeCentroid(OmegaObject3D inhabitant)
         {
             return MeshGeometryOperations.GetObjectCentroid(
                 inhabitant,
@@ -213,7 +212,7 @@ namespace TheOmegaStrain.Wpf.Helpers
             // Mothership marker - always drawn with its own red/black flash cycle
             {
                 var aiObjects = GameState.SurfaceState?.AiObjects;
-                _3dObject[]? msSnapshot = null;
+                OmegaObject3D[]? msSnapshot = null;
                 if (aiObjects != null)
                 {
                     lock (aiObjects) { msSnapshot = [.. aiObjects]; }
@@ -246,7 +245,7 @@ namespace TheOmegaStrain.Wpf.Helpers
             // and a stronger variant of the same color family.
             {
                 var aiObjects = GameState.SurfaceState?.AiObjects;
-                _3dObject[]? snapshot = null;
+                OmegaObject3D[]? snapshot = null;
                 if (aiObjects != null)
                 {
                     lock (aiObjects) { snapshot = [.. aiObjects]; }
@@ -510,7 +509,7 @@ namespace TheOmegaStrain.Wpf.Helpers
             }
         }
 
-        public static void UpdateShipStatistics(System.Windows.Shapes.Rectangle healthRectangle, _3dObject ship)
+        public static void UpdateShipStatistics(System.Windows.Shapes.Rectangle healthRectangle, OmegaObject3D ship)
         {
             if (ship == null || ship.ImpactStatus == null) return;
             if (ship.ImpactStatus.ObjectHealth > 0)

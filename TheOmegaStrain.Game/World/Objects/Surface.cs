@@ -4,7 +4,6 @@ using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.GamePlayHelpers;
@@ -45,7 +44,7 @@ namespace TheOmegaStrain.Game.World.Objects
             int requiredTriangleCount = tileCount * 2;
 
             EnsureSurfaceTrianglePool(requiredTriangleCount);
-            var surface = new _3dObject { ObjectId = GameState.ObjectIdCounter++ };
+            var surface = new OmegaObject3D { ObjectId = GameState.ObjectIdCounter++ };
             _viewPortCrashBoxes.Clear();
             _viewPortCrashBoxNames.Clear();
 
@@ -135,7 +134,7 @@ namespace TheOmegaStrain.Game.World.Objects
                             z = ResolveTerrainCrashBoxDepth(box, currentTile.mapDepth) - YRemainer
                         };
 
-                        var crashBoxCorners = RotateTerrainCrashBox(_3dObjectHelpers.GenerateCrashBoxCorners(min, max));
+                        var crashBoxCorners = RotateTerrainCrashBox(OmegaObject3DHelpers.GenerateCrashBoxCorners(min, max));
                         _viewPortCrashBoxes.Add(crashBoxCorners);
                         _viewPortCrashBoxNames.Add("TerrainSurface");
                     }
@@ -166,7 +165,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 }
             }
 
-            surface.ObjectParts.Add(new _3dObjectPart { PartName = "Surface", Triangles = _surfaceTriangles, IsVisible = true });
+            surface.ObjectParts.Add(new OmegaObjectPart3D { PartName = "Surface", Triangles = _surfaceTriangles, IsVisible = true });
             surface.CrashBoxes = _viewPortCrashBoxes;
             surface.CrashBoxNames = _viewPortCrashBoxNames;
             surface.CrashBoxes.AddRange(GetMainSurfaceCrashBox(YRemainer));
@@ -270,7 +269,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(min, max)
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(min, max)
             };
         }
 
@@ -325,7 +324,7 @@ namespace TheOmegaStrain.Game.World.Objects
             // ------------------------------------------------------------
             else if (gameMode == GameModes.Playback)
             {
-                if (GameplayHelpers.SurfaceIO.SurfaceIO.TryLoad(
+                if (TheOmegaStrain.Common.GamePlayHelpers.SurfaceIO.SurfaceIO.TryLoad(
                         sceneFilePath,
                         out var loadedMap,
                         out var hash))
@@ -370,7 +369,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 // Ensure SceneFiles folder exists in output directory
                 Directory.CreateDirectory(sceneFolder);
 
-                var hash = GameplayHelpers.SurfaceIO.SurfaceIO.Save(
+                    var hash = TheOmegaStrain.Common.GamePlayHelpers.SurfaceIO.SurfaceIO.Save(
                     recordPath,
                     GameState.SurfaceState.Global2DMap);
 

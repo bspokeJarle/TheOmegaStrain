@@ -5,7 +5,6 @@ using TheOmegaStrain.Common.GamePlayHelpers;
 using TheOmegaStrain.Domain;
 using System;
 using static TheOmegaStrain.Common.GamePlayHelpers.GamePlayHelpers;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Helpers
 {

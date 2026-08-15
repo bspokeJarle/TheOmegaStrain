@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {
@@ -285,7 +284,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             if (part != null)
                 return part;
 
-            part = new _3dObjectPart
+            part = new OmegaObjectPart3D
             {
                 PartName = "LightningBolts",
                 IsVisible = true

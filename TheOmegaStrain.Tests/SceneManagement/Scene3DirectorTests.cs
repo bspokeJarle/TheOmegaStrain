@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.Events;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Game.Scenes.Scene3;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.SceneManagement;
 
@@ -104,7 +103,7 @@ public class Scene3DirectorTests
         gps.InitialDrones = 8;
 
         var aiObjs = GameState.SurfaceState.AiObjects;
-        var seeders = new List<_3dObject>();
+        var seeders = new List<OmegaObject3D>();
         for (int i = 0; i < 8; i++)
         {
             var s = CreateAiObject("Seeder");
@@ -112,7 +111,7 @@ public class Scene3DirectorTests
             aiObjs.Add(s);
         }
 
-        var drones = new List<_3dObject>();
+        var drones = new List<OmegaObject3D>();
         for (int i = 0; i < 8; i++)
         {
             var d = CreateAiObject("KamikazeDrone", isActive: false);
@@ -149,9 +148,9 @@ public class Scene3DirectorTests
 
     private static int _nextObjectId = 2000;
 
-    private static _3dObject CreateAiObject(string name, bool isActive = true)
+    private static OmegaObject3D CreateAiObject(string name, bool isActive = true)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = _nextObjectId++,
             ObjectName = name,

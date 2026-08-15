@@ -2,7 +2,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Game.Projection;
 using TheOmegaStrain.Game.World.Objects;
 using TheOmegaStrain.Wpf.Rendering;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Architecture;
 
@@ -33,7 +32,7 @@ public class EngineObjectCompatibilityTests
     [TestMethod]
     public void DomainObject_ImplementsGameplayAndEngineContracts()
     {
-        I3dObject gameplayObject = new _3dObject
+        I3dObject gameplayObject = new OmegaObject3D
         {
             ObjectId = 1,
             ObjectName = "TestObject"
@@ -42,7 +41,7 @@ public class EngineObjectCompatibilityTests
         Assert.IsInstanceOfType(gameplayObject, typeof(IRenderable3dObject));
 
         var renderable = (IRenderable3dObject)gameplayObject;
-        renderable.ObjectParts.Add(new _3dObjectPart { PartName = "Hull" });
+        renderable.ObjectParts.Add(new OmegaObjectPart3D { PartName = "Hull" });
 
         gameplayObject.HasPowerUp = true;
         gameplayObject.PowerUpType = PowerUpType.TravelSpeedLevel1;
@@ -60,8 +59,8 @@ public class EngineObjectCompatibilityTests
         {
             WorldInhabitants = new List<I3dObject>
             {
-                new _3dObject { ObjectId = 1, ObjectName = "Ship" },
-                new _3dObject { ObjectId = 2, ObjectName = "Surface" }
+                new OmegaObject3D { ObjectId = 1, ObjectName = "Ship" },
+                new OmegaObject3D { ObjectId = 2, ObjectName = "Surface" }
             }
         };
 
@@ -77,7 +76,7 @@ public class EngineObjectCompatibilityTests
         I3dWorld world = new TestWorld();
         var renderableWorld = (IRenderable3dWorldView)world;
 
-        world.WorldInhabitants.Add(new _3dObject { ObjectId = 1, ObjectName = "Ship" });
+        world.WorldInhabitants.Add(new OmegaObject3D { ObjectId = 1, ObjectName = "Ship" });
 
         Assert.AreEqual("Ship", renderableWorld.RenderableObjects.Single().ObjectName);
 
@@ -123,7 +122,7 @@ public class EngineObjectCompatibilityTests
     {
         Assert.IsInstanceOfType(
             OmegaPerspectiveProjectorFactory.Create(),
-            typeof(IWorldProjector<_3dObject, ProjectedTriangleMesh>));
+            typeof(IWorldProjector<OmegaObject3D, ProjectedTriangleMesh>));
         Assert.AreEqual("RetroMesh.Engine", typeof(PerspectiveWorldProjector<,>).Namespace);
     }
 
@@ -294,7 +293,7 @@ public class EngineObjectCompatibilityTests
             .Where(hit =>
                 hit.line.Contains("using TheOmegaStrain.Game.Helpers", StringComparison.Ordinal) ||
                 hit.line.Contains("TheOmegaStrain.Common.OmegaEngineAdapters", StringComparison.Ordinal) ||
-                hit.line.Contains("_3dObjectHelpers", StringComparison.Ordinal) ||
+                hit.line.Contains("OmegaObject3DHelpers", StringComparison.Ordinal) ||
                 hit.line.Contains("ObjectPlacementHelpers", StringComparison.Ordinal) ||
                 IsForbiddenCrashExtensionCall(hit.line))
             .Select(hit => $"{Path.GetRelativePath(repositoryRoot, hit.path)}:{hit.lineNumber}: {hit.line.Trim()}")

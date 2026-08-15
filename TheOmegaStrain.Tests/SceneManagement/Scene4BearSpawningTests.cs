@@ -6,7 +6,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.Events;
 using TheOmegaStrain.Domain;
 using System.Linq;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.SceneManagement;
 

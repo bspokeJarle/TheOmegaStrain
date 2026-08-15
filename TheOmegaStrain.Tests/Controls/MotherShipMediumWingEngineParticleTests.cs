@@ -5,7 +5,6 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -413,7 +412,7 @@ public class MotherShipMediumWingEngineParticleTests
         GameState.SurfaceState = new SurfaceState
         {
             GlobalMapPosition = new Vector3 { x = 0f, y = 40f, z = 0f },
-            AiObjects = new List<_3dObject>()
+            AiObjects = new List<OmegaObject3D>()
         };
 
         var ship = MotherShipMedium.CreateMotherShipMedium(parentSurface: null!);

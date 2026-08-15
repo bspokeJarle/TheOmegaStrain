@@ -2,7 +2,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -63,7 +62,7 @@ public class KamikazeDroneControlsHuntTimingTests
         };
 
         var drone = CreateDrone(300, 0, 0);
-        var liveSeeder = new _3dObject
+        var liveSeeder = new OmegaObject3D
         {
             ObjectId = 301,
             ObjectName = "Seeder",
@@ -99,7 +98,7 @@ public class KamikazeDroneControlsHuntTimingTests
         };
 
         var drone = CreateDrone(400, 0, 0);
-        var swan = new _3dObject
+        var swan = new OmegaObject3D
         {
             ObjectId = 401,
             ObjectName = "SpaceSwan",
@@ -134,7 +133,7 @@ public class KamikazeDroneControlsHuntTimingTests
         };
 
         var drone = CreateDrone(500, 0, 0);
-        var zeppelin = new _3dObject
+        var zeppelin = new OmegaObject3D
         {
             ObjectId = 501,
             ObjectName = "ZeppelinBomber",
@@ -232,9 +231,9 @@ public class KamikazeDroneControlsHuntTimingTests
             "Regular drones should keep hunting normally while only the selected surprise group waits.");
     }
 
-    private static _3dObject CreateDrone(int id, float x, float z)
+    private static OmegaObject3D CreateDrone(int id, float x, float z)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = id,
             ObjectName = "KamikazeDrone",
@@ -246,9 +245,9 @@ public class KamikazeDroneControlsHuntTimingTests
         };
     }
 
-    private static List<_3dObject> AddDroneGroup(int firstId, int count)
+    private static List<OmegaObject3D> AddDroneGroup(int firstId, int count)
     {
-        var drones = new List<_3dObject>(count);
+        var drones = new List<OmegaObject3D>(count);
         for (int i = 0; i < count; i++)
         {
             var drone = CreateDrone(firstId + i, i * 1000f, i * 1000f);

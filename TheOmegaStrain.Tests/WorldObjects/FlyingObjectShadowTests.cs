@@ -2,7 +2,6 @@ using TheOmegaStrain.Game.World.Objects;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.WorldObjects;
 
@@ -19,7 +18,7 @@ public class FlyingObjectShadowTests
     [TestMethod]
     public void GameplayFlyingObjectsOtherThanShip_HaveTerrainShadowParts()
     {
-        var objects = new Dictionary<string, _3dObject>
+        var objects = new Dictionary<string, OmegaObject3D>
         {
             ["Seeder"] = Seeder.CreateSeeder(null!),
             ["KamikazeDrone"] = KamikazeDrone.CreateKamikazeDrone(null!),

@@ -4,8 +4,7 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System.Collections.Generic;
 using System.Linq;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
-using static TheOmegaStrain.Game.Helpers._3dObjectHelpers;
+using static TheOmegaStrain.Game.Helpers.OmegaObject3DHelpers;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -17,7 +16,7 @@ namespace TheOmegaStrain.Game.World.Objects
         private const float TopCannonCrashBoxSizeMultiplier = 0.35f;
         private static readonly Vector3 TopCannonCrashBoxPadding = new() { x = 0.5f, y = 2f, z = 1f };
 
-        public static _3dObject CreateShip(ISurface? parentSurface, IObjectMovement? movement = null)
+        public static OmegaObject3D CreateShip(ISurface? parentSurface, IObjectMovement? movement = null)
         {
             var upperTriangles = UpperTriangles();
             var lowerTriangles = LowerTriangles();
@@ -33,20 +32,20 @@ namespace TheOmegaStrain.Game.World.Objects
 
 
             // Add orb as an inhabitant
-            var ship = new _3dObject { ObjectId = GameState.ObjectIdCounter++ };
+            var ship = new OmegaObject3D { ObjectId = GameState.ObjectIdCounter++ };
             if (upperTriangles == null || lowerTriangles == null || rearTriangles == null) return ship;
-            ship.ObjectParts.Add(new _3dObjectPart { PartName = "UpperPart", Triangles = upperTriangles, IsVisible = true });
-            ship.ObjectParts.Add(new _3dObjectPart { PartName = "LowerPart", Triangles = lowerTriangles, IsVisible = true });
-            ship.ObjectParts.Add(new _3dObjectPart { PartName = "RearPart", Triangles = rearTriangles, IsVisible = true });
-            ship.ObjectParts.Add(new _3dObjectPart { PartName = "RearEngine", Triangles = rearEngineTriangles!, IsVisible = true });
-            ship.ObjectParts.Add(new _3dObjectPart { PartName = "JetMotor", Triangles = jetMotorTriangle!, IsVisible = true });
-            ship.ObjectParts.Add(new _3dObjectPart { PartName = "JetMotorDirectionGuide", Triangles = jetMotorDirectionGuide!, IsVisible = false });
-            ship.ObjectParts.Add(new _3dObjectPart { PartName = "RearEngineDirectionGuide", Triangles = rearEngineDirectionGuide!, IsVisible = false });
-            ship.ObjectParts.Add(new _3dObjectPart { PartName = "TopCannon", Triangles = cannon!, IsVisible = true });
-            ship.ObjectParts.Add(new _3dObjectPart { PartName = "WeaponDirectionGuide", Triangles = topCannonDirectionGuide!, IsVisible = false });
-            ship.ObjectParts.Add(new _3dObjectPart { PartName = "WeaponStartGuide", Triangles = CannonStartGuide()!, IsVisible = false });
-            ship.ObjectParts.Add(new _3dObjectPart { PartName = "MuzzleFlash", Triangles = muzzleFlash!, IsVisible = false });
-            ship.ObjectParts.Add(new _3dObjectPart { PartName = "Winglets", Triangles = winglets!, IsVisible = true });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "UpperPart", Triangles = upperTriangles, IsVisible = true });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "LowerPart", Triangles = lowerTriangles, IsVisible = true });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "RearPart", Triangles = rearTriangles, IsVisible = true });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "RearEngine", Triangles = rearEngineTriangles!, IsVisible = true });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "JetMotor", Triangles = jetMotorTriangle!, IsVisible = true });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "JetMotorDirectionGuide", Triangles = jetMotorDirectionGuide!, IsVisible = false });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "RearEngineDirectionGuide", Triangles = rearEngineDirectionGuide!, IsVisible = false });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "TopCannon", Triangles = cannon!, IsVisible = true });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "WeaponDirectionGuide", Triangles = topCannonDirectionGuide!, IsVisible = false });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "WeaponStartGuide", Triangles = CannonStartGuide()!, IsVisible = false });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "MuzzleFlash", Triangles = muzzleFlash!, IsVisible = false });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "Winglets", Triangles = winglets!, IsVisible = true });
 
             var crashBoxes = new List<List<IVector3>>();
             crashBoxes.Add(CreateCrashBoxFromTriangles(
@@ -71,9 +70,9 @@ namespace TheOmegaStrain.Game.World.Objects
             ship.CrashBoxes = crashBoxes;
             ship.HasShadow = true;
 
-            _3dObjectHelpers.ApplyScaleToObject(ship, ZoomRatio);
+            OmegaObject3DHelpers.ApplyScaleToObject(ship, ZoomRatio);
 
-            _3dObjectHelpers.AddSimplifiedShadowPart(ship, useFlatQuad: true);
+            OmegaObject3DHelpers.AddSimplifiedShadowPart(ship, useFlatQuad: true);
 
             return ship;
         }
@@ -114,7 +113,7 @@ namespace TheOmegaStrain.Game.World.Objects
             var min = new Vector3 { x = center.x - halfX, y = center.y - halfY, z = center.z - halfZ };
             var max = new Vector3 { x = center.x + halfX, y = center.y + halfY, z = center.z + halfZ };
 
-            return _3dObjectHelpers.GenerateCrashBoxCorners(min, max);
+            return OmegaObject3DHelpers.GenerateCrashBoxCorners(min, max);
         }
 
         public static List<ITriangleMeshWithColor>? TopCannonTriangles()

@@ -18,7 +18,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using static TheOmegaStrain.Domain.WeaponHelpers;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {
@@ -562,7 +561,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             if (!weaponChanged || _audio == null || _changeWeaponSound == null || ParentObject == null)
                 return;
 
-            var audioPosition = ((_3dObject)ParentObject).GetAudioPosition();
+            var audioPosition = ((OmegaObject3D)ParentObject).GetAudioPosition();
             _audio.Play(
                 _changeWeaponSound,
                 AudioPlayMode.OneShot,
@@ -585,7 +584,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
                 if (_audio != null && _rocketSound != null && ParentObject != null)
                 {
-                    var audioPosition = ((_3dObject)ParentObject).GetAudioPosition();
+                    var audioPosition = ((OmegaObject3D)ParentObject).GetAudioPosition();
                     if (Logger.ShouldLog(logging)) Logger.Log("Audio: Starting new rocket segmented loop.");
                     _rocketInstance = _audio.Play(
                         _rocketSound,
@@ -1015,7 +1014,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
         private void PlayBulletOneShot()
         {
-            if (_audio == null || _bulletSound == null || ParentObject is not _3dObject ship)
+            if (_audio == null || _bulletSound == null || ParentObject is not OmegaObject3D ship)
                 return;
 
             var audioPosition = ship.GetAudioPosition();
@@ -1090,7 +1089,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
             if (_audio != null && _releaseDecoySound != null)
             {
-                var audioPosition = ((_3dObject)ParentObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)ParentObject).GetAudioPosition();
                 _audio.Play(
                     _releaseDecoySound,
                     AudioPlayMode.OneShot,
@@ -1103,7 +1102,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             return true;
         }
 
-        private static _3dObject? CreateDecoyBeaconObject(ISurface parentSurface)
+        private static OmegaObject3D? CreateDecoyBeaconObject(ISurface parentSurface)
         {
             const string decoyBeaconTypeName = "TheOmegaStrain.Game.World.Objects.DecoyBeacon";
 
@@ -1116,7 +1115,7 @@ namespace TheOmegaStrain.Gameplay.Controls
                 }
 
                 var createMethod = decoyType.GetMethod("CreateDecoyBeacon", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                if (createMethod?.Invoke(null, new object[] { parentSurface }) is _3dObject decoy)
+                if (createMethod?.Invoke(null, new object[] { parentSurface }) is OmegaObject3D decoy)
                 {
                     return decoy;
                 }
@@ -1446,7 +1445,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
             if (_rocketInstance != null)
             {
-                var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
                 _rocketInstance.SetWorldPosition(new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z));
             }
 
@@ -1785,7 +1784,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             // Play the ship explosion if audio is configured.
             if (_audio != null && _explosionSound != null)
             {
-                var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
                 _audio.PlayOneShot(
                     _explosionSound,
                     new AudioPlayOptions
@@ -2299,7 +2298,7 @@ namespace TheOmegaStrain.Gameplay.Controls
         {
             if (_audio == null || _impactThudSound == null) return;
 
-            var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+            var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
             _audio.PlayOneShot(
                 _impactThudSound,
                 new AudioPlayOptions

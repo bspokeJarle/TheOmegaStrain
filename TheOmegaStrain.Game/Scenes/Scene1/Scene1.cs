@@ -12,7 +12,6 @@ using TheOmegaStrain.Gameplay.Controls.JumpingFishControls;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Intrinsics.Arm;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.Scenes.Scene1
 {
@@ -133,7 +132,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
 
             //Get the surface viewport based on the global Map Position
             //Important: In a Scene, Surface should be amongst the first objects added to the world
-            var surfaceObject = (_3dObject)Surface.GetSurfaceViewPort();
+            var surfaceObject = (OmegaObject3D)Surface.GetSurfaceViewPort();
             surfaceObject.ObjectName = "Surface";
             //This position and rotation is for the onscreen object, not the map position
             surfaceObject.ObjectOffsets = new Vector3 { x = 70 * ScreenSetup.ScreenScaleX, y = 500 * ScreenSetup.ScreenScaleY, z = 400 };

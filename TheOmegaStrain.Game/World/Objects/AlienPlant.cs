@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -38,9 +37,9 @@ namespace TheOmegaStrain.Game.World.Objects
         //  PUBLIC FACTORIES
         // ----------------------------------------------------
 
-        public static _3dObject CreateLargeAlienPlant(ISurface parentSurface)
+        public static OmegaObject3D CreateLargeAlienPlant(ISurface parentSurface)
         {
-            var plant = new _3dObject
+            var plant = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "LargeAlienPlant",
@@ -59,16 +58,16 @@ namespace TheOmegaStrain.Game.World.Objects
             plant.CrashBoxes = AlienPlantCrashBoxes(16f, 34f);
             plant.CrashBoxNames = new List<string?> { "AlienPlantBody" };
 
-            _3dObjectHelpers.AddCustomShadowPart(plant, AlienPlantShadow(28f, 24f));
-            _3dObjectHelpers.ApplyScaleToObject(plant, ZoomRatio);
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(plant);
+            OmegaObject3DHelpers.AddCustomShadowPart(plant, AlienPlantShadow(28f, 24f));
+            OmegaObject3DHelpers.ApplyScaleToObject(plant, ZoomRatio);
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(plant);
 
             return plant;
         }
 
-        public static _3dObject CreateSmallAlienPlant(ISurface parentSurface)
+        public static OmegaObject3D CreateSmallAlienPlant(ISurface parentSurface)
         {
-            var plant = new _3dObject
+            var plant = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "SmallAlienPlant",
@@ -87,9 +86,9 @@ namespace TheOmegaStrain.Game.World.Objects
             plant.CrashBoxes = AlienPlantCrashBoxes(9f, 20f);
             plant.CrashBoxNames = new List<string?> { "AlienPlantBody" };
 
-            _3dObjectHelpers.AddCustomShadowPart(plant, AlienPlantShadow(17f, 15f));
-            _3dObjectHelpers.ApplyScaleToObject(plant, ZoomRatio);
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(plant);
+            OmegaObject3DHelpers.AddCustomShadowPart(plant, AlienPlantShadow(17f, 15f));
+            OmegaObject3DHelpers.ApplyScaleToObject(plant, ZoomRatio);
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(plant);
 
             return plant;
         }
@@ -353,7 +352,7 @@ namespace TheOmegaStrain.Game.World.Objects
         {
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -radius, y = -radius, z = 0f },
                     new Vector3 { x = radius, y = radius, z = height }
                 )
@@ -367,7 +366,7 @@ namespace TheOmegaStrain.Game.World.Objects
         private static List<ITriangleMeshWithColor> AlienPlantShadow(float radius, float height)
         {
             var tris = new List<ITriangleMeshWithColor>();
-            const string sc = _3dObjectHelpers.ShadowColorHex;
+            const string sc = OmegaObject3DHelpers.ShadowColorHex;
 
             // Base shadow
             AddShadowTri(tris, -radius * 0.35f, radius * 0.35f, 0f, height * 0.25f, sc);
@@ -426,11 +425,11 @@ namespace TheOmegaStrain.Game.World.Objects
             return points;
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

@@ -4,7 +4,6 @@ using System.Globalization;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 using MathF = System.MathF;
 using TheOmegaStrain.Game.World.Objects;
 
@@ -36,7 +35,7 @@ namespace TheOmegaStrain.Game.World.Objects.EarthObject
 
         private static readonly string[] StarColors = { "FFFFFF", "FFF7CC", "CCE5FF", "FFD8D8", "E6FFE6" };
 
-        public static _3dObject CreateEarth()
+        public static OmegaObject3D CreateEarth()
         {
             var parts = new List<I3dObjectPart>
             {
@@ -52,7 +51,7 @@ namespace TheOmegaStrain.Game.World.Objects.EarthObject
             // Surface miniatures — placed on land/highland triangles, rotate with globe
             AddSurfaceMiniatures(parts, rng);
 
-            var obj = new _3dObject
+            var obj = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "Earth",
@@ -177,21 +176,21 @@ namespace TheOmegaStrain.Game.World.Objects.EarthObject
             };
         }
 
-        private static _3dObjectPart BuildMiniTreePart(int index, Vector3 center, Random rng)
+        private static OmegaObjectPart3D BuildMiniTreePart(int index, Vector3 center, Random rng)
         {
             var obj = Tree.CreateTree(null!);
             float scale = 0.22f;
             return EmbedObjectOnSurface($"MiniTree_{index}", obj, center, scale, rng);
         }
 
-        private static _3dObjectPart BuildMiniHousePart(int index, Vector3 center, Random rng)
+        private static OmegaObjectPart3D BuildMiniHousePart(int index, Vector3 center, Random rng)
         {
             var obj = House.CreateHouse(null!);
             float scale = 0.20f;
             return EmbedObjectOnSurface($"MiniHouse_{index}", obj, center, scale, rng);
         }
 
-        private static _3dObjectPart BuildMiniIglooPart(int index, Vector3 center)
+        private static OmegaObjectPart3D BuildMiniIglooPart(int index, Vector3 center)
         {
             var obj = Igloo.CreateSmallIgloo(null!);
             float scale = 0.25f;
@@ -202,7 +201,7 @@ namespace TheOmegaStrain.Game.World.Objects.EarthObject
         /// Extracts all visible (non-shadow) triangles from a real object, scales them,
         /// and transforms each vertex onto the globe surface using the surface frame at <paramref name="center"/>.
         /// </summary>
-        private static _3dObjectPart EmbedObjectOnSurface(string partName, _3dObject obj, Vector3 center, float scale, Random rng)
+        private static OmegaObjectPart3D EmbedObjectOnSurface(string partName, OmegaObject3D obj, Vector3 center, float scale, Random rng)
         {
             var (n, t1, t2) = SurfaceFrame(center);
             float yaw = (float)(rng.NextDouble() * MathF.PI * 2f);
@@ -232,7 +231,7 @@ namespace TheOmegaStrain.Game.World.Objects.EarthObject
                 }
             }
 
-            return new _3dObjectPart { PartName = partName, Triangles = tris, IsVisible = true };
+            return new OmegaObjectPart3D { PartName = partName, Triangles = tris, IsVisible = true };
         }
 
         /// <summary>
@@ -269,7 +268,7 @@ namespace TheOmegaStrain.Game.World.Objects.EarthObject
         // Stars
         // ----------------------------------------------------------------
 
-        private static _3dObjectPart CreateStarPart(int index, Random rng)
+        private static OmegaObjectPart3D CreateStarPart(int index, Random rng)
         {
             // Evenly distribute stars across the sphere surface using the Fibonacci sphere method
             float goldenAngle = MathF.PI * (3f - MathF.Sqrt(5f));
@@ -289,7 +288,7 @@ namespace TheOmegaStrain.Game.World.Objects.EarthObject
 
             var tris = BuildStarTriangles(cx, cy, cz, size, color, rotationRadians);
 
-            return new _3dObjectPart
+            return new OmegaObjectPart3D
             {
                 PartName = $"Star_{index}",
                 Triangles = tris,
@@ -601,9 +600,9 @@ namespace TheOmegaStrain.Game.World.Objects.EarthObject
             return new List<List<IVector3>> { box };
         }
 
-        private static _3dObjectPart CreatePart(string name, List<ITriangleMeshWithColor> triangles)
+        private static OmegaObjectPart3D CreatePart(string name, List<ITriangleMeshWithColor> triangles)
         {
-            return new _3dObjectPart
+            return new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = triangles,

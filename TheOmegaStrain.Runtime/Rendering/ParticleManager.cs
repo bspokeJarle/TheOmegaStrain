@@ -5,7 +5,6 @@ using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Runtime.Rendering
 {
@@ -45,7 +44,7 @@ namespace TheOmegaStrain.Runtime.Rendering
         // Cached surface-tilt trig — mirrors ObjectShadowManager so particle
         // shadows rotate onto the ground plane the same way.
 
-        public void HandleParticles(_3dObject inhabitant, List<_3dObject> particleObjectList)
+        public void HandleParticles(OmegaObject3D inhabitant, List<OmegaObject3D> particleObjectList)
         {
             if (inhabitant.Particles?.Particles is null || inhabitant.Particles.Particles.Count == 0)
                 return;
@@ -85,7 +84,7 @@ namespace TheOmegaStrain.Runtime.Rendering
                 float particleOffsetZ = inhabitant.ObjectOffsets.z + particle.Position.z;
 
                 // Original particle — rendered as its actual colored triangle in 3D space
-                particleObjectList.Add(new _3dObject
+                particleObjectList.Add(new OmegaObject3D
                 {
                     ObjectId = GameState.ObjectIdCounter++,
                     ObjectName = "Particle",
@@ -96,7 +95,7 @@ namespace TheOmegaStrain.Runtime.Rendering
                     ParentSurface = inhabitant.ParentSurface,
                     ObjectParts = new List<I3dObjectPart>
                     {
-                        new _3dObjectPart { Triangles = new List<ITriangleMeshWithColor> { particleTriangle }, PartName = "Particle", IsVisible = true }
+                        new OmegaObjectPart3D { Triangles = new List<ITriangleMeshWithColor> { particleTriangle }, PartName = "Particle", IsVisible = true }
                     },
                     ObjectOffsets = new Vector3
                     {
@@ -195,7 +194,7 @@ namespace TheOmegaStrain.Runtime.Rendering
                     noHidden = true
                 };
 
-                particleObjectList.Add(new _3dObject
+                particleObjectList.Add(new OmegaObject3D
                 {
                     ObjectId = GameState.ObjectIdCounter++,
                     ObjectName = "ParticleShadow",
@@ -203,7 +202,7 @@ namespace TheOmegaStrain.Runtime.Rendering
                     ParentSurface = inhabitant.ParentSurface,
                     ObjectParts = new List<I3dObjectPart>
                     {
-                        new _3dObjectPart { Triangles = new List<ITriangleMeshWithColor> { shadowTriangle }, PartName = "ParticleShadow", IsVisible = true }
+                        new OmegaObjectPart3D { Triangles = new List<ITriangleMeshWithColor> { shadowTriangle }, PartName = "ParticleShadow", IsVisible = true }
                     },
                     ObjectOffsets = new Vector3
                     {

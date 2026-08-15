@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using static TheOmegaStrain.Domain.WeaponHelpers;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls
 {
@@ -466,7 +465,7 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls
         private void PlayThudSound(I3dObject theObject)
         {
             if (_audio == null || _thudSound == null) return;
-            var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+            var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
             _audio.Play(_thudSound, AudioPlayMode.OneShot, new AudioPlayOptions
             {
                 WorldPosition = new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z)
@@ -476,7 +475,7 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls
         private void PlayExplosionSound(I3dObject theObject)
         {
             if (_audio == null || _explosionSound == null) return;
-            var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+            var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
             _audio.Play(_explosionSound, AudioPlayMode.OneShot, new AudioPlayOptions
             {
                 WorldPosition = new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z)
@@ -492,7 +491,7 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls
 
             if (theObject.IsOnScreen)
             {
-                var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
 
                 if (_engineInstance == null || !_engineInstance.IsPlaying)
                 {

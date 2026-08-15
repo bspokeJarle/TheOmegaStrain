@@ -1,5 +1,4 @@
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 using System.Collections.Generic;
 using System;
 using System.Runtime.CompilerServices;

@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Net.Security;
 using static TheOmegaStrain.Domain.WeaponHelpers;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
@@ -32,12 +31,12 @@ namespace TheOmegaStrain.Gameplay.Controls
         private readonly OmegaMeshRotation _rotate = new(); // Rotation fra OmegaEngineAdapters
 
         public IObjectMovement ParentShip { get; set; }
-        public _3dObject ParentShipObject { get; set; }
+        public OmegaObject3D ParentShipObject { get; set; }
         public IVector3 WorldPosition { get; set; } = new Vector3(0, 0, 0);
         public IVector3 ParentVelocityLocal { get; set; } = new Vector3(0, 0, 0);
         public List<IActiveWeapon> ActiveWeapons { get; set; } = new List<IActiveWeapon>();
 
-        private _3dObject? _aimAssistLockedTarget;
+        private OmegaObject3D? _aimAssistLockedTarget;
 
         public bool ShowAimAssist { get; set; } = true;
         public bool FireAsEnemyWeapon { get; set; } = false;
@@ -60,7 +59,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             _lazerSound = soundRegistry.Get("lazer_main");
         }
 
-        public Weapons(List<I3dObject> weapons, IObjectMovement parent, _3dObject ship)
+        public Weapons(List<I3dObject> weapons, IObjectMovement parent, OmegaObject3D ship)
         {
             _weaponObjects = weapons ?? new List<I3dObject>();
             ParentShip = parent;
@@ -76,14 +75,14 @@ namespace TheOmegaStrain.Gameplay.Controls
             int tilt
         )
         {
-            ParentShipObject = (_3dObject)parentShip;
+            ParentShipObject = (OmegaObject3D)parentShip;
             var shipOffsets = ParentShipObject.ObjectOffsets ?? new Vector3(0, 0, 0);
 
             if (weaponType == WeaponType.Lazer)
             {
                 I3dObject template = _weaponObjects.Count > 0
                     ? _weaponObjects[0]
-                    : new _3dObject { ObjectName = "Lazer", ObjectId = GameState.ObjectIdCounter++ };
+                    : new OmegaObject3D { ObjectName = "Lazer", ObjectId = GameState.ObjectIdCounter++ };
 
                 I3dObject instance = OmegaObjectHelpers.DeepCopySingleObject(template);
                 if (FireAsEnemyWeapon) instance.ObjectName = EnemyLazerName;
@@ -138,7 +137,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
                 if (_audio != null && _lazerSound != null)
                 {
-                    var audioPosition = ((_3dObject)parentShip).GetAudioPosition();
+                    var audioPosition = ((OmegaObject3D)parentShip).GetAudioPosition();
                     _lazerInstance = _audio.Play(
                         _lazerSound,
                         AudioPlayMode.OneShot,
@@ -164,7 +163,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             {
                 I3dObject? template = _weaponObjects.Find(w => w.ObjectName == "Bullet");
                 if (template == null)
-                    template = new _3dObject { ObjectName = "Bullet", ObjectId = GameState.ObjectIdCounter++ };
+                    template = new OmegaObject3D { ObjectName = "Bullet", ObjectId = GameState.ObjectIdCounter++ };
 
                 I3dObject instance = OmegaObjectHelpers.DeepCopySingleObject(template);
                 instance.ImpactStatus = new ImpactStatus
@@ -254,12 +253,12 @@ namespace TheOmegaStrain.Gameplay.Controls
 
             float bestDot = coneDot;
             IVector3? bestEnemyDir = null;
-            _3dObject? bestEnemy = null;
+            OmegaObject3D? bestEnemy = null;
             float bestDist = float.MaxValue;
 
             for (int i = 0; i < aiObjects.Count; i++)
             {
-                var obj = aiObjects[i] as _3dObject;
+                var obj = aiObjects[i] as OmegaObject3D;
                 if (!IsValidAimAssistEnemy(obj)) continue;
                 if (!TryGetVisibleAimAssistTarget(obj, out var screenTarget)) continue;
 
@@ -342,7 +341,7 @@ namespace TheOmegaStrain.Gameplay.Controls
         //Rotates the weapon geometry according to ship rotation + tilt
         private void InitializeWeaponGeometry(I3dObject weaponObj, Vector3 rotation, int tilt)
         {
-            if (weaponObj is not _3dObject weapon)
+            if (weaponObj is not OmegaObject3D weapon)
                 return;
 
             if (weapon.ObjectParts == null)
@@ -434,7 +433,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             if (Logger.ShouldLog(enableLogging)) Logger.Log($"Weapon HasCrashed:{hasCrashed} ImpactName:{objectName}");
             if (_audio != null && _thudSound != null)
             {
-                var audioPosition = ((_3dObject)weaponObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)weaponObject).GetAudioPosition();
                 //Stop Lazer, it owerpowers the thud
                 _lazerInstance?.Stop(playEndSegment: false);
                 // Implement thudding sound or effects here
@@ -558,12 +557,12 @@ namespace TheOmegaStrain.Gameplay.Controls
                 return;
 
             float bestDistSq = float.MaxValue;
-            _3dObject? bestTarget = null;
+            OmegaObject3D? bestTarget = null;
             float bestSx = 0f, bestSy = 0f;
 
             for (int i = 0; i < aiObjects.Count; i++)
             {
-                var obj = aiObjects[i] as _3dObject;
+                var obj = aiObjects[i] as OmegaObject3D;
                 if (!TrySetAimAssistTarget(null, obj, halfW, halfH, out var screenTarget)) continue;
 
                 float dx = screenTarget.ScreenX - halfW;
@@ -607,7 +606,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
         private static bool TrySetAimAssistTarget(
             GamePlayState? gameplay,
-            _3dObject? obj,
+            OmegaObject3D? obj,
             float halfW,
             float halfH,
             out AimAssistScreenTarget screenTarget)
@@ -630,7 +629,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             return true;
         }
 
-        private static bool IsValidAimAssistEnemy(_3dObject? obj)
+        private static bool IsValidAimAssistEnemy(OmegaObject3D? obj)
         {
             if (obj == null) return false;
             if (!EnemySetup.IsEnemyTypeValid(obj.ObjectName)) return false;
@@ -640,7 +639,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             return true;
         }
 
-        private static bool TryGetVisibleAimAssistTarget(_3dObject obj, out AimAssistScreenTarget screenTarget)
+        private static bool TryGetVisibleAimAssistTarget(OmegaObject3D obj, out AimAssistScreenTarget screenTarget)
         {
             screenTarget = default;
 
@@ -658,7 +657,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             return true;
         }
 
-        private static bool TryGetRenderOrigin(_3dObject obj, out float x, out float y, out float z)
+        private static bool TryGetRenderOrigin(OmegaObject3D obj, out float x, out float y, out float z)
         {
             x = y = z = 0f;
             if (obj == null || obj.WorldPosition == null)
@@ -683,7 +682,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             return true;
         }
 
-        private static Vector3 GetLocalCrashBoxCenter(_3dObject obj)
+        private static Vector3 GetLocalCrashBoxCenter(OmegaObject3D obj)
         {
             return ToVector3(ObjectCollisionGeometry.GetLocalCrashCenter(obj));
         }
@@ -721,17 +720,17 @@ namespace TheOmegaStrain.Gameplay.Controls
             var effectivePos = pos.x + obj.ObjectOffsets?.x ?? 0;
             effectivePos = pos.y + obj.ObjectOffsets?.y ?? 0;
             effectivePos = pos.z + obj.ObjectOffsets?.z ?? 0;
-            ((_3dObject)obj).WorldPosition = pos;
+            ((OmegaObject3D)obj).WorldPosition = pos;
         }
 
         private static void SetObjectOffsets(I3dObject obj, IVector3 pos)
         {
-            ((_3dObject)obj).ObjectOffsets = pos;
+            ((OmegaObject3D)obj).ObjectOffsets = pos;
         }
 
         private static IVector3 GetObjectOffsets(I3dObject obj)
         {
-            var o = (_3dObject)obj;
+            var o = (OmegaObject3D)obj;
             return o.ObjectOffsets ?? new Vector3(0, 0, 0);
         }
 

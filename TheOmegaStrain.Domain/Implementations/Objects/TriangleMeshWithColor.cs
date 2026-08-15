@@ -1,10 +1,7 @@
 namespace TheOmegaStrain.Domain
 {
-    public partial class _3dSpecificsImplementations
+    public class TriangleMeshWithColor : TriangleMesh, ITriangleMeshWithColor
     {
-        public class TriangleMeshWithColor : TriangleMesh, ITriangleMeshWithColor
-        {
-            public string? Color { get; set; }
-        }
+        public string? Color { get; set; }
     }
 }

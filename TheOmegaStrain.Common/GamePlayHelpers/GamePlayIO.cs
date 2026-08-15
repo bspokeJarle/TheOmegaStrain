@@ -5,10 +5,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 using System.Text.Json;
 
-namespace GameplayHelpers.ReplayIO
+namespace TheOmegaStrain.Common.GamePlayHelpers.ReplayIO
 {
     public static class ReplayIO
     {

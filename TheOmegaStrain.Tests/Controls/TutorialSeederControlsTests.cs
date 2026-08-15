@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System.Reflection;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -102,7 +101,7 @@ public class TutorialSeederControlsTests
         original.Movement = controls;
         GameState.SurfaceState.AiObjects.Add(original);
 
-        var visibleFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
+        var visibleFrameCopy = (OmegaObject3D)OmegaObjectHelpers.DeepCopySingleObject(original);
         controls.MoveObject(visibleFrameCopy, audioPlayer: null, soundRegistry: null);
 
         Assert.AreEqual(visibleFrameCopy.ObjectOffsets!.y, original.ObjectOffsets!.y, 0.001f,
@@ -111,7 +110,7 @@ public class TutorialSeederControlsTests
         visibleFrameCopy.ImpactStatus!.HasCrashed = true;
         visibleFrameCopy.ImpactStatus.ObjectName = "Lazer";
 
-        var nextFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
+        var nextFrameCopy = (OmegaObject3D)OmegaObjectHelpers.DeepCopySingleObject(original);
         controls.MoveObject(nextFrameCopy, audioPlayer: null, soundRegistry: null);
 
         Assert.IsTrue(IsUsingCombatControls(controls));
@@ -127,7 +126,7 @@ public class TutorialSeederControlsTests
         return (bool)field.GetValue(controls)!;
     }
 
-    private static _3dObject CreateSeeder() =>
+    private static OmegaObject3D CreateSeeder() =>
         new()
         {
             ObjectId = 42,
@@ -138,7 +137,7 @@ public class TutorialSeederControlsTests
             ImpactStatus = new ImpactStatus { ObjectHealth = 55 },
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "Body",
                     IsVisible = true,

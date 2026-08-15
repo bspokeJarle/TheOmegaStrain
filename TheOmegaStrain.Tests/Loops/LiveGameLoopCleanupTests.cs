@@ -8,7 +8,6 @@ using TheOmegaStrain.Domain;
 using System.Diagnostics;
 using System.Reflection;
 using TheOmegaStrain.Runtime.Loops;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Loops;
 
@@ -79,7 +78,7 @@ public class LiveGameLoopCleanupTests
     public void CleanupExplodedObjects_PowerUpDropPreservesSourceLocalRenderOffsets()
     {
         GameState.SurfaceState.GlobalMapPosition = new Vector3 { x = 500f, y = 80f, z = 900f };
-        GameState.SurfaceState.AiObjects = new List<_3dObject>();
+        GameState.SurfaceState.AiObjects = new List<OmegaObject3D>();
         var explodedSeeder = CreateExplodedObject(20);
         explodedSeeder.ObjectName = "Seeder";
         explodedSeeder.HasPowerUp = true;
@@ -97,7 +96,7 @@ public class LiveGameLoopCleanupTests
 
         InvokePrivate(loop, "CleanupExplodedObjects", world);
 
-        var powerup = world.WorldInhabitants.OfType<_3dObject>().Single(x => x.ObjectName == "PowerUp");
+        var powerup = world.WorldInhabitants.OfType<OmegaObject3D>().Single(x => x.ObjectName == "PowerUp");
         Assert.AreEqual(sourceWorld.x, powerup.WorldPosition!.x, 0.001f);
         Assert.AreEqual(sourceWorld.y, powerup.WorldPosition.y, 0.001f);
         Assert.AreEqual(sourceWorld.z, powerup.WorldPosition.z, 0.001f);
@@ -118,7 +117,7 @@ public class LiveGameLoopCleanupTests
         // Configure a wave where the very first seeder kill should drop a powerup.
         TheOmegaStrain.Game.Helpers.PowerUpDropPolicy.ConfigureForWave(totalSeeders: 1, powerUpCount: 1);
         GameState.SurfaceState.GlobalMapPosition = new Vector3();
-        GameState.SurfaceState.AiObjects = new List<_3dObject>();
+        GameState.SurfaceState.AiObjects = new List<OmegaObject3D>();
         GameState.GamePlayState.CurrentSceneType = SceneTypes.Game;
 
         var explodedSeeder = CreateExplodedObject(30);
@@ -137,7 +136,7 @@ public class LiveGameLoopCleanupTests
 
         InvokePrivate(loop, "CleanupExplodedObjects", world);
 
-        bool spawnedPowerUp = world.WorldInhabitants.OfType<_3dObject>().Any(x => x.ObjectName == "PowerUp");
+        bool spawnedPowerUp = world.WorldInhabitants.OfType<OmegaObject3D>().Any(x => x.ObjectName == "PowerUp");
         Assert.IsTrue(spawnedPowerUp,
             "First seeder kill of a 1/1 wave must promote the seeder via PowerUpDropPolicy and drop a PowerUp.");
     }
@@ -161,7 +160,7 @@ public class LiveGameLoopCleanupTests
         speedCarrier.PowerUpType = PowerUpType.Standard;
         speedCarrier.WorldPosition = new Vector3 { x = 100f, z = 200f };
 
-        GameState.SurfaceState.AiObjects = new List<_3dObject> { existingPowerUp, speedCarrier };
+        GameState.SurfaceState.AiObjects = new List<OmegaObject3D> { existingPowerUp, speedCarrier };
         var world = new TestWorld
         {
             WorldInhabitants = new List<I3dObject> { existingPowerUp, speedCarrier }
@@ -169,7 +168,7 @@ public class LiveGameLoopCleanupTests
 
         InvokePrivate(new LiveGameLoop(), "CleanupExplodedObjects", world);
 
-        var drops = world.WorldInhabitants.OfType<_3dObject>()
+        var drops = world.WorldInhabitants.OfType<OmegaObject3D>()
             .Where(obj => obj.ObjectName == "PowerUp")
             .ToList();
         Assert.AreEqual(2, drops.Count);
@@ -182,7 +181,7 @@ public class LiveGameLoopCleanupTests
     {
         TheOmegaStrain.Game.Helpers.PowerUpDropPolicy.ConfigureForWave(totalSeeders: 1, powerUpCount: 1);
         GameState.SurfaceState.GlobalMapPosition = new Vector3();
-        GameState.SurfaceState.AiObjects = new List<_3dObject>();
+        GameState.SurfaceState.AiObjects = new List<OmegaObject3D>();
         GameState.GamePlayState.CurrentSceneType = SceneTypes.Tutorial;
 
         var explodedSeeder = CreateExplodedObject(31);
@@ -217,7 +216,7 @@ public class LiveGameLoopCleanupTests
         gps.CurrentSceneType = SceneTypes.Game;
         gps.HasCheckpoint = false;
         GameState.SurfaceState.GlobalMapPosition = new Vector3();
-        GameState.SurfaceState.AiObjects = new List<_3dObject>();
+        GameState.SurfaceState.AiObjects = new List<OmegaObject3D>();
 
         var explodedSeeder = CreateExplodedObject(50);
         explodedSeeder.ObjectName = "Seeder";
@@ -234,7 +233,7 @@ public class LiveGameLoopCleanupTests
         var loop = new LiveGameLoop();
         InvokePrivate(loop, "CleanupExplodedObjects", world);
 
-        bool spawnedPowerUp = world.WorldInhabitants.OfType<_3dObject>().Any(x => x.ObjectName == "PowerUp");
+        bool spawnedPowerUp = world.WorldInhabitants.OfType<OmegaObject3D>().Any(x => x.ObjectName == "PowerUp");
         Assert.IsTrue(spawnedPowerUp,
             "Test precondition: seeder kill must have produced a PowerUp drop.");
         Assert.IsFalse(gps.HasCheckpoint,
@@ -260,7 +259,7 @@ public class LiveGameLoopCleanupTests
         explodedMotherShip.ObjectName = "MotherShipSmall";
         explodedMotherShip.IsActive = true;
 
-        GameState.SurfaceState.AiObjects = new List<_3dObject> { explodedMotherShip };
+        GameState.SurfaceState.AiObjects = new List<OmegaObject3D> { explodedMotherShip };
         var world = new TestWorld
         {
             WorldInhabitants = new List<I3dObject> { explodedMotherShip }
@@ -453,9 +452,9 @@ public class LiveGameLoopCleanupTests
         };
     }
 
-    private static _3dObject CreateExplodedObject(int objectId)
+    private static OmegaObject3D CreateExplodedObject(int objectId)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = objectId,
             ObjectName = "Decoration",
@@ -468,14 +467,14 @@ public class LiveGameLoopCleanupTests
         };
     }
 
-    private static _3dObject CreateRenderableObject(
+    private static OmegaObject3D CreateRenderableObject(
         int objectId,
         string objectName,
         IObjectMovement movement,
         int? surfaceBasedId = null,
         ISurface? parentSurface = null)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = objectId,
             ObjectName = objectName,
@@ -486,7 +485,7 @@ public class LiveGameLoopCleanupTests
             CrashBoxes = new List<List<IVector3>>(),
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = objectName + "Body",
                     IsVisible = true,

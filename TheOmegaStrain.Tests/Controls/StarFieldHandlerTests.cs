@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Runtime.Rendering;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -105,7 +104,7 @@ public class StarFieldHandlerTests
         };
     }
 
-    private static int GetFirstStarColorIntensity(List<_3dObject> stars)
+    private static int GetFirstStarColorIntensity(List<OmegaObject3D> stars)
     {
         string color = stars[0].ObjectParts[0].Triangles[0].Color ?? "000000";
         color = color.TrimStart('#');

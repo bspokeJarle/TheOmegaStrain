@@ -5,7 +5,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Helpers;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls
 {
@@ -224,7 +223,7 @@ namespace TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls
             // Play explosion sound
             if (_audio != null && _explosionSound != null)
             {
-                var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
                 _audio.Play(_explosionSound, AudioPlayMode.OneShot, new AudioPlayOptions
                 {
                     WorldPosition = new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z)
@@ -510,7 +509,7 @@ namespace TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls
 
             if (theObject.IsOnScreen)
             {
-                var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
 
                 if (_propellerInstance == null || !_propellerInstance.IsPlaying)
                 {
@@ -622,7 +621,7 @@ namespace TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls
             GameState.PendingWorldObjects.Add(bomb);
         }
 
-        private static _3dObject? CreateBomberBombObject(ISurface parentSurface)
+        private static OmegaObject3D? CreateBomberBombObject(ISurface parentSurface)
         {
             const string typeName = "TheOmegaStrain.Game.World.Objects.BomberBomb";
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -630,7 +629,7 @@ namespace TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls
                 var type = assembly.GetType(typeName, throwOnError: false, ignoreCase: false);
                 if (type == null) continue;
                 var method = type.GetMethod("CreateBomberBomb", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                if (method?.Invoke(null, new object[] { parentSurface }) is _3dObject bomb)
+                if (method?.Invoke(null, new object[] { parentSurface }) is OmegaObject3D bomb)
                 {
                     return bomb;
                 }

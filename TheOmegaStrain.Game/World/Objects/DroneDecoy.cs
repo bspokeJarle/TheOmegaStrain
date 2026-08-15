@@ -5,8 +5,7 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
-using static TheOmegaStrain.Game.Helpers._3dObjectHelpers;
+using static TheOmegaStrain.Game.Helpers.OmegaObject3DHelpers;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -49,7 +48,7 @@ namespace TheOmegaStrain.Game.World.Objects
         private static string antennaColor = "7C828C";
         private static string antennaTipColor = "FFCC33";
 
-        public static _3dObject CreateDecoyBeacon(ISurface parentSurface)
+        public static OmegaObject3D CreateDecoyBeacon(ISurface parentSurface)
         {
             var core = DecoyCore();
             var frontPulse = DecoyFrontPulsePanel();
@@ -60,7 +59,7 @@ namespace TheOmegaStrain.Game.World.Objects
             var guide = ParticlesDirectionGuide();
             var startGuide = ParticlesStartGuide();
 
-            var decoy = new _3dObject
+            var decoy = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++
             };
@@ -86,9 +85,9 @@ namespace TheOmegaStrain.Game.World.Objects
             decoy.ParentSurface = parentSurface;
             decoy.HasShadow = true;
 
-            _3dObjectHelpers.ApplyScaleToObject(decoy, ZoomRatio);
+            OmegaObject3DHelpers.ApplyScaleToObject(decoy, ZoomRatio);
 
-            _3dObjectHelpers.AddSimplifiedShadowPart(decoy, useFlatQuad: true);
+            OmegaObject3DHelpers.AddSimplifiedShadowPart(decoy, useFlatQuad: true);
 
             return decoy;
         }
@@ -334,7 +333,7 @@ namespace TheOmegaStrain.Game.World.Objects
                     z = coreHalfHeight + antennaHeight
                 });
 
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(bounds.min, bounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(bounds.min, bounds.max));
 
             return boxes;
         }
@@ -343,12 +342,12 @@ namespace TheOmegaStrain.Game.World.Objects
         //  HELPERS
         // ----------------------------------------------------
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null)
                 return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

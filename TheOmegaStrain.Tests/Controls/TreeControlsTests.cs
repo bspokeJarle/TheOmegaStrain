@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System.Reflection;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -91,16 +90,16 @@ public class TreeControlsTests
         Assert.IsTrue(leafTree.CrashBoxes.Count >= 3, "LeafTree should have crashboxes like other landbased tree objects.");
     }
 
-    private static _3dObject CreateTreeObject()
+    private static OmegaObject3D CreateTreeObject()
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 7,
             ObjectName = "Tree",
             Rotation = new Vector3(),
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "TreeTrunk",
                     IsVisible = true,
@@ -115,7 +114,7 @@ public class TreeControlsTests
                         }
                     }
                 },
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "TreeFoliage",
                     IsVisible = true,
@@ -130,7 +129,7 @@ public class TreeControlsTests
                         }
                     }
                 },
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "Shadow",
                     IsVisible = true,

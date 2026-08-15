@@ -6,8 +6,7 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
-using static TheOmegaStrain.Game.Helpers._3dObjectHelpers;
+using static TheOmegaStrain.Game.Helpers.OmegaObject3DHelpers;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -93,7 +92,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
         private static readonly Vector3 BodyCenter = new Vector3 { x = 0, y = 0, z = 0 };
 
-        public static _3dObject CreateKamikazeDrone(ISurface parentSurface)
+        public static OmegaObject3D CreateKamikazeDrone(ISurface parentSurface)
         {
             var nose = KamikazeRoundedNose();
             var noseTransition = KamikazeNoseTransition();
@@ -109,7 +108,7 @@ namespace TheOmegaStrain.Game.World.Objects
             var guide = ParticlesDirectionGuide();
             var startGuide = ParticlesStartGuide();
 
-            var drone = new _3dObject
+            var drone = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "KamikazeDrone"
@@ -138,9 +137,9 @@ namespace TheOmegaStrain.Game.World.Objects
             drone.ParentSurface = parentSurface;
             drone.HasShadow = true;
 
-            _3dObjectHelpers.ApplyScaleToObject(drone, ZoomRatio);
+            OmegaObject3DHelpers.ApplyScaleToObject(drone, ZoomRatio);
 
-            _3dObjectHelpers.AddSimplifiedShadowPart(drone, useFlatQuad: true);
+            OmegaObject3DHelpers.AddSimplifiedShadowPart(drone, useFlatQuad: true);
 
             return drone;
         }
@@ -548,17 +547,17 @@ namespace TheOmegaStrain.Game.World.Objects
             var noseBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = noseBaseX, y = -noseRadiusY, z = -noseRadiusZ },
                 new Vector3 { x = noseBaseX + noseLength, y = noseRadiusY, z = noseRadiusZ });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(noseBounds.min, noseBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(noseBounds.min, noseBounds.max));
 
             var bodyBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = bodyMidX, y = -bodyHalfWidthMid, z = bodyBottomMid - 1.0f },
                 new Vector3 { x = bodyFrontX + 3f, y = bodyHalfWidthMid, z = bodyTopMid + spineLiftMid + canopyLiftMid + canopyHeightMid });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(bodyBounds.min, bodyBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(bodyBounds.min, bodyBounds.max));
 
             var engineBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = engineBackX, y = -bodyHalfWidthBack, z = bodyBottomBack - 1.0f },
                 new Vector3 { x = bodyBackX + 4f, y = bodyHalfWidthBack, z = bodyTopBack + finHeight });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(engineBounds.min, engineBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(engineBounds.min, engineBounds.max));
 
             return boxes;
         }
@@ -567,11 +566,11 @@ namespace TheOmegaStrain.Game.World.Objects
         //  HELPERS
         // ----------------------------------------------------
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

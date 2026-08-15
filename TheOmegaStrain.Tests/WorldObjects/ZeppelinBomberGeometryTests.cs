@@ -5,7 +5,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls;
 using System.Reflection;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.WorldObjects;
 
@@ -19,7 +18,7 @@ public class ZeppelinBomberGeometryTests
         GameState.SurfaceState = new SurfaceState
         {
             GlobalMapPosition = new Vector3 { x = 0f, y = 40f, z = 0f },
-            AiObjects = new List<_3dObject>()
+            AiObjects = new List<OmegaObject3D>()
         };
         GameState.ShipState = new ShipState();
     }

@@ -2,7 +2,7 @@ using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Domain;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -28,7 +28,7 @@ public class ResolutionScaledVisibilityTests
 
         float viewportCenter = (SurfaceSetup.viewPortSize * SurfaceSetup.tileSize) / 2f;
         float scaledShipOffset = 400f * ScreenSetup.ScreenScaleX;
-        var decoy = new _3dObject
+        var decoy = new OmegaObject3D
         {
             ObjectId = 1,
             ObjectName = "DroneDecoy",

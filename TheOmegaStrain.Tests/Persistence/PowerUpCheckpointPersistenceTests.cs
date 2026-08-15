@@ -6,7 +6,6 @@ using TheOmegaStrain.Gameplay.Controls;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Persistence;
 
@@ -30,7 +29,7 @@ public class PowerUpCheckpointPersistenceTests
         GameState.ShipState = new ShipState();
 
         GameState.GamePlayState.PlayerName = "Jarle";
-        GameState.SurfaceState.AiObjects = new List<_3dObject>();
+        GameState.SurfaceState.AiObjects = new List<OmegaObject3D>();
     }
 
     [TestCleanup]
@@ -55,12 +54,12 @@ public class PowerUpCheckpointPersistenceTests
         gps.Score = 0;
         gps.HasCheckpoint = false;
 
-        var ship = new _3dObject
+        var ship = new OmegaObject3D
         {
             ObjectId = 1,
             ObjectName = "Ship",
             ImpactStatus = new ImpactStatus { HasCrashed = true, ObjectName = "PowerUp", ObjectHealth = 100 },
-            ObjectParts = new List<I3dObjectPart> { new _3dObjectPart { PartName = "Ship", Triangles = new List<ITriangleMeshWithColor>() } },
+            ObjectParts = new List<I3dObjectPart> { new OmegaObjectPart3D { PartName = "Ship", Triangles = new List<ITriangleMeshWithColor>() } },
             CrashBoxes = new List<List<IVector3>>(),
             Rotation = new Vector3(),
             WorldPosition = new Vector3(),
@@ -68,12 +67,12 @@ public class PowerUpCheckpointPersistenceTests
             Movement = new ShipControls()
         };
 
-        var powerUp = new _3dObject
+        var powerUp = new OmegaObject3D
         {
             ObjectId = 2,
             ObjectName = "PowerUp",
             ImpactStatus = new ImpactStatus { HasCrashed = true },
-            ObjectParts = new List<I3dObjectPart> { new _3dObjectPart { PartName = "PowerUp", Triangles = new List<ITriangleMeshWithColor>() } },
+            ObjectParts = new List<I3dObjectPart> { new OmegaObjectPart3D { PartName = "PowerUp", Triangles = new List<ITriangleMeshWithColor>() } },
             Rotation = new Vector3(),
             WorldPosition = new Vector3(),
             ObjectOffsets = new Vector3()
@@ -148,12 +147,12 @@ public class PowerUpCheckpointPersistenceTests
         gps.Score = 0;
         gps.HasCheckpoint = false;
 
-        var ship = new _3dObject
+        var ship = new OmegaObject3D
         {
             ObjectId = 21,
             ObjectName = "Ship",
             ImpactStatus = new ImpactStatus { HasCrashed = true, ObjectName = "PowerUp", ObjectHealth = 100 },
-            ObjectParts = new List<I3dObjectPart> { new _3dObjectPart { PartName = "Ship", Triangles = new List<ITriangleMeshWithColor>() } },
+            ObjectParts = new List<I3dObjectPart> { new OmegaObjectPart3D { PartName = "Ship", Triangles = new List<ITriangleMeshWithColor>() } },
             CrashBoxes = new List<List<IVector3>>(),
             Rotation = new Vector3(),
             WorldPosition = new Vector3(),
@@ -161,7 +160,7 @@ public class PowerUpCheckpointPersistenceTests
             Movement = new ShipControls()
         };
 
-        GameState.SurfaceState.AiObjects.Add(new _3dObject
+        GameState.SurfaceState.AiObjects.Add(new OmegaObject3D
         {
             ObjectId = 22,
             ObjectName = "PowerUp",
@@ -194,12 +193,12 @@ public class PowerUpCheckpointPersistenceTests
         gps.DronesRemaining = 0;
         gps.MotherShipsRemaining = 0;
 
-        var ship = new _3dObject
+        var ship = new OmegaObject3D
         {
             ObjectId = 11,
             ObjectName = "Ship",
             ImpactStatus = new ImpactStatus { HasCrashed = true, ObjectName = "PowerUp", ObjectHealth = 100 },
-            ObjectParts = new List<I3dObjectPart> { new _3dObjectPart { PartName = "Ship", Triangles = new List<ITriangleMeshWithColor>() } },
+            ObjectParts = new List<I3dObjectPart> { new OmegaObjectPart3D { PartName = "Ship", Triangles = new List<ITriangleMeshWithColor>() } },
             CrashBoxes = new List<List<IVector3>>(),
             Rotation = new Vector3(),
             WorldPosition = new Vector3(),
@@ -208,7 +207,7 @@ public class PowerUpCheckpointPersistenceTests
         };
 
         // Existing active enemies in current scene state
-        GameState.SurfaceState.AiObjects.Add(new _3dObject
+        GameState.SurfaceState.AiObjects.Add(new OmegaObject3D
         {
             ObjectId = 12,
             ObjectName = "Seeder",
@@ -220,7 +219,7 @@ public class PowerUpCheckpointPersistenceTests
             ObjectParts = new List<I3dObjectPart>()
         });
 
-        GameState.SurfaceState.AiObjects.Add(new _3dObject
+        GameState.SurfaceState.AiObjects.Add(new OmegaObject3D
         {
             ObjectId = 13,
             ObjectName = "KamikazeDrone",
@@ -232,7 +231,7 @@ public class PowerUpCheckpointPersistenceTests
             ObjectParts = new List<I3dObjectPart>()
         });
 
-        GameState.SurfaceState.AiObjects.Add(new _3dObject
+        GameState.SurfaceState.AiObjects.Add(new OmegaObject3D
         {
             ObjectId = 14,
             ObjectName = "MotherShipSmall",
@@ -244,7 +243,7 @@ public class PowerUpCheckpointPersistenceTests
             ObjectParts = new List<I3dObjectPart>()
         });
 
-        GameState.SurfaceState.AiObjects.Add(new _3dObject
+        GameState.SurfaceState.AiObjects.Add(new OmegaObject3D
         {
             ObjectId = 15,
             ObjectName = "PowerUp",
@@ -298,14 +297,14 @@ public class PowerUpCheckpointPersistenceTests
         }
     }
 
-    private static _3dObject CreatePowerUpHitShip(int objectId, ShipControls controls)
+    private static OmegaObject3D CreatePowerUpHitShip(int objectId, ShipControls controls)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = objectId,
             ObjectName = "Ship",
             ImpactStatus = new ImpactStatus { HasCrashed = true, ObjectName = "PowerUp", ObjectHealth = 100 },
-            ObjectParts = new List<I3dObjectPart> { new _3dObjectPart { PartName = "Ship", Triangles = new List<ITriangleMeshWithColor>() } },
+            ObjectParts = new List<I3dObjectPart> { new OmegaObjectPart3D { PartName = "Ship", Triangles = new List<ITriangleMeshWithColor>() } },
             CrashBoxes = new List<List<IVector3>>(),
             Rotation = new Vector3(),
             WorldPosition = new Vector3(),
@@ -314,9 +313,9 @@ public class PowerUpCheckpointPersistenceTests
         };
     }
 
-    private static _3dObject CreateCrashedPowerUp(int objectId)
+    private static OmegaObject3D CreateCrashedPowerUp(int objectId)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = objectId,
             ObjectName = "PowerUp",

@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Audio.Services;
 using TheOmegaStrain.Gameplay.Controls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -158,7 +157,7 @@ public class TutorialVoicePromptControlsTests
     private static void AssertPlayed(CapturingAudioPlayer audio, string soundId) =>
         Assert.AreEqual(soundId, audio.PlayedSoundIds[^1]);
 
-    private static _3dObject CreateMarker() =>
+    private static OmegaObject3D CreateMarker() =>
         new()
         {
             ObjectId = 1,
@@ -169,7 +168,7 @@ public class TutorialVoicePromptControlsTests
             ImpactStatus = new ImpactStatus()
         };
 
-    private static _3dObject CreateSeeder(Vector3 worldPosition) =>
+    private static OmegaObject3D CreateSeeder(Vector3 worldPosition) =>
         new()
         {
             ObjectId = 2,
@@ -181,7 +180,7 @@ public class TutorialVoicePromptControlsTests
             IsActive = true
         };
 
-    private static _3dObject CreateDrone(Vector3 worldPosition) =>
+    private static OmegaObject3D CreateDrone(Vector3 worldPosition) =>
         new()
         {
             ObjectId = 3,
@@ -193,7 +192,7 @@ public class TutorialVoicePromptControlsTests
             IsActive = true
         };
 
-    private static _3dObject CreatePowerUp(Vector3 worldPosition) =>
+    private static OmegaObject3D CreatePowerUp(Vector3 worldPosition) =>
         new()
         {
             ObjectId = 4,
@@ -205,7 +204,7 @@ public class TutorialVoicePromptControlsTests
             IsActive = true,
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "PowerUpBody",
                     IsVisible = true,

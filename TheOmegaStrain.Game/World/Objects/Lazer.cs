@@ -5,7 +5,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Ai;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -13,19 +12,19 @@ namespace TheOmegaStrain.Game.World.Objects
     {
         private const float ZoomRatio = 1f;
 
-        public static _3dObject CreateLazer(ISurface parentSurface, float scaleMultiplier = 1f, float crashBoxScaleMultiplier = 1f)
+        public static OmegaObject3D CreateLazer(ISurface parentSurface, float scaleMultiplier = 1f, float crashBoxScaleMultiplier = 1f)
         {
             var seg1 = LazerSegment1(); // longest, bright
             var seg2 = LazerSegment2(); // medium, darker
             var seg3 = LazerSegment3(); // shortest, grey
             var crash = LazerCrashBoxes();
 
-            var beam = new _3dObject { ObjectId = GameState.ObjectIdCounter++ };
+            var beam = new OmegaObject3D { ObjectId = GameState.ObjectIdCounter++ };
             if (seg1 == null || seg2 == null || seg3 == null) return beam;
 
-            beam.ObjectParts.Add(new _3dObjectPart { PartName = "Lazer_Long_Bright", Triangles = seg1, IsVisible = true });
-            beam.ObjectParts.Add(new _3dObjectPart { PartName = "Lazer_Mid_Darker", Triangles = seg2, IsVisible = true });
-            beam.ObjectParts.Add(new _3dObjectPart { PartName = "Lazer_Short_Grey", Triangles = seg3, IsVisible = true });
+            beam.ObjectParts.Add(new OmegaObjectPart3D { PartName = "Lazer_Long_Bright", Triangles = seg1, IsVisible = true });
+            beam.ObjectParts.Add(new OmegaObjectPart3D { PartName = "Lazer_Mid_Darker", Triangles = seg2, IsVisible = true });
+            beam.ObjectParts.Add(new OmegaObjectPart3D { PartName = "Lazer_Short_Grey", Triangles = seg3, IsVisible = true });
 
             // Place/aim via ObjectOffsets when spawning (e.g., muzzle position).
             beam.ObjectOffsets = new Vector3 { };
@@ -38,7 +37,7 @@ namespace TheOmegaStrain.Game.World.Objects
             beam.ImpactStatus = new ImpactStatus { ObjectName = "Lazer" };
             if (crash != null) beam.CrashBoxes = crash;
 
-            _3dObjectHelpers.ApplyScaleToObject(beam, ZoomRatio * scaleMultiplier);
+            OmegaObject3DHelpers.ApplyScaleToObject(beam, ZoomRatio * scaleMultiplier);
             ScaleCrashBoxesAroundCenter(beam.CrashBoxes, crashBoxScaleMultiplier);
 
             return beam;
@@ -62,7 +61,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(min, max)
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(min, max)
             };
         }
 

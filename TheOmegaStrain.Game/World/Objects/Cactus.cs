@@ -4,7 +4,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -17,10 +16,10 @@ namespace TheOmegaStrain.Game.World.Objects
         private const float ArmHeight = 24f;
         private static readonly float[] RotationAngles = { -45f, -30f, -15f, 0f, 15f, 30f, 45f };
 
-        public static _3dObject CreateCactus(ISurface parentSurface)
+        public static OmegaObject3D CreateCactus(ISurface parentSurface)
         {
             int objectId = GameState.ObjectIdCounter++;
-            var cactus = new _3dObject { ObjectId = objectId };
+            var cactus = new OmegaObject3D { ObjectId = objectId };
             float rotationZ = RotationAngles[Math.Abs(objectId) % RotationAngles.Length];
             float bodyHeight = BodyHeight;
             float bodyRadius = BodyRadius;
@@ -44,17 +43,17 @@ namespace TheOmegaStrain.Game.World.Objects
             cactus.CrashBoxes = CactusCrashBoxes(bodyHeight);
             cactus.ShadowOffset = new Vector3 { x = -7, y = 0, z = -8 };
 
-            _3dObjectHelpers.AddCustomShadowPart(cactus, CactusShadow(rotationZ, bodyHeight));
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(cactus);
+            OmegaObject3DHelpers.AddCustomShadowPart(cactus, CactusShadow(rotationZ, bodyHeight));
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(cactus);
 
             return cactus;
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? triangles, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? triangles, bool visible)
         {
             if (triangles == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = triangles,
@@ -228,7 +227,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
         private static List<ITriangleMeshWithColor> CactusShadow(float rotationZ, float bodyHeight)
         {
-            const string sc = _3dObjectHelpers.ShadowColorHex;
+            const string sc = OmegaObject3DHelpers.ShadowColorHex;
             var triangles = new List<ITriangleMeshWithColor>();
 
             AddShadowStem(triangles, centerX: 0f, halfWidth: BodyRadius * 1.05f, baseY: -BodyRadius, topY: BodyRadius, height: bodyHeight, color: sc);
@@ -277,13 +276,13 @@ namespace TheOmegaStrain.Game.World.Objects
         {
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -5.2f, y = -5.2f, z = 2f },
                     new Vector3 { x = 5.2f, y = 5.2f, z = bodyHeight - 5f }),
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -ArmReach - 1.5f, y = -3.1f, z = 25f },
                     new Vector3 { x = -BodyRadius * 0.35f, y = 3.1f, z = 46f }),
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = BodyRadius * 0.35f, y = -3.1f, z = 24f },
                     new Vector3 { x = ArmReach, y = 3.1f, z = 43f })
             };

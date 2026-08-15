@@ -8,7 +8,6 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.Scenes.Intro
 {

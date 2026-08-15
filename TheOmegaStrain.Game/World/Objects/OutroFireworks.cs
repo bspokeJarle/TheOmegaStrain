@@ -2,7 +2,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -11,9 +10,9 @@ namespace TheOmegaStrain.Game.World.Objects
         public const string ObjectName = "OutroFireworks";
         public const string ParticlePartName = "OutroFireworksParticles";
 
-        public static _3dObject CreateFireworks()
+        public static OmegaObject3D CreateFireworks()
         {
-            var fireworks = new _3dObject { ObjectId = GameState.ObjectIdCounter++ };
+            var fireworks = new OmegaObject3D { ObjectId = GameState.ObjectIdCounter++ };
             fireworks.ObjectName = ObjectName;
             fireworks.WorldPosition = new Vector3();
             fireworks.ObjectOffsets = new Vector3();
@@ -26,7 +25,7 @@ namespace TheOmegaStrain.Game.World.Objects
             fireworks.Movement = new OutroFireworksControls();
             fireworks.ZSortBias = 520f;
 
-            fireworks.ObjectParts.Add(new _3dObjectPart
+            fireworks.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = ParticlePartName,
                 Triangles = new List<ITriangleMeshWithColor>(),

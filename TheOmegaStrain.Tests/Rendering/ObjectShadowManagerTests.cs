@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Runtime.Rendering;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Rendering;
 
@@ -16,7 +15,7 @@ public class ObjectShadowManagerTests
         GameState.SurfaceState = new SurfaceState
         {
             GlobalMapPosition = new Vector3(),
-            SurfaceViewportObject = new _3dObject
+            SurfaceViewportObject = new OmegaObject3D
             {
                 ObjectId = 1,
                 ObjectName = "Surface",
@@ -50,7 +49,7 @@ public class ObjectShadowManagerTests
             };
 
             var flyingObject = CreateFreeFlyingShadowCaster(surface, x: 25f, y: 400f, z: 25f);
-            var shadows = new List<_3dObject>();
+            var shadows = new List<OmegaObject3D>();
 
             new ObjectShadowManager().HandleObjectShadow(flyingObject, shadows);
 
@@ -69,9 +68,9 @@ public class ObjectShadowManagerTests
         }
     }
 
-    private static _3dObject CreateFreeFlyingShadowCaster(Surface surface, float x, float y, float z)
+    private static OmegaObject3D CreateFreeFlyingShadowCaster(Surface surface, float x, float y, float z)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 2,
             ObjectName = "KamikazeDrone",
@@ -82,7 +81,7 @@ public class ObjectShadowManagerTests
             Rotation = new Vector3(),
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "Shadow",
                     IsVisible = false,

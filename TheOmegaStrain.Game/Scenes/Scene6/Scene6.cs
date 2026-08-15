@@ -6,7 +6,6 @@ using TheOmegaStrain.Common.GamePlayHelpers;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls;
@@ -123,7 +122,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene6
                 crashBoxScaleMultiplier: WeaponSetup.EnemyLazerMediumCrashBoxScale);
             motherShipMediumLazer.CrashBoxDebugMode = false;
             var motherShipMediumWeapons = new List<I3dObject> { motherShipMediumLazer };
-            motherShipMedium.WeaponSystems = new Weapons(motherShipMediumWeapons, motherShipMedium.Movement!, (_3dObject)motherShipMedium)
+            motherShipMedium.WeaponSystems = new Weapons(motherShipMediumWeapons, motherShipMedium.Movement!, (OmegaObject3D)motherShipMedium)
             {
                 ShowAimAssist = false,
                 FireAsEnemyWeapon = true,
@@ -153,7 +152,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene6
                 GameState.SurfaceState.AiObjects.Add(spaceSwan);
             }
 
-            var surfaceObject = (_3dObject)Surface.GetSurfaceViewPort();
+            var surfaceObject = (OmegaObject3D)Surface.GetSurfaceViewPort();
             surfaceObject.ObjectName = "Surface";
             surfaceObject.ObjectOffsets = new Vector3 { x = 105 * ScreenSetup.ScreenScaleX, y = 500 * ScreenSetup.ScreenScaleY, z = 400 };
             surfaceObject.Rotation = new Vector3 { x = WorldViewSetup.SurfacePitchDegrees, y = 0, z = 0 };

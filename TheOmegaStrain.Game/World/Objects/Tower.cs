@@ -4,8 +4,7 @@ using TheOmegaStrain.Game.World;
 using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
-using static TheOmegaStrain.Game.Helpers._3dObjectHelpers;
+using static TheOmegaStrain.Game.Helpers.OmegaObject3DHelpers;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -106,7 +105,7 @@ namespace TheOmegaStrain.Game.World.Objects
         //  PUBLIC FACTORY
         // ----------------------------------------------------
 
-        public static _3dObject CreateTower(ISurface parentSurface)
+        public static OmegaObject3D CreateTower(ISurface parentSurface)
         {
             var baseBlock = TowerBase();                      // shaded
             var baseDecals = TowerBaseDecals_DoorAndWindows();  // NOT shaded
@@ -118,7 +117,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
             var crashBoxes = TowerCrashBoxes();
 
-            var tower = new _3dObject{ ObjectId = GameState.ObjectIdCounter++ };
+            var tower = new OmegaObject3D{ ObjectId = GameState.ObjectIdCounter++ };
             tower.HasShadow = true;
 
             AddPart(tower, "TowerBase", baseBlock, true);
@@ -137,17 +136,17 @@ namespace TheOmegaStrain.Game.World.Objects
 
             tower.ParentSurface = parentSurface;
 
-            _3dObjectHelpers.AddSimplifiedShadowPart(tower, useFlatQuad: false);
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(tower);
+            OmegaObject3DHelpers.AddSimplifiedShadowPart(tower, useFlatQuad: false);
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(tower);
 
             return tower;
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,
@@ -454,7 +453,7 @@ namespace TheOmegaStrain.Game.World.Objects
             {
                 var min = new Vector3 { x = -baseHalfSize, y = -baseHalfSize, z = 0f };
                 var max = new Vector3 { x = baseHalfSize, y = baseHalfSize, z = baseHeight };
-                boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(min, max));
+                boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(min, max));
             }
 
             // Shaft (rough bounding box)
@@ -462,7 +461,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 float r = Math.Max(shaftBottomRadius, shaftTopRadius) + 2.0f;
                 var min = new Vector3 { x = -r, y = -r, z = baseHeight };
                 var max = new Vector3 { x = r, y = r, z = baseHeight + shaftHeight };
-                boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(min, max));
+                boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(min, max));
             }
 
             // Head + roof (rough bounding box)
@@ -472,7 +471,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 float z1 = z0 + headHeight + roofHeight;
                 var min = new Vector3 { x = -r, y = -r, z = z0 };
                 var max = new Vector3 { x = r, y = r, z = z1 };
-                boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(min, max));
+                boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(min, max));
             }
 
             // Radar (rough bounding box)
@@ -481,7 +480,7 @@ namespace TheOmegaStrain.Game.World.Objects
                 float r = dishRadius + 3f;
                 var min = new Vector3 { x = -r, y = -r, z = roofTopZ + mastHeight * 0.4f };
                 var max = new Vector3 { x = r, y = r, z = roofTopZ + mastHeight + 3.0f };
-                boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(min, max));
+                boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(min, max));
             }
 
             return boxes;

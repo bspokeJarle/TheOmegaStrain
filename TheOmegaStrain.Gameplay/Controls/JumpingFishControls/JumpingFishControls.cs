@@ -5,7 +5,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Helpers;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls.JumpingFishControls
 {
@@ -414,7 +413,7 @@ namespace TheOmegaStrain.Gameplay.Controls.JumpingFishControls
         {
             if (_audio == null || _splashSound == null) return;
 
-            var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+            var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
             _audio.Play(
                 _splashSound,
                 AudioPlayMode.OneShot,

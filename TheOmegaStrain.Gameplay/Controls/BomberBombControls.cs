@@ -5,7 +5,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Helpers;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {
@@ -143,7 +142,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
             float speed = _howlSoundDuration / MaxFallTimeSeconds;
 
-            var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+            var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
             _howlInstance = _audio.Play(
                 _howlSound,
                 AudioPlayMode.OneShot,
@@ -158,7 +157,7 @@ namespace TheOmegaStrain.Gameplay.Controls
         {
             if (_howlInstance == null || !_howlInstance.IsPlaying) return;
 
-            var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+            var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
             _howlInstance.SetWorldPosition(new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z));
 
             float volumeRamp = 0.6f + 0.4f * fallProgress;
@@ -174,7 +173,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
             if (_audio != null && _explosionSound != null)
             {
-                var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
                 _audio.Play(
                     _explosionSound,
                     AudioPlayMode.OneShot,

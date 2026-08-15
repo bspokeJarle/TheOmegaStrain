@@ -1,5 +1,4 @@
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Common.OmegaEngineAdapters
 {

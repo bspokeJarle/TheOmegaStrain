@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -19,7 +18,7 @@ public class PolarBearControlsTests
         GameState.SurfaceState = new SurfaceState
         {
             GlobalMapPosition = new Vector3 { x = 1000f, y = 500f, z = 1000f },
-            SurfaceViewportObject = new _3dObject
+            SurfaceViewportObject = new OmegaObject3D
             {
                 ObjectId = 77,
                 ObjectName = "Surface",
@@ -151,7 +150,7 @@ public class PolarBearControlsTests
         control.Dispose();
     }
 
-    private static _3dObject CreateBear(float tileY1 = -205f, float tileY2 = -205f, float tileY3 = -205f)
+    private static OmegaObject3D CreateBear(float tileY1 = -205f, float tileY2 = -205f, float tileY3 = -205f)
     {
         const int bearTileId = 1234;
         var rotatedTile = new TriangleMeshWithColor

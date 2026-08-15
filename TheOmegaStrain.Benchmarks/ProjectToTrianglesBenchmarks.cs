@@ -4,19 +4,18 @@ using Microsoft.VSDiagnostics;
 using TheOmegaStrain.Game.Projection;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Common.CommonGlobalState;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
 public class ProjectToTrianglesBenchmarks
 {
-    private IWorldProjector<_3dObject, ProjectedTriangleMesh> _converter = null !;
-    private List<_3dObject> _objects = null !;
+    private IWorldProjector<OmegaObject3D, ProjectedTriangleMesh> _converter = null !;
+    private List<OmegaObject3D> _objects = null !;
     [GlobalSetup]
     public void Setup()
     {
         _converter = OmegaPerspectiveProjectorFactory.Create();
-        _objects = new List<_3dObject>(128);
+        _objects = new List<OmegaObject3D>(128);
         GameState.SurfaceState.GlobalMapPosition = new Vector3
         {
             x = 0,
@@ -55,7 +54,7 @@ public class ProjectToTrianglesBenchmarks
                 Color = "FFFFFF",
                 noHidden = true
             };
-            _objects.Add(new _3dObject { ObjectId = i, ObjectName = "BenchmarkObject", WorldPosition = new Vector3 { x = 0, y = 0, z = 0 }, ObjectOffsets = new Vector3 { x = 0, y = 0, z = 0 }, Rotation = new Vector3 { x = 0, y = 0, z = 0 }, ObjectParts = new List<I3dObjectPart> { new _3dObjectPart { PartName = "Main", IsVisible = true, Triangles = new List<ITriangleMeshWithColor> { triangle } } }, CrashBoxes = new List<List<IVector3>>() });
+            _objects.Add(new OmegaObject3D { ObjectId = i, ObjectName = "BenchmarkObject", WorldPosition = new Vector3 { x = 0, y = 0, z = 0 }, ObjectOffsets = new Vector3 { x = 0, y = 0, z = 0 }, Rotation = new Vector3 { x = 0, y = 0, z = 0 }, ObjectParts = new List<I3dObjectPart> { new OmegaObjectPart3D { PartName = "Main", IsVisible = true, Triangles = new List<ITriangleMeshWithColor> { triangle } } }, CrashBoxes = new List<List<IVector3>>() });
         }
     }
 

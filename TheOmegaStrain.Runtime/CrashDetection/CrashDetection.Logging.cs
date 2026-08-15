@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Runtime.Collision
 {
@@ -24,14 +23,14 @@ namespace TheOmegaStrain.Runtime.Collision
         private static bool ShouldLogAny => Logger.ShouldLog(LocalEnableLogging);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool ShouldLogPair(_3dObject a, _3dObject b)
+        private static bool ShouldLogPair(OmegaObject3D a, OmegaObject3D b)
         {
             if (!ShouldLogAny) return false;
             return CheckLogFilter(a, b);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void LogNonCollision(_3dObject a, _3dObject b, string message)
+        private static void LogNonCollision(OmegaObject3D a, OmegaObject3D b, string message)
         {
             if (LogOnlyCollisions) return;
             if (!ShouldLogPair(a, b)) return;
@@ -39,14 +38,14 @@ namespace TheOmegaStrain.Runtime.Collision
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void LogCollision(_3dObject a, _3dObject b, string message)
+        private static void LogCollision(OmegaObject3D a, OmegaObject3D b, string message)
         {
             if (!ShouldLogPair(a, b)) return;
             Logger.Log(message);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void LogCollisionDetail(_3dObject a, _3dObject b, string message)
+        private static void LogCollisionDetail(OmegaObject3D a, OmegaObject3D b, string message)
         {
             if (!LogCollisionDetails) return;
             if (!ShouldLogPair(a, b)) return;
@@ -84,7 +83,7 @@ namespace TheOmegaStrain.Runtime.Collision
             }
         }
 
-        public static void LogSnapShots(_3dObject inhabitant, _3dObject otherInhabitant)
+        public static void LogSnapShots(OmegaObject3D inhabitant, OmegaObject3D otherInhabitant)
         {
             if (!ShouldLogAny) return;
 
@@ -99,7 +98,7 @@ namespace TheOmegaStrain.Runtime.Collision
             Logger.Flush();
         }
 
-        private static void LogObject(string role, _3dObject obj)
+        private static void LogObject(string role, OmegaObject3D obj)
         {
             Logger.Log($"[SNAPSHOT] --- {role}: {obj.ObjectName} ---");
 

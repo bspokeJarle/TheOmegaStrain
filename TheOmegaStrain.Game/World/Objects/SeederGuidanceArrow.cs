@@ -5,8 +5,7 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
-using static TheOmegaStrain.Game.Helpers._3dObjectHelpers;
+using static TheOmegaStrain.Game.Helpers.OmegaObject3DHelpers;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -44,13 +43,13 @@ namespace TheOmegaStrain.Game.World.Objects
         //  OBJECT CREATION
         // ----------------------------------------------------
 
-        public static _3dObject CreateSeederGuidanceArrow(ISurface parentSurface)
+        public static OmegaObject3D CreateSeederGuidanceArrow(ISurface parentSurface)
         {
             var body = ArrowBody();
             var head = ArrowHead();
             var bevels = ArrowBevels();
 
-            var arrow = new _3dObject
+            var arrow = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectOffsets = new Vector3 { x = 0, y = 0, z = 0 },
@@ -274,12 +273,12 @@ namespace TheOmegaStrain.Game.World.Objects
         //  HELPERS
         // ----------------------------------------------------
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null)
                 return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

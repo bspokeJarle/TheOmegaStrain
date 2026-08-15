@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls.SeederControls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -15,8 +14,8 @@ public class SeederControlsParticleGuideTests
     {
         GameState.SurfaceState = new SurfaceState
         {
-            AiObjects = new List<_3dObject>(),
-            SurfaceViewportObject = new _3dObject
+            AiObjects = new List<OmegaObject3D>(),
+            SurfaceViewportObject = new OmegaObject3D
             {
                 ObjectId = 1,
                 ObjectName = "Surface",
@@ -30,7 +29,7 @@ public class SeederControlsParticleGuideTests
     public void ReleaseParticles_UsesSeederWorldPositionWithoutSurfaceXOffset()
     {
         var particles = new CapturingParticles();
-        var seeder = new _3dObject
+        var seeder = new OmegaObject3D
         {
             ObjectId = 2,
             ObjectName = "Seeder",
@@ -131,16 +130,16 @@ public class SeederControlsParticleGuideTests
         Assert.AreEqual(anchoredRotation.z, seeder.Rotation!.z, 0.001f);
     }
 
-    private static void HitSeeder(SeederControls controls, _3dObject seeder, string weaponName)
+    private static void HitSeeder(SeederControls controls, OmegaObject3D seeder, string weaponName)
     {
         seeder.ImpactStatus!.HasCrashed = true;
         seeder.ImpactStatus.ObjectName = weaponName;
         controls.HandleCrash(seeder);
     }
 
-    private static _3dObject CreateSeederCollisionObject()
+    private static OmegaObject3D CreateSeederCollisionObject()
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 10,
             ObjectName = "Seeder",
@@ -157,7 +156,7 @@ public class SeederControlsParticleGuideTests
             ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.SeederHealth },
             ObjectParts =
             [
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "Body",
                     IsVisible = true,

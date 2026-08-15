@@ -6,7 +6,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using Microsoft.VSDiagnostics;
 using TheOmegaStrain.Game.World.Objects;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]
@@ -38,7 +37,7 @@ public class SurfaceViewportBenchmarks
                 y = 25f,
                 z = SurfaceSetup.DefaultMapPosition.z
             },
-            SurfaceViewportObject = new _3dObject
+            SurfaceViewportObject = new OmegaObject3D
             {
                 ObjectId = -1,
                 ObjectName = "SurfaceViewport",
@@ -104,13 +103,13 @@ public class SurfaceViewportBenchmarks
         return map;
     }
 
-    private static List<_3dObject> CreateAiObjects()
+    private static List<OmegaObject3D> CreateAiObjects()
     {
         var globalMapPosition = GameState.SurfaceState.GlobalMapPosition;
-        var aiObjects = new List<_3dObject>(4);
+        var aiObjects = new List<OmegaObject3D>(4);
         for (int i = 0; i < 4; i++)
         {
-            aiObjects.Add(new _3dObject { ObjectId = 100 + i, ObjectName = $"ShadowCaster{i}", WorldPosition = new Vector3 { x = globalMapPosition.x + 120f + (i * 60f), y = 0f, z = globalMapPosition.z + 80f + (i * 45f) }, ObjectOffsets = new Vector3 { x = 0f, y = 0f, z = 0f }, Rotation = new Vector3 { x = 0f, y = 0f, z = 0f }, CrashBoxes = new List<List<IVector3>>(), HasShadow = true });
+            aiObjects.Add(new OmegaObject3D { ObjectId = 100 + i, ObjectName = $"ShadowCaster{i}", WorldPosition = new Vector3 { x = globalMapPosition.x + 120f + (i * 60f), y = 0f, z = globalMapPosition.z + 80f + (i * 45f) }, ObjectOffsets = new Vector3 { x = 0f, y = 0f, z = 0f }, Rotation = new Vector3 { x = 0f, y = 0f, z = 0f }, CrashBoxes = new List<List<IVector3>>(), HasShadow = true });
         }
 
         return aiObjects;

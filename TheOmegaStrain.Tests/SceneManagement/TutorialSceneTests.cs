@@ -10,7 +10,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Audio.Services;
 using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.SceneManagement;
 
@@ -578,9 +577,9 @@ public class TutorialSceneTests
         return world;
     }
 
-    private static _3dObject CreateRotatedTutorialShip(ShipControls controls)
+    private static OmegaObject3D CreateRotatedTutorialShip(ShipControls controls)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 1001,
             ObjectName = "Ship",

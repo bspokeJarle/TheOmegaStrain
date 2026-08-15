@@ -5,7 +5,6 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -118,7 +117,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
         private static readonly Vector3 BodyCenter = new Vector3 { x = -5f, y = 0f, z = 0f };
 
-        public static _3dObject CreateZeppelinBomber(ISurface parentSurface)
+        public static OmegaObject3D CreateZeppelinBomber(ISurface parentSurface)
         {
             var nose = BomberNose();
             var body = BomberHullBody();
@@ -135,7 +134,7 @@ namespace TheOmegaStrain.Game.World.Objects
             var bombDropStart = BombDropStartGuide();
             var bombDropEnd = BombDropEndGuide();
 
-            var bomber = new _3dObject
+            var bomber = new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "ZeppelinBomber"
@@ -163,9 +162,9 @@ namespace TheOmegaStrain.Game.World.Objects
             if (crashBoxes != null)
                 bomber.CrashBoxes = crashBoxes;
 
-            _3dObjectHelpers.ApplyScaleToObject(bomber, ZoomRatio);
+            OmegaObject3DHelpers.ApplyScaleToObject(bomber, ZoomRatio);
 
-            _3dObjectHelpers.AddSimplifiedShadowPart(bomber, useFlatQuad: true);
+            OmegaObject3DHelpers.AddSimplifiedShadowPart(bomber, useFlatQuad: true);
 
             return bomber;
         }
@@ -538,22 +537,22 @@ namespace TheOmegaStrain.Game.World.Objects
             var frontBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = frontRingX - 3f, y = -frontRadiusY - 1f, z = -frontRadiusZ - 1f },
                 new Vector3 { x = noseTipX, y = frontRadiusY + 1f, z = frontRadiusZ + 1.5f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(frontBounds.min, frontBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(frontBounds.min, frontBounds.max));
 
             var midBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = rearMidX, y = -centerMidRadiusY - 1.2f, z = -centerMidRadiusZ - 1.2f },
                 new Vector3 { x = upperMidFrontX + 2f, y = centerMidRadiusY + 1.2f, z = centerMidRadiusZ + 1.5f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(midBounds.min, midBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(midBounds.min, midBounds.max));
 
             var bayBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = bayBackX - 1f, y = -bayHalfWidth - 0.8f, z = bayInsetZ - 0.8f },
                 new Vector3 { x = bayFrontX + 1f, y = bayHalfWidth + 0.8f, z = bayLipZ + 1.2f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(bayBounds.min, bayBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(bayBounds.min, bayBounds.max));
 
             var rearBounds = ScaleCrashBoxBounds(
                 new Vector3 { x = tailRingX - 2f, y = -tailRadiusY - 2f, z = -tailRadiusZ - 1.5f },
                 new Vector3 { x = propHubFrontX + 1f, y = tailRadiusY + 2f, z = topFinHeight + 6.5f });
-            boxes.Add(_3dObjectHelpers.GenerateCrashBoxCorners(rearBounds.min, rearBounds.max));
+            boxes.Add(OmegaObject3DHelpers.GenerateCrashBoxCorners(rearBounds.min, rearBounds.max));
 
             return boxes;
         }
@@ -682,11 +681,11 @@ namespace TheOmegaStrain.Game.World.Objects
             AddQuadOutward(tris, d, c, c2, d2, BodyCenter, color);
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

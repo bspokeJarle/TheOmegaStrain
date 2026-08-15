@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using System.Collections.Generic;
 using System.Linq;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -15,19 +14,19 @@ namespace TheOmegaStrain.Game.World.Objects
         private static float foliageBaseRadius = 8.5f; // Increased foliage mass
         private static float foliageHeight = 3.5f; // Squashed foliage into a denser form
 
-        public static _3dObject CreateTree(ISurface parentSurface)
+        public static OmegaObject3D CreateTree(ISurface parentSurface)
         {
             var trunkTriangles = TrunkTriangles();
             var foliageTriangles = FoliageTriangles();
             var treeCrashBox = TreeCrashBoxes();
-            var tree = new _3dObject{ ObjectId = GameState.ObjectIdCounter++ };
+            var tree = new OmegaObject3D{ ObjectId = GameState.ObjectIdCounter++ };
             tree.HasShadow = true;
 
             if (trunkTriangles != null)
-                tree.ObjectParts.Add(new _3dObjectPart { PartName = "TreeTrunk", Triangles = trunkTriangles, IsVisible = true });
+                tree.ObjectParts.Add(new OmegaObjectPart3D { PartName = "TreeTrunk", Triangles = trunkTriangles, IsVisible = true });
 
             if (foliageTriangles != null)
-                tree.ObjectParts.Add(new _3dObjectPart { PartName = "TreeFoliage", Triangles = foliageTriangles, IsVisible = true });
+                tree.ObjectParts.Add(new OmegaObjectPart3D { PartName = "TreeFoliage", Triangles = foliageTriangles, IsVisible = true });
 
             tree.ObjectOffsets = new Vector3 { };
             tree.Rotation = new Vector3 { x = 0, y = 0, z = 0 };
@@ -45,7 +44,7 @@ namespace TheOmegaStrain.Game.World.Objects
             // the outline read — no hard limit. Tree here = 8 tris: a narrow
             // trunk + a rounded, slightly asymmetric crown.
             var shadowTris = new List<ITriangleMeshWithColor>(8);
-            const string sc = _3dObjectHelpers.ShadowColorHex;
+            const string sc = OmegaObject3DHelpers.ShadowColorHex;
 
             // --- Trunk (2 tris) ---
             var tA = new Vector3 { x = -4f, y = 0f, z = 0f };
@@ -88,8 +87,8 @@ namespace TheOmegaStrain.Game.World.Objects
                 vert3 = new Vector3 { x = 0f, y = 0f, z = 32f }
             });
 
-            _3dObjectHelpers.AddCustomShadowPart(tree, shadowTris);
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(tree);
+            OmegaObject3DHelpers.AddCustomShadowPart(tree, shadowTris);
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(tree);
 
             return tree;
         }
@@ -161,25 +160,25 @@ namespace TheOmegaStrain.Game.World.Objects
             return new List<List<IVector3>>
             {
                 // Trunk lower half
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -trunkExpand, y = -trunkExpand, z = 0 },
                     new Vector3 { x = trunkExpand, y = trunkExpand, z = trunkHeight / 2 }
                 ),
 
                 // Trunk upper half
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -trunkExpand - 1, y = -trunkExpand - 1, z = trunkHeight / 2 },
                     new Vector3 { x = trunkExpand + 1, y = trunkExpand + 1, z = trunkHeight }
                 ),
 
                 // Middle foliage
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -foliageExpand, y = -foliageExpand, z = trunkHeight },
                     new Vector3 { x = foliageExpand, y = foliageExpand, z = trunkHeight + foliageHeightExpanded }
                 ),
 
                 // Top foliage
-                 _3dObjectHelpers.GenerateCrashBoxCorners(
+                 OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -foliageExpand / 2, y = -foliageExpand / 2, z = trunkHeight + foliageHeightExpanded },
                     new Vector3 { x = foliageExpand / 2, y = foliageExpand / 2, z = trunkHeight + foliageHeightExpanded * 1.5f }
                 )

@@ -4,7 +4,6 @@ using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects.LogoCube
 {
@@ -38,7 +37,7 @@ namespace TheOmegaStrain.Game.World.Objects.LogoCube
         // ----------------------------------------------------
         //  PUBLIC FACTORY
         // ----------------------------------------------------
-        public static _3dObject CreateLogoCube()
+        public static OmegaObject3D CreateLogoCube()
         {
             // Cube shell: ONLY +Z and -Z faces as 4x4 squares
             // - +Y/-Y omitted entirely (nothing behind Omega/Retro)
@@ -93,7 +92,7 @@ namespace TheOmegaStrain.Game.World.Objects.LogoCube
                 flipX: true,     // <-- this is the missing fix
                 flipZ: true);
 
-            var obj = new _3dObject { ObjectId = GameState.ObjectIdCounter++ };
+            var obj = new OmegaObject3D { ObjectId = GameState.ObjectIdCounter++ };
 
             AddPart(obj, "CubeShell", cubeShell, true);
             AddPart(obj, "OmegaStrainLogo", omega, true);
@@ -108,7 +107,7 @@ namespace TheOmegaStrain.Game.World.Objects.LogoCube
 
             obj.CrashBoxes = new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -CubeHalf, y = -CubeHalf, z = -CubeHalf },
                     new Vector3 { x = +CubeHalf, y = +CubeHalf, z = +CubeHalf })
             };
@@ -116,11 +115,11 @@ namespace TheOmegaStrain.Game.World.Objects.LogoCube
             return obj;
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? tris, bool visible)
         {
             if (tris == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = tris,

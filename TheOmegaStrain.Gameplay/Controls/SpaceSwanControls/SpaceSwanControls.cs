@@ -5,7 +5,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Helpers;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls.SpaceSwanControls
 {
@@ -239,7 +238,7 @@ namespace TheOmegaStrain.Gameplay.Controls.SpaceSwanControls
 
             if (_audio != null && _explosionSound != null)
             {
-                var audioPosition = ((_3dObject)theObject).GetAudioPosition();
+                var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
                 _audio.Play(
                     _explosionSound,
                     AudioPlayMode.OneShot,
@@ -312,7 +311,7 @@ namespace TheOmegaStrain.Gameplay.Controls.SpaceSwanControls
 
             if (theObject.IsOnScreen)
             {
-                var audioPos = ((_3dObject)theObject).GetAudioPosition();
+                var audioPos = ((OmegaObject3D)theObject).GetAudioPosition();
                 audioWorldPos = new System.Numerics.Vector3(audioPos.x, audioPos.y, audioPos.z);
                 volume = _wingFlapSound.Settings.Volume;
             }

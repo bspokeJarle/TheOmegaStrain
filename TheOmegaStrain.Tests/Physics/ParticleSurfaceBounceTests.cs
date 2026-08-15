@@ -6,7 +6,6 @@ using TheOmegaStrain.Gameplay.Controls;
 using System.Reflection;
 using TheOmegaStrain.Game.Helpers;
 using RetroMesh.Engine;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Physics;
 

@@ -3,15 +3,14 @@ using TheOmegaStrain.Domain;
 using RetroMesh.Engine;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Runtime.Collision
 {
     public static partial class CrashDetection
     {
-        private static readonly CollisionPairScanner<_3dObject, ObjectTypeFlags> PairScanner = new();
-        private static readonly CollisionFrameCache<_3dObject, Vector3> FrameCache = new();
-        private static readonly Dictionary<_3dObject, ObjectTypeFlags> TypeFlagCache = new();
+        private static readonly CollisionPairScanner<OmegaObject3D, ObjectTypeFlags> PairScanner = new();
+        private static readonly CollisionFrameCache<OmegaObject3D, Vector3> FrameCache = new();
+        private static readonly Dictionary<OmegaObject3D, ObjectTypeFlags> TypeFlagCache = new();
         private static int _cacheFrame = -1;
 
         private static int CacheHits = 0;
@@ -58,7 +57,7 @@ namespace TheOmegaStrain.Runtime.Collision
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ObjectTypeFlags GetTypeFlagsCached(_3dObject obj)
+        private static ObjectTypeFlags GetTypeFlagsCached(OmegaObject3D obj)
         {
             if (TypeFlagCache.TryGetValue(obj, out var flags))
             {
@@ -72,7 +71,7 @@ namespace TheOmegaStrain.Runtime.Collision
             return flags;
         }
 
-        private static ObjectTypeFlags CreateTypeFlags(_3dObject obj)
+        private static ObjectTypeFlags CreateTypeFlags(OmegaObject3D obj)
         {
             return new ObjectTypeFlags(obj.ObjectName ?? string.Empty);
         }
@@ -96,7 +95,7 @@ namespace TheOmegaStrain.Runtime.Collision
             TheOmegaStrain.Common.CommonSetup.TerrainAvoidanceSetup.IsTerrainObstacle(flags.Name);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool IsTerrainAvoidanceAiObject(_3dObject obj, ObjectTypeFlags flags)
+        private static bool IsTerrainAvoidanceAiObject(OmegaObject3D obj, ObjectTypeFlags flags)
         {
             if (!TheOmegaStrain.Common.CommonSetup.TerrainAvoidanceSetup.IsAvoidanceCapableAi(flags.Name))
                 return false;
@@ -117,25 +116,25 @@ namespace TheOmegaStrain.Runtime.Collision
         private static Vector3 CreateVector(float x, float y, float z) => new(x, y, z);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Vector3 GetOffsetCached(_3dObject obj)
+        private static Vector3 GetOffsetCached(OmegaObject3D obj)
         {
             return FrameCache.GetOffset(obj, CreateVector);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static List<Vector3> GetWorldPointsCached(_3dObject obj)
+        private static List<Vector3> GetWorldPointsCached(OmegaObject3D obj)
         {
             return FrameCache.GetWorldPoints(obj, CreateVector);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Vector3 GetCenterCached(_3dObject obj)
+        private static Vector3 GetCenterCached(OmegaObject3D obj)
         {
             return FrameCache.GetCenter(obj, CreateVector);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static List<Vector3> GetWorldBoxPointsCached(_3dObject obj, int boxIndex, List<IVector3> box)
+        private static List<Vector3> GetWorldBoxPointsCached(OmegaObject3D obj, int boxIndex, List<IVector3> box)
         {
             return FrameCache.GetWorldBoxPoints(obj, boxIndex, box, CreateVector);
         }

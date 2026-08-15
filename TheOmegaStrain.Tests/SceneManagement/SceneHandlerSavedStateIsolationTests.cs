@@ -7,7 +7,6 @@ using TheOmegaStrain.Domain;
 using System;
 using System.IO;
 using System.Reflection;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.SceneManagement;
 

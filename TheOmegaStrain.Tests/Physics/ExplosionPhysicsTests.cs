@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Gameplay.Physics;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Physics;
 
@@ -51,11 +50,11 @@ public class ExplosionPhysicsTests
     {
         var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         var original = CreateTwoPartObject();
-        var firstFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
+        var firstFrameCopy = (OmegaObject3D)OmegaObjectHelpers.DeepCopySingleObject(original);
 
         physics.ExplodeObject(firstFrameCopy, explosionForce: 200f);
 
-        var nextFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
+        var nextFrameCopy = (OmegaObject3D)OmegaObjectHelpers.DeepCopySingleObject(original);
         physics.UpdateExplosion(nextFrameCopy, DateTime.Now.AddMilliseconds(-100));
 
         Assert.IsTrue(nextFrameCopy.ObjectParts.All(part => part.PartName == "ExplodingPart"),
@@ -67,12 +66,12 @@ public class ExplosionPhysicsTests
     {
         var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         var original = CreateTwoPartObject();
-        var firstFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
+        var firstFrameCopy = (OmegaObject3D)OmegaObjectHelpers.DeepCopySingleObject(original);
 
         physics.ExplodeObject(firstFrameCopy, explosionForce: 0f);
         MutateAllGeometry(firstFrameCopy, 99999f);
 
-        var nextFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
+        var nextFrameCopy = (OmegaObject3D)OmegaObjectHelpers.DeepCopySingleObject(original);
         physics.UpdateExplosion(nextFrameCopy, DateTime.Now);
 
         Assert.IsTrue(
@@ -88,14 +87,14 @@ public class ExplosionPhysicsTests
     {
         var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         var original = CreateTwoPartObject();
-        var firstFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
+        var firstFrameCopy = (OmegaObject3D)OmegaObjectHelpers.DeepCopySingleObject(original);
 
         physics.ExplodeObject(firstFrameCopy, explosionForce: 0f);
         physics.UpdateExplosion(firstFrameCopy, DateTime.Now.AddSeconds(1));
 
         new OmegaMeshRotation().RotateMesh(firstFrameCopy.ObjectParts[0].Triangles, 90f, 'Z');
 
-        var nextFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
+        var nextFrameCopy = (OmegaObject3D)OmegaObjectHelpers.DeepCopySingleObject(original);
         physics.UpdateExplosion(nextFrameCopy, DateTime.Now.AddSeconds(1));
 
         var v = nextFrameCopy.ObjectParts[0].Triangles[0].vert1;
@@ -159,9 +158,9 @@ public class ExplosionPhysicsTests
             "Low graphics should keep the previous explosion color path without debris shimmer.");
     }
 
-    private static _3dObject CreateTwoPartObject()
+    private static OmegaObject3D CreateTwoPartObject()
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 1,
             ObjectName = "Exploder",
@@ -172,7 +171,7 @@ public class ExplosionPhysicsTests
             ImpactStatus = new ImpactStatus(),
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "Hull",
                     IsVisible = true,
@@ -181,7 +180,7 @@ public class ExplosionPhysicsTests
                         CreateTriangle(-10f)
                     }
                 },
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "Wing",
                     IsVisible = true,

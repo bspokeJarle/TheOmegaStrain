@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using System;
 using System.Reflection;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls
 {
@@ -166,7 +165,7 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls
             }
         }
 
-        private static _3dObject? CreateKamikazeDroneObject(ISurface parentSurface)
+        private static OmegaObject3D? CreateKamikazeDroneObject(ISurface parentSurface)
         {
             const string typeName = "TheOmegaStrain.Game.World.Objects.KamikazeDrone";
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -175,7 +174,7 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls
                 if (type == null) continue;
                 var method = type.GetMethod("CreateKamikazeDrone",
                     BindingFlags.Public | BindingFlags.Static);
-                if (method?.Invoke(null, new object[] { parentSurface }) is _3dObject drone)
+                if (method?.Invoke(null, new object[] { parentSurface }) is OmegaObject3D drone)
                     return drone;
             }
             return null;

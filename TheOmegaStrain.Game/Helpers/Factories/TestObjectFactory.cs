@@ -2,15 +2,14 @@ using TheOmegaStrain.Game.World.Objects;
 using TheOmegaStrain.Game.World;
 using TheOmegaStrain.Domain;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.Helpers
 {
     public static class TestObjectFactory
     {
-        public static _3dObject CreateDynamicTestObject()
+        public static OmegaObject3D CreateDynamicTestObject()
         {
-            return new _3dObject
+            return new OmegaObject3D
             {
                 ObjectId = 1,
                 ObjectName = "DynamicObject",
@@ -25,7 +24,7 @@ namespace TheOmegaStrain.Game.Helpers
                 },
                 ObjectParts = new List<I3dObjectPart>
                 {
-                    new _3dObjectPart
+                    new OmegaObjectPart3D
                     {
                         IsVisible = true,
                         PartName = "Body",
@@ -43,9 +42,9 @@ namespace TheOmegaStrain.Game.Helpers
                 ObjectOffsets = new Vector3 { x = 1000, y = 0, z = 1000 } // position it onscreen
             };
         }
-        public static _3dObject CreateSurfaceBasedTestObject()
+        public static OmegaObject3D CreateSurfaceBasedTestObject()
         {
-            return new _3dObject
+            return new OmegaObject3D
             {
                 ObjectId = 2,
                 ObjectName = "House",
@@ -60,7 +59,7 @@ namespace TheOmegaStrain.Game.Helpers
                 },
                 ObjectParts = new List<I3dObjectPart>
                 {
-                    new _3dObjectPart
+                    new OmegaObjectPart3D
                     {
                         IsVisible = true,
                         PartName = "Main",

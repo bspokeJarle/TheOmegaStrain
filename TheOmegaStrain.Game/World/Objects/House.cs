@@ -3,7 +3,6 @@ using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -17,7 +16,7 @@ namespace TheOmegaStrain.Game.World.Objects
         private static float garageDepth = 10f;
         private static float garageHeight = 8f;
 
-        public static _3dObject CreateHouse(ISurface parentSurface)
+        public static OmegaObject3D CreateHouse(ISurface parentSurface)
         {
             var houseWalls = HouseWalls();
             var houseRoof = HouseRoof();
@@ -30,35 +29,35 @@ namespace TheOmegaStrain.Game.World.Objects
             var houseDetails = HouseDetails();
             var houseCrashBox = HouseCrashBoxes();
 
-            var house = new _3dObject{ ObjectId = GameState.ObjectIdCounter++ };
+            var house = new OmegaObject3D{ ObjectId = GameState.ObjectIdCounter++ };
             house.HasShadow = true;
 
             if (houseWalls != null)
-                house.ObjectParts.Add(new _3dObjectPart { PartName = "HouseWalls", Triangles = houseWalls, IsVisible = true });
+                house.ObjectParts.Add(new OmegaObjectPart3D { PartName = "HouseWalls", Triangles = houseWalls, IsVisible = true });
 
             if (houseRoof != null)
-                house.ObjectParts.Add(new _3dObjectPart { PartName = "HouseRoof", Triangles = houseRoof, IsVisible = true });
+                house.ObjectParts.Add(new OmegaObjectPart3D { PartName = "HouseRoof", Triangles = houseRoof, IsVisible = true });
 
             if (garageStructure != null)
-                house.ObjectParts.Add(new _3dObjectPart { PartName = "Garage", Triangles = garageStructure, IsVisible = true });
+                house.ObjectParts.Add(new OmegaObjectPart3D { PartName = "Garage", Triangles = garageStructure, IsVisible = true });
 
             if (garageRoof != null)
-                house.ObjectParts.Add(new _3dObjectPart { PartName = "GarageRoof", Triangles = garageRoof, IsVisible = true });
+                house.ObjectParts.Add(new OmegaObjectPart3D { PartName = "GarageRoof", Triangles = garageRoof, IsVisible = true });
 
             if (garageDoor != null)
-                house.ObjectParts.Add(new _3dObjectPart { PartName = "GarageDoor", Triangles = garageDoor, IsVisible = true });
+                house.ObjectParts.Add(new OmegaObjectPart3D { PartName = "GarageDoor", Triangles = garageDoor, IsVisible = true });
 
             if (houseWindows != null)
-                house.ObjectParts.Add(new _3dObjectPart { PartName = "HouseWindows", Triangles = houseWindows, IsVisible = true });
+                house.ObjectParts.Add(new OmegaObjectPart3D { PartName = "HouseWindows", Triangles = houseWindows, IsVisible = true });
 
             if (houseDoor != null)
-                house.ObjectParts.Add(new _3dObjectPart { PartName = "HouseDoor", Triangles = houseDoor, IsVisible = true });
+                house.ObjectParts.Add(new OmegaObjectPart3D { PartName = "HouseDoor", Triangles = houseDoor, IsVisible = true });
 
             if (garageWindow != null)
-                house.ObjectParts.Add(new _3dObjectPart { PartName = "GarageWindow", Triangles = garageWindow, IsVisible = true });
+                house.ObjectParts.Add(new OmegaObjectPart3D { PartName = "GarageWindow", Triangles = garageWindow, IsVisible = true });
 
             if (houseDetails != null)
-                house.ObjectParts.Add(new _3dObjectPart { PartName = "HouseDetails", Triangles = houseDetails, IsVisible = true });
+                house.ObjectParts.Add(new OmegaObjectPart3D { PartName = "HouseDetails", Triangles = houseDetails, IsVisible = true });
 
             house.ObjectOffsets = new Vector3 { };
             house.Rotation = new Vector3 { x = 0, y = 0, z = 0 };
@@ -71,7 +70,7 @@ namespace TheOmegaStrain.Game.World.Objects
             // limit. House here = 7 tris: main body + overhanging roof +
             // garage + chimney.
             var shadowTris = new List<ITriangleMeshWithColor>(7);
-            const string sc = _3dObjectHelpers.ShadowColorHex;
+            const string sc = OmegaObject3DHelpers.ShadowColorHex;
 
             // --- Main house box (2 tris) ---
             var hA = new Vector3 { x = -15f, y = 0f, z = 0f };
@@ -114,8 +113,8 @@ namespace TheOmegaStrain.Game.World.Objects
                 vert3 = new Vector3 { x = 8f, y = 0f, z = 34f }
             });
 
-            _3dObjectHelpers.AddCustomShadowPart(house, shadowTris);
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(house);
+            OmegaObject3DHelpers.AddCustomShadowPart(house, shadowTris);
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(house);
 
             return house;
         }
@@ -335,7 +334,7 @@ namespace TheOmegaStrain.Game.World.Objects
             };
 
             // Convert min/max to 8-corner crashbox
-            var crashBoxCorners = _3dObjectHelpers.GenerateCrashBoxCorners(min, max);
+            var crashBoxCorners = OmegaObject3DHelpers.GenerateCrashBoxCorners(min, max);
 
             return new List<List<IVector3>> { crashBoxCorners };
         }

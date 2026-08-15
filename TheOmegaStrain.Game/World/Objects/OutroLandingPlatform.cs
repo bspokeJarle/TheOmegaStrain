@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -23,9 +22,9 @@ namespace TheOmegaStrain.Game.World.Objects
         private const string PadSideColor = "343D39";
         private const string MarkingColor = "F4D35E";
 
-        public static _3dObject CreatePlatform(ISurface parentSurface)
+        public static OmegaObject3D CreatePlatform(ISurface parentSurface)
         {
-            var platform = new _3dObject { ObjectId = GameState.ObjectIdCounter++ };
+            var platform = new OmegaObject3D { ObjectId = GameState.ObjectIdCounter++ };
             platform.ObjectName = "OutroLandingPlatform";
             platform.ParentSurface = parentSurface;
             platform.WorldPosition = new Vector3();
@@ -38,14 +37,14 @@ namespace TheOmegaStrain.Game.World.Objects
             platform.ImpactStatus = new ImpactStatus();
             platform.ZSortBias = 35f;
 
-            platform.ObjectParts.Add(new _3dObjectPart
+            platform.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = "LandingPlatformPad",
                 Triangles = CreatePad(),
                 IsVisible = true
             });
 
-            platform.ObjectParts.Add(new _3dObjectPart
+            platform.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = "LandingPlatformMarkings",
                 Triangles = CreateMarkings(),
@@ -75,7 +74,7 @@ namespace TheOmegaStrain.Game.World.Objects
         {
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -HalfWidth, y = -HalfDepth, z = CrashBoxBottomZ },
                     new Vector3 { x = HalfWidth, y = HalfDepth, z = CrashBoxTopZ })
             };

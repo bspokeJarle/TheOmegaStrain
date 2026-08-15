@@ -1,6 +1,5 @@
 using TheOmegaStrain.Game.World.Objects;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.WorldObjects;
 

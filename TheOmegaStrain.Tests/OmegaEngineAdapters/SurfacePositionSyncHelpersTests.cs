@@ -1,7 +1,6 @@
 using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.OmegaEngineAdapters;
 
@@ -39,9 +38,9 @@ public class SurfacePositionSyncHelpersTests
         Assert.AreEqual(2000f, guidanceWorld.z, 0.1f);
     }
 
-    private static _3dObject CreateObject(float worldX, float worldZ, float offsetX)
+    private static OmegaObject3D CreateObject(float worldX, float worldZ, float offsetX)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 1,
             ObjectName = "Seeder",

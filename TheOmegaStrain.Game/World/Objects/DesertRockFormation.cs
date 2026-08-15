@@ -4,7 +4,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -13,11 +12,11 @@ namespace TheOmegaStrain.Game.World.Objects
         private static readonly float[] RotationAngles = { -38f, -22f, -8f, 0f, 17f, 31f, 46f };
         private static readonly string[] RockColors = { "8B6A45", "A37A4D", "6E5238", "B38A58" };
 
-        public static _3dObject CreateDesertRockFormation(ISurface parentSurface)
+        public static OmegaObject3D CreateDesertRockFormation(ISurface parentSurface)
         {
             int objectId = GameState.ObjectIdCounter++;
             float rotationZ = RotationAngles[Math.Abs(objectId) % RotationAngles.Length];
-            var rocks = new _3dObject
+            var rocks = new OmegaObject3D
             {
                 ObjectId = objectId,
                 ObjectName = "DesertRockFormation",
@@ -37,17 +36,17 @@ namespace TheOmegaStrain.Game.World.Objects
             rocks.CrashBoxes = DesertRockCrashBoxes();
             rocks.CrashBoxNames = new List<string?> { "RockFormation" };
 
-            _3dObjectHelpers.AddCustomShadowPart(rocks, DesertRockShadow(rotationZ));
-            _3dObjectHelpers.NormalizeSurfaceFootprintPivot(rocks);
+            OmegaObject3DHelpers.AddCustomShadowPart(rocks, DesertRockShadow(rotationZ));
+            OmegaObject3DHelpers.NormalizeSurfaceFootprintPivot(rocks);
 
             return rocks;
         }
 
-        private static void AddPart(_3dObject obj, string name, List<ITriangleMeshWithColor>? triangles, bool visible)
+        private static void AddPart(OmegaObject3D obj, string name, List<ITriangleMeshWithColor>? triangles, bool visible)
         {
             if (triangles == null) return;
 
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = name,
                 Triangles = triangles,
@@ -136,7 +135,7 @@ namespace TheOmegaStrain.Game.World.Objects
         {
             return new List<List<IVector3>>
             {
-                _3dObjectHelpers.GenerateCrashBoxCorners(
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(
                     new Vector3 { x = -30f, y = -20f, z = 1f },
                     new Vector3 { x = 30f, y = 20f, z = 22f })
             };
@@ -144,7 +143,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
         private static List<ITriangleMeshWithColor> DesertRockShadow(float rotationZ)
         {
-            const string sc = _3dObjectHelpers.ShadowColorHex;
+            const string sc = OmegaObject3DHelpers.ShadowColorHex;
             var triangles = new List<ITriangleMeshWithColor>();
 
             AddShadowRock(triangles, 0f, 0f, 23f, 16f, 18f, sc);

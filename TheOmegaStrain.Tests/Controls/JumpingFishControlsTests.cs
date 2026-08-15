@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls.JumpingFishControls;
 using TheOmegaStrain.Game.World.Objects;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -197,7 +196,7 @@ public class JumpingFishControlsTests
         Assert.AreEqual(InitialZ, splashZ, 0.001f, "Landing splash should stay on the water surface depth.");
     }
 
-    private static _3dObject CreateFish(bool isOnScreen)
+    private static OmegaObject3D CreateFish(bool isOnScreen)
     {
         var fish = JumpingFish.CreateJumpingFish(parentSurface: null!);
         fish.ObjectOffsets = new Vector3 { x = InitialX, y = InitialY, z = InitialZ };

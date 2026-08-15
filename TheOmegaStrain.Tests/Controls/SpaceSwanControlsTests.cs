@@ -1,7 +1,6 @@
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls.SpaceSwanControls;
 using System.Reflection;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 

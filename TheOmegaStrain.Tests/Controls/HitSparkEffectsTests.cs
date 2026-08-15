@@ -4,7 +4,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Helpers;
 using System.Collections.Generic;
 using System.Linq;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -111,9 +110,9 @@ public class HitSparkEffectsTests
         Assert.AreEqual(60, particles.MaxParticlesOverride);
     }
 
-    private static _3dObject CreateTarget(ParticlesAI? particles = null)
+    private static OmegaObject3D CreateTarget(ParticlesAI? particles = null)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 1,
             ObjectName = "Seeder",
@@ -122,7 +121,7 @@ public class HitSparkEffectsTests
             Particles = particles ?? new ParticlesAI(),
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "Hull",
                     IsVisible = true,

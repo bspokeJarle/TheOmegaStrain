@@ -2,7 +2,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -14,14 +13,14 @@ public class BomberBombControlsTests
     {
         GameState.GamePlayState = new GamePlayState();
         GameState.SurfaceState = new SurfaceState();
-        GameState.SurfaceState.AiObjects = new List<_3dObject>();
+        GameState.SurfaceState.AiObjects = new List<OmegaObject3D>();
     }
 
     [TestMethod]
     public void MoveObject_WhenBombCrashes_ExplosionKeepsSurfaceImpactMetadata()
     {
         var control = new BomberBombControls();
-        var bomb = new _3dObject
+        var bomb = new OmegaObject3D
         {
             ObjectId = 101,
             ObjectName = "BomberBomb",
@@ -33,7 +32,7 @@ public class BomberBombControlsTests
             ImpactStatus = new ImpactStatus { HasCrashed = true },
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "BombPart",
                     IsVisible = true,
@@ -78,9 +77,9 @@ public class BomberBombControlsTests
         Assert.AreEqual(225f, physics.LastExplosionForce, 0.001f);
     }
 
-    private static _3dObject CreateCrashedBomb()
+    private static OmegaObject3D CreateCrashedBomb()
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 102,
             ObjectName = "BomberBomb",
@@ -92,7 +91,7 @@ public class BomberBombControlsTests
             ImpactStatus = new ImpactStatus { HasCrashed = true },
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "BombPart",
                     IsVisible = true,

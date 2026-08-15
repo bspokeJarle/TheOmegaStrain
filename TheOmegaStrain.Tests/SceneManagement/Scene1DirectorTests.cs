@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.Events;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Game.Scenes.Scene1;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.SceneManagement;
 
@@ -471,9 +470,9 @@ public class Scene1DirectorTests
 
     private static int _nextObjectId = 1;
 
-    private static _3dObject CreateAiObject(string name, bool isActive = true)
+    private static OmegaObject3D CreateAiObject(string name, bool isActive = true)
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = _nextObjectId++,
             ObjectName = name,

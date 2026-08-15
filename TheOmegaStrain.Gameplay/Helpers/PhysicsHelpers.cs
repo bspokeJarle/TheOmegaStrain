@@ -1,6 +1,5 @@
 using TheOmegaStrain.Domain;
 using System;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Gameplay.Helpers
 {

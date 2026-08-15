@@ -3,7 +3,6 @@ using TheOmegaStrain.Common.Persistence;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Audio.Services;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.Scenes.Scene3
 {
@@ -179,7 +178,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene3
             return false;
         }
 
-        private static string GetBlockingEnemySummary(List<_3dObject> aiObjs)
+        private static string GetBlockingEnemySummary(List<OmegaObject3D> aiObjs)
         {
             var seeders = new List<string>();
             var drones = new List<string>();
@@ -201,7 +200,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene3
             return $"seeders={seedersPart}; drones={dronesPart}";
         }
 
-        private static string GetMotherShipSummary(List<_3dObject> aiObjs)
+        private static string GetMotherShipSummary(List<OmegaObject3D> aiObjs)
         {
             var mothers = new List<string>();
             for (int i = 0; i < aiObjs.Count; i++)

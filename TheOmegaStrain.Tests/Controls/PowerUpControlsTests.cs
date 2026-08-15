@@ -2,7 +2,6 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -15,7 +14,7 @@ public class PowerUpControlsTests
         GameState.SurfaceState = new SurfaceState
         {
             GlobalMapPosition = new Vector3(),
-            AiObjects = new List<_3dObject>()
+            AiObjects = new List<OmegaObject3D>()
         };
     }
 
@@ -49,9 +48,9 @@ public class PowerUpControlsTests
         Assert.AreEqual(anchoredOffsets.z, powerup.ObjectOffsets.z, 0.001f);
     }
 
-    private static _3dObject CreatePowerUp()
+    private static OmegaObject3D CreatePowerUp()
     {
-        return new _3dObject
+        return new OmegaObject3D
         {
             ObjectId = 30,
             ObjectName = "PowerUp",
@@ -69,7 +68,7 @@ public class PowerUpControlsTests
             ImpactStatus = new ImpactStatus { HasCrashed = false, ObjectName = "Ship", ObjectHealth = 1 },
             ObjectParts = new List<I3dObjectPart>
             {
-                new _3dObjectPart
+                new OmegaObjectPart3D
                 {
                     PartName = "PowerUpBody",
                     IsVisible = true,

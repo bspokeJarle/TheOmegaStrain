@@ -3,7 +3,6 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Game.World.Objects
 {
@@ -25,9 +24,9 @@ namespace TheOmegaStrain.Game.World.Objects
         private const string PoleColor = "5A3518";
         private const string TextColor = "15331F";
 
-        public static _3dObject CreateBanner(ISurface parentSurface)
+        public static OmegaObject3D CreateBanner(ISurface parentSurface)
         {
-            var banner = new _3dObject { ObjectId = GameState.ObjectIdCounter++ };
+            var banner = new OmegaObject3D { ObjectId = GameState.ObjectIdCounter++ };
             banner.ObjectName = "OutroLandingBanner";
             banner.ParentSurface = parentSurface;
             banner.ObjectOffsets = new Vector3();
@@ -176,9 +175,9 @@ namespace TheOmegaStrain.Game.World.Objects
             };
         }
 
-        private static void AddPart(_3dObject obj, string partName, List<ITriangleMeshWithColor> triangles)
+        private static void AddPart(OmegaObject3D obj, string partName, List<ITriangleMeshWithColor> triangles)
         {
-            obj.ObjectParts.Add(new _3dObjectPart
+            obj.ObjectParts.Add(new OmegaObjectPart3D
             {
                 PartName = partName,
                 Triangles = triangles,

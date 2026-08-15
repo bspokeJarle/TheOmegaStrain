@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Runtime.Rendering;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Physics;
 
@@ -275,7 +274,7 @@ public class ParticleShadowProjectionTests
             RotatedSurfaceTriangles = new List<ITriangleMeshWithColor>()
         };
 
-        GameState.SurfaceState.SurfaceViewportObject = new _3dObject
+        GameState.SurfaceState.SurfaceViewportObject = new OmegaObject3D
         {
             ObjectId = 1,
             ObjectName = "Surface",
@@ -284,7 +283,7 @@ public class ParticleShadowProjectionTests
             Rotation = new Vector3()
         };
 
-        var source = new _3dObject
+        var source = new OmegaObject3D
         {
             ObjectId = 2,
             ObjectName = "JumpingFish",
@@ -315,7 +314,7 @@ public class ParticleShadowProjectionTests
             }
         };
 
-        var renderedParticles = new List<_3dObject>();
+        var renderedParticles = new List<OmegaObject3D>();
         new ParticleManager().HandleParticles(source, renderedParticles);
 
         Assert.AreEqual(1, renderedParticles.Count, "Only the visible particle should be rendered; JumpingFish splash shadows are suppressed.");
@@ -328,7 +327,7 @@ public class ParticleShadowProjectionTests
     {
         GameState.SurfaceState.SurfaceViewportObject = null;
 
-        var source = new _3dObject
+        var source = new OmegaObject3D
         {
             ObjectId = 2,
             ObjectName = "Ship",
@@ -357,7 +356,7 @@ public class ParticleShadowProjectionTests
             }
         };
 
-        var renderedParticles = new List<_3dObject>();
+        var renderedParticles = new List<OmegaObject3D>();
         new ParticleManager().HandleParticles(source, renderedParticles);
 
         Assert.AreEqual(1, renderedParticles.Count,
@@ -371,7 +370,7 @@ public class ParticleShadowProjectionTests
         GameState.SurfaceState.SurfaceViewportObject = null;
 
         var particleTriangle = CreateParticleTriangle();
-        var source = new _3dObject
+        var source = new OmegaObject3D
         {
             ObjectId = 2,
             ObjectName = "Ship",
@@ -400,7 +399,7 @@ public class ParticleShadowProjectionTests
             }
         };
 
-        var renderedParticles = new List<_3dObject>();
+        var renderedParticles = new List<OmegaObject3D>();
         new ParticleManager().HandleParticles(source, renderedParticles);
 
         Assert.AreEqual(-1f, particleTriangle.vert1.x, 0.001f,

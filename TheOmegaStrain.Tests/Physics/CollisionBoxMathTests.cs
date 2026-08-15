@@ -1,6 +1,5 @@
 using TheOmegaStrain.Domain;
 using RetroMesh.Engine;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Tests.Physics;
 

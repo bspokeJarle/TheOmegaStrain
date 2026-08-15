@@ -4,7 +4,6 @@ using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
-using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Runtime.Rendering
 {
@@ -102,7 +101,7 @@ namespace TheOmegaStrain.Runtime.Rendering
         /// The shadow shares the surface's ObjectOffsets so it scrolls with the terrain.
         /// Shadow geometry is translated to the sampled surface point in surface-local space.
         /// </summary>
-        public void HandleObjectShadow(_3dObject inhabitant, List<_3dObject> shadowList)
+        public void HandleObjectShadow(OmegaObject3D inhabitant, List<OmegaObject3D> shadowList)
         {
             if (!inhabitant.HasShadow)
                 return;
@@ -159,7 +158,7 @@ namespace TheOmegaStrain.Runtime.Rendering
                                            || name.IndexOf("tower", StringComparison.OrdinalIgnoreCase) >= 0);
 
             // Compute only the shadow base actually needed for this object type.
-            // All *BaseX/Y/Z are in SURFACE-LOCAL space because the shadow _3dObject
+            // All *BaseX/Y/Z are in SURFACE-LOCAL space because the shadow OmegaObject3D
             // is parented to surface.ObjectOffsets; the renderer adds surfaceX/Y/Z.
             // targetX = objScreenX - surfScreenX is the object's X in surface space.
             float shadowBaseX = targetX;
@@ -349,7 +348,7 @@ namespace TheOmegaStrain.Runtime.Rendering
                     });
                 }
 
-                shadowParts.Add(new _3dObjectPart
+                shadowParts.Add(new OmegaObjectPart3D
                 {
                     PartName = "ObjectShadow",
                     Triangles = shadowTriangles,
@@ -358,7 +357,7 @@ namespace TheOmegaStrain.Runtime.Rendering
             }
 
             // Shadow uses the surface's ObjectOffsets and WorldPosition so it scrolls with the terrain
-            shadowList.Add(new _3dObject
+            shadowList.Add(new OmegaObject3D
             {
                 ObjectId = GameState.ObjectIdCounter++,
                 ObjectName = "ObjectShadow",
