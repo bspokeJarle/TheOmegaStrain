@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.4.11605.240
@@ -29,13 +29,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheOmegaStrain.Common", "Th
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheOmegaStrain.Steam", "TheOmegaStrain.Steam\TheOmegaStrain.Steam.csproj", "{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetroMesh.Engine", "RetroMesh.Engine\RetroMesh.Engine.csproj", "{B529BB92-B73F-4037-BAAD-135C5E67B7CA}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheOmegaStrain.Benchmarks", "TheOmegaStrain.Benchmarks\TheOmegaStrain.Benchmarks.csproj", "{AA96E246-B22A-4E90-846A-12059132CA0A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheOmegaStrain.Runtime", "TheOmegaStrain.Runtime\TheOmegaStrain.Runtime.csproj", "{895DF255-46C1-4ED3-987D-5CD88069A7F6}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetroMesh.Engine.Tests", "RetroMesh.Engine.Tests\RetroMesh.Engine.Tests.csproj", "{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -131,18 +127,6 @@ Global
 		{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}.Release|x64.Build.0 = Release|Any CPU
 		{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}.Release|x86.ActiveCfg = Release|Any CPU
 		{C0D2EA46-BC3F-4733-AB8D-516D719A77FC}.Release|x86.Build.0 = Release|Any CPU
-		{B529BB92-B73F-4037-BAAD-135C5E67B7CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B529BB92-B73F-4037-BAAD-135C5E67B7CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B529BB92-B73F-4037-BAAD-135C5E67B7CA}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{B529BB92-B73F-4037-BAAD-135C5E67B7CA}.Debug|x64.Build.0 = Debug|Any CPU
-		{B529BB92-B73F-4037-BAAD-135C5E67B7CA}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{B529BB92-B73F-4037-BAAD-135C5E67B7CA}.Debug|x86.Build.0 = Debug|Any CPU
-		{B529BB92-B73F-4037-BAAD-135C5E67B7CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B529BB92-B73F-4037-BAAD-135C5E67B7CA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B529BB92-B73F-4037-BAAD-135C5E67B7CA}.Release|x64.ActiveCfg = Release|Any CPU
-		{B529BB92-B73F-4037-BAAD-135C5E67B7CA}.Release|x64.Build.0 = Release|Any CPU
-		{B529BB92-B73F-4037-BAAD-135C5E67B7CA}.Release|x86.ActiveCfg = Release|Any CPU
-		{B529BB92-B73F-4037-BAAD-135C5E67B7CA}.Release|x86.Build.0 = Release|Any CPU
 		{AA96E246-B22A-4E90-846A-12059132CA0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AA96E246-B22A-4E90-846A-12059132CA0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA96E246-B22A-4E90-846A-12059132CA0A}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -167,18 +151,6 @@ Global
 		{895DF255-46C1-4ED3-987D-5CD88069A7F6}.Release|x64.Build.0 = Release|Any CPU
 		{895DF255-46C1-4ED3-987D-5CD88069A7F6}.Release|x86.ActiveCfg = Release|Any CPU
 		{895DF255-46C1-4ED3-987D-5CD88069A7F6}.Release|x86.Build.0 = Release|Any CPU
-		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Debug|x64.Build.0 = Debug|Any CPU
-		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Debug|x86.Build.0 = Debug|Any CPU
-		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Release|x64.ActiveCfg = Release|Any CPU
-		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Release|x64.Build.0 = Release|Any CPU
-		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Release|x86.ActiveCfg = Release|Any CPU
-		{36C9829F-BEDE-4FB0-B96A-D7471144CBEF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

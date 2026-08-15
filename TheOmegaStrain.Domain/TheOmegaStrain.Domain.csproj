@@ -5,6 +5,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RetroMesh.Engine\RetroMesh.Engine.csproj" />
+    <PackageReference Include="RetroMesh.Engine" Version="$(RetroMeshEnginePackageVersion)" />
   </ItemGroup>
 </Project>

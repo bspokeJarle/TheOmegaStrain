@@ -6,9 +6,10 @@ In the end the plan is to make a tribute to Zarch (Virus) first developed for th
 
 ## RetroMesh Engine
 
-The reusable engine work lives in `RetroMesh.Engine`. See:
+The reusable engine work lives in `RetroMesh/` with its own solution. See:
 
-- `RetroMesh.Engine/README.md` for engine capabilities, usage, build commands,
-  license, and support notes.
+- `RetroMesh/RetroMesh.Engine.slnx` for the standalone engine solution.
+- `RetroMesh/RetroMesh.Engine/README.md` for engine capabilities, usage, build
+  commands, license, and support notes.
 - `docs/USING_RETROMESH_ENGINE.md` for the general game/engine boundary, using
   The Omega Strain as the reference implementation.

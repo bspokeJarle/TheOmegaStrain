@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup>
     <NoWarn>$(NoWarn);CS0162;CS0169;CS0219;CS0414;CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8622;CS8625;CS8632;CS8766;CS8767;CA2014;SYSLIB0060</NoWarn>
+    <RetroMeshEnginePackageVersion>0.1.0</RetroMeshEnginePackageVersion>
   </PropertyGroup>
 </Project>

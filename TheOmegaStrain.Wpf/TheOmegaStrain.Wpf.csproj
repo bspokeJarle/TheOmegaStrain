@@ -13,7 +13,9 @@
     <Content Include="GameGraphics\OmegaStrain.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RetroMesh.Engine\RetroMesh.Engine.csproj" />
+    <PackageReference Include="RetroMesh.Engine" Version="$(RetroMeshEnginePackageVersion)" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\TheOmegaStrain.Runtime\TheOmegaStrain.Runtime.csproj" />
     <ProjectReference Include="..\TheOmegaStrain.Game\TheOmegaStrain.Game.csproj" />
     <ProjectReference Include="..\TheOmegaStrain.Steam\TheOmegaStrain.Steam.csproj" />

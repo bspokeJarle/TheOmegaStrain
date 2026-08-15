@@ -10,10 +10,10 @@
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.2" />
     <PackageReference Include="Microsoft.VisualStudio.DiagnosticsHub.BenchmarkDotNetDiagnosers" Version="18.3.36812.1" />
+    <PackageReference Include="RetroMesh.Engine" Version="$(RetroMeshEnginePackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RetroMesh.Engine\RetroMesh.Engine.csproj" />
     <ProjectReference Include="..\TheOmegaStrain.Runtime\TheOmegaStrain.Runtime.csproj" />
     <ProjectReference Include="..\TheOmegaStrain.Wpf\TheOmegaStrain.Wpf.csproj" />
     <ProjectReference Include="..\TheOmegaStrain.Common\TheOmegaStrain.Common.csproj" />

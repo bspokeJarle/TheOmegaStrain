@@ -254,7 +254,7 @@ public class EngineObjectCompatibilityTests
     public void RetroMeshEngineSource_DoesNotReferenceGameProjects()
     {
         var repositoryRoot = FindRepositoryRoot();
-        var engineDirectory = Path.Combine(repositoryRoot, "RetroMesh.Engine");
+        var engineDirectory = Path.Combine(repositoryRoot, "RetroMesh", "RetroMesh.Engine");
         var forbiddenHits = Directory
             .EnumerateFiles(engineDirectory, "*.*", SearchOption.AllDirectories)
             .Where(path => path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) ||

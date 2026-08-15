@@ -7,9 +7,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MouseKeyHook" Version="5.7.1" />
+    <PackageReference Include="RetroMesh.Engine" Version="$(RetroMeshEnginePackageVersion)" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RetroMesh.Engine\RetroMesh.Engine.csproj" />
     <ProjectReference Include="..\TheOmegaStrain.Common\TheOmegaStrain.Common.csproj" />
     <ProjectReference Include="..\TheOmegaStrain.Domain\TheOmegaStrain.Domain.csproj" />
   </ItemGroup>
