@@ -1,6 +1,8 @@
 using TheOmegaStrain.Domain;
 using System.Collections;
 
+using RetroMesh.Engine;
+
 namespace TheOmegaStrain.Common.OmegaEngineAdapters
 {
     public static class OmegaCrashBoxOffsetExtensions

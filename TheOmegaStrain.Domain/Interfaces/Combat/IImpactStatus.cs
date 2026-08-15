@@ -1,3 +1,4 @@
+using RetroMesh.Engine;
 namespace TheOmegaStrain.Domain
 {
     public interface IImpactStatus : IImpactState

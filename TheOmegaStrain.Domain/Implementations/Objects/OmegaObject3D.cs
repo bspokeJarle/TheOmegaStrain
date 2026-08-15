@@ -1,3 +1,4 @@
+using RetroMesh.Engine;
 namespace TheOmegaStrain.Domain
 {
     public class OmegaObject3D : Engine3dObject, I3dObject

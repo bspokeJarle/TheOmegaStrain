@@ -2,6 +2,8 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 
+using RetroMesh.Engine;
+
 namespace TheOmegaStrain.Common.OmegaEngineAdapters
 {
     public static class SurfacePositionSyncHelpers

@@ -1,3 +1,5 @@
+using RetroMesh.Engine;
+
 namespace TheOmegaStrain.Domain
 {
     public class Vector3 : EngineVector3

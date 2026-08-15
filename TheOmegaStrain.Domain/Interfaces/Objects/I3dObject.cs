@@ -1,3 +1,4 @@
+using RetroMesh.Engine;
 namespace TheOmegaStrain.Domain
 {
     public interface I3dObject : IRenderable3dObject

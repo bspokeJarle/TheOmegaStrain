@@ -1,6 +1,8 @@
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 
+using RetroMesh.Engine;
+
 namespace TheOmegaStrain.Common.GamePlayHelpers
 {
     public static class MapCoordinateHelpers
