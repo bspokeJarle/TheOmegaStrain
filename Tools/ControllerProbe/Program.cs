@@ -1,5 +1,5 @@
 using SharpDX.DirectInput;
-using GameAiAndControls.Input;
+using TheOmegaStrain.Gameplay.Input;
 using Windows.Gaming.Input;
 
 Console.WriteLine("The Omega Strain controller probe");

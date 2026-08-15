@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
+    <RootNamespace>TheOmegaStrain.Tests</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.0.4" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.0.4" />
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="RetroMesh.Engine" Version="$(RetroMeshEnginePackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TheOmegaStrain.Runtime\TheOmegaStrain.Runtime.csproj" />
+    <ProjectReference Include="..\TheOmegaStrain.Wpf\TheOmegaStrain.Wpf.csproj" />
+    <ProjectReference Include="..\TheOmegaStrain.Game\TheOmegaStrain.Game.csproj" />
+    <ProjectReference Include="..\TheOmegaStrain.Gameplay\TheOmegaStrain.Gameplay.csproj" />
+    <ProjectReference Include="..\TheOmegaStrain.Steam\TheOmegaStrain.Steam.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="MapAndOverlay\" />
+  </ItemGroup>
+
+</Project>

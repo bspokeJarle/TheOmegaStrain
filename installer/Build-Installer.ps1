@@ -60,7 +60,7 @@ function Test-SecretsFile {
 }
 
 $repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
-$projectPath = Join-Path $repoRoot "3dTesting\Frontend.csproj"
+$projectPath = Join-Path $repoRoot "TheOmegaStrain.Wpf\TheOmegaStrain.Wpf.csproj"
 $installerScript = Join-Path $PSScriptRoot "TheOmegaStrain.iss"
 $publishDir = Join-Path $repoRoot "artifacts\installer\publish\$Runtime"
 $outputDir = Join-Path $repoRoot "artifacts\installer\output"

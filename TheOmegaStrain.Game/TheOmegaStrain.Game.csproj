@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
+    <RootNamespace>TheOmegaStrain.Game</RootNamespace>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="RetroMesh.Engine" Version="$(RetroMeshEnginePackageVersion)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TheOmegaStrain.Common\TheOmegaStrain.Common.csproj" />
+    <ProjectReference Include="..\TheOmegaStrain.Domain\TheOmegaStrain.Domain.csproj" />
+    <ProjectReference Include="..\TheOmegaStrain.Gameplay\TheOmegaStrain.Gameplay.csproj" />
+  </ItemGroup>
+</Project>

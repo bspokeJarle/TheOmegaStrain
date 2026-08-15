@@ -1,0 +1,156 @@
+Changes in this version:
+
+Gameplay and campaign
+    The game now has an 8-scene campaign with stronger scene progression.
+    Mothership encounters are staged by scene and difficulty.
+    Scene transitions, scene completion, and next-scene progression have been stabilized.
+    Infection tuning has been adjusted across late-game scenes, especially Scene6 and onward.
+    Seeder distribution has been improved so action stays closer to the player and the landing platform.
+    The active arrow/targeting logic now snaps to the intended seeder and avoids long empty flights.
+    Lost-planet handling can detect unwinnable restored states and offer a planet reset flow.
+    Planet reset returns the player to the state from arrival instead of corrupting broader progress.
+    Enemy kills still score immediately, while bonus rewards are counted between planets.
+    Extra reward points were added for clean loops, risky low-altitude flying, and planet performance.
+    Speed powerups were added and are stored as user progress.
+    Speed powerups now appear earlier in the campaign.
+    Powerup assignment is dynamic and follows existing powerup placement patterns.
+    Powerup pickups now save checkpoints at the right time.
+    Game state saves are limited to intended checkpoint events: powerup pickup, mothership entry, mothership kill, and next-scene progression.
+    Save/restore behavior has been tightened so current in-flight state is not accidentally persisted as checkpoint state.
+    Highscore and progress persistence have been hardened against accidental reset paths.
+    Local and Supabase highscore handling has been improved, including offline fallback behavior.
+
+Enemies, weapons, and damage
+    Seeders, drones, bombers, SpaceSwan enemies, and motherships have received gameplay tuning.
+    Seeder health and laser/bullet damage balance have been adjusted.
+    Decoys can now damage seeders.
+    Decoy deployment is rate-limited to prevent multiple drops from a single controller press.
+    Mothership health, aggression, attack range, wait timing, and scene scaling have been tuned.
+    Medium mothership laser collision has been reduced to feel fairer.
+    Bombers fly at corrected world height and have stronger bombs.
+    Drone behavior includes a small surprise-delay chance.
+    Drone audio level has been increased.
+    Weapon guidance has been tuned without changing the unrelated navigation guidance systems.
+    Bullet, laser, decoy, and speed powerup behavior is now tracked more consistently.
+
+Controls and input
+    Keyboard, mouse, and Xbox controller modes are configurable from in-game settings overlays.
+    Only the selected control mode is listened to during gameplay, with weapon hotkeys still available where needed.
+    Xbox controller support has been added and tuned, including practical thrust/fire mappings.
+    Xbox powerup selection maps X, Y, B, and A to powerup slots.
+    Xbox rotation speed has been tuned so loops are achievable.
+    Mouse controls now use raw mouse input and Virus-inspired flight behavior.
+    Mouse control no longer depends on cursor screen position or screen edges.
+    Mouse pitch sensitivity and rotation behavior have been tuned for more natural control.
+    Mouse self-leveling experiments were removed in favor of stable raw-input flight control.
+    Game input is blocked when overlays, menus, intro, outro, pause, and non-gameplay screens are active.
+    Ctrl pause now pauses gameplay input and physics while allowing music to continue.
+    Gravity and crash detection are briefly paused when resuming from pause or tutorial overlays.
+    Esc and X now route through menu/exit flow consistently.
+
+Training and onboarding
+    A guided training mode has been added.
+    Training can start automatically for new local users and can also be started manually.
+    Training uses controlled seeders, a powerup, decoy deployment, and a drone encounter.
+    Training voice lines use the ship AI voice concept, Hal-E.
+    Training voice playback can run faster without affecting normal gameplay voice speed.
+    Music ducks under training voice playback and returns afterward.
+    Training overlays pause gameplay, empty the key buffer, and require a minimum visible time before accepting input.
+    Tutorial overlays explain thrust, weapons, map arrow directions, seeder attack angle, powerups, decoys, and debris danger.
+    Training completion is stored locally and can trigger the Steam achievement when appropriate.
+    Training no longer grants normal campaign powerups.
+    Training explosions and powerup drops have been stabilized so they stay anchored to their source object.
+
+Biomes and worlds
+    Desert biome support has been added and tuned.
+    Scene6 now has desert-specific generation with large irregular lakes instead of many small water tiles.
+    Desert lakes place fish and nearby alien plants.
+    Desert scene objects include cacti, rock formations, Bedouin-style tents, desert towers, fish, alien plants, and sand/dust weather.
+    Desert placement avoids the central landing platform.
+    Tent design, density, and placement have been improved.
+    Cacti have been cleaned up to keep the good original shape with rotation-based variety.
+    Desert rock and cactus crash boxes have been reduced.
+    Desert sand/dust visuals have been refined.
+    Winter biomes now scale winter surface objects and polar bears up slightly.
+    Winter object placement and shadow offsets have been adjusted after scaling.
+    Polar bears are placed farther apart and stand higher on the terrain.
+    Rain, thunder, snow, sand, and leaf weather/effects now behave more consistently with scene transitions.
+    Leaf trees and airborne leaf emitters have been added to standard biomes.
+    Leaf colors were brightened and leaf density was tuned near the player's travel direction.
+    Biome-specific flight physics have been added subtly for desert, snow, and rain/forest scenes.
+    Biome physics were tuned back where snow and rain initially felt too strong.
+    The active scene/debug start flows were used for testing and then cleaned up.
+
+Rendering, visuals, and UI
+    Surface-based objects now use a surface-footprint pivot so they stay planted on terrain while scaling toward the camera.
+    Common world angle configuration was added and verified.
+    Object placement on the bitmap map and the target arrow were corrected to use shared projection math.
+    Map marker blinking was revised after contrast experiments to preserve object readability.
+    Ship arrow placement was adjusted for lower resolutions so it stays below the overlay.
+    Crash box generation and debug visualization were improved, then disabled for normal play.
+    Surface crash boxes now sync with the moving surface again.
+    Mountain and large-formation collision boxes have been tightened.
+    Explosion positions for ship, seeders, and powerups have been anchored to the source transform at explosion time.
+    Low-speed crashes now always do at least a little damage and play the thud sound.
+    Ship under-surface edge cases now trigger an explosion.
+    Ship explosion physics no longer drifts away from the explosion start point.
+    Muzzle flash and hit spark effects were added as graphics-quality controlled effects.
+    Particle bursts, hit spark counts, and default/high graphics particle counts were tuned.
+    Debris shimmer was retained where useful; low-altitude debris experiments were removed.
+    Graphics and sound settings overlays were added.
+    Default graphics keeps the original look, with optional effects enabled through quality settings.
+    Overlay paging and intro text were improved, including keyboard/mouse gameplay instructions.
+    Multi-page overlays now show arrow-key navigation help and have a longer auto-page time.
+    Outro/reward overlay now counts bonus points between planets.
+
+Audio
+    Audio playback has been expanded with sound effects, music, segmented loops, and voice lines.
+    Ship engine, weapons, drones, explosions, decoys, powerups, checkpoints, and UI events now use audio cues.
+    Music playback and installer music were added.
+    Non-music sounds stop when exiting a planet to prevent engine loops from leaking into menus.
+    Checkpoint save/restore voice cues are played during real gameplay only.
+    The audio runtime has been moved into RetroMesh Engine behind generic audio interfaces.
+    NAudio-backed playback now lives in the engine and can be reused by future games.
+
+Steam, installer, and distribution
+    Steam integration has been added with achievements, stats, and leaderboards.
+    Steam integration is optional; the game still runs without Steam.
+    Steam app id configuration has been added and corrected.
+    Achievement icons and Steam library/store artwork assets were generated and archived.
+    Duplicate Steam achievement/stat submissions are guarded.
+    Steam build and content copy scripts were added for easier SteamPipe upload.
+    Inno Setup installer support has been added.
+    The installer includes game assets, secrets handling, music, and custom artwork.
+    Installer visuals were adjusted for larger artwork and more readable text.
+    Installer packaging was fixed so the final installer can still be a single file.
+    Store, library, trailer, and Steam artwork workflows have been built around real gameplay captures.
+
+Performance and diagnostics
+    Frame pacing work now targets consistent gameplay speed across 60 Hz and 90 Hz displays.
+    Frame-dependent movement paths have been moved toward elapsed-time scaling.
+    Performance logging was added for headroom testing and then disabled when no longer needed.
+    Particle, rendering, object placement, and collision hot paths have been repeatedly optimized.
+    Antimalware-related development slowdowns were investigated outside the game code.
+    Benchmark projects were consolidated and renamed to reduce solution noise.
+
+Architecture and RetroMesh Engine split
+    A new `RetroMesh.Engine` project has been introduced.
+    Generic renderable object contracts have moved into the engine.
+    Projection, shading, vector, color, geometry, world view, frame timing, placement, and collision helpers have moved into the engine.
+    Crash detection math, collision pair scanning, collision frame caching, radial scanning, impact state, and physics motion helpers have moved into the engine.
+    Audio runtime services have moved into the engine.
+    Input primitives and Windows raw mouse/Xbox readers have moved into the engine.
+    The Omega Strain runtime has been thinned so gameplay-specific orchestration stays outside the front end.
+    The Omega Strain domain remains game-specific by design.
+    Adapter boundaries now translate between Omega-specific types and RetroMesh engine abstractions.
+    Legacy project folders and project files were renamed to clearer `TheOmegaStrain.*` names.
+    Old STL functionality was removed.
+    Dead legacy CommonHelpers project files were removed.
+    Architecture tests now guard RetroMesh.Engine against references back to game projects.
+    Namespaces have been normalized toward a cleaner engine/game split.
+    RetroMesh Engine documentation, license, and support policy have been added with The Omega Strain as a reference implementation.
+    The long-term direction is a reusable RetroMesh engine package with The Omega Strain as one consuming game.
+
+Older foundations retained
+    Procedural surface generation, map wrapping, crash detection, particle physics, object placement, shadows, audio, scene handling, and the original retro polygon renderer remain core parts of the game.
+    The project continues to use the existing patterns for scene setup, object placement, powerups, persistence, rendering, and gameplay systems.

@@ -30,7 +30,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 OutputDir={#OutputDir}
 OutputBaseFilename=TheOmegaStrainSetup-{#AppVersion}
-SetupIconFile=..\3dTesting\GameGraphics\OmegaStrain.ico
+SetupIconFile=..\TheOmegaStrain.Wpf\GameGraphics\OmegaStrain.ico
 WizardImageFile=Assets\InstallerWizardImage.bmp
 WizardSmallImageFile=Assets\InstallerWizardSmall.bmp
 WizardBackImageFile=Assets\InstallerWizardBackImage.bmp
@@ -52,7 +52,7 @@ Name: "desktopicon"; Description: "Create a desktop launch shortcut"; GroupDescr
 Name: "{userappdata}\OmegaStrain"; Flags: uninsneveruninstall
 
 [Files]
-Source: "..\3dTesting\Soundeffects\Spekeord_intro.wav"; DestName: "{#InstallerMusicFile}"; Flags: dontcopy nocompression
+Source: "..\TheOmegaStrain.Wpf\Soundeffects\Spekeord_intro.wav"; DestName: "{#InstallerMusicFile}"; Flags: dontcopy nocompression
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs solidbreak
 Source: "{#SecretsSource}"; DestDir: "{userappdata}\OmegaStrain"; DestName: "secrets.json"; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall
 
