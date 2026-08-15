@@ -2,7 +2,7 @@
 
 Source images:
 C:\Users\JarleAdolfsen\Downloads\LibraryHero.png.png
-C:\Users\JarleAdolfsen\Repositories\3dExploration\TheOmegaStrain.Wpf\GameGraphics\TheOmegaStrainLogo.png
+TheOmegaStrain.Wpf\GameGraphics\TheOmegaStrainLogo.png
 
 Files:
 the_omega_strain_library_capsule_600x900.png - 600 x 900

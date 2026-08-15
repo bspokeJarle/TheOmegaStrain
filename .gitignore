@@ -28,6 +28,9 @@ artifacts/installer/
 # Local checkout of the separate RetroMesh engine repository.
 RetroMesh/
 
+# Local checkout of the separate RetroMesh template repository.
+RetroMesh.GameTemplate/
+
 # NuGet Packages
 *.nupkg
 # The packages folder can be ignored because of Package Restore
