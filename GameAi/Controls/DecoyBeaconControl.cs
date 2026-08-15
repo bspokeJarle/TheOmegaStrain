@@ -17,7 +17,6 @@ namespace GameAiAndControls.Controls
 {
     public class DecoyBeaconControls : IObjectMovement
     {
-        private static readonly OmegaMeshRotation Rotate3d = new();
         private readonly OmegaMeshRotation _rotate = new();
         private const bool enableLogging = false;
         private const string WheelPartName = "DecoyFrontPulsePanel";
@@ -146,48 +145,27 @@ namespace GameAiAndControls.Controls
 
         private static Vector3 Normalize(Vector3 v)
         {
-            float lenSq = v.x * v.x + v.y * v.y + v.z * v.z;
-            if (lenSq <= 1e-6f)
-            {
-                return new Vector3 { x = 0, y = 0, z = 0 };
-            }
-
-            float invLen = 1f / MathF.Sqrt(lenSq);
-            return new Vector3
-            {
-                x = v.x * invLen,
-                y = v.y * invLen,
-                z = v.z * invLen
-            };
+            return ToVector3(VectorMath.Normalize(v));
         }
 
         private static float Length(Vector3 v)
         {
-            return MathF.Sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+            return VectorMath.Length(v);
         }
 
         private static float Dot(Vector3 a, Vector3 b)
         {
-            return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
+            return VectorMath.Dot(a, b);
         }
 
         private static float NormalizeAngle(float angle)
         {
-            angle %= 360f;
-            if (angle > 180f) angle -= 360f;
-            if (angle < -180f) angle += 360f;
-            return angle;
+            return GeometryMath.NormalizeAngle(angle);
         }
 
         private static float MoveAngleTowards(float current, float target, float maxDelta)
         {
-            float delta = NormalizeAngle(target - current);
-            if (MathF.Abs(delta) <= maxDelta)
-            {
-                return current + delta;
-            }
-
-            return current + MathF.Sign(delta) * maxDelta;
+            return GeometryMath.MoveAngleTowards(current, target, maxDelta);
         }
 
         private static Vector3 GetPartCenter(List<ITriangleMeshWithColor> triangles)
@@ -275,56 +253,24 @@ namespace GameAiAndControls.Controls
 
         private static Vector3 GetLocalCrashCenter(I3dObject obj)
         {
-            if (obj.CrashBoxes == null || obj.CrashBoxes.Count == 0)
-            {
-                return new Vector3();
-            }
-
-            var localPoints = new List<Vector3>();
-            foreach (var box in obj.CrashBoxes)
-            {
-                foreach (var point in box)
-                {
-                    localPoints.Add((Vector3)point);
-                }
-            }
-
-            return localPoints.Count > 0
-                ? OmegaObjectHelpers.GetCenterOfBox(localPoints)
-                : new Vector3();
+            return ToVector3(ObjectCollisionGeometry.GetLocalCrashCenter(obj));
         }
 
         private static Vector3 RotateLocalPoint(Vector3 point, IVector3? rotation)
         {
-            if (rotation is not Vector3 rotationVector)
-            {
-                return point;
-            }
-
-            var rotatedPoint = (Vector3)Rotate3d.RotatePoint(rotationVector.z, point, 'Z');
-            rotatedPoint = (Vector3)Rotate3d.RotatePoint(rotationVector.y, rotatedPoint, 'Y');
-            rotatedPoint = (Vector3)Rotate3d.RotatePoint(rotationVector.x, rotatedPoint, 'X');
-            return rotatedPoint;
+            return ToVector3(ObjectCollisionGeometry.RotateLocalPoint(point, rotation));
         }
 
         private static Vector3 GetRotatedLocalCrashCenter(I3dObject obj)
         {
-            return RotateLocalPoint(GetLocalCrashCenter(obj), obj.Rotation);
+            return ToVector3(ObjectCollisionGeometry.GetRotatedLocalCrashCenter(obj));
         }
 
         private static Vector3 GetDroneCrashCenterWorldPosition(I3dObject obj)
         {
-            var rotatedLocalCrashCenter = GetRotatedLocalCrashCenter(obj);
-
-            var worldPosition = obj.WorldPosition;
-            var objectOffsets = obj.ObjectOffsets;
-
-            return new Vector3
-            {
-                x = (worldPosition?.x ?? 0f) + (objectOffsets?.x ?? 0f) + rotatedLocalCrashCenter.x,
-                y = (worldPosition?.y ?? 0f) + (objectOffsets?.y ?? 0f) + rotatedLocalCrashCenter.y,
-                z = (worldPosition?.z ?? 0f) + (objectOffsets?.z ?? 0f) + rotatedLocalCrashCenter.z
-            };
+            return ToVector3(ObjectCollisionGeometry.GetObjectCrashCenterWorldPosition(
+                obj,
+                includeObjectOffsets: true));
         }
 
         private static Vector3? GetShipCrashCenterWorldPosition()

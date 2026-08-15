@@ -17,17 +17,38 @@ namespace RetroMesh.Engine
             ArgumentNullException.ThrowIfNull(vertex);
             ArgumentNullException.ThrowIfNull(viewport);
 
-            double denom = -vertex.z + objectScreenZ + viewport.PerspectiveAdjustment;
+            return TryProjectVertex(
+                vertex,
+                objectScreenX,
+                objectScreenY,
+                objectScreenZ,
+                viewport.PerspectiveAdjustment,
+                viewport.ObjectZoom,
+                out screenPoint);
+        }
+
+        public static bool TryProjectVertex(
+            IVector3 vertex,
+            double objectScreenX,
+            double objectScreenY,
+            double objectScreenZ,
+            double perspectiveAdjustment,
+            double objectZoom,
+            out (double x, double y) screenPoint)
+        {
+            ArgumentNullException.ThrowIfNull(vertex);
+
+            double denom = -vertex.z + objectScreenZ + perspectiveAdjustment;
             if (denom <= NearPlaneSafetyMargin)
             {
                 screenPoint = (double.NaN, double.NaN);
                 return false;
             }
 
-            double factor = viewport.PerspectiveAdjustment / denom;
+            double factor = perspectiveAdjustment / denom;
             screenPoint = (
-                vertex.x * factor * viewport.ObjectZoom + objectScreenX,
-                vertex.y * factor * viewport.ObjectZoom + objectScreenY);
+                vertex.x * factor * objectZoom + objectScreenX,
+                vertex.y * factor * objectZoom + objectScreenY);
             return true;
         }
 

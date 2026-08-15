@@ -229,35 +229,12 @@ public class ParticlesAI : IParticles
             b = 0;
         }
 
-        return $"{PhysicsHelpers.ClampColor(r):X2}{PhysicsHelpers.ClampColor(g):X2}{PhysicsHelpers.ClampColor(b):X2}".ToLower();
+        return $"{ColorMath.ClampColor(r):X2}{ColorMath.ClampColor(g):X2}{ColorMath.ClampColor(b):X2}".ToLower();
     }
 
     private static string LerpColorHex(string fromHex, string toHex, float amount)
     {
-        amount = Clamp(amount, 0f, 1f);
-        ParseHexColor(fromHex, out int fromR, out int fromG, out int fromB);
-        ParseHexColor(toHex, out int toR, out int toG, out int toB);
-
-        int r = (int)MathF.Round(fromR + (toR - fromR) * amount);
-        int g = (int)MathF.Round(fromG + (toG - fromG) * amount);
-        int b = (int)MathF.Round(fromB + (toB - fromB) * amount);
-        return $"{PhysicsHelpers.ClampColor(r):X2}{PhysicsHelpers.ClampColor(g):X2}{PhysicsHelpers.ClampColor(b):X2}".ToLower();
-    }
-
-    private static void ParseHexColor(string hex, out int r, out int g, out int b)
-    {
-        hex = (hex ?? string.Empty).Trim().TrimStart('#');
-        if (hex.Length < 6)
-        {
-            r = 255;
-            g = 255;
-            b = 255;
-            return;
-        }
-
-        r = Convert.ToInt32(hex.Substring(0, 2), 16);
-        g = Convert.ToInt32(hex.Substring(2, 2), 16);
-        b = Convert.ToInt32(hex.Substring(4, 2), 16);
+        return ColorMath.LerpColorHex(fromHex, toHex, amount, lowerCase: true, roundChannels: true);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

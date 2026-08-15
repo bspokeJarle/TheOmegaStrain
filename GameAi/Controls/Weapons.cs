@@ -685,37 +685,7 @@ namespace GameAiAndControls.Controls
 
         private static Vector3 GetLocalCrashBoxCenter(_3dObject obj)
         {
-            float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
-            float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
-            bool hasPoint = false;
-
-            foreach (var box in obj.CrashBoxes)
-            {
-                if (box == null) continue;
-
-                foreach (var point in box)
-                {
-                    if (point == null) continue;
-
-                    hasPoint = true;
-                    if (point.x < minX) minX = point.x;
-                    if (point.x > maxX) maxX = point.x;
-                    if (point.y < minY) minY = point.y;
-                    if (point.y > maxY) maxY = point.y;
-                    if (point.z < minZ) minZ = point.z;
-                    if (point.z > maxZ) maxZ = point.z;
-                }
-            }
-
-            if (!hasPoint)
-                return new Vector3();
-
-            return new Vector3
-            {
-                x = (minX + maxX) / 2f,
-                y = (minY + maxY) / 2f,
-                z = (minZ + maxZ) / 2f
-            };
+            return ToVector3(ObjectCollisionGeometry.GetLocalCrashCenter(obj));
         }
 
         private static bool TryProjectLocalPoint(
@@ -729,13 +699,20 @@ namespace GameAiAndControls.Controls
             screenX = 0f;
             screenY = 0f;
 
-            double denom = -localPoint.z + originZ + ScreenSetup.perspectiveAdjustment;
-            if (denom <= 1.0)
+            if (!ProjectionMath.TryProjectVertex(
+                    localPoint,
+                    originX,
+                    originY,
+                    originZ,
+                    ScreenSetup.perspectiveAdjustment,
+                    ScreenSetup.defaultObjectZoom,
+                    out var screenPoint))
+            {
                 return false;
+            }
 
-            double factor = ScreenSetup.perspectiveAdjustment / denom;
-            screenX = (float)(localPoint.x * factor * ScreenSetup.defaultObjectZoom + originX);
-            screenY = (float)(localPoint.y * factor * ScreenSetup.defaultObjectZoom + originY);
+            screenX = (float)screenPoint.x;
+            screenY = (float)screenPoint.y;
             return !float.IsNaN(screenX) && !float.IsNaN(screenY);
         }
 
@@ -770,22 +747,22 @@ namespace GameAiAndControls.Controls
         }
 
         private static IVector3 Add(IVector3 a, IVector3 b) =>
-            new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
+            ToVector3(VectorMath.Add(a, b));
 
         private static IVector3 Scale(IVector3 a, float s) =>
-            new Vector3(a.x * s, a.y * s, a.z * s);
+            ToVector3(VectorMath.Multiply(a, s));
 
         private static float Magnitude(IVector3 a) =>
-            (float)Math.Sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+            VectorMath.Length(a);
 
         private static IVector3 Normalize(IVector3 a)
         {
-            float m = Magnitude(a);
-            if (m <= 1e-6f)
-                return new Vector3(0, 0, 0);
+            return ToVector3(VectorMath.Normalize(a));
+        }
 
-            float inv = 1f / m;
-            return new Vector3(a.x * inv, a.y * inv, a.z * inv);
+        private static Vector3 ToVector3(IVector3 vector)
+        {
+            return new Vector3(vector.x, vector.y, vector.z);
         }
     }
 }

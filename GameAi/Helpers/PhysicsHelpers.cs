@@ -1,186 +1,101 @@
-﻿using Domain;
+using Domain;
 using System;
 using static Domain._3dSpecificsImplementations;
 
 namespace GameAiAndControls.Helpers
 {
-    public class PhysicsHelpers
+    public static class PhysicsHelpers
     {
+        private static readonly Random _random = new();
+
         public static float Clamp(float value, float min, float max)
         {
-            return MathF.Min(MathF.Max(value, min), max);
+            return VectorMath.Clamp(value, min, max);
         }
 
         public static int Clamp(int value, int min, int max)
         {
-            return Math.Min(Math.Max(value, min), max);
+            return VectorMath.Clamp(value, min, max);
         }
 
         public static string LerpColorHex(string hexFrom, string hexTo, float t)
         {
-            t = Clamp(t, 0f, 1f);
-
-            int r1 = Convert.ToInt32(hexFrom.Substring(0, 2), 16);
-            int g1 = Convert.ToInt32(hexFrom.Substring(2, 2), 16);
-            int b1 = Convert.ToInt32(hexFrom.Substring(4, 2), 16);
-
-            int r2 = Convert.ToInt32(hexTo.Substring(0, 2), 16);
-            int g2 = Convert.ToInt32(hexTo.Substring(2, 2), 16);
-            int b2 = Convert.ToInt32(hexTo.Substring(4, 2), 16);
-
-            int r = (int)(r1 + (r2 - r1) * t);
-            int g = (int)(g1 + (g2 - g1) * t);
-            int b = (int)(b1 + (b2 - b1) * t);
-
-            r = Clamp(r, 0, 255);
-            g = Clamp(g, 0, 255);
-            b = Clamp(b, 0, 255);
-
-            return $"{r:X2}{g:X2}{b:X2}";
+            return ColorMath.LerpColorHex(hexFrom, hexTo, t);
         }
 
         public static int ClampColor(int value)
         {
-            return Math.Max(0, Math.Min(255, value));
+            return ColorMath.ClampColor(value);
         }
 
         public static IVector3 Subtract(IVector3 a, IVector3 b)
         {
-            return new Vector3(
-                a.x - b.x,
-                a.y - b.y,
-                a.z - b.z
-            );
+            return ToVector3(VectorMath.Subtract(a, b));
         }
 
         public static IVector3 Add(IVector3 a, IVector3 b)
         {
-            return new Vector3(
-                a.x + b.x,
-                a.y + b.y,
-                a.z + b.z
-            );
+            return ToVector3(VectorMath.Add(a, b));
         }
 
         public static IVector3 Multiply(IVector3 v, float scalar)
         {
-            return new Vector3(
-                v.x * scalar,
-                v.y * scalar,
-                v.z * scalar
-            );
+            return ToVector3(VectorMath.Multiply(v, scalar));
         }
 
         public static IVector3 Normalize(IVector3 v)
         {
-            float length = (float)Math.Sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-            if (length == 0) return new Vector3(0, 0, 0);
-            return new Vector3(v.x / length, v.y / length, v.z / length);
+            return ToVector3(VectorMath.Normalize(v));
         }
 
         public static double GetLength(Vector3 point1, Vector3 point2)
         {
-            float dx = point1.x - point2.x;
-            float dy = point1.y - point2.y;
-            float dz = point1.z - point2.z;
-
-            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
+            return VectorMath.GetLength(point1, point2);
         }
+
         public static float Dot(IVector3 a, IVector3 b)
         {
-            return a.x * b.x + a.y * b.y + a.z * b.z;
+            return VectorMath.Dot(a, b);
         }
 
         public static float Length(IVector3 v)
         {
-            return (float)Math.Sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+            return VectorMath.Length(v);
         }
 
         public static IVector3 ClampMagnitude(IVector3 v, float maxLength)
         {
-            float length = Length(v);
-            if (length > maxLength)
-            {
-                float scale = maxLength / length;
-                return Multiply(v, scale);
-            }
-            return v;
+            return ToVector3(VectorMath.ClampMagnitude(v, maxLength));
         }
+
         public static IVector3 ReflectVelocity(IVector3 velocity, IVector3 normal, float bounceFactor)
         {
-            float dot = Dot(velocity, normal);
-            var reflected = Subtract(velocity, Multiply(normal, 2 * dot));
-            return Multiply(reflected, bounceFactor);
+            return ToVector3(VectorMath.ReflectVelocity(velocity, normal, bounceFactor));
         }
 
         public static IVector3 GetTriangleCenter(TriangleMeshWithColor tri)
         {
-            return new Vector3(
-                (tri.vert1.x + tri.vert2.x + tri.vert3.x) / 3f,
-                (tri.vert1.y + tri.vert2.y + tri.vert3.y) / 3f,
-                (tri.vert1.z + tri.vert2.z + tri.vert3.z) / 3f
-            );
+            return ToVector3(VectorMath.GetTriangleCenter(tri));
         }
-
-        private static readonly Random _random = new();
 
         public static IVector3 RandomUnitVector()
         {
-            float x = (float)(_random.NextDouble() * 2 - 1);
-            float y = (float)(_random.NextDouble() * 2 - 1);
-            float z = (float)(_random.NextDouble() * 2 - 1);
-            var vec = new Vector3(x, y, z);
-            return Normalize(vec);
+            return ToVector3(VectorMath.RandomUnitVector(_random));
         }
 
         public static IVector3 RotateAroundAxis(IVector3 point, IVector3 axis, float angleDegrees, IVector3 origin)
         {
-            float angleRad = angleDegrees * (MathF.PI / 180f);
-            axis = Normalize(axis);
-
-            // Move so the rotationpoint is at the origin
-            IVector3 translated = Subtract(point,origin);
-
-            float cos = MathF.Cos(angleRad);
-            float sin = MathF.Sin(angleRad);
-
-            IVector3 rotated = new Vector3
-            {
-                x = (cos + (1 - cos) * axis.x * axis.x) * translated.x +
-                    ((1 - cos) * axis.x * axis.y - axis.z * sin) * translated.y +
-                    ((1 - cos) * axis.x * axis.z + axis.y * sin) * translated.z,
-
-                y = ((1 - cos) * axis.y * axis.x + axis.z * sin) * translated.x +
-                    (cos + (1 - cos) * axis.y * axis.y) * translated.y +
-                    ((1 - cos) * axis.y * axis.z - axis.x * sin) * translated.z,
-
-                z = ((1 - cos) * axis.z * axis.x - axis.y * sin) * translated.x +
-                    ((1 - cos) * axis.z * axis.y + axis.x * sin) * translated.y +
-                    (cos + (1 - cos) * axis.z * axis.z) * translated.z
-            };
-
-            return Add(rotated,origin);
+            return ToVector3(VectorMath.RotateAroundAxis(point, axis, angleDegrees, origin));
         }
 
         public static IVector3 CalculateTriangleGeometryCenter(I3dObject obj)
         {
-            float sumX = 0f, sumY = 0f, sumZ = 0f;
-            int count = 0;
+            return ToVector3(VectorMath.CalculateTriangleGeometryCenter(obj));
+        }
 
-            foreach (var part in obj.ObjectParts)
-            {
-                foreach (var tri in part.Triangles)
-                {
-                    var c = PhysicsHelpers.GetTriangleCenter((TriangleMeshWithColor)tri);
-                    sumX += c.x;
-                    sumY += c.y;
-                    sumZ += c.z;
-                    count++;
-                }
-            }
-
-            if (count == 0) return new Vector3(0, 0, 0);
-            return new Vector3(sumX / count, sumY / count, sumZ / count);
+        private static Vector3 ToVector3(IVector3 vector)
+        {
+            return new Vector3(vector.x, vector.y, vector.z);
         }
 
         public static class RandomHelper
@@ -189,9 +104,8 @@ namespace GameAiAndControls.Helpers
 
             public static float Float(float min, float max)
             {
-                return (float)(_random.NextDouble() * (max - min) + min);
+                return VectorMath.RandomFloat(_random, min, max);
             }
         }
-
     }
 }
