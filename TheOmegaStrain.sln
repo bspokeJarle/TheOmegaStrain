@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{098E60BA-0020-4ECE-B255-925164831E12}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		build\Prepare-RetroMeshPackage.ps1 = build\Prepare-RetroMeshPackage.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Installer", "Installer", "{0E61A128-2072-462C-A54F-6C8E4FB0955D}"

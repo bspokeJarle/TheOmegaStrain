@@ -1,4 +1,0 @@
-Issue ID,Description,State,Severity,Story Points,Project Path,Location Kind,Path,Line,Column,Incident ID,Help Link,Assembly Name,Assembly Version,Assembly Public Key,Snippet
-Project.0002,Project's target framework(s) needs to be changed,Active,Mandatory,1,BenchmarkSuite1\BenchmarkSuite.csproj,File,BenchmarkSuite1\BenchmarkSuite.csproj,,,,,,,,Current target framework: net8.0-windows Recommended target framework: net10.0--windows
-Project.0002,Project's target framework(s) needs to be changed,Active,Mandatory,1,BenchmarkSuite4\BenchmarkSuite4.csproj,File,BenchmarkSuite4\BenchmarkSuite4.csproj,,,,,,,,Current target framework: net8.0-windows Recommended target framework: net10.0--windows
-Project.0002,Project's target framework(s) needs to be changed,Active,Mandatory,1,BenchmarkSuite5\BenchmarkSuite5.csproj,File,BenchmarkSuite5\BenchmarkSuite5.csproj,,,,,,,,Current target framework: net8.0-windows Recommended target framework: net10.0--windows

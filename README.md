@@ -33,13 +33,12 @@ The Omega Strain consumes RetroMesh as a local NuGet package:
 RetroMesh/artifacts/packages
 ```
 
-For local development, keep a checkout of the engine beside the game source in a
-folder named `RetroMesh/`, then build the package before restoring Omega:
+For local development, run the bootstrap script from a fresh checkout. It clones
+RetroMesh into `RetroMesh/` if needed, builds the package version configured in
+`Directory.Build.props`, and can restore Omega afterwards:
 
 ```powershell
-git clone https://github.com/bspokeJarle/RetroMesh.git RetroMesh
-.\RetroMesh\build\Build-RetroMeshEnginePackage.ps1
-dotnet restore .\TheOmegaStrain.sln
+.\build\Prepare-RetroMeshPackage.ps1 -RestoreOmega
 ```
 
 The package version is controlled by `RetroMeshEnginePackageVersion` in
