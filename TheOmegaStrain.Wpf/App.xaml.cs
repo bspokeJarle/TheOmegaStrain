@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Steam;
 using System.Windows;
 
 namespace TheOmegaStrain.Wpf
@@ -13,5 +9,15 @@ namespace TheOmegaStrain.Wpf
     /// </summary>
     public partial class App : Application
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            if (SteamManager.RequestRestartThroughSteamIfNecessary(SteamGameConfig.RuntimeAppId))
+            {
+                Shutdown();
+                return;
+            }
+
+            base.OnStartup(e);
+        }
     }
 }

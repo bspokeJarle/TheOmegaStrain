@@ -10,6 +10,8 @@ public sealed class SteamManager : IDisposable
 
     public bool IsAvailable => IsInitialized;
 
+    public bool RestartRequested { get; private set; }
+
     public string? LastError { get; private set; }
 
     public bool IsSteamRunning
@@ -119,12 +121,13 @@ public sealed class SteamManager : IDisposable
             return true;
         }
 
+        RestartRequested = false;
+
         try
         {
-            if (appId > 0 &&
-                !HasLocalSteamAppIdFile() &&
-                SteamAPI.RestartAppIfNecessary(new AppId_t(appId)))
+            if (RequestRestartThroughSteamIfNecessary(appId))
             {
+                RestartRequested = true;
                 LastError = "Steam restart requested.";
                 return false;
             }
@@ -142,6 +145,23 @@ public sealed class SteamManager : IDisposable
         {
             LastError = exception.Message;
             IsInitialized = false;
+            return false;
+        }
+    }
+
+    public static bool RequestRestartThroughSteamIfNecessary(uint appId)
+    {
+        if (appId == 0 || HasLocalSteamAppIdFile())
+        {
+            return false;
+        }
+
+        try
+        {
+            return SteamAPI.RestartAppIfNecessary(new AppId_t(appId));
+        }
+        catch
+        {
             return false;
         }
     }
