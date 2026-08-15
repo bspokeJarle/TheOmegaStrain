@@ -127,6 +127,18 @@ dotnet build .\RetroMesh.Engine.slnx --no-restore
 dotnet test .\RetroMesh.Engine.slnx --no-restore
 ```
 
+To build, test, and create a local NuGet package in `artifacts/packages`:
+
+```powershell
+.\build\Build-RetroMeshEnginePackage.ps1
+```
+
+Use `-Version` when preparing a specific GitHub Packages upload:
+
+```powershell
+.\build\Build-RetroMeshEnginePackage.ps1 -Version 0.1.1
+```
+
 When changing engine contracts inside the current combined repository, also run
 the reference game build:
 
