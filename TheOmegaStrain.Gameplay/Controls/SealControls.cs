@@ -1,7 +1,7 @@
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls
+namespace TheOmegaStrain.Gameplay.Controls
 {
     public class SealControls : IObjectMovement
     {

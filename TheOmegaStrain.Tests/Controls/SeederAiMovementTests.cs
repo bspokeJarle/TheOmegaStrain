@@ -1,18 +1,18 @@
 using System.Reflection;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using Domain;
-using GameAiAndControls.Controls.SeederControls;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls.SeederControls;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Controls;
+namespace TheOmegaStrain.Tests.Controls;
 
 [TestClass]
 public class SeederAiMovementTests
 {
     private static readonly Type SeederAiType = typeof(SeederControls).Assembly.GetType(
-        "GameAiAndControls.Controls.SeederControls.SeederAi",
+        "TheOmegaStrain.Gameplay.Controls.SeederControls.SeederAi",
         throwOnError: true)!;
     private static readonly Type AiStateType = SeederAiType.GetNestedType("AiState", BindingFlags.NonPublic)!;
     private static readonly MethodInfo MoveMethod = SeederAiType.GetMethod("HandleMoveTowardTarget", BindingFlags.Static | BindingFlags.NonPublic)!;

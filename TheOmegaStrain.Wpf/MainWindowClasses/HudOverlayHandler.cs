@@ -1,6 +1,6 @@
-﻿using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Windows;
@@ -9,7 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace _3dTesting.MainWindowClasses
+namespace TheOmegaStrain.Wpf.MainWindowClasses
 {
     /// <summary>
     /// HUD Overlay V2:
@@ -97,10 +97,10 @@ namespace _3dTesting.MainWindowClasses
         private const double MiniMapW = 500;
         private const double MiniMapH = 210;
 
-        // FPS line — adjusted from your earlier values to sit inside the top middle label slot
+        // FPS line � adjusted from your earlier values to sit inside the top middle label slot
         private const double FpsX = 870;
         private const double FpsY = 28;
-        // Ship power (health) vertical bar — replaces the old active-powerup icon slot
+        // Ship power (health) vertical bar � replaces the old active-powerup icon slot
         private const double PowerBarX = 1314;
         private const double PowerBarY = 22;
         private const double PowerBarW = 18;
@@ -113,7 +113,7 @@ namespace _3dTesting.MainWindowClasses
         private const double PowerupRowY = 85;
         private const double PowerupIconSize = 48;
 
-        // Enemy bars (icon on left, bar on right — below the powerup row)
+        // Enemy bars (icon on left, bar on right � below the powerup row)
         // Icon size and bar height match the existing HUD elements (48px icons, 16px bars).
         // Bar width fills from after the icon to the right edge of the center indentation.
         private const double EnemyIconSize = 75;
@@ -179,12 +179,12 @@ namespace _3dTesting.MainWindowClasses
                 Width = MiniMapW,
                 Height = MiniMapH,
                 Opacity = 0.90,
-                Stretch = Stretch.UniformToFill // keeps it visually tighter / less “smeared”
+                Stretch = Stretch.UniformToFill // keeps it visually tighter / less �smeared�
             };
             Canvas.SetLeft(_minimap, MiniMapX);
             Canvas.SetTop(_minimap, MiniMapY);
 
-            // Viewport indicator — semi-transparent cyan outline on top of the minimap
+            // Viewport indicator � semi-transparent cyan outline on top of the minimap
             _viewportRect = new Rectangle
             {
                 Stroke = new SolidColorBrush(Color.FromArgb(160, 0, 255, 255)),
@@ -364,7 +364,7 @@ namespace _3dTesting.MainWindowClasses
             _canvas.Width = DesignWidth;
             _canvas.Height = DesignHudHeight;
 
-            // Center line – numbers only (labels are in PNG)
+            // Center line � numbers only (labels are in PNG)
             var activePowerup = string.IsNullOrWhiteSpace(gameplay.ActivePowerup) ? "LAZER" : gameplay.ActivePowerup.ToUpperInvariant();
 
             _fpsCenter.Text = $"{fps}                       {triangles}";
@@ -376,7 +376,7 @@ namespace _3dTesting.MainWindowClasses
                 : activePowerup == "LAZER" ? 1.0 : 0.45;
             UpdateSpeedPowerupIcon(gameplay.SpeedPowerUpLevel);
 
-            // Ship power (health) vertical bar: fills bottom-to-top, green→red
+            // Ship power (health) vertical bar: fills bottom-to-top, green?red
             UpdatePowerBar(gameplay);
 
             SetBarFill(_altBarFill, gameplay.Alt);
@@ -410,13 +410,13 @@ namespace _3dTesting.MainWindowClasses
         /// <summary>
         /// Positions and sizes the viewport rectangle overlay on the minimap.
         /// The minimap shows a cropped portion of the full bitmap.
-        /// The viewport (18×18 tiles) is centered on the ship (center of the crop).
+        /// The viewport (18�18 tiles) is centered on the ship (center of the crop).
         /// </summary>
         private void UpdateViewportRect()
         {
-            int cropW = CommonUtilities.CommonSetup.MapSetup.bitmapSize * 2; // 144
-            int cropH = CommonUtilities.CommonSetup.MapSetup.bitmapSize;     // 72
-            int vpTiles = CommonUtilities.CommonSetup.SurfaceSetup.viewPortSize; // 18
+            int cropW = TheOmegaStrain.Common.CommonSetup.MapSetup.bitmapSize * 2; // 144
+            int cropH = TheOmegaStrain.Common.CommonSetup.MapSetup.bitmapSize;     // 72
+            int vpTiles = TheOmegaStrain.Common.CommonSetup.SurfaceSetup.viewPortSize; // 18
 
             // The viewport is centered in the crop (ship is at crop center)
             double vpBitmapX = (cropW - vpTiles) / 2.0;
@@ -435,7 +435,7 @@ namespace _3dTesting.MainWindowClasses
         /// <summary>
         /// Updates the vertical ship power bar.
         /// Height scales with health percentage (bottom-to-top fill).
-        /// Color interpolates: green (100%) → yellow (50%) → red (0%).
+        /// Color interpolates: green (100%) ? yellow (50%) ? red (0%).
         /// </summary>
         private void UpdatePowerBar(GamePlayState gameplay)
         {
@@ -453,14 +453,14 @@ namespace _3dTesting.MainWindowClasses
             byte r, g;
             if (pct > 0.5f)
             {
-                // 100%→50%: green to yellow (red ramps up 0→255)
+                // 100%?50%: green to yellow (red ramps up 0?255)
                 float t = (1f - pct) * 2f; // 0 at 100%, 1 at 50%
                 r = (byte)(255 * t);
                 g = 255;
             }
             else
             {
-                // 50%→0%: yellow to red (green ramps down 255→0)
+                // 50%?0%: yellow to red (green ramps down 255?0)
                 float t = pct * 2f; // 1 at 50%, 0 at 0%
                 r = 255;
                 g = (byte)(255 * t);

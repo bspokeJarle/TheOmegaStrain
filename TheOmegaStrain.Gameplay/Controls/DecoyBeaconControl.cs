@@ -1,8 +1,8 @@
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using Domain;
-using GameAiAndControls.Helpers;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Helpers;
 using Gma.System.MouseKeyHook;
 using System;
 using System.Collections.Generic;
@@ -11,9 +11,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Shapes;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls
+namespace TheOmegaStrain.Gameplay.Controls
 {
     public class DecoyBeaconControls : IObjectMovement
     {
@@ -279,7 +279,7 @@ namespace GameAiAndControls.Controls
             {
                 return new Vector3
                 {
-                    x = shipCrashCenter.x - (CommonUtilities.CommonSetup.ScreenSetup.screenSizeX / 2f),
+                    x = shipCrashCenter.x - (TheOmegaStrain.Common.CommonSetup.ScreenSetup.screenSizeX / 2f),
                     y = shipCrashCenter.y,
                     z = shipCrashCenter.z
                 };
@@ -289,7 +289,7 @@ namespace GameAiAndControls.Controls
             {
                 return new Vector3
                 {
-                    x = shipWorldPosition.x - (CommonUtilities.CommonSetup.ScreenSetup.screenSizeX / 2f),
+                    x = shipWorldPosition.x - (TheOmegaStrain.Common.CommonSetup.ScreenSetup.screenSizeX / 2f),
                     y = shipWorldPosition.y,
                     z = shipWorldPosition.z
                 };

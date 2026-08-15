@@ -1,13 +1,13 @@
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using Domain;
-using GameAiAndControls.Helpers;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Helpers;
 using System;
 using System.Collections.Generic;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls.ZeppelinBomberControls
+namespace TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls
 {
     public class ZeppelinBomberControls : IObjectMovement
     {
@@ -624,7 +624,7 @@ namespace GameAiAndControls.Controls.ZeppelinBomberControls
 
         private static _3dObject? CreateBomberBombObject(ISurface parentSurface)
         {
-            const string typeName = "_3dRotations.World.Objects.BomberBomb";
+            const string typeName = "TheOmegaStrain.Game.World.Objects.BomberBomb";
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 var type = assembly.GetType(typeName, throwOnError: false, ignoreCase: false);

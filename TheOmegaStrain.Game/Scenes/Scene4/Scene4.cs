@@ -1,21 +1,21 @@
-using _3dRotations.Helpers;
-using _3dRotations.World.Objects;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.GamePlayHelpers;
-using Domain;
-using GameAiAndControls.Controls;
-using GameAiAndControls.Controls.JumpingFishControls;
-using GameAiAndControls.Controls.ZeppelinBomberControls;
-using GameAiAndControls.Controls.KamikazeDroneControls;
-using GameAiAndControls.Controls.MotherShipMediumControls;
-using GameAiAndControls.Controls.SpaceSwanControls;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls;
+using TheOmegaStrain.Gameplay.Controls.JumpingFishControls;
+using TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls;
+using TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls;
+using TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls;
+using TheOmegaStrain.Gameplay.Controls.SpaceSwanControls;
 using System;
 using System.Collections.Generic;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.Scenes.Scene4
+namespace TheOmegaStrain.Game.Scenes.Scene4
 {
     public class Scene4 : IScene
     {

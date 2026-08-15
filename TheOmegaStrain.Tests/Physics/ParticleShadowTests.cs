@@ -1,12 +1,12 @@
-using _3dRotations.World.Objects;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using Domain;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
 using TheOmegaStrain.Runtime.Rendering;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Physics;
+namespace TheOmegaStrain.Tests.Physics;
 
 // The tests exist primarily to catch REGRESSIONS of the bug that caused
 // particle shadows to vanish:

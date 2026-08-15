@@ -1,11 +1,11 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.GamePlayHelpers;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 
-namespace _3dRotations.Helpers
+namespace TheOmegaStrain.Game.Helpers
 {
     public static class SurfaceGeneration
     {

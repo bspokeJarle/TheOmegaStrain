@@ -1,15 +1,15 @@
-using _3dRotations.World.Objects;
-using _3dRotations.Projection;
-using _3dRotations.Helpers;
-using _3dTesting.Rendering;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using Domain;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Game.Projection;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Wpf.Rendering;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
 using System.Windows.Media;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Rendering;
+namespace TheOmegaStrain.Tests.Rendering;
 
 [TestClass]
 public class RenderSimpleOptimizationTests

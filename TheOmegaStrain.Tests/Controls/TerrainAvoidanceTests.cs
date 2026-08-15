@@ -1,15 +1,15 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using Domain;
-using GameAiAndControls.Controls.MotherShipSmallControls;
-using GameAiAndControls.Helpers;
-using _3dRotations.Helpers;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls.MotherShipSmallControls;
+using TheOmegaStrain.Gameplay.Helpers;
+using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Runtime.Collision;
 using System.Reflection;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Controls;
+namespace TheOmegaStrain.Tests.Controls;
 
 [TestClass]
 public class TerrainAvoidanceTests

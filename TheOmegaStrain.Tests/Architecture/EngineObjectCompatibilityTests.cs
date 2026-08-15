@@ -1,10 +1,10 @@
-using Domain;
-using _3dRotations.Projection;
-using _3dRotations.World.Objects;
-using _3dTesting.Rendering;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Game.Projection;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Wpf.Rendering;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Architecture;
+namespace TheOmegaStrain.Tests.Architecture;
 
 [TestClass]
 public class EngineObjectCompatibilityTests
@@ -267,14 +267,14 @@ public class EngineObjectCompatibilityTests
                 .Select((line, index) => new { path, line, lineNumber = index + 1 }))
             .Where(hit =>
                 hit.line.Contains("ProjectReference", StringComparison.Ordinal) ||
-                hit.line.Contains("using Domain", StringComparison.Ordinal) ||
-                hit.line.Contains("using CommonUtilities", StringComparison.Ordinal) ||
+                hit.line.Contains("using TheOmegaStrain.Domain", StringComparison.Ordinal) ||
+                hit.line.Contains("using TheOmegaStrain.Common", StringComparison.Ordinal) ||
                 hit.line.Contains("using GameAi", StringComparison.Ordinal) ||
-                hit.line.Contains("using _3dRotations", StringComparison.Ordinal) ||
-                hit.line.Contains("using _3dTesting", StringComparison.Ordinal) ||
+                hit.line.Contains("using TheOmegaStrain.Game", StringComparison.Ordinal) ||
+                hit.line.Contains("using TheOmegaStrain.Wpf", StringComparison.Ordinal) ||
                 hit.line.Contains("GameState", StringComparison.Ordinal) ||
                 hit.line.Contains("ScreenSetup", StringComparison.Ordinal) ||
-                hit.line.Contains("SteamIntegration", StringComparison.Ordinal))
+                hit.line.Contains("TheOmegaStrain.Steam", StringComparison.Ordinal))
             .Select(hit => $"{Path.GetRelativePath(repositoryRoot, hit.path)}:{hit.lineNumber}: {hit.line.Trim()}")
             .ToList();
 
@@ -292,8 +292,8 @@ public class EngineObjectCompatibilityTests
                 .ReadLines(path)
                 .Select((line, index) => new { path, line, lineNumber = index + 1 }))
             .Where(hit =>
-                hit.line.Contains("using _3dRotations.Helpers", StringComparison.Ordinal) ||
-                hit.line.Contains("CommonUtilities.OmegaEngineAdapters", StringComparison.Ordinal) ||
+                hit.line.Contains("using TheOmegaStrain.Game.Helpers", StringComparison.Ordinal) ||
+                hit.line.Contains("TheOmegaStrain.Common.OmegaEngineAdapters", StringComparison.Ordinal) ||
                 hit.line.Contains("_3dObjectHelpers", StringComparison.Ordinal) ||
                 hit.line.Contains("ObjectPlacementHelpers", StringComparison.Ordinal) ||
                 IsForbiddenCrashExtensionCall(hit.line))

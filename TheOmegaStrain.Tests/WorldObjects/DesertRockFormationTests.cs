@@ -1,10 +1,10 @@
-using _3dRotations.World.Objects;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using GameAiAndControls.Controls;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Gameplay.Controls;
 using System.Linq;
 
-namespace _3DSpesificsUnitTests.WorldObjects;
+namespace TheOmegaStrain.Tests.WorldObjects;
 
 [TestClass]
 public class DesertRockFormationTests

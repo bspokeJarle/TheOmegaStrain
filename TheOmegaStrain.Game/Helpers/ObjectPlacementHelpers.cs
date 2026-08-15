@@ -1,13 +1,13 @@
-using _3dRotations.World;
-using CommonUtilities.OmegaEngineAdapters;
-using Domain;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.Helpers
+namespace TheOmegaStrain.Game.Helpers
 {
     public static class ObjectPlacementHelpers
     {

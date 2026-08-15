@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
 using Microsoft.VSDiagnostics;
-using _3dRotations.World.Objects;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Game.World.Objects;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]

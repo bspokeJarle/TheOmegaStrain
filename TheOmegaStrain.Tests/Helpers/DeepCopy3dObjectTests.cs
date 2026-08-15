@@ -1,8 +1,8 @@
-using CommonUtilities.OmegaEngineAdapters;
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Helpers;
+namespace TheOmegaStrain.Tests.Helpers;
 
 [TestClass]
 public class DeepCopy3dObjectTests

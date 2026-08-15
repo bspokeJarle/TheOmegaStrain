@@ -1,8 +1,8 @@
-﻿using System;
-using CommonUtilities.Persistence;
+using System;
+using TheOmegaStrain.Common.Persistence;
 using System.Collections.Generic;
 
-namespace CommonUtilities.CommonGlobalState.States
+namespace TheOmegaStrain.Common.CommonGlobalState.States
 {
     public enum ScreenOverlayType
     {

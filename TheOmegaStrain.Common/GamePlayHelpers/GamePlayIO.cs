@@ -1,11 +1,11 @@
-﻿using Domain;
+using TheOmegaStrain.Domain;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 using System.Text.Json;
 
 namespace GameplayHelpers.ReplayIO

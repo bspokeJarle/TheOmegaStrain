@@ -1,14 +1,14 @@
-using _3dRotations.Helpers;
-using _3dRotations.Scenes.Scene4;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.Events;
-using Domain;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Game.Scenes.Scene4;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.Events;
+using TheOmegaStrain.Domain;
 using System.Linq;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 [TestClass]
 public class Scene4BearSpawningTests

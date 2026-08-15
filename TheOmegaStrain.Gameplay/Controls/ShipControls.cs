@@ -1,13 +1,13 @@
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.Events;
-using CommonUtilities.GamePlayHelpers;
-using CommonUtilities.Input;
-using CommonUtilities.Persistence;
-using Domain;
-using GameAiAndControls.Audio.Services;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.Events;
+using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Common.Input;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Audio.Services;
 using Gma.System.MouseKeyHook;
 using RetroMesh.Engine;
 using System;
@@ -17,10 +17,10 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using static Domain.WeaponHelpers;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain.WeaponHelpers;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls
+namespace TheOmegaStrain.Gameplay.Controls
 {
     public class ShipControls : IObjectMovement
     {
@@ -1105,7 +1105,7 @@ namespace GameAiAndControls.Controls
 
         private static _3dObject? CreateDecoyBeaconObject(ISurface parentSurface)
         {
-            const string decoyBeaconTypeName = "_3dRotations.World.Objects.DecoyBeacon";
+            const string decoyBeaconTypeName = "TheOmegaStrain.Game.World.Objects.DecoyBeacon";
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {

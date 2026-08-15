@@ -1,16 +1,16 @@
-﻿using _3dRotations.World.Objects.LogoCube;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.Persistence;
-using Domain;
-using GameAiAndControls.Controls;
+using TheOmegaStrain.Game.World.Objects.LogoCube;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls;
 using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.Scenes.Intro
+namespace TheOmegaStrain.Game.Scenes.Intro
 {
     public class Intro : IScene
     {

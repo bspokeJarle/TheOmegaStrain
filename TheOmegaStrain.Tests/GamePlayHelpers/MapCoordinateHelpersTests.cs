@@ -1,6 +1,6 @@
-using CommonUtilities.GamePlayHelpers;
+using TheOmegaStrain.Common.GamePlayHelpers;
 
-namespace _3DSpesificsUnitTests.CommonHelpers;
+namespace TheOmegaStrain.Tests.CommonHelpers;
 
 [TestClass]
 public class MapCoordinateHelpersTests

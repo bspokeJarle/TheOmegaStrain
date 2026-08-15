@@ -1,7 +1,7 @@
-using _3dTesting.MainWindowClasses;
-using Domain;
+using TheOmegaStrain.Wpf.MainWindowClasses;
+using TheOmegaStrain.Domain;
 
-namespace _3DSpesificsUnitTests.MapAndOverlay;
+namespace TheOmegaStrain.Tests.MapAndOverlay;
 
 [TestClass]
 public class HudInfectionMeterTests

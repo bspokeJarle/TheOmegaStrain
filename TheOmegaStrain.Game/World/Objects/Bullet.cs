@@ -1,13 +1,13 @@
-using _3dRotations.World;
-using _3dRotations.Helpers;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using Domain;
-using GameAiAndControls.Ai;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Ai;
 using System.Collections.Generic;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.World.Objects
+namespace TheOmegaStrain.Game.World.Objects
 {
     public static class Bullet
     {

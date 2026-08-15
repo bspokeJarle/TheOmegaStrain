@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using _3dRotations.World;
-using _3dRotations.Helpers;
-using CommonUtilities.CommonGlobalState;
-using Domain;
-using GameAiAndControls.Controls;
-using static Domain._3dSpecificsImplementations;
-using static _3dRotations.Helpers._3dObjectHelpers;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Game.Helpers._3dObjectHelpers;
 
-namespace _3dRotations.World.Objects
+namespace TheOmegaStrain.Game.World.Objects
 {
     public class SpaceSwan
     {

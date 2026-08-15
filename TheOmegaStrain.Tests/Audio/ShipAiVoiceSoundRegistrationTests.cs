@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace _3DSpesificsUnitTests.Audio;
+namespace TheOmegaStrain.Tests.Audio;
 
 [TestClass]
 public class ShipAiVoiceSoundRegistrationTests

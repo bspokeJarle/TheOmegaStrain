@@ -1,17 +1,17 @@
-using _3dTesting.Helpers;
-using _3dTesting.Input;
-using _3dTesting.MainWindowClasses;
-using _3dTesting.MainWindowClasses.Overlays;
-using _3dTesting.Rendering;
+using TheOmegaStrain.Wpf.Helpers;
+using TheOmegaStrain.Wpf.Input;
+using TheOmegaStrain.Wpf.MainWindowClasses;
+using TheOmegaStrain.Wpf.MainWindowClasses.Overlays;
+using TheOmegaStrain.Wpf.Rendering;
 using TheOmegaStrain.Runtime.Loops;
-using _3dRotations.World;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.Persistence;
-using Domain;
-using GameAiAndControls.Controls;
-using SteamIntegration;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls;
+using TheOmegaStrain.Steam;
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -27,7 +27,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Interop;
 using System.Windows.Threading;
 
-namespace _3dTesting
+namespace TheOmegaStrain.Wpf
 {
     public class DrawingVisualHost : FrameworkElement
     {
@@ -141,7 +141,7 @@ namespace _3dTesting
             PersistenceSetup.Initialize();
             GameState.GamePlayState.PlayerName = PersistenceSetup.LoadLastPlayerName();
             GameState.EventBus = world.EventBus;
-            InitializeSteamIntegration();
+            InitializeSteam();
 
             InitializeComponent();
             this.PreviewKeyDown += new KeyEventHandler(HandleKeys);
@@ -300,12 +300,12 @@ namespace _3dTesting
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             ShutdownRawMouseInput();
-            ShutdownSteamIntegration();
+            ShutdownSteam();
             // Closing the window is not a checkpoint. Progress and highscores
             // are persisted by checkpoint flows: powerups and motherships.
         }
 
-        private void InitializeSteamIntegration()
+        private void InitializeSteam()
         {
             _steamManager = new SteamManager();
 
@@ -330,7 +330,7 @@ namespace _3dTesting
             LogSteamDiagnostics("Initialized");
         }
 
-        private void ShutdownSteamIntegration()
+        private void ShutdownSteam()
         {
             _steamGameplaySync?.Dispose();
             _steamGameplaySync = null;

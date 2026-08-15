@@ -1,6 +1,6 @@
-using Domain;
+using TheOmegaStrain.Domain;
 
-namespace CommonUtilities.OmegaEngineAdapters
+namespace TheOmegaStrain.Common.OmegaEngineAdapters
 {
     public static class SurfaceGroundProjectionHelpers
     {

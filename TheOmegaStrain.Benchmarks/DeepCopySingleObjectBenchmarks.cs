@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
-using Domain;
-using CommonUtilities.OmegaEngineAdapters;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]

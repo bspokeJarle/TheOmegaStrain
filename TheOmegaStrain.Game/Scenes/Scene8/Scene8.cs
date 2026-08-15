@@ -1,19 +1,19 @@
-using _3dRotations.Helpers;
-using _3dRotations.World.Objects;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using Domain;
-using GameAiAndControls.Controls;
-using GameAiAndControls.Controls.KamikazeDroneControls;
-using GameAiAndControls.Controls.MotherShipMediumControls;
-using GameAiAndControls.Controls.SpaceSwanControls;
-using GameAiAndControls.Controls.ZeppelinBomberControls;
-using GameAiAndControls.Controls.JumpingFishControls;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls;
+using TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls;
+using TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls;
+using TheOmegaStrain.Gameplay.Controls.SpaceSwanControls;
+using TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls;
+using TheOmegaStrain.Gameplay.Controls.JumpingFishControls;
 using System;
 using System.Collections.Generic;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.Scenes.Scene8
+namespace TheOmegaStrain.Game.Scenes.Scene8
 {
     public class Scene8 : IScene
     {

@@ -1,9 +1,9 @@
-using CommonUtilities.CommonGlobalState;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
 using System;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Helpers
+namespace TheOmegaStrain.Gameplay.Helpers
 {
     internal static class KamikazeDroneMovementHelpers
     {
@@ -77,9 +77,9 @@ namespace GameAiAndControls.Helpers
             {
                 return new Vector3
                 {
-                    x = shipCrashCenter.x - (CommonUtilities.CommonSetup.ScreenSetup.screenSizeX / 2f),
+                    x = shipCrashCenter.x - (TheOmegaStrain.Common.CommonSetup.ScreenSetup.screenSizeX / 2f),
                     y = shipCrashCenter.y,
-                    z = shipCrashCenter.z - (CommonUtilities.CommonSetup.ScreenSetup.screenSizeY / 2f)
+                    z = shipCrashCenter.z - (TheOmegaStrain.Common.CommonSetup.ScreenSetup.screenSizeY / 2f)
                 };
             }
 
@@ -87,9 +87,9 @@ namespace GameAiAndControls.Helpers
             {
                 return new Vector3
                 {
-                    x = shipWorldPosition.x - (CommonUtilities.CommonSetup.ScreenSetup.screenSizeX / 2f),
+                    x = shipWorldPosition.x - (TheOmegaStrain.Common.CommonSetup.ScreenSetup.screenSizeX / 2f),
                     y = shipWorldPosition.y,
-                    z = shipWorldPosition.z - (CommonUtilities.CommonSetup.ScreenSetup.screenSizeY / 2f)
+                    z = shipWorldPosition.z - (TheOmegaStrain.Common.CommonSetup.ScreenSetup.screenSizeY / 2f)
                 };
             }
 

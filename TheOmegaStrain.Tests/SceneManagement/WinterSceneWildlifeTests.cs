@@ -1,13 +1,13 @@
-using _3dRotations.Scenes.Scene7;
-using _3dRotations.Scenes.SceneSimulation;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.Events;
-using Domain;
+using TheOmegaStrain.Game.Scenes.Scene7;
+using TheOmegaStrain.Game.Scenes.SceneSimulation;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.Events;
+using TheOmegaStrain.Domain;
 using System.Linq;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 [TestClass]
 public class WinterSceneWildlifeTests

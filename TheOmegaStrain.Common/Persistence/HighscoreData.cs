@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace CommonUtilities.Persistence
+namespace TheOmegaStrain.Common.Persistence
 {
     /// <summary>
     /// A single highscore entry. Stored locally encrypted and synced to Supabase.

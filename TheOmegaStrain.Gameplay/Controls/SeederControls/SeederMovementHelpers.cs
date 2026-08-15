@@ -1,13 +1,13 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.GamePlayHelpers;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Domain;
 using System;
-using static CommonUtilities.GamePlayHelpers.GamePlayHelpers;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Common.GamePlayHelpers.GamePlayHelpers;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Helpers
+namespace TheOmegaStrain.Gameplay.Helpers
 {
     internal static class SeederMovementHelpers
     {

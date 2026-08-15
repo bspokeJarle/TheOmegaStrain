@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows7.0</TargetFramework>
-    <RootNamespace>_3dTesting</RootNamespace>
+    <RootNamespace>TheOmegaStrain.Wpf</RootNamespace>
     <UseWPF>true</UseWPF>
     <AssemblyName>TheOmegaStrain</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

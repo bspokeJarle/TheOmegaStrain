@@ -1,10 +1,10 @@
-using _3dRotations.Helpers;
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonSetup;
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.Projection
+namespace TheOmegaStrain.Game.Projection
 {
     public static class OmegaPerspectiveProjectorFactory
     {

@@ -1,9 +1,9 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
 
-namespace _3DSpesificsUnitTests.Physics;
+namespace TheOmegaStrain.Tests.Physics;
 
 [TestClass]
 public class BiomePhysicsSetupTests
@@ -86,7 +86,7 @@ public class BiomePhysicsSetupTests
     private static float SimulateForwardInertia(SceneBiomeTypes biome)
     {
         GameState.GamePlayState.CurrentSceneBiome = biome;
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
 
         for (int frame = 0; frame < 90; frame++)
         {

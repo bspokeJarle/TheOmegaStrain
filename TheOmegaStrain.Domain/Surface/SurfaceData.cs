@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Domain
+namespace TheOmegaStrain.Domain
 {
     public struct SurfaceData
     {

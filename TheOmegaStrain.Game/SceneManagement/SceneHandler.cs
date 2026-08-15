@@ -1,31 +1,31 @@
-using _3dRotations.Scenes.Scene1;
-using _3dRotations.Scenes.Scene2;
-using _3dRotations.Scenes.Scene3;
-using _3dRotations.Scenes.Scene4;
-using _3dRotations.Scenes.Scene5;
-using _3dRotations.Scenes.Scene6;
-using _3dRotations.Scenes.Scene7;
-using _3dRotations.Scenes.Scene8;
-using _3dRotations.Scenes.Intro;
-using _3dRotations.Scenes.Outro;
-using _3dRotations.Scenes.SceneSimulation;
-using _3dRotations.Scenes.Tutorial;
-using _3dRotations.World;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.Events;
-using CommonUtilities.Persistence;
-using Domain;
-using GameAiAndControls.Audio.Services;
-using GameAiAndControls.Controls;
+using TheOmegaStrain.Game.Scenes.Scene1;
+using TheOmegaStrain.Game.Scenes.Scene2;
+using TheOmegaStrain.Game.Scenes.Scene3;
+using TheOmegaStrain.Game.Scenes.Scene4;
+using TheOmegaStrain.Game.Scenes.Scene5;
+using TheOmegaStrain.Game.Scenes.Scene6;
+using TheOmegaStrain.Game.Scenes.Scene7;
+using TheOmegaStrain.Game.Scenes.Scene8;
+using TheOmegaStrain.Game.Scenes.Intro;
+using TheOmegaStrain.Game.Scenes.Outro;
+using TheOmegaStrain.Game.Scenes.SceneSimulation;
+using TheOmegaStrain.Game.Scenes.Tutorial;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.Events;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Audio.Services;
+using TheOmegaStrain.Gameplay.Controls;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.SceneManagement
+namespace TheOmegaStrain.Game.SceneManagement
 {
     public class SceneHandler : ISceneHandler
     {

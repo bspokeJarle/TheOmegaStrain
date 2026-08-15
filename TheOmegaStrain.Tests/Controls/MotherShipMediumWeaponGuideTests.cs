@@ -1,10 +1,10 @@
-using CommonUtilities.OmegaEngineAdapters;
-using Domain;
-using GameAiAndControls.Controls.MotherShipMediumControls;
-using _3dRotations.World.Objects;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls;
+using TheOmegaStrain.Game.World.Objects;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Controls;
+namespace TheOmegaStrain.Tests.Controls;
 
 // These tests pin down the MotherShipMedium weapon-guide pipeline so we stop
 // regressing on the same bug.

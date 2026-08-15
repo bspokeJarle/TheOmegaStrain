@@ -1,8 +1,8 @@
-using Domain;
+using TheOmegaStrain.Domain;
 using System;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Helpers
+namespace TheOmegaStrain.Gameplay.Helpers
 {
     public static class PhysicsHelpers
     {

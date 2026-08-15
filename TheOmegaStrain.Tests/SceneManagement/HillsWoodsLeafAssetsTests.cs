@@ -1,11 +1,11 @@
-using _3dRotations.Scenes.Scene1;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.Events;
-using CommonUtilities.GamePlayHelpers;
-using Domain;
+using TheOmegaStrain.Game.Scenes.Scene1;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.Events;
+using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Domain;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 [TestClass]
 public class HillsWoodsLeafAssetsTests

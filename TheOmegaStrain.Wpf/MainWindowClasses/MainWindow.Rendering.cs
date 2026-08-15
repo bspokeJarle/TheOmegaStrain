@@ -1,7 +1,7 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
 
-namespace _3dTesting.Rendering
+namespace TheOmegaStrain.Wpf.Rendering
 {
     public class WorldRenderer : IProjectedTriangleRenderer<ProjectedTriangleMesh>
     {

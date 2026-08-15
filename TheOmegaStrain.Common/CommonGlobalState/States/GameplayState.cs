@@ -1,9 +1,9 @@
 using System;
-using CommonUtilities.CommonSetup;
-using Domain;
-using static Domain.WeaponHelpers;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain.WeaponHelpers;
 
-namespace CommonUtilities.CommonGlobalState.States
+namespace TheOmegaStrain.Common.CommonGlobalState.States
 {
     public enum GamePhase
     {

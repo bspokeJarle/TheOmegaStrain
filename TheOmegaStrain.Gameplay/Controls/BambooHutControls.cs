@@ -1,6 +1,6 @@
-using Domain;
+using TheOmegaStrain.Domain;
 
-namespace GameAiAndControls.Controls
+namespace TheOmegaStrain.Gameplay.Controls
 {
     public class BambooHutControls : IObjectMovement
     {

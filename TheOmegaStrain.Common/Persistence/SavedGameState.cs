@@ -1,6 +1,6 @@
-namespace CommonUtilities.Persistence
+namespace TheOmegaStrain.Common.Persistence
 {
-    using Domain;
+    using TheOmegaStrain.Domain;
 
     /// <summary>
     /// Serializable snapshot of the player's game progress.

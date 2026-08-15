@@ -1,11 +1,11 @@
-using _3dRotations.World.Objects;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using GameAiAndControls.Controls;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Gameplay.Controls;
 using System.Linq;
 
-namespace _3DSpesificsUnitTests.WorldObjects;
+namespace TheOmegaStrain.Tests.WorldObjects;
 
 [TestClass]
 public class CactusGeometryTests
@@ -104,7 +104,7 @@ public class CactusGeometryTests
         }
     }
 
-    private static void AssertSameMeshStructure(Domain.I3dObject expected, Domain.I3dObject actual)
+    private static void AssertSameMeshStructure(TheOmegaStrain.Domain.I3dObject expected, TheOmegaStrain.Domain.I3dObject actual)
     {
         foreach (var expectedPart in expected.ObjectParts.Where(p => p.PartName != "Shadow"))
         {

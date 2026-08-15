@@ -1,11 +1,11 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using Domain;
-using GameAiAndControls.Controls.SeederControls;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls.SeederControls;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Controls;
+namespace TheOmegaStrain.Tests.Controls;
 
 [TestClass]
 public class SeederControlsParticleGuideTests

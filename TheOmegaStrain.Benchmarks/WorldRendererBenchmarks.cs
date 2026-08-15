@@ -3,9 +3,9 @@ using System.Threading;
 using System.Windows.Threading;
 using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
-using _3dTesting;
-using _3dTesting.Rendering;
-using Domain;
+using TheOmegaStrain.Wpf;
+using TheOmegaStrain.Wpf.Rendering;
+using TheOmegaStrain.Domain;
 
 namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]

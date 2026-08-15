@@ -1,11 +1,11 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.Events;
-using CommonUtilities.Persistence;
-using Domain;
-using GameAiAndControls.Controls.KamikazeDroneControls;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.Events;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls;
 using System;
 
-namespace _3dRotations.Scenes.Tutorial
+namespace TheOmegaStrain.Game.Scenes.Tutorial
 {
     public class TutorialSceneDirector : ISceneDirector
     {

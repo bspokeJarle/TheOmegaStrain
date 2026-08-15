@@ -1,6 +1,6 @@
 using System;
 
-namespace GameAiAndControls.Controls
+namespace TheOmegaStrain.Gameplay.Controls
 {
     public readonly struct ShipLoopStatus
     {

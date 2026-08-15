@@ -1,4 +1,4 @@
-namespace SteamIntegration;
+namespace TheOmegaStrain.Steam;
 
 public static class SteamGameConfig
 {

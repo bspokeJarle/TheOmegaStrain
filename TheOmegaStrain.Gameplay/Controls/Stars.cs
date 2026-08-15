@@ -1,8 +1,8 @@
-﻿using CommonUtilities.CommonGlobalState;
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls
+namespace TheOmegaStrain.Gameplay.Controls
 {
     public class StarsControl : IObjectMovement
     {
@@ -20,7 +20,7 @@ namespace GameAiAndControls.Controls
         private float _syncY = 0f;
 
         // Factor to stay in sync with surface movement (similar to SeederControls)
-        // Tweak as desired – lower value = calmer star movement in Y
+        // Tweak as desired � lower value = calmer star movement in Y
         private float _syncFactor = 2.5f;
 
         private readonly bool _enableLogging = false;

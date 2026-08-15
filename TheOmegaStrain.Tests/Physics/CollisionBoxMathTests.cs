@@ -1,8 +1,8 @@
-using Domain;
+using TheOmegaStrain.Domain;
 using RetroMesh.Engine;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Physics;
+namespace TheOmegaStrain.Tests.Physics;
 
 [TestClass]
 public class CollisionBoxMathTests

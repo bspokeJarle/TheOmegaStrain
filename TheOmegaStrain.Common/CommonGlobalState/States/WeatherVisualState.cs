@@ -1,6 +1,6 @@
 using System;
 
-namespace CommonUtilities.CommonGlobalState.States
+namespace TheOmegaStrain.Common.CommonGlobalState.States
 {
     public sealed class WeatherVisualState
     {

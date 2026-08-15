@@ -1,13 +1,13 @@
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonGlobalState;
-using Domain;
-using GameAiAndControls.Helpers;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls
+namespace TheOmegaStrain.Gameplay.Controls
 {
     public class PowerUpControls : IObjectMovement
     {

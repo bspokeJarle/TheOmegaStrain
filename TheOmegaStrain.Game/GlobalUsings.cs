@@ -1,2 +1,2 @@
 global using RetroMesh.Engine;
-global using CommonUtilities.CommonGlobalState.States;
+global using TheOmegaStrain.Common.CommonGlobalState.States;

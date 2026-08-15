@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0-windows7.0</TargetFramework>
-    <RootNamespace>_3dRotations</RootNamespace>
+    <RootNamespace>TheOmegaStrain.Game</RootNamespace>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>

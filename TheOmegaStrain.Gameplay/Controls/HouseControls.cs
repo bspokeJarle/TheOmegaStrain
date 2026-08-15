@@ -1,13 +1,13 @@
-﻿using Domain;
+using TheOmegaStrain.Domain;
 using Gma.System.MouseKeyHook;
-using CommonUtilities.CommonSetup;
+using TheOmegaStrain.Common.CommonSetup;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GameAiAndControls.Controls
+namespace TheOmegaStrain.Gameplay.Controls
 {
     public class HouseControls : IObjectMovement
     {

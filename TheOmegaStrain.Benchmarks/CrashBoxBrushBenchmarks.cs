@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
 using System.Windows.Media;
-using _3dTesting.Rendering;
+using TheOmegaStrain.Wpf.Rendering;
 
 namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]

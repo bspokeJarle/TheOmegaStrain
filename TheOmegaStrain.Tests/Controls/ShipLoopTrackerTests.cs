@@ -1,6 +1,6 @@
-using GameAiAndControls.Controls;
+using TheOmegaStrain.Gameplay.Controls;
 
-namespace _3DSpesificsUnitTests.Controls;
+namespace TheOmegaStrain.Tests.Controls;
 
 [TestClass]
 public class ShipLoopTrackerTests

@@ -1,4 +1,4 @@
-using Domain;
+using TheOmegaStrain.Domain;
 using System.Collections.Generic;
 
 namespace TheOmegaStrain.Runtime.Loops

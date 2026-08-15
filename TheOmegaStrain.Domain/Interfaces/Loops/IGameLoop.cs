@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Domain
+namespace TheOmegaStrain.Domain
 {
     public interface IGameLoop<TTriangle> : IWorldFrameLoop<I3dWorld, TTriangle>
     {

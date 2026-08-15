@@ -1,12 +1,12 @@
-using CommonUtilities.CommonSetup;
-using Domain;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using CommonUtilities.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonGlobalState.States;
 
-namespace CommonUtilities.GamePlayHelpers
+namespace TheOmegaStrain.Common.GamePlayHelpers
 {
     public sealed record PlanetRewardLine(string Label, int Points);
 

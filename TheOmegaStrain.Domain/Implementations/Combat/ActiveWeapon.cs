@@ -1,7 +1,7 @@
 using System;
-using static Domain.WeaponHelpers;
+using static TheOmegaStrain.Domain.WeaponHelpers;
 
-namespace Domain
+namespace TheOmegaStrain.Domain
 {
     public partial class _3dSpecificsImplementations
     {

@@ -1,24 +1,24 @@
-using _3dRotations.World;
-using _3dRotations.Projection;
-using _3dTesting.Rendering;
-using _3dRotations.SceneManagement;
-using _3dRotations.World.Objects;
-using _3dRotations.World.Objects.EarthObject;
-using _3dRotations.Scenes.Outro;
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.Events;
-using CommonUtilities.Persistence;
-using Domain;
-using GameAiAndControls.Controls;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Game.Projection;
+using TheOmegaStrain.Wpf.Rendering;
+using TheOmegaStrain.Game.SceneManagement;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Game.World.Objects.EarthObject;
+using TheOmegaStrain.Game.Scenes.Outro;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.Events;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls;
 using System.IO;
 using System.Windows.Media;
 using NumericsVector3 = System.Numerics.Vector3;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 [TestClass]
 public class OutroSceneTests

@@ -1,9 +1,9 @@
-using Domain;
+using TheOmegaStrain.Domain;
 using System.Linq;
 using System.Text;
-using CommonUtilities.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonGlobalState.States;
 
-namespace CommonUtilities.Persistence
+namespace TheOmegaStrain.Common.Persistence
 {
     public static class HighscoreOverlayFormatter
     {

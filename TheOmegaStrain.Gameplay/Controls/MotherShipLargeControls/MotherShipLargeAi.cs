@@ -1,11 +1,11 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
 using System;
 using System.Reflection;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls.MotherShipMediumControls
+namespace TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls
 {
     internal static class MotherShipLargeAi
     {
@@ -156,7 +156,7 @@ namespace GameAiAndControls.Controls.MotherShipMediumControls
                 drone.CrashBoxDebugMode = false;
                 // Stagger each drone by 0.3 s so they release one by one from the hatch.
                 float staggerDelay = i * 0.3f;
-                drone.Movement = new GameAiAndControls.Controls.KamikazeDroneControls.HatchDroppedDroneControls(staggerDelay);
+                drone.Movement = new TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls.HatchDroppedDroneControls(staggerDelay);
                 drone.WeaponSystems     = null;
                 drone.HasPowerUp        = false;
                 drone.IsActive          = true;
@@ -168,7 +168,7 @@ namespace GameAiAndControls.Controls.MotherShipMediumControls
 
         private static _3dObject? CreateKamikazeDroneObject(ISurface parentSurface)
         {
-            const string typeName = "_3dRotations.World.Objects.KamikazeDrone";
+            const string typeName = "TheOmegaStrain.Game.World.Objects.KamikazeDrone";
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 var type = assembly.GetType(typeName, throwOnError: false, ignoreCase: false);

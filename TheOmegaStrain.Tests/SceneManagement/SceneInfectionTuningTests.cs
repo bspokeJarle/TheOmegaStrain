@@ -1,18 +1,18 @@
-using _3dRotations.Scenes.Scene1;
-using _3dRotations.Scenes.Scene2;
-using _3dRotations.Scenes.Scene3;
-using _3dRotations.Scenes.Scene4;
-using _3dRotations.Scenes.Scene5;
-using _3dRotations.Scenes.Scene6;
-using _3dRotations.Scenes.Scene7;
-using _3dRotations.Scenes.Scene8;
-using _3dRotations.Scenes.Intro;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using Domain;
+using TheOmegaStrain.Game.Scenes.Scene1;
+using TheOmegaStrain.Game.Scenes.Scene2;
+using TheOmegaStrain.Game.Scenes.Scene3;
+using TheOmegaStrain.Game.Scenes.Scene4;
+using TheOmegaStrain.Game.Scenes.Scene5;
+using TheOmegaStrain.Game.Scenes.Scene6;
+using TheOmegaStrain.Game.Scenes.Scene7;
+using TheOmegaStrain.Game.Scenes.Scene8;
+using TheOmegaStrain.Game.Scenes.Intro;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Domain;
 using System.Globalization;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 [TestClass]
 public class SceneInfectionTuningTests

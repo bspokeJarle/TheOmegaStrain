@@ -1,12 +1,12 @@
-using SteamIntegration;
-using CommonUtilities.Events;
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Steam;
+using TheOmegaStrain.Common.Events;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.SteamIntegration;
+namespace TheOmegaStrain.Tests.Steam;
 
 [TestClass]
-public sealed class SteamIntegrationTests
+public sealed class SteamTests
 {
     [TestMethod]
     public void SteamConfigUsesTheOmegaStrainAppId()

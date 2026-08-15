@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CommonUtilities.Persistence
+namespace TheOmegaStrain.Common.Persistence
 {
     /// <summary>
     /// AES-256-CBC encryption helper that reads the passphrase from a key file.

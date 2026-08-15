@@ -1,4 +1,4 @@
-namespace _3dRotations.World.Objects.EarthObject
+namespace TheOmegaStrain.Game.World.Objects.EarthObject
 {
     public static class EarthModelData
     {

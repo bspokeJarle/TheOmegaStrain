@@ -1,8 +1,8 @@
 using System.IO;
-using CommonUtilities.CommonGlobalState;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
 
-namespace CommonUtilities.CommonSetup
+namespace TheOmegaStrain.Common.CommonSetup
 {
     /// <summary>
     /// Centralized audio configuration shared by playback, game loop wiring,

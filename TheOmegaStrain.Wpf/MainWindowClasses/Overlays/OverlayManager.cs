@@ -1,8 +1,8 @@
-using CommonUtilities.CommonGlobalState;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
 using System.Windows.Controls;
 
-namespace _3dTesting.MainWindowClasses.Overlays
+namespace TheOmegaStrain.Wpf.MainWindowClasses.Overlays
 {
     /// <summary>
     /// Central coordinator for all overlay handlers.

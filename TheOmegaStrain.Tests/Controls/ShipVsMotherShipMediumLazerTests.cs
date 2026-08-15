@@ -1,12 +1,12 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using Domain;
-using GameAiAndControls.Controls;
-using _3dRotations.World.Objects;
-using static Domain.WeaponHelpers;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls;
+using TheOmegaStrain.Game.World.Objects;
+using static TheOmegaStrain.Domain.WeaponHelpers;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Controls;
+namespace TheOmegaStrain.Tests.Controls;
 
 // Side-by-side comparison of the Ship lazer vs the MotherShipMedium lazer.
 //

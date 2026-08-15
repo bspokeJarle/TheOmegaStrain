@@ -1,10 +1,10 @@
-using _3dRotations.Helpers;
-using _3dRotations.World.Objects;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using Domain;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Domain;
 
-namespace _3DSpesificsUnitTests.Controls;
+namespace TheOmegaStrain.Tests.Controls;
 
 /// <summary>
 /// Locks in two coupled gameplay rules so future scene tuning cannot regress them:

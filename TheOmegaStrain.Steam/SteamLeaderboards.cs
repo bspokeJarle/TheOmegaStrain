@@ -1,6 +1,6 @@
 using Steamworks;
 
-namespace SteamIntegration;
+namespace TheOmegaStrain.Steam;
 
 public sealed class SteamLeaderboards
 {

@@ -1,10 +1,10 @@
-using _3dRotations.World;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.Persistence;
-using Domain;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
 
-namespace _3DSpesificsUnitTests.Persistence;
+namespace TheOmegaStrain.Tests.Persistence;
 
 [TestClass]
 public class HighscoreRemoteFallbackTests

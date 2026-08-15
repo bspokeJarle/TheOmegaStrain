@@ -1,8 +1,8 @@
-using CommonUtilities.CommonSetup;
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls
+namespace TheOmegaStrain.Gameplay.Controls
 {
     public class IglooControls : IObjectMovement
     {

@@ -1,10 +1,10 @@
-using Domain;
+using TheOmegaStrain.Domain;
 using System;
 using System.IO;
 using System.Text.Json;
-using CommonUtilities.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonGlobalState.States;
 
-namespace CommonUtilities.Persistence
+namespace TheOmegaStrain.Common.Persistence
 {
     public sealed class PlayerProgressState
     {

@@ -1,10 +1,10 @@
-using _3dRotations.World.Objects;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.WorldObjects;
+namespace TheOmegaStrain.Tests.WorldObjects;
 
 [TestClass]
 public class FlyingObjectShadowTests

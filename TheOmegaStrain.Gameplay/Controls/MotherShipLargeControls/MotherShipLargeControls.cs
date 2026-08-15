@@ -1,15 +1,15 @@
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using Domain;
-using GameAiAndControls.Helpers;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Domain.WeaponHelpers;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain.WeaponHelpers;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls.MotherShipMediumControls
+namespace TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls
 {
     public class MotherShipLargeControls : IObjectMovement
     {

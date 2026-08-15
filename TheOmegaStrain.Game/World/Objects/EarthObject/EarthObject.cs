@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 using MathF = System.MathF;
-using _3dRotations.World.Objects;
+using TheOmegaStrain.Game.World.Objects;
 
-namespace _3dRotations.World.Objects.EarthObject
+namespace TheOmegaStrain.Game.World.Objects.EarthObject
 {
     public static class EarthObject
     {

@@ -1,9 +1,9 @@
-using Domain;
-using GameAiAndControls.Controls.SpaceSwanControls;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls.SpaceSwanControls;
 using System.Reflection;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Controls;
+namespace TheOmegaStrain.Tests.Controls;
 
 [TestClass]
 public class SpaceSwanControlsTests

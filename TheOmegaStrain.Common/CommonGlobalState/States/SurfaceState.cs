@@ -1,8 +1,8 @@
-using CommonUtilities.CommonSetup;
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace CommonUtilities.CommonGlobalState.States
+namespace TheOmegaStrain.Common.CommonGlobalState.States
 {
     // This class holds global state information for the ship, expand as needed
     // No deep copy for this class, it's intended to be a singleton-like static holder of state

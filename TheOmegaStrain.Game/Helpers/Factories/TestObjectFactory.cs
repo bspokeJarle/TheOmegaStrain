@@ -1,10 +1,10 @@
-using _3dRotations.World.Objects;
-using _3dRotations.World;
-using Domain;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Domain;
 using System.Collections.Generic;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.Helpers
+namespace TheOmegaStrain.Game.Helpers
 {
     public static class TestObjectFactory
     {

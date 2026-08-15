@@ -1,8 +1,8 @@
-using _3dRotations.Helpers;
-using _3dTesting.Helpers;
-using Domain;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Wpf.Helpers;
+using TheOmegaStrain.Domain;
 
-namespace _3DSpesificsUnitTests.MapAndOverlay;
+namespace TheOmegaStrain.Tests.MapAndOverlay;
 
 [TestClass]
 public class MinimapMarkerContrastTests

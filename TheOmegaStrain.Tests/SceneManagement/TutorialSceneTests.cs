@@ -1,18 +1,18 @@
-using _3dRotations.SceneManagement;
-using _3dRotations.Scenes.Tutorial;
-using _3dRotations.World;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.Events;
-using CommonUtilities.Persistence;
-using Domain;
-using GameAiAndControls.Audio.Services;
-using GameAiAndControls.Controls;
-using GameAiAndControls.Controls.KamikazeDroneControls;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Game.SceneManagement;
+using TheOmegaStrain.Game.Scenes.Tutorial;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.Events;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Audio.Services;
+using TheOmegaStrain.Gameplay.Controls;
+using TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 [TestClass]
 public class TutorialSceneTests
@@ -551,7 +551,7 @@ public class TutorialSceneTests
     [TestMethod]
     public void IntroOverlay_TextMentionsManualTrainingKey()
     {
-        var intro = new _3dRotations.Scenes.Intro.Intro();
+        var intro = new TheOmegaStrain.Game.Scenes.Intro.Intro();
 
         intro.SetupSceneOverlay();
 

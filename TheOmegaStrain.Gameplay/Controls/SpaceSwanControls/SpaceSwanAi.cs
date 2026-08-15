@@ -1,9 +1,9 @@
-using CommonUtilities.CommonGlobalState;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
 using System;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls.SpaceSwanControls
+namespace TheOmegaStrain.Gameplay.Controls.SpaceSwanControls
 {
     internal static class SpaceSwanAi
     {

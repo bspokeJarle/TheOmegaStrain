@@ -1,8 +1,8 @@
-using Domain;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 
-namespace GameAiAndControls.Audio.Services
+namespace TheOmegaStrain.Gameplay.Audio.Services
 {
     public enum ShipAiVoiceCue
     {

@@ -1,8 +1,8 @@
-using Domain;
+using TheOmegaStrain.Domain;
 using System.Collections;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace CommonUtilities.OmegaEngineAdapters
+namespace TheOmegaStrain.Common.OmegaEngineAdapters
 {
     public static class OmegaCrashBoxOffsetExtensions
     {

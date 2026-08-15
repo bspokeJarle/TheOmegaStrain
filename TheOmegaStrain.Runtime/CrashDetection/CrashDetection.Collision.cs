@@ -1,10 +1,10 @@
-using CommonUtilities.CommonSetup;
-using Domain;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
 using RetroMesh.Engine;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Runtime.Collision
 {
@@ -222,7 +222,7 @@ namespace TheOmegaStrain.Runtime.Collision
 
         private static void HandleDecoyBlastDamage(List<_3dObject> activeWorld)
         {
-            float blastRadius = CommonUtilities.CommonSetup.GameSetup.DecoyBlastRadius;
+            float blastRadius = TheOmegaStrain.Common.CommonSetup.GameSetup.DecoyBlastRadius;
 
             RadialObjectScanner.Scan(
                 activeWorld,
@@ -274,8 +274,8 @@ namespace TheOmegaStrain.Runtime.Collision
 
         private static void HandleBomberBombBlastDamage(List<_3dObject> activeWorld)
         {
-            float blastRadius = CommonUtilities.CommonSetup.GameSetup.BomberBombBlastRadius;
-            float blastDamage = CommonUtilities.CommonSetup.GameSetup.BomberBombBlastDamage;
+            float blastRadius = TheOmegaStrain.Common.CommonSetup.GameSetup.BomberBombBlastRadius;
+            float blastDamage = TheOmegaStrain.Common.CommonSetup.GameSetup.BomberBombBlastDamage;
 
             RadialObjectScanner.Scan(
                 activeWorld,
@@ -304,7 +304,7 @@ namespace TheOmegaStrain.Runtime.Collision
 
             void HandleBombBlastHit(in RadialHitContext<_3dObject, Vector3> context)
             {
-                CommonUtilities.CommonGlobalState.GameState.GamePlayState?.ApplyDamage(blastDamage);
+                TheOmegaStrain.Common.CommonGlobalState.GameState.GamePlayState?.ApplyDamage(blastDamage);
 
                 LogCollision(context.Source, context.Target,
                     $"[FRAME:{numFrame}] [BOMB BLAST] {context.Source.ObjectName} -> {context.Target.ObjectName} | Distance:{context.Distance:0.##} | BlastRadius:{context.Radius:0.##} | Damage:{blastDamage:0.##}");
@@ -318,7 +318,7 @@ namespace TheOmegaStrain.Runtime.Collision
 
         private static Vector3? GetShipCrashCenterWorldPosition(_3dObject obj)
         {
-            var shipPosRaw = CommonUtilities.CommonGlobalState.GameState.ShipState?.ShipCrashCenterWorldPosition;
+            var shipPosRaw = TheOmegaStrain.Common.CommonGlobalState.GameState.ShipState?.ShipCrashCenterWorldPosition;
             return shipPosRaw == null
                 ? null
                 : new Vector3 { x = shipPosRaw.x, y = shipPosRaw.y, z = shipPosRaw.z };

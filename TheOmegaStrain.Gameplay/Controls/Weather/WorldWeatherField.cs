@@ -1,10 +1,10 @@
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonSetup;
-using Domain;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
 using System;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls.Weather
+namespace TheOmegaStrain.Gameplay.Controls.Weather
 {
     public sealed class WorldWeatherField
     {

@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 
-namespace CommonUtilities.Persistence
+namespace TheOmegaStrain.Common.Persistence
 {
     /// <summary>
     /// Stores local per-player tutorial completion independently from campaign saves.

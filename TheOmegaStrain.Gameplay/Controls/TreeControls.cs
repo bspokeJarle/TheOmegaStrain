@@ -1,11 +1,11 @@
-using Domain;
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonSetup;
 using System;
 using System.Collections.Generic;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls
+namespace TheOmegaStrain.Gameplay.Controls
 {
     public class TreeControls : IObjectMovement
     {

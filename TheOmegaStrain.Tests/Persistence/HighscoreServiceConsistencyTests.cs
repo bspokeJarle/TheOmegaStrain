@@ -1,9 +1,9 @@
-using CommonUtilities.Persistence;
+using TheOmegaStrain.Common.Persistence;
 using System;
 using System.IO;
 using System.Linq;
 
-namespace _3DSpesificsUnitTests.Persistence;
+namespace TheOmegaStrain.Tests.Persistence;
 
 [TestClass]
 public class HighscoreServiceConsistencyTests

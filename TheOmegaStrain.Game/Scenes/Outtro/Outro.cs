@@ -1,13 +1,13 @@
-using _3dRotations.World.Objects;
-using _3dRotations.World.Objects.EarthObject;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using Domain;
-using GameAiAndControls.Controls;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Game.World.Objects.EarthObject;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls;
 using System;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.Scenes.Outro
+namespace TheOmegaStrain.Game.Scenes.Outro
 {
     public class Outro : IScene
     {

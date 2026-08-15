@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CommonUtilities.CommonSetup
+namespace TheOmegaStrain.Common.CommonSetup
 {
     //TODO: Expand this as needed, common enemy properties can go here
     public static class WeaponSetup

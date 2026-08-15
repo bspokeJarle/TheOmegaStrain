@@ -1,12 +1,12 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.OmegaEngineAdapters;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls
+namespace TheOmegaStrain.Gameplay.Controls
 {
     public class OutroGroundStarsControls : IObjectMovement
     {

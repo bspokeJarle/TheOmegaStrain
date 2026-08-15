@@ -1,8 +1,8 @@
-using CommonUtilities.CommonSetup;
-using CommonUtilities.GamePlayHelpers;
-using Domain;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Domain;
 
-namespace _3DSpesificsUnitTests.Scoring;
+namespace TheOmegaStrain.Tests.Scoring;
 
 [TestClass]
 public sealed class PlanetRewardCalculatorTests

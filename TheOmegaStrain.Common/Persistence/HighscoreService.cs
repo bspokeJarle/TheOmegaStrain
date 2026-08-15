@@ -1,12 +1,12 @@
-using Domain;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using CommonUtilities.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonGlobalState.States;
 
-namespace CommonUtilities.Persistence
+namespace TheOmegaStrain.Common.Persistence
 {
     /// <summary>
     /// Manages highscores with a local-first strategy:

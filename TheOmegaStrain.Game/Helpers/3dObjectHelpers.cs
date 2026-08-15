@@ -1,11 +1,11 @@
-using CommonUtilities.CommonSetup;
-using Domain;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.Helpers
+namespace TheOmegaStrain.Game.Helpers
 {
     public static class _3dObjectHelpers
     {

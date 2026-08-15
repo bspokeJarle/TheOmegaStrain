@@ -1,4 +1,4 @@
-﻿// GameplayHelpers.SurfaceIO.SurfaceIO.cs  (OSSD v2)
+// GameplayHelpers.SurfaceIO.SurfaceIO.cs  (OSSD v2)
 // ------------------------------------------------------------
 // Complete helper class to READ/WRITE precomputed SurfaceData in a compact binary format,
 // with hashing + validation + fail-safe load-or-generate.
@@ -29,7 +29,7 @@
 //
 // ------------------------------------------------------------
 
-using Domain;
+using TheOmegaStrain.Domain;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;

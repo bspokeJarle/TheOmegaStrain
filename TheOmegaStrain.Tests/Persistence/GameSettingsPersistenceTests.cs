@@ -1,8 +1,8 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.Persistence;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.Persistence;
 
-namespace _3DSpesificsUnitTests.Persistence;
+namespace TheOmegaStrain.Tests.Persistence;
 
 [TestClass]
 public class GameSettingsPersistenceTests

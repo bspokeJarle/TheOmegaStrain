@@ -1,13 +1,13 @@
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using Domain;
-using GameAiAndControls.Helpers;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Helpers;
 using System;
 using System.Collections.Generic;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls.SeederControls
+namespace TheOmegaStrain.Gameplay.Controls.SeederControls
 {
     public class SeederControls : IObjectMovement
     {
@@ -446,7 +446,7 @@ namespace GameAiAndControls.Controls.SeederControls
         /// <summary>
         /// Process delayed cascading infection spread. Call once per frame from the game loop.
         /// </summary>
-        public static void ProcessLocalInfectionSpread(CommonUtilities.CommonGlobalState.States.SurfaceState surfaceState)
+        public static void ProcessLocalInfectionSpread(TheOmegaStrain.Common.CommonGlobalState.States.SurfaceState surfaceState)
         {
             SeederMovementHelpers.ProcessLocalInfectionSpread(surfaceState);
         }

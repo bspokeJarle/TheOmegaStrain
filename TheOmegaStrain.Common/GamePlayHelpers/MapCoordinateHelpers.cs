@@ -1,7 +1,7 @@
-using CommonUtilities.CommonSetup;
-using Domain;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
 
-namespace CommonUtilities.GamePlayHelpers
+namespace TheOmegaStrain.Common.GamePlayHelpers
 {
     public static class MapCoordinateHelpers
     {

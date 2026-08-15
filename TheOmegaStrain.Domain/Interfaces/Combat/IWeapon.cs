@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using static Domain.WeaponHelpers;
+using static TheOmegaStrain.Domain.WeaponHelpers;
 
-namespace Domain
+namespace TheOmegaStrain.Domain
 {
     public interface IWeapon
     {

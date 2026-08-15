@@ -1,4 +1,4 @@
-namespace CommonUtilities.CommonSetup
+namespace TheOmegaStrain.Common.CommonSetup
 {
     public static class GameSetup
     {

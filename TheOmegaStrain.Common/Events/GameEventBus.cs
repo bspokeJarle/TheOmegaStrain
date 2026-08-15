@@ -1,8 +1,8 @@
-using Domain;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 
-namespace CommonUtilities.Events
+namespace TheOmegaStrain.Common.Events
 {
     public class GameEventBus : IGameEventBus
     {

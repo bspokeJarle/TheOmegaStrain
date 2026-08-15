@@ -1,10 +1,10 @@
-using CommonUtilities.CommonGlobalState;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls.KamikazeDroneControls
+namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
 {
     // A drone that was just dropped from the MotherShipLarge hatch.
     // For the first DropDurationSeconds it descends straight down without attacking.

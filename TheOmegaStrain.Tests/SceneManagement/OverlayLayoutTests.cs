@@ -1,7 +1,7 @@
-using _3dTesting.MainWindowClasses;
-using Domain;
+using TheOmegaStrain.Wpf.MainWindowClasses;
+using TheOmegaStrain.Domain;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 [TestClass]
 public class OverlayLayoutTests

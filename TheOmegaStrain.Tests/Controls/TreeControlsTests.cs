@@ -1,11 +1,11 @@
-using _3dRotations.World.Objects;
-using CommonUtilities.CommonSetup;
-using Domain;
-using GameAiAndControls.Controls;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls;
 using System.Reflection;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Controls;
+namespace TheOmegaStrain.Tests.Controls;
 
 [TestClass]
 public class TreeControlsTests

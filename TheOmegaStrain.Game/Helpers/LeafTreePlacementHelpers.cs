@@ -1,12 +1,12 @@
-using _3dRotations.World.Objects;
-using CommonUtilities.GamePlayHelpers;
-using Domain;
-using GameAiAndControls.Controls;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls;
 using System;
 using System.Collections.Generic;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.Helpers
+namespace TheOmegaStrain.Game.Helpers
 {
     public static class LeafTreePlacementHelpers
     {

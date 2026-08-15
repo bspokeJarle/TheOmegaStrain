@@ -1,17 +1,17 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.GamePlayHelpers;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Domain;
 using System.Reflection;
-using _3dRotations.World.Objects;
-using _3dRotations.Helpers;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Runtime.Collision;
-using GameAiAndControls.Controls;
+using TheOmegaStrain.Gameplay.Controls;
 using RetroMesh.Engine;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Physics;
+namespace TheOmegaStrain.Tests.Physics;
 
 [DoNotParallelize]
 [TestClass]
@@ -71,7 +71,7 @@ public class ShipSurfaceLandingTests
         int screenWidth = (int)(screenHeight * (1500.0 / 1024.0));
         ScreenSetup.Initialize(screenWidth, screenHeight);
 
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         float shipRestingY = ShipRestingScreenY(screenHeight);
         float offsetY = shipRestingY;
         float gmpY = 0f;
@@ -125,7 +125,7 @@ public class ShipSurfaceLandingTests
     [TestMethod]
     public void MaxScreenDrop_ReflectsCurrentScreenSize()
     {
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
 
         ScreenSetup.Initialize(1500, 1024);
         float small = physics.MaxScreenDrop;
@@ -142,7 +142,7 @@ public class ShipSurfaceLandingTests
     [TestMethod]
     public void CeilingHeight_ReflectsCurrentScreenSize()
     {
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
 
         ScreenSetup.Initialize(1500, 1024);
         float small = physics.CeilingHeight;
@@ -159,7 +159,7 @@ public class ShipSurfaceLandingTests
     [TestMethod]
     public void AirborneSettleRate_ReflectsCurrentScreenSize()
     {
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
 
         ScreenSetup.Initialize(1500, 1024);
         float small = physics.AirborneSettleRate;

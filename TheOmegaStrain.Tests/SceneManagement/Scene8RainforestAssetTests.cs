@@ -1,11 +1,11 @@
-using _3dRotations.Scenes.Scene8;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.Events;
-using Domain;
+using TheOmegaStrain.Game.Scenes.Scene8;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.Events;
+using TheOmegaStrain.Domain;
 using System.Linq;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 [TestClass]
 public class Scene8RainforestAssetTests

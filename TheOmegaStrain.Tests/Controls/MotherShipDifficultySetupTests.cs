@@ -1,6 +1,6 @@
-using CommonUtilities.CommonSetup;
+using TheOmegaStrain.Common.CommonSetup;
 
-namespace _3DSpesificsUnitTests.Controls;
+namespace TheOmegaStrain.Tests.Controls;
 
 [TestClass]
 public class MotherShipDifficultySetupTests

@@ -1,5 +1,5 @@
 using BenchmarkDotNet.Attributes;
-using Domain;
+using TheOmegaStrain.Domain;
 using Microsoft.VSDiagnostics;
 
 namespace TheOmegaStrain.Benchmarks;

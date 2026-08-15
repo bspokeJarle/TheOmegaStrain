@@ -1,25 +1,25 @@
-using _3dRotations.Helpers;
-using _3dRotations.Projection;
-using _3dRotations.World.Objects;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Game.Projection;
+using TheOmegaStrain.Game.World.Objects;
 using TheOmegaStrain.Runtime.Collision;
 using TheOmegaStrain.Runtime.Rendering;
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.Events;
-using CommonUtilities.GamePlayHelpers;
-using CommonUtilities.Persistence;
-using Domain;
-using GameAiAndControls.Audio.Services;
-using GameAiAndControls.Controls;
-using GameAiAndControls.Controls.SeederControls;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.Events;
+using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Audio.Services;
+using TheOmegaStrain.Gameplay.Controls;
+using TheOmegaStrain.Gameplay.Controls.SeederControls;
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Runtime.Loops
 {

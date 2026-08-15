@@ -1,6 +1,6 @@
-using CommonUtilities.Persistence;
+using TheOmegaStrain.Common.Persistence;
 
-namespace _3DSpesificsUnitTests.Persistence;
+namespace TheOmegaStrain.Tests.Persistence;
 
 [TestClass]
 public class TutorialProgressServiceTests

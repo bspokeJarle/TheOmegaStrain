@@ -1,8 +1,8 @@
-using CommonUtilities.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonGlobalState.States;
 using System;
 using System.Collections.Generic;
 
-namespace CommonUtilities.CommonGlobalState
+namespace TheOmegaStrain.Common.CommonGlobalState
 {
     public static class GameSettingsOverlayFormatter
     {

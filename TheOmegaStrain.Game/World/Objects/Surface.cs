@@ -1,16 +1,16 @@
-using _3dRotations.Helpers;
-using CommonUtilities.OmegaEngineAdapters;
-using Domain;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using static Domain._3dSpecificsImplementations;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.GamePlayHelpers;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.GamePlayHelpers;
 
 
-namespace _3dRotations.World.Objects
+namespace TheOmegaStrain.Game.World.Objects
 {
     public class Surface : ISurface
     {

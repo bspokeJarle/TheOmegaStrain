@@ -1,6 +1,6 @@
-using Domain;
+using TheOmegaStrain.Domain;
 
-namespace _3DSpesificsUnitTests.CommonGlobalState;
+namespace TheOmegaStrain.Tests.CommonGlobalState;
 
 [TestClass]
 public class ScreenOverlayChoiceTests

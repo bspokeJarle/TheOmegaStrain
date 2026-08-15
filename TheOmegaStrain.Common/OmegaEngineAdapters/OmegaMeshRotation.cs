@@ -1,7 +1,7 @@
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace CommonUtilities.OmegaEngineAdapters
+namespace TheOmegaStrain.Common.OmegaEngineAdapters
 {
     public class OmegaMeshRotation : MeshRotation
     {

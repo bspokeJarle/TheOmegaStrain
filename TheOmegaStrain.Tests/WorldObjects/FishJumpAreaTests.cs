@@ -1,7 +1,7 @@
-using _3dRotations.Helpers;
-using Domain;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Domain;
 
-namespace _3DSpesificsUnitTests.WorldObjects;
+namespace TheOmegaStrain.Tests.WorldObjects;
 
 [TestClass]
 public class FishJumpAreaTests

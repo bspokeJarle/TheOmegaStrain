@@ -1,6 +1,6 @@
-using Domain;
+using TheOmegaStrain.Domain;
 
-namespace CommonUtilities.Events
+namespace TheOmegaStrain.Common.Events
 {
     public class GameEvent : IGameEvent
     {

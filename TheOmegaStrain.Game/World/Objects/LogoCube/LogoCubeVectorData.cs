@@ -1,4 +1,4 @@
-﻿namespace _3dRotations.World.Objects.LogoCube
+namespace TheOmegaStrain.Game.World.Objects.LogoCube
 {
     public class LogoCubeVectorData
     {

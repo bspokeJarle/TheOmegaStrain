@@ -1,5 +1,5 @@
-﻿using CommonUtilities.CommonGlobalState.States;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CommonUtilities.CommonGlobalState
+namespace TheOmegaStrain.Common.CommonGlobalState
 {
     // This class holds global state information for the game, expand as needed
     // No deep copy for this class, it's intended to be a singleton-like static holder of state

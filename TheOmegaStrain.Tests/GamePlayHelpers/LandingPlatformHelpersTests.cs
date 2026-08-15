@@ -1,7 +1,7 @@
-using CommonUtilities.GamePlayHelpers;
-using Domain;
+using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Domain;
 
-namespace _3DSpesificsUnitTests.GamePlayHelperTests;
+namespace TheOmegaStrain.Tests.GamePlayHelperTests;
 
 [TestClass]
 public class LandingPlatformHelpersTests

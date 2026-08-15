@@ -1,8 +1,8 @@
-using _3dRotations.Helpers;
-using CommonUtilities.CommonSetup;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Common.CommonSetup;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 [TestClass]
 public class SeederPlacementHelpersTests

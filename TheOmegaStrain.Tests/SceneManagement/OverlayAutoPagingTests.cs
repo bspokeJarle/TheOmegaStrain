@@ -1,9 +1,9 @@
-using _3dRotations.Scenes.Intro;
-using _3dTesting.MainWindowClasses;
-using CommonUtilities.CommonGlobalState;
-using Domain;
+using TheOmegaStrain.Game.Scenes.Intro;
+using TheOmegaStrain.Wpf.MainWindowClasses;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 [TestClass]
 public class OverlayAutoPagingTests

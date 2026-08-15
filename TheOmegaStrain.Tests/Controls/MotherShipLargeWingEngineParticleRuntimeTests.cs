@@ -1,11 +1,11 @@
-using _3dRotations.World.Objects;
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonGlobalState;
-using Domain;
-using GameAiAndControls.Controls.MotherShipMediumControls;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Controls;
+namespace TheOmegaStrain.Tests.Controls;
 
 [TestClass]
 public class MotherShipLargeWingEngineParticleRuntimeTests

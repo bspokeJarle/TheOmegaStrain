@@ -1,16 +1,16 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.GamePlayHelpers;
-using Domain;
-using GameAiAndControls.Helpers;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using static CommonUtilities.GamePlayHelpers.GamePlayHelpers;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Common.GamePlayHelpers.GamePlayHelpers;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls.SeederControls
+namespace TheOmegaStrain.Gameplay.Controls.SeederControls
 {
     internal static class SeederAi
     {

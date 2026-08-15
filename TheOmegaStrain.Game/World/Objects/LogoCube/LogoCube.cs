@@ -1,12 +1,12 @@
-using _3dRotations.Helpers;
-using CommonUtilities.CommonGlobalState;
-using Domain;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.World.Objects.LogoCube
+namespace TheOmegaStrain.Game.World.Objects.LogoCube
 {
     public class LogoCube
     {

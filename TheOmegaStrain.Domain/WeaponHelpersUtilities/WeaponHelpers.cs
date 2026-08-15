@@ -1,6 +1,6 @@
 using System;
 
-namespace Domain
+namespace TheOmegaStrain.Domain
 {
     public static class WeaponHelpers
     {

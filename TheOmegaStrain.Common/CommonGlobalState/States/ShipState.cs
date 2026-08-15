@@ -1,11 +1,11 @@
-﻿using Domain;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CommonUtilities.CommonGlobalState.States
+namespace TheOmegaStrain.Common.CommonGlobalState.States
 {
     // This class holds global state information for the ship, expand as needed
     // No deep copy for this class, it's intended to be a singleton-like static holder of state

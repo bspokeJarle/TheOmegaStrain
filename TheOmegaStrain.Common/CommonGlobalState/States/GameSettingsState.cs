@@ -1,7 +1,7 @@
 using System;
-using Domain;
+using TheOmegaStrain.Domain;
 
-namespace CommonUtilities.CommonGlobalState.States
+namespace TheOmegaStrain.Common.CommonGlobalState.States
 {
     public enum GraphicsQualityPreset
     {

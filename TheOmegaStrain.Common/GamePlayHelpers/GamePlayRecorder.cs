@@ -1,9 +1,9 @@
-﻿using CommonUtilities.CommonGlobalState; // Logger.Log(...) (adjust if needed)
-using Domain;                            // Vector3, I3dObject, _3dObject etc. (adjust if needed)
+using TheOmegaStrain.Common.CommonGlobalState; // Logger.Log(...) (adjust if needed)
+using TheOmegaStrain.Domain;                            // Vector3, I3dObject, _3dObject etc. (adjust if needed)
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace GameplayHelpers.ReplayIO
 {

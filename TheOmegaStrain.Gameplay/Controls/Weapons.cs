@@ -1,15 +1,15 @@
-using CommonUtilities.OmegaEngineAdapters;
-using Domain;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
 using System.Net.Security;
-using static Domain.WeaponHelpers;
-using static Domain._3dSpecificsImplementations;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
+using static TheOmegaStrain.Domain.WeaponHelpers;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
 
-namespace GameAiAndControls.Controls
+namespace TheOmegaStrain.Gameplay.Controls
 {
     public class Weapons : IWeapon
     {

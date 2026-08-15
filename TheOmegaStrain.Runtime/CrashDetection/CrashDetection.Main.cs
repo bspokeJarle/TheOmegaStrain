@@ -1,12 +1,12 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using Domain;
-using GameAiAndControls.Helpers;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Helpers;
 using RetroMesh.Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Runtime.Collision
 {
@@ -176,9 +176,9 @@ namespace TheOmegaStrain.Runtime.Collision
 
             double distance = GeometryMath.GetDistance(centerA, centerB);
 
-            if (CommonUtilities.CommonSetup.EnemySetup.IsEnemyTypeValid(inhabitant.ObjectName) && distance < MaxCrashDistance * 2)
+            if (TheOmegaStrain.Common.CommonSetup.EnemySetup.IsEnemyTypeValid(inhabitant.ObjectName) && distance < MaxCrashDistance * 2)
             {
-                CommonUtilities.CommonGlobalState.GameState.ShipState.BestCandidateStates.Add(new BestCandidateState
+                TheOmegaStrain.Common.CommonGlobalState.GameState.ShipState.BestCandidateStates.Add(new BestCandidateState
                 {
                     BestEnemyCandidate = new EnemyCandidateInfo
                     {
@@ -243,8 +243,8 @@ namespace TheOmegaStrain.Runtime.Collision
         {
             bool aIsAvoidingAi = IsTerrainAvoidanceAiObject(a, flagsA);
             bool bIsAvoidingAi = IsTerrainAvoidanceAiObject(b, flagsB);
-            bool aIsProactiveObstacle = CommonUtilities.CommonSetup.TerrainAvoidanceSetup.IsProactiveTerrainObstacle(flagsA.Name);
-            bool bIsProactiveObstacle = CommonUtilities.CommonSetup.TerrainAvoidanceSetup.IsProactiveTerrainObstacle(flagsB.Name);
+            bool aIsProactiveObstacle = TheOmegaStrain.Common.CommonSetup.TerrainAvoidanceSetup.IsProactiveTerrainObstacle(flagsA.Name);
+            bool bIsProactiveObstacle = TheOmegaStrain.Common.CommonSetup.TerrainAvoidanceSetup.IsProactiveTerrainObstacle(flagsB.Name);
 
             _3dObject? ai = null;
             _3dObject? obstacle = null;
@@ -269,7 +269,7 @@ namespace TheOmegaStrain.Runtime.Collision
             if (ai == null || obstacle == null)
                 return false;
 
-            float proactiveAvoidanceDistance = CommonUtilities.CommonSetup.TerrainAvoidanceSetup.GetProactiveAvoidanceDistance(ai.ObjectName);
+            float proactiveAvoidanceDistance = TheOmegaStrain.Common.CommonSetup.TerrainAvoidanceSetup.GetProactiveAvoidanceDistance(ai.ObjectName);
             if (centerDistance > proactiveAvoidanceDistance)
                 return false;
 

@@ -1,6 +1,6 @@
-using Domain;
+using TheOmegaStrain.Domain;
 
-namespace CommonUtilities.CommonSetup
+namespace TheOmegaStrain.Common.CommonSetup
 {
     public readonly record struct BiomePhysicsProfile(
         float InertiaRetentionMultiplier,
@@ -43,6 +43,6 @@ namespace CommonUtilities.CommonSetup
         };
 
         public static BiomePhysicsProfile CurrentProfile =>
-            GetProfile(CommonUtilities.CommonGlobalState.GameState.GamePlayState.CurrentSceneBiome);
+            GetProfile(TheOmegaStrain.Common.CommonGlobalState.GameState.GamePlayState.CurrentSceneBiome);
     }
 }

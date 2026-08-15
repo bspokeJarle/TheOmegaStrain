@@ -1,9 +1,9 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.Persistence;
-using Domain;
-using GameAiAndControls.Audio.Services;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Audio.Services;
 
-namespace _3dRotations.Scenes.Scene1
+namespace TheOmegaStrain.Game.Scenes.Scene1
 {
     public class Scene1Director : ISceneDirector
     {

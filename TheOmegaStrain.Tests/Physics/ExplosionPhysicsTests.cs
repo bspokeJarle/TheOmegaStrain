@@ -1,11 +1,11 @@
-using Domain;
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using GameAiAndControls.Physics;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Gameplay.Physics;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Physics;
+namespace TheOmegaStrain.Tests.Physics;
 
 [TestClass]
 public class ExplosionPhysicsTests
@@ -20,7 +20,7 @@ public class ExplosionPhysicsTests
     [TestMethod]
     public void ExplodeObject_MarksOriginalPartsAsExplodingParts()
     {
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         var obj = CreateTwoPartObject();
 
         var returned = physics.ExplodeObject(obj, explosionForce: 200f);
@@ -34,7 +34,7 @@ public class ExplosionPhysicsTests
     [TestMethod]
     public void UpdateExplosion_KeepsOriginalPartIndexes()
     {
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         var obj = CreateTwoPartObject();
 
         physics.ExplodeObject(obj, explosionForce: 200f);
@@ -49,7 +49,7 @@ public class ExplosionPhysicsTests
     [TestMethod]
     public void UpdateExplosion_MarksFreshDeepCopyAsExplodingParts()
     {
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         var original = CreateTwoPartObject();
         var firstFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
 
@@ -65,7 +65,7 @@ public class ExplosionPhysicsTests
     [TestMethod]
     public void ExplosionState_IsIndependentOfFrameCopyGeometry()
     {
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         var original = CreateTwoPartObject();
         var firstFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
 
@@ -86,7 +86,7 @@ public class ExplosionPhysicsTests
     [TestMethod]
     public void ExplosionState_IsNotMutatedByFrameRotation()
     {
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         var original = CreateTwoPartObject();
         var firstFrameCopy = (_3dObject)OmegaObjectHelpers.DeepCopySingleObject(original);
 
@@ -109,7 +109,7 @@ public class ExplosionPhysicsTests
     public void ExplodeObject_RaisesImpactFlashWhenGlowIsEnabled()
     {
         GameState.SettingsState.GlowEffectsEnabled = true;
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         var obj = CreateTwoPartObject();
 
         physics.ExplodeObject(obj, explosionForce: 260f);
@@ -121,7 +121,7 @@ public class ExplosionPhysicsTests
     public void ExplodeObject_DoesNotRaiseImpactFlashWhenGlowIsDisabled()
     {
         GameState.SettingsState.GlowEffectsEnabled = false;
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         var obj = CreateTwoPartObject();
 
         physics.ExplodeObject(obj, explosionForce: 260f);
@@ -133,7 +133,7 @@ public class ExplosionPhysicsTests
     public void UpdateExplosion_AddsDebrisShimmerOutsideLowGraphics()
     {
         GameState.SettingsState.GraphicsQuality = GraphicsQualityPreset.Balanced;
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         var obj = CreateTwoPartObject();
 
         physics.ExplodeObject(obj, explosionForce: 0f);
@@ -148,7 +148,7 @@ public class ExplosionPhysicsTests
     public void UpdateExplosion_DisablesDebrisShimmerOnLowGraphics()
     {
         GameState.SettingsState.GraphicsQuality = GraphicsQualityPreset.Low;
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         var obj = CreateTwoPartObject();
 
         physics.ExplodeObject(obj, explosionForce: 0f);

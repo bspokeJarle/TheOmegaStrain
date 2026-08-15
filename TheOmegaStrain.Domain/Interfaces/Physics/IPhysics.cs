@@ -1,7 +1,7 @@
 using System;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace Domain
+namespace TheOmegaStrain.Domain
 {
     public interface IPhysics
     {

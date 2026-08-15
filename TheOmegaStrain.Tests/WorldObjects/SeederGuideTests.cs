@@ -1,8 +1,8 @@
-using _3dRotations.World.Objects;
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.WorldObjects;
+namespace TheOmegaStrain.Tests.WorldObjects;
 
 [TestClass]
 public class SeederGuideTests

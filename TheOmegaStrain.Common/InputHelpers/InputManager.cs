@@ -1,7 +1,7 @@
 using Gma.System.MouseKeyHook;
 using System.Diagnostics;
 
-namespace CommonUtilities.Input
+namespace TheOmegaStrain.Common.Input
 {
     public static class InputManager
     {

@@ -1,6 +1,6 @@
 using RetroMesh.Engine;
 
-namespace _3DSpesificsUnitTests.Physics;
+namespace TheOmegaStrain.Tests.Physics;
 
 [TestClass]
 public class CollisionDirectionMathTests

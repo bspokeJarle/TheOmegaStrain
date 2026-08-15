@@ -1,15 +1,15 @@
-using _3dRotations.SceneManagement;
-using _3dRotations.Scenes.SceneSimulation;
-using _3dRotations.World;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.Events;
-using CommonUtilities.Persistence;
-using Domain;
+using TheOmegaStrain.Game.SceneManagement;
+using TheOmegaStrain.Game.Scenes.SceneSimulation;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.Events;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
 using System.Reflection;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 [TestClass]
 public class SceneSimulationTests

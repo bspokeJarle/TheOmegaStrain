@@ -1,17 +1,17 @@
-using _3dRotations.SceneManagement;
-using _3dRotations.World.Objects;
-using _3dRotations.World;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.Persistence;
-using Domain;
+using TheOmegaStrain.Game.SceneManagement;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
 using System;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 /// <summary>
 /// Tests covering:

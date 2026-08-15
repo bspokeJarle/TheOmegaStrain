@@ -1,11 +1,11 @@
-using CommonUtilities.CommonGlobalState;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
 using System;
 using System.IO;
 using System.Text.Json;
-using CommonUtilities.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonGlobalState.States;
 
-namespace CommonUtilities.Persistence
+namespace TheOmegaStrain.Common.Persistence
 {
     /// <summary>
     /// Saves and restores the local game state as an encrypted JSON file.
@@ -355,7 +355,7 @@ namespace CommonUtilities.Persistence
 
             saved.PlayerName = normalizedName;
             saved.SceneIndex = 1;
-            saved.SceneBiome = Domain.SceneBiomeTypes.HillsWoods;
+            saved.SceneBiome = TheOmegaStrain.Domain.SceneBiomeTypes.HillsWoods;
             saved.Score = 0;
             saved.PlanetStyleBonusScore = 0;
             saved.PlanetStyleBonusSceneIndex = 1;
@@ -433,7 +433,7 @@ namespace CommonUtilities.Persistence
             {
                 state.PlayerName = normalizedName;
                 state.SceneIndex = 1;
-                state.CurrentSceneBiome = Domain.SceneBiomeTypes.HillsWoods;
+                state.CurrentSceneBiome = TheOmegaStrain.Domain.SceneBiomeTypes.HillsWoods;
                 state.Score = 0;
                 state.PlanetStyleBonusScore = 0;
                 state.PlanetStyleBonusSceneIndex = 1;

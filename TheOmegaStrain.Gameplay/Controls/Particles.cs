@@ -1,14 +1,14 @@
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 using System.Collections.Generic;
 using System;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using GameAiAndControls.Physics;
-using GameAiAndControls.Helpers;
+using TheOmegaStrain.Gameplay.Physics;
+using TheOmegaStrain.Gameplay.Helpers;
 using System.Dynamic;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
 
 public class ParticlesAI : IParticles
 {

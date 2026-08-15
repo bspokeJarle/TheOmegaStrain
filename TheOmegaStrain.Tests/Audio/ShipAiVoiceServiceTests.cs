@@ -1,7 +1,7 @@
-using Domain;
-using GameAiAndControls.Audio.Services;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Audio.Services;
 
-namespace _3DSpesificsUnitTests.Audio;
+namespace TheOmegaStrain.Tests.Audio;
 
 [TestClass]
 public class ShipAiVoiceServiceTests

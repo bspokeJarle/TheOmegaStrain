@@ -1,11 +1,11 @@
-using _3dRotations.SceneManagement;
-using _3dRotations.World;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.Persistence;
-using Domain;
+using TheOmegaStrain.Game.SceneManagement;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 [TestClass]
 public class SettingsOverlayTests

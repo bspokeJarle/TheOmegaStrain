@@ -1,4 +1,4 @@
-namespace GameAiAndControls.Controls.Weather
+namespace TheOmegaStrain.Gameplay.Controls.Weather
 {
     public readonly record struct WeatherFieldSettings(
         float DepthStartZ,

@@ -1,11 +1,11 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.Persistence;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
 using System;
 using System.IO;
 
-namespace _3DSpesificsUnitTests.Persistence;
+namespace TheOmegaStrain.Tests.Persistence;
 
 [TestClass]
 public class GameStatePersistenceIsolationTests

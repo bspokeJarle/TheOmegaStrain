@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using _3dRotations.World;
-using _3dRotations.Helpers;
-using CommonUtilities.CommonGlobalState;
-using Domain;
-using GameAiAndControls.Controls;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.World.Objects
+namespace TheOmegaStrain.Game.World.Objects
 {
     public class ZeppelinBomber
     {

@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq;
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using Domain;
-using GameAiAndControls.Helpers;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Helpers;
 using RetroMesh.Engine;
-using static Domain._3dSpecificsImplementations;
-using CommonUtilities.CommonSetup;
-using static GameAiAndControls.Helpers.PhysicsHelpers;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.CommonSetup;
+using static TheOmegaStrain.Gameplay.Helpers.PhysicsHelpers;
 
-namespace GameAiAndControls.Physics
+namespace TheOmegaStrain.Gameplay.Physics
 {
     public class Physics : IPhysics
     {

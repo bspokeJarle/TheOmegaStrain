@@ -1,10 +1,10 @@
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonGlobalState;
-using Domain;
-using GameAiAndControls.Helpers;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Helpers;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace GameAiAndControls.Controls.KamikazeDroneControls
+namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
 {
     internal static class KamikazeDroneAi
     {

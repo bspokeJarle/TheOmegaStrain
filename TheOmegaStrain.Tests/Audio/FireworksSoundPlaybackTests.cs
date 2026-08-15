@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using Domain;
-using GameAiAndControls.Controls;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls;
 
-namespace _3DSpesificsUnitTests.Audio
+namespace TheOmegaStrain.Tests.Audio
 {
     /// <summary>
     /// Smoke tests for the fireworks sound IDs used by OutroFireworksControls.

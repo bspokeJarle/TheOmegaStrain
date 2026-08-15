@@ -1,13 +1,13 @@
-using _3dRotations.SceneManagement;
-using _3dRotations.World;
-using _3dRotations.Scenes.Scene1;
-using _3dRotations.Scenes.Scene2;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Game.SceneManagement;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Game.Scenes.Scene1;
+using TheOmegaStrain.Game.Scenes.Scene2;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.SceneManagement;
+namespace TheOmegaStrain.Tests.SceneManagement;
 
 [TestClass]
 [Ignore("Manual only: these tests build full scenes and are too slow for normal test runs.")]
@@ -652,9 +652,9 @@ public class SceneHandlerTests
         Assert.AreEqual(0, powerUpSeedersAtSpawn, "Scene1 must not flag any seeder as a powerup at spawn.");
 
         int seederCount = world.WorldInhabitants.Count(o => o.ObjectName == "Seeder");
-        Assert.AreEqual(1, _3dRotations.Helpers.SeederPlacementHelpers.GetPowerUpCountForSeeders(seederCount),
+        Assert.AreEqual(1, TheOmegaStrain.Game.Helpers.SeederPlacementHelpers.GetPowerUpCountForSeeders(seederCount),
             "Scene1's seeder wave should award exactly 1 powerup via PowerUpDropPolicy.");
-        Assert.AreEqual(1, _3dRotations.Helpers.PowerUpDropPolicy.CurrentThresholds.Count,
+        Assert.AreEqual(1, TheOmegaStrain.Game.Helpers.PowerUpDropPolicy.CurrentThresholds.Count,
             "PowerUpDropPolicy should expose exactly 1 drop threshold for Scene1.");
     }
 

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace CommonUtilities.CommonSetup
+namespace TheOmegaStrain.Common.CommonSetup
 {
     public static class TerrainAvoidanceSetup
     {

@@ -1,12 +1,12 @@
-using _3dRotations.Helpers;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using CommonUtilities.GamePlayHelpers;
-using Domain;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Domain;
 using System.Reflection;
 
-namespace _3DSpesificsUnitTests.WorldObjects;
+namespace TheOmegaStrain.Tests.WorldObjects;
 
 [TestClass]
 public class DesertSurfaceGenerationTests
@@ -256,15 +256,15 @@ public class DesertSurfaceGenerationTests
 
     private static bool IsDry(SurfaceData tile, int maxHeight)
     {
-        var terrain = CommonUtilities.GamePlayHelpers.GamePlayHelpers.GetTerrainType(tile.mapDepth, maxHeight);
-        return terrain == CommonUtilities.GamePlayHelpers.GamePlayHelpers.TerrainType.Grassland ||
-               terrain == CommonUtilities.GamePlayHelpers.GamePlayHelpers.TerrainType.Highlands;
+        var terrain = TheOmegaStrain.Common.GamePlayHelpers.GamePlayHelpers.GetTerrainType(tile.mapDepth, maxHeight);
+        return terrain == TheOmegaStrain.Common.GamePlayHelpers.GamePlayHelpers.TerrainType.Grassland ||
+               terrain == TheOmegaStrain.Common.GamePlayHelpers.GamePlayHelpers.TerrainType.Highlands;
     }
 
     private static bool IsDeepWater(SurfaceData tile, int maxHeight)
     {
-        return CommonUtilities.GamePlayHelpers.GamePlayHelpers.GetTerrainType(tile.mapDepth, maxHeight) ==
-               CommonUtilities.GamePlayHelpers.GamePlayHelpers.TerrainType.DeepWater;
+        return TheOmegaStrain.Common.GamePlayHelpers.GamePlayHelpers.GetTerrainType(tile.mapDepth, maxHeight) ==
+               TheOmegaStrain.Common.GamePlayHelpers.GamePlayHelpers.TerrainType.DeepWater;
     }
 
     private static bool HasWaterNearby(SurfaceData[,] map, int maxHeight, int x, int y)
@@ -278,9 +278,9 @@ public class DesertSurfaceGenerationTests
                 if (nx < 0 || ny < 0 || nx >= map.GetLength(1) || ny >= map.GetLength(0))
                     continue;
 
-                var terrain = CommonUtilities.GamePlayHelpers.GamePlayHelpers.GetTerrainType(map[ny, nx].mapDepth, maxHeight);
-                if (terrain == CommonUtilities.GamePlayHelpers.GamePlayHelpers.TerrainType.DeepWater ||
-                    terrain == CommonUtilities.GamePlayHelpers.GamePlayHelpers.TerrainType.Coast)
+                var terrain = TheOmegaStrain.Common.GamePlayHelpers.GamePlayHelpers.GetTerrainType(map[ny, nx].mapDepth, maxHeight);
+                if (terrain == TheOmegaStrain.Common.GamePlayHelpers.GamePlayHelpers.TerrainType.DeepWater ||
+                    terrain == TheOmegaStrain.Common.GamePlayHelpers.GamePlayHelpers.TerrainType.Coast)
                     return true;
             }
         }

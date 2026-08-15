@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Domain
+namespace TheOmegaStrain.Domain
 {
     public interface I3dWorld : IRenderable3dWorldView
     {

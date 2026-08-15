@@ -1,7 +1,7 @@
-using CommonUtilities.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace _3DSpesificsUnitTests.Timing;
+namespace TheOmegaStrain.Tests.Timing;
 
 [TestClass]
 public class FrameRateIndependenceTests
@@ -46,7 +46,7 @@ public class FrameRateIndependenceTests
     {
         float deltaTime = 1f / fps;
         GameState.DeltaTime = deltaTime;
-        var physics = new GameAiAndControls.Physics.Physics();
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics();
         float position = 0f;
 
         for (int frame = 0; frame < fps; frame++)

@@ -1,8 +1,8 @@
-using CommonUtilities.CommonSetup;
+using TheOmegaStrain.Common.CommonSetup;
 using System;
 using System.Collections.Generic;
 
-namespace _3dRotations.Helpers
+namespace TheOmegaStrain.Game.Helpers
 {
     public static class PolarBearPlacementHelpers
     {

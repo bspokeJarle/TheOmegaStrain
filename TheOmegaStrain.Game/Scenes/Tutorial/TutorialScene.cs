@@ -1,13 +1,13 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonSetup;
-using Domain;
-using _3dRotations.Helpers;
-using _3dRotations.World.Objects;
-using GameAiAndControls.Controls;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Gameplay.Controls;
 using System.Collections.Generic;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3dRotations.Scenes.Tutorial
+namespace TheOmegaStrain.Game.Scenes.Tutorial
 {
     public class TutorialScene : IScene
     {

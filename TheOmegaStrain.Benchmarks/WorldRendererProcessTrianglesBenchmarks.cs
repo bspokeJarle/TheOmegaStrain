@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
-using _3dTesting.Rendering;
-using Domain;
+using TheOmegaStrain.Wpf.Rendering;
+using TheOmegaStrain.Domain;
 using System.Windows.Media;
 
 namespace TheOmegaStrain.Benchmarks;

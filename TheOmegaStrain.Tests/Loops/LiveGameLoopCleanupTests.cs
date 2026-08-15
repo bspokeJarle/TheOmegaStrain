@@ -1,16 +1,16 @@
-using CommonUtilities.OmegaEngineAdapters;
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.Events;
-using CommonUtilities.GamePlayHelpers;
-using CommonUtilities.Persistence;
-using Domain;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.Events;
+using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Domain;
 using System.Diagnostics;
 using System.Reflection;
 using TheOmegaStrain.Runtime.Loops;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Loops;
+namespace TheOmegaStrain.Tests.Loops;
 
 [TestClass]
 public class LiveGameLoopCleanupTests
@@ -116,7 +116,7 @@ public class LiveGameLoopCleanupTests
     public void CleanupExplodedObjects_KillTimePolicyPromotesSeederToPowerUpDrop()
     {
         // Configure a wave where the very first seeder kill should drop a powerup.
-        _3dRotations.Helpers.PowerUpDropPolicy.ConfigureForWave(totalSeeders: 1, powerUpCount: 1);
+        TheOmegaStrain.Game.Helpers.PowerUpDropPolicy.ConfigureForWave(totalSeeders: 1, powerUpCount: 1);
         GameState.SurfaceState.GlobalMapPosition = new Vector3();
         GameState.SurfaceState.AiObjects = new List<_3dObject>();
         GameState.GamePlayState.CurrentSceneType = SceneTypes.Game;
@@ -145,7 +145,7 @@ public class LiveGameLoopCleanupTests
     [TestMethod]
     public void CleanupExplodedObjects_SpeedDropSurvivesWhenStandardPowerUpAlreadyExists()
     {
-        _3dRotations.Helpers.PowerUpDropPolicy.ConfigureForWave(
+        TheOmegaStrain.Game.Helpers.PowerUpDropPolicy.ConfigureForWave(
             totalSeeders: 21,
             powerUpCount: 2,
             firstKillPowerUpType: PowerUpType.TravelSpeedLevel1);
@@ -180,7 +180,7 @@ public class LiveGameLoopCleanupTests
     [TestMethod]
     public void CleanupExplodedObjects_TutorialSeederKillDoesNotConsumePowerUpDrop()
     {
-        _3dRotations.Helpers.PowerUpDropPolicy.ConfigureForWave(totalSeeders: 1, powerUpCount: 1);
+        TheOmegaStrain.Game.Helpers.PowerUpDropPolicy.ConfigureForWave(totalSeeders: 1, powerUpCount: 1);
         GameState.SurfaceState.GlobalMapPosition = new Vector3();
         GameState.SurfaceState.AiObjects = new List<_3dObject>();
         GameState.GamePlayState.CurrentSceneType = SceneTypes.Tutorial;
@@ -200,7 +200,7 @@ public class LiveGameLoopCleanupTests
         var loop = new LiveGameLoop();
         InvokePrivate(loop, "CleanupExplodedObjects", world);
 
-        Assert.AreEqual(0, _3dRotations.Helpers.PowerUpDropPolicy.SeederKillsObserved,
+        Assert.AreEqual(0, TheOmegaStrain.Game.Helpers.PowerUpDropPolicy.SeederKillsObserved,
             "Tutorial seeder kills must not advance the wave-wide PowerUpDropPolicy counter.");
     }
 
@@ -210,7 +210,7 @@ public class LiveGameLoopCleanupTests
         // Checkpoints belong to the pickup, not the drop. A killed seeder that drops a
         // powerup must NOT trigger a checkpoint save here; the checkpoint is written by
         // ShipControls.CollectPowerUp when the player actually grabs it.
-        _3dRotations.Helpers.PowerUpDropPolicy.ConfigureForWave(totalSeeders: 1, powerUpCount: 1);
+        TheOmegaStrain.Game.Helpers.PowerUpDropPolicy.ConfigureForWave(totalSeeders: 1, powerUpCount: 1);
         var gps = GameState.GamePlayState;
         gps.PlayerName = "Pilot";
         gps.SceneIndex = 1;

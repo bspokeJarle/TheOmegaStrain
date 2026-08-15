@@ -1,4 +1,4 @@
-namespace CommonUtilities.Persistence
+namespace TheOmegaStrain.Common.Persistence
 {
     public static class PlayerNameFormatter
     {

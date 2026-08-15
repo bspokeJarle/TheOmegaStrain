@@ -1,9 +1,9 @@
-using CommonUtilities.CommonGlobalState;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Domain;
 using RetroMesh.Engine;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Runtime.Collision
 {
@@ -39,11 +39,11 @@ namespace TheOmegaStrain.Runtime.Collision
                 IsStatic = IsStaticName(name);
                 IsParticle = name == "Particle";
                 IsLazer = name == "Lazer" || name == "EnemyLazer" || name == "EnemyLazerMedium";
-                IsWeapon = CommonUtilities.CommonSetup.WeaponSetup.IsWeaponTypeValid(name);
+                IsWeapon = TheOmegaStrain.Common.CommonSetup.WeaponSetup.IsWeaponTypeValid(name);
                 IsSeeder = name == "Seeder";
                 IsShip = name == "Ship";
                 IsSurface = name == "Surface";
-                IsEnemy = CommonUtilities.CommonSetup.EnemySetup.IsEnemyTypeValid(name);
+                IsEnemy = TheOmegaStrain.Common.CommonSetup.EnemySetup.IsEnemyTypeValid(name);
             }
         }
 
@@ -93,12 +93,12 @@ namespace TheOmegaStrain.Runtime.Collision
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsTerrainObstacle(ObjectTypeFlags flags) =>
-            CommonUtilities.CommonSetup.TerrainAvoidanceSetup.IsTerrainObstacle(flags.Name);
+            TheOmegaStrain.Common.CommonSetup.TerrainAvoidanceSetup.IsTerrainObstacle(flags.Name);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsTerrainAvoidanceAiObject(_3dObject obj, ObjectTypeFlags flags)
         {
-            if (!CommonUtilities.CommonSetup.TerrainAvoidanceSetup.IsAvoidanceCapableAi(flags.Name))
+            if (!TheOmegaStrain.Common.CommonSetup.TerrainAvoidanceSetup.IsAvoidanceCapableAi(flags.Name))
                 return false;
 
             var aiObjects = GameState.SurfaceState?.AiObjects;

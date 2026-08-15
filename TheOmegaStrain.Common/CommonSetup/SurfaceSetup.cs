@@ -1,6 +1,6 @@
-﻿using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace CommonUtilities.CommonSetup
+namespace TheOmegaStrain.Common.CommonSetup
 {
     //TODO: Expand this as needed, common map properties can go here
     public static class SurfaceSetup

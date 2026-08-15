@@ -1,8 +1,8 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Domain;
 
-namespace CommonUtilities.GamePlayHelpers
+namespace TheOmegaStrain.Common.GamePlayHelpers
 {
     public static class MapHelpers
     {

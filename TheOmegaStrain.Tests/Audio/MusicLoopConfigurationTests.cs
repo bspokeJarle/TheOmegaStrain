@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 
-namespace _3DSpesificsUnitTests.Audio
+namespace TheOmegaStrain.Tests.Audio
 {
     [TestClass]
     public class MusicLoopConfigurationTests

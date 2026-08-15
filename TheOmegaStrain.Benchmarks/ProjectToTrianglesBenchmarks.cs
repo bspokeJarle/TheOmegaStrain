@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
-using _3dRotations.Projection;
-using Domain;
-using CommonUtilities.CommonGlobalState;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Game.Projection;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Common.CommonGlobalState;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]

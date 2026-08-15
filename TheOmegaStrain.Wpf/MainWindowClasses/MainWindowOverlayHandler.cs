@@ -1,11 +1,11 @@
-﻿using Domain;
+using TheOmegaStrain.Domain;
 using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-namespace _3dTesting.MainWindowClasses
+namespace TheOmegaStrain.Wpf.MainWindowClasses
 {
     /// <summary>
     /// Simple WPF overlay renderer for ScreenOverlayState.

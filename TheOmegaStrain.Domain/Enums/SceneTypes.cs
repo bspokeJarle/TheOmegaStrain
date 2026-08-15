@@ -1,4 +1,4 @@
-namespace Domain
+namespace TheOmegaStrain.Domain
 {
     public enum SceneTypes
     {

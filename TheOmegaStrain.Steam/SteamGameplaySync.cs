@@ -1,6 +1,6 @@
-using Domain;
+using TheOmegaStrain.Domain;
 
-namespace SteamIntegration;
+namespace TheOmegaStrain.Steam;
 
 public sealed class SteamGameplaySync : IDisposable
 {

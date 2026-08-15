@@ -1,14 +1,14 @@
-using CommonUtilities.CommonGlobalState;
-using CommonUtilities.CommonGlobalState.States;
-using CommonUtilities.CommonSetup;
-using Domain;
-using GameAiAndControls.Controls;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Controls;
 using System.Reflection;
-using _3dRotations.Helpers;
+using TheOmegaStrain.Game.Helpers;
 using RetroMesh.Engine;
-using static Domain._3dSpecificsImplementations;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
-namespace _3DSpesificsUnitTests.Physics;
+namespace TheOmegaStrain.Tests.Physics;
 
 [TestClass]
 public class ParticleSurfaceBounceTests
@@ -23,7 +23,7 @@ public class ParticleSurfaceBounceTests
         float initialVelocityY = 0f, float friction = 0.02f, bool applyPenetrationCorrection = true)
     {
         // Particle starts above the surface box (lower Y = higher on screen)
-        var physics = new GameAiAndControls.Physics.Physics
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics
         {
             GravityStrength = gravityStrength,
             Friction = friction,
@@ -152,7 +152,7 @@ public class ParticleSurfaceBounceTests
         // Simulates an explosion particle that goes up then falls back down
         // Explosion particles have positive velocity.y (upward via position -= velocity)
         // then gravity pulls them back down
-        var physics = new GameAiAndControls.Physics.Physics
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics
         {
             GravityStrength = 50f,
             Friction = 0.02f,
@@ -215,7 +215,7 @@ public class ParticleSurfaceBounceTests
     public void Particle_Bounce_VelocityIsUpwardAfterSurfaceHit()
     {
         // Verify the bounce fix: after hitting surface, velocity.y must be positive (upward)
-        var physics = new GameAiAndControls.Physics.Physics
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics
         {
             GravityStrength = 50f,
             Friction = 0.02f,
@@ -240,7 +240,7 @@ public class ParticleSurfaceBounceTests
     public void Particle_MultipleBounces_PenetrationDepthPerBounce()
     {
         // Simulate a particle that bounces multiple times, measuring penetration each time
-        var physics = new GameAiAndControls.Physics.Physics
+        var physics = new TheOmegaStrain.Gameplay.Physics.Physics
         {
             GravityStrength = 50f,
             Friction = 0.02f,
@@ -328,7 +328,7 @@ public class ParticleSurfaceBounceTests
         var particle = new Particle
         {
             Position = new Vector3 { x = 10f, y = 400f, z = 20f },
-            Physics = new GameAiAndControls.Physics.Physics
+            Physics = new TheOmegaStrain.Gameplay.Physics.Physics
             {
                 Velocity = new Vector3 { x = 2f, y = -8f, z = 3f },
                 BounceCooldownFrames = 0
@@ -347,7 +347,7 @@ public class ParticleSurfaceBounceTests
     {
         var fallingParticle = new Particle
         {
-            Physics = new GameAiAndControls.Physics.Physics
+            Physics = new TheOmegaStrain.Gameplay.Physics.Physics
             {
                 Velocity = new Vector3 { x = 0.2f, y = -8f, z = 0.1f }
             }
@@ -355,7 +355,7 @@ public class ParticleSurfaceBounceTests
 
         var upwardParticle = new Particle
         {
-            Physics = new GameAiAndControls.Physics.Physics
+            Physics = new TheOmegaStrain.Gameplay.Physics.Physics
             {
                 Velocity = new Vector3 { x = 0.2f, y = 8f, z = 0.1f }
             }

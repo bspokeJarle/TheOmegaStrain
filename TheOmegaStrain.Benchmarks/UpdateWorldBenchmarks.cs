@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using Microsoft.VSDiagnostics;
 using TheOmegaStrain.Runtime.Loops;
-using _3dRotations.World;
-using _3dRotations.Helpers;
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 
 namespace TheOmegaStrain.Benchmarks;
 [CPUUsageDiagnoser]

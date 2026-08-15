@@ -1,4 +1,4 @@
-﻿namespace CommonUtilities.CommonSetup
+namespace TheOmegaStrain.Common.CommonSetup
 {
     //TODO: Expand this as needed, common Screen properties can go here
     public static class ScreenSetup
@@ -9,7 +9,7 @@
         public static int RuntimeTargetFps { get; private set; } = targetFps;
         public static double TargetFrameIntervalMs => 1000.0 / RuntimeTargetFps;
 
-        // Screen dimensions — initialized at startup from the actual window size.
+        // Screen dimensions � initialized at startup from the actual window size.
         // Default values match the original constants so the engine works even
         // before Initialize() is called (unit tests, benchmarks, etc.).
         public static int screenSizeX { get; private set; } = 1500;

@@ -1,7 +1,7 @@
-using Domain;
+using TheOmegaStrain.Domain;
 using System.Windows.Input;
 
-namespace _3dTesting.Input
+namespace TheOmegaStrain.Wpf.Input
 {
     public static class WpfGameInputKeyMapper
     {

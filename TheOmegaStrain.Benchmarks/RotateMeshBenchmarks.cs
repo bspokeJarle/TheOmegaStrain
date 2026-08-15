@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
-using CommonUtilities.OmegaEngineAdapters;
-using Domain;
-using static Domain._3dSpecificsImplementations;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Domain;
+using static TheOmegaStrain.Domain._3dSpecificsImplementations;
 using Microsoft.VSDiagnostics;
 
 namespace TheOmegaStrain.Benchmarks;

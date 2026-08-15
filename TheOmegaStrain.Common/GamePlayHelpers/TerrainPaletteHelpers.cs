@@ -1,6 +1,6 @@
-using Domain;
+using TheOmegaStrain.Domain;
 
-namespace CommonUtilities.GamePlayHelpers
+namespace TheOmegaStrain.Common.GamePlayHelpers
 {
     public static class TerrainPaletteHelpers
     {

@@ -1,8 +1,8 @@
-using _3dTesting.Input;
-using Domain;
+using TheOmegaStrain.Wpf.Input;
+using TheOmegaStrain.Domain;
 using System.Windows.Input;
 
-namespace _3DSpesificsUnitTests.Controls;
+namespace TheOmegaStrain.Tests.Controls;
 
 [TestClass]
 public class WpfGameInputKeyMapperTests
