@@ -8,12 +8,18 @@ public class GamePlayStateStyleBonusTests
 {
     private int _originalCap;
     private int _originalCleanLoopScore;
+    private float _originalLowAltitudeRunMaxHeight;
+    private float _originalLowAltitudeRunMinHeight;
+    private float _originalLowAltitudeRunRequiredSeconds;
 
     [TestInitialize]
     public void Setup()
     {
         _originalCap = GameSetup.PlanetStyleBonusScoreCap;
         _originalCleanLoopScore = GameSetup.CleanLoopStyleBonusScore;
+        _originalLowAltitudeRunMinHeight = GameSetup.LowAltitudeRunMinHeight;
+        _originalLowAltitudeRunMaxHeight = GameSetup.LowAltitudeRunMaxHeight;
+        _originalLowAltitudeRunRequiredSeconds = GameSetup.LowAltitudeRunRequiredSeconds;
     }
 
     [TestCleanup]
@@ -21,6 +27,9 @@ public class GamePlayStateStyleBonusTests
     {
         GameSetup.PlanetStyleBonusScoreCap = _originalCap;
         GameSetup.CleanLoopStyleBonusScore = _originalCleanLoopScore;
+        GameSetup.LowAltitudeRunMinHeight = _originalLowAltitudeRunMinHeight;
+        GameSetup.LowAltitudeRunMaxHeight = _originalLowAltitudeRunMaxHeight;
+        GameSetup.LowAltitudeRunRequiredSeconds = _originalLowAltitudeRunRequiredSeconds;
     }
 
     [TestMethod]
@@ -70,5 +79,34 @@ public class GamePlayStateStyleBonusTests
         Assert.AreEqual(1200L, gameplay.Score);
         Assert.AreEqual(400, gameplay.PlanetStyleBonusScore);
         Assert.AreEqual(3, gameplay.PlanetStyleBonusSceneIndex);
+    }
+
+    [TestMethod]
+    public void LowAltitudeRun_DefaultTuningRequiresLowerAndLongerFlight()
+    {
+        Assert.AreEqual(20f, GameSetup.LowAltitudeRunMinHeight, 0.001f,
+            "Very low flight should still count once the ship is airborne; landed state already blocks pad idling.");
+        Assert.AreEqual(126f, GameSetup.LowAltitudeRunMaxHeight, 0.001f,
+            "Low-altitude flying should require about 10% lower altitude than the old 140-unit window.");
+        Assert.AreEqual(4.6f, GameSetup.LowAltitudeRunRequiredSeconds, 0.001f,
+            "Low-altitude flying should require about 15% longer sustained flight than the old 4 second window.");
+    }
+
+    [TestMethod]
+    public void LowAltitudeRunAttemptBonus_ResetForNewPlanetAttempt()
+    {
+        var gameplay = new GamePlayState { SceneIndex = 1 };
+
+        Assert.IsTrue(gameplay.TryConsumeLowAltitudeRunAttemptBonus());
+        Assert.IsFalse(gameplay.TryConsumeLowAltitudeRunAttemptBonus());
+
+        gameplay.ResetForNewGame();
+
+        Assert.IsFalse(gameplay.LowAltitudeRunAttemptBonusConsumed);
+        Assert.IsTrue(gameplay.TryConsumeLowAltitudeRunAttemptBonus());
+
+        gameplay.ConsumeLifeAndRespawn();
+
+        Assert.IsFalse(gameplay.LowAltitudeRunAttemptBonusConsumed);
     }
 }

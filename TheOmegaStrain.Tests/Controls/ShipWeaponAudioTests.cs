@@ -1,6 +1,7 @@
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.Events;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Game.World.Objects;
@@ -29,6 +30,7 @@ public class ShipWeaponAudioTests
         };
         GameState.ShipState = new ShipState();
         GameState.SettingsState = new GameSettingsState();
+        GameState.EventBus = null;
         GameState.DeltaTime = GameState.GameplayBaselineDeltaTime;
     }
 
@@ -550,6 +552,32 @@ public class ShipWeaponAudioTests
         Assert.IsFalse(fixture.Ship.ImpactStatus.HasCrashed);
     }
 
+    [TestMethod]
+    public void LowAltitudeRunBonus_WhenAlreadyAwardedThisAttempt_DoesNotAwardAgain()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.GamePlayState.SceneIndex = 1;
+        GameState.SurfaceState.GlobalMapPosition.y = 30f;
+        fixture.Controls.Physics.InertiaX = GameSetup.LowAltitudeRunMinHorizontalSpeed + 1f;
+        SetLanded(fixture.Controls, false);
+
+        int lowAltitudeEvents = 0;
+        var bus = new GameEventBus();
+        bus.Subscribe(GameEventType.StyleBonusAwarded, gameEvent =>
+        {
+            if (string.Equals(gameEvent.StyleBonusType, StyleBonusTypes.LowAltitudeRun, StringComparison.Ordinal))
+                lowAltitudeEvents++;
+        });
+        GameState.EventBus = bus;
+
+        InvokeLowAltitudeRunBonus(fixture.Controls, GameSetup.LowAltitudeRunRequiredSeconds);
+        InvokeLowAltitudeRunBonus(fixture.Controls, GameSetup.LowAltitudeRunRequiredSeconds);
+
+        Assert.IsTrue(GameState.GamePlayState.LowAltitudeRunAttemptBonusConsumed);
+        Assert.AreEqual(GameSetup.LowAltitudeRunStyleBonusScore, GameState.GamePlayState.PlanetStyleBonusScore);
+        Assert.AreEqual(1, lowAltitudeEvents);
+    }
+
     private static ShipFixture CreateReadyShip(bool withWeaponGuides, ISurface? parentSurface = null)
     {
         var controls = new ShipControls();
@@ -667,6 +695,26 @@ public class ShipWeaponAudioTests
 
         Assert.IsNotNull(field);
         field!.SetValue(controls, lastDeployUtc);
+    }
+
+    private static void SetLanded(ShipControls controls, bool landed)
+    {
+        var field = typeof(ShipControls).GetField(
+            "landed",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.IsNotNull(field);
+        field!.SetValue(controls, landed);
+    }
+
+    private static void InvokeLowAltitudeRunBonus(ShipControls controls, float deltaTime)
+    {
+        var method = typeof(ShipControls).GetMethod(
+            "HandleLowAltitudeRunBonus",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.IsNotNull(method);
+        method!.Invoke(controls, new object[] { deltaTime });
     }
 
     private sealed class ShipFixture : IDisposable

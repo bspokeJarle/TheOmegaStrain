@@ -36,10 +36,10 @@ namespace TheOmegaStrain.Common.CommonSetup
         public static int CleanLoopStyleBonusScore { get; set; } = 250;
         public static int CollisionLoopStyleBonusScore { get; set; } = 0;
         public static int LowAltitudeRunStyleBonusScore { get; set; } = 250;
-        public static float LowAltitudeRunMinHeight { get; set; } = 35f;
-        public static float LowAltitudeRunMaxHeight { get; set; } = 140f;
+        public static float LowAltitudeRunMinHeight { get; set; } = 20f;
+        public static float LowAltitudeRunMaxHeight { get; set; } = 126f;
         public static float LowAltitudeRunMinHorizontalSpeed { get; set; } = 5f;
-        public static float LowAltitudeRunRequiredSeconds { get; set; } = 4f;
+        public static float LowAltitudeRunRequiredSeconds { get; set; } = 4.6f;
         public static int PlanetBiomassContainedPointsPerCleanPercent { get; set; } = 10;
         public static int PlanetHullIntegrityMaxBonus { get; set; } = 800;
         public static int PlanetLifePreservedBonus { get; set; } = 500;

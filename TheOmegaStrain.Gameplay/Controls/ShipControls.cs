@@ -1697,6 +1697,13 @@ namespace TheOmegaStrain.Gameplay.Controls
 
         private void HandleLowAltitudeRunBonus(float deltaTime)
         {
+            var gameplay = GameState.GamePlayState;
+            if (gameplay.LowAltitudeRunAttemptBonusConsumed)
+            {
+                _lowAltitudeRunSeconds = 0f;
+                return;
+            }
+
             if (!IsLowAltitudeRunActive())
             {
                 _lowAltitudeRunSeconds = 0f;
@@ -1708,10 +1715,11 @@ namespace TheOmegaStrain.Gameplay.Controls
                 return;
 
             _lowAltitudeRunSeconds = 0f;
-
-            var gameplay = GameState.GamePlayState;
             int awardedScore = gameplay.AwardStyleBonus(GameSetup.LowAltitudeRunStyleBonusScore);
             if (awardedScore <= 0)
+                return;
+
+            if (!gameplay.TryConsumeLowAltitudeRunAttemptBonus())
                 return;
 
             GameState.EventBus?.Publish(new GameEvent

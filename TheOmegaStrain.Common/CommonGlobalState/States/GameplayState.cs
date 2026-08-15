@@ -59,6 +59,8 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
         public long Score { get; set; } = 0;
         public int PlanetStyleBonusScore { get; set; } = 0;
         public int PlanetStyleBonusSceneIndex { get; set; } = 0;
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool LowAltitudeRunAttemptBonusConsumed { get; private set; } = false;
 
         // Wave/level can drive seeder spawn intensity later
         public int WaveNumber { get; set; } = 1;
@@ -203,6 +205,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
             CheckpointInitialMotherShips = cp.InitialMotherShips;
             CheckpointPlanetStyleBonusScore = cp.PlanetStyleBonusScore;
             CheckpointPlanetStyleBonusSceneIndex = cp.PlanetStyleBonusSceneIndex;
+            ResetPlanetAttemptRuntimeBonuses();
         }
 
         public void SavePlanetStartSnapshot()
@@ -286,6 +289,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
             PlanetStyleBonusScore = PlanetStartPlanetStyleBonusScore;
             PlanetStyleBonusSceneIndex = PlanetStartPlanetStyleBonusSceneIndex;
             ClearCheckpoint();
+            ResetPlanetAttemptRuntimeBonuses();
         }
 
         public void ClearCheckpoint()
@@ -571,6 +575,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
 
             Health = MaxHealth;
             InvulnerableSecondsLeft = 1.0f;
+            ResetPlanetAttemptRuntimeBonuses();
 
             if (Lives < 0) Lives = 0;
         }
@@ -677,6 +682,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
             LaserCooldownLeft = 0f;
             RocketCooldownLeft = 0f;
             BulletCooldownLeft = 0f;
+            ResetPlanetAttemptRuntimeBonuses();
         }
 
         /// <summary>
@@ -702,6 +708,20 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
 
             PlanetStyleBonusScore += awarded;
             return awarded;
+        }
+
+        public bool TryConsumeLowAltitudeRunAttemptBonus()
+        {
+            if (LowAltitudeRunAttemptBonusConsumed)
+                return false;
+
+            LowAltitudeRunAttemptBonusConsumed = true;
+            return true;
+        }
+
+        public void ResetPlanetAttemptRuntimeBonuses()
+        {
+            LowAltitudeRunAttemptBonusConsumed = false;
         }
 
         public int PlanetStyleBonusRemaining
