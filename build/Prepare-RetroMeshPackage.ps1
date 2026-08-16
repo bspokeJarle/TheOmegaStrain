@@ -41,10 +41,13 @@ if ([string]::IsNullOrWhiteSpace($packageVersion)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($EnginePath)) {
-    $EnginePath = Join-Path $repoRoot "RetroMesh"
+    $EnginePath = [System.IO.Path]::GetFullPath((Join-Path $repoRoot "..\RetroMesh"))
 }
 elseif (-not [System.IO.Path]::IsPathRooted($EnginePath)) {
-    $EnginePath = Join-Path $repoRoot $EnginePath
+    $EnginePath = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $EnginePath))
+}
+else {
+    $EnginePath = [System.IO.Path]::GetFullPath($EnginePath)
 }
 
 if (-not (Test-Path -LiteralPath $EnginePath)) {

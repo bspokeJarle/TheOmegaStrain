@@ -30,12 +30,21 @@ audio foundations, timing, and other shared game-loop functionality.
 The Omega Strain consumes RetroMesh as a local NuGet package:
 
 ```text
-RetroMesh/artifacts/packages
+..\RetroMesh\artifacts\packages
 ```
 
-For local development, run the bootstrap script from a fresh checkout. It clones
-RetroMesh into `RetroMesh/` if needed, builds the package version configured in
-`Directory.Build.props`, and can restore Omega afterwards:
+For local development, keep the related repositories as siblings:
+
+```text
+Repositories/
+  TheOmegaStrain/
+  RetroMesh/
+  RetroMesh.GameTemplate/
+```
+
+Run the bootstrap script from a fresh checkout. It clones RetroMesh next to this
+repository as `..\RetroMesh\` if needed, builds the package version configured
+in `Directory.Build.props`, and can restore Omega afterwards:
 
 ```powershell
 .\build\Prepare-RetroMeshPackage.ps1 -RestoreOmega
