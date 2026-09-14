@@ -6,21 +6,39 @@ using TheOmegaStrain.Domain;
 namespace TheOmegaStrain.Tests.OmegaEngineAdapters;
 
 [TestClass]
+[DoNotParallelize]
 public class SurfacePositionSyncHelpersTests
 {
+    private ShipState _originalShip = null!;
+    private SurfaceState _originalSurface = null!;
+    private int _originalWidth;
+    private int _originalHeight;
+
     [TestInitialize]
     public void Setup()
     {
+        _originalShip = GameState.ShipState;
+        _originalSurface = GameState.SurfaceState;
+        _originalWidth = ScreenSetup.screenSizeX;
+        _originalHeight = ScreenSetup.screenSizeY;
         ScreenSetup.Initialize(1500, 1024);
-        GameState.ShipState = new TheOmegaStrain.Common.CommonGlobalState.States.ShipState
+        GameState.ShipState = new ShipState
         {
             ShipObjectOffsets = new Vector3()
         };
     }
 
+    [TestCleanup]
+    public void Cleanup()
+    {
+        GameState.ShipState = _originalShip;
+        GameState.SurfaceState = _originalSurface;
+        ScreenSetup.Initialize(_originalWidth, _originalHeight);
+    }
+
     [DataTestMethod]
     [DataRow("AttackShip")]
-    [DataRow("AttackShip2")]
+    [DataRow("CustomEnemy")]
     public void AttackShip_UsesRenderedDepthRatherThanLegacyPursuitMapping(string name)
     {
         var oldSurface = GameState.SurfaceState;
@@ -55,7 +73,7 @@ public class SurfacePositionSyncHelpersTests
     [DataTestMethod]
     [DataRow("KamikazeDrone")]
     [DataRow("AttackShip")]
-    [DataRow("AttackShip2")]
+    [DataRow("CustomEnemy")]
     [DataRow("Seeder")]
     [DataRow("SpaceSwan")]
     [DataRow("ZeppelinBomber")]

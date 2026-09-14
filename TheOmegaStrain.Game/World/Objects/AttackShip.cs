@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using TheOmegaStrain.Game.World;
 using TheOmegaStrain.Game.Helpers;
@@ -11,7 +11,11 @@ namespace TheOmegaStrain.Game.World.Objects
 {
     public static class AttackShip
     {
-        private const float ZoomRatio = 1f;
+        // Scale hull, crash boxes and both guide pairs together in the factory.
+        private const float ZoomRatio = 1.5f;
+        private const float NoseTipX = 48f;
+        // Ship's weapon guides run from local Y = 40 to -200; AttackShip fires along +X.
+        private const float RocketWeaponGuideDistance = 240f;
         // Expand each collision box equally without shifting the navigation/map centre.
         private const float CrashBoxPadding = 12f;
         private const float EngineNozzleCapX = -54.2f;
@@ -43,6 +47,8 @@ namespace TheOmegaStrain.Game.World.Objects
             AddPart(ship, "AttackShipLeftEngineDirectionGuide", BuildEngineDirectionGuide(EngineParticleLateralOffsetY), false);
             AddPart(ship, "AttackShipRightEngineStartGuide", BuildEngineStartGuide(-EngineParticleLateralOffsetY), false);
             AddPart(ship, "AttackShipRightEngineDirectionGuide", BuildEngineDirectionGuide(-EngineParticleLateralOffsetY), false);
+            AddPart(ship, "WeaponStartGuide", BuildRocketWeaponGuide(NoseTipX, "00ff00"), false);
+            AddPart(ship, "WeaponDirectionGuide", BuildRocketWeaponGuide(NoseTipX + RocketWeaponGuideDistance, "ff0000"), false);
             // Three crash boxes approximate the fuselage and both wing/engine sections.
             ship.CrashBoxes = BuildCrashBoxes();
             // Exhaust styling, mirroring ShipControls.ApplyThrustParticleStyle: the default
@@ -59,6 +65,7 @@ namespace TheOmegaStrain.Game.World.Objects
             };
 
             OmegaObject3DHelpers.ApplyScaleToObject(ship, ZoomRatio);
+            // Guides stay hidden so the shadow is generated from the hull only.
             OmegaObject3DHelpers.AddSimplifiedShadowPart(ship, useFlatQuad: true);
             return ship;
         }
@@ -66,7 +73,7 @@ namespace TheOmegaStrain.Game.World.Objects
         private static List<ITriangleMeshWithColorAndTexture> BuildNose()
         {
             var t = new List<ITriangleMeshWithColorAndTexture>(); const int n = 12;
-            var tip = V(48, 0, 0); var r1 = Ring(n, 40, 4, 3.4f); var r2 = Ring(n, 30, 7, 5.2f); var r3 = Ring(n, 18, 10.5f, 6.4f);
+            var tip = V(NoseTipX, 0, 0); var r1 = Ring(n, 40, 4, 3.4f); var r2 = Ring(n, 30, 7, 5.2f); var r3 = Ring(n, 18, 10.5f, 6.4f);
             for (int i = 0; i < n; i++)
             {
                 int j = (i + 1) % n; var c1 = i % 2 == 0 ? BodyLight : BodyMid; var c2 = i % 2 == 0 ? BodyMid : BodyDark;
@@ -140,6 +147,22 @@ namespace TheOmegaStrain.Game.World.Objects
             AddBox(t, V(12, 12.8f, 0), V(7, 1.4f, 1.4f), Accent); AddBox(t, V(12, -12.8f, 0), V(7, 1.4f, 1.4f), Accent);
             AddBox(t, V(2, 13.6f, .5f), V(8, 1, 2.2f), BodyDark); AddBox(t, V(2, -13.6f, .5f), V(8, 1, 2.2f), BodyDark);
             return t;
+        }
+
+        private static List<ITriangleMeshWithColorAndTexture> BuildRocketWeaponGuide(float x, string color)
+        {
+            // Weapons use vert1 as the launch/aim anchor; keep both anchors on the nose axis.
+            return new List<ITriangleMeshWithColorAndTexture>
+            {
+                new TriangleMeshWithColor
+                {
+                    Color = color,
+                    vert1 = V(x, 0f, 0f),
+                    vert2 = V(x, -6f, 8f),
+                    vert3 = V(x, 6f, 8f),
+                    noHidden = true
+                }
+            };
         }
 
         private static List<ITriangleMeshWithColorAndTexture> BuildEngineStartGuide(float y)

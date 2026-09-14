@@ -247,7 +247,7 @@ namespace TheOmegaStrain.Runtime.Loops
                 if (!gameplayPausedForVictoryReward)
                 {
                     particleManager.HandleParticles(inhabitant, particleObjectList);
-                    weaponsManager.HandleWeapons(inhabitant, weaponObjectList);
+                    weaponsManager.HandleWeapons(inhabitant, weaponObjectList, particleObjectList);
                 }
 
                 if (GameState.SettingsState.EnhancedShadowsEnabled)

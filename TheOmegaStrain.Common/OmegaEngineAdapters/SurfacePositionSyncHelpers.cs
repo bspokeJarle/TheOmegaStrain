@@ -149,6 +149,14 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters
         /// </summary>
         public static Vector3 GetShipRamTargetWorldPosition(I3dObject enemyObject)
         {
+            var enemyLocalCentre = ObjectCollisionGeometry.GetRotatedLocalCrashCenter(enemyObject);
+            return GetShipRamTargetWorldPosition(
+                VectorMath.Add(enemyObject.ObjectOffsets ?? new Vector3(), enemyLocalCentre));
+        }
+
+        // Also accepts a muzzle/weapon anchor without adding the enemy's collision centre.
+        public static Vector3 GetShipRamTargetWorldPosition(IVector3 enemyLocalAnchor)
+        {
             var globalMapPosition = GameState.SurfaceState.GlobalMapPosition;
             var shipState = GameState.ShipState;
             var shipOffsets = shipState.ShipObjectOffsets ?? new Vector3();
@@ -156,11 +164,9 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters
             var shipLocalCentre = shipState.ShipCrashCenterWorldPosition == null
                 ? new Vector3()
                 : VectorMath.Subtract(shipState.ShipCrashCenterWorldPosition, shipWorld);
-            var enemyLocalCentre = ObjectCollisionGeometry.GetRotatedLocalCrashCenter(enemyObject);
-
             return WorldPositionMath.GetShipRamTargetWorldPosition(
                 globalMapPosition,
-                VectorMath.Add(enemyObject.ObjectOffsets ?? new Vector3(), enemyLocalCentre),
+                enemyLocalAnchor,
                 VectorMath.Add(shipOffsets, shipLocalCentre),
                 CreateVector);
         }

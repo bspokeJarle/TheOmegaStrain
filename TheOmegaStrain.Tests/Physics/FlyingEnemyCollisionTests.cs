@@ -44,17 +44,19 @@ public class FlyingEnemyCollisionTests
     [DataRow(0, -38f, 48f, -15f, 15f, -7f, 12.5f)]
     [DataRow(1, -54.5f, 8f, 10f, 36f, -6.5f, 15f)]
     [DataRow(2, -54.5f, 8f, -36f, -10f, -6.5f, 15f)]
-    public void AttackShip_ExpandsEachBoxByTwelveWithoutMovingItsCentre(
+    public void AttackShip_ScalesPaddedBoxesAndTheirCentresWithTheHull(
         int index, float minX, float maxX, float minY, float maxY, float minZ, float maxZ)
     {
         var attack = AttackShip.CreateAttackShip(null!);
         Assert.AreEqual(3, attack.CrashBoxes.Count);
         var actual = AabbBounds.FromPoints(attack.CrashBoxes[index]);
-        Assert.AreEqual(new AabbBounds(minX - 12f, maxX + 12f, minY - 12f, maxY + 12f, minZ - 12f, maxZ + 12f), actual);
+        const float scale = 1.5f;
+        Assert.AreEqual(new AabbBounds((minX - 12f) * scale, (maxX + 12f) * scale,
+            (minY - 12f) * scale, (maxY + 12f) * scale, (minZ - 12f) * scale, (maxZ + 12f) * scale), actual);
         var centre = CollisionBoxMath.GetCenter(actual);
-        Assert.AreEqual((minX + maxX) / 2f, centre.x, 0.001f);
-        Assert.AreEqual((minY + maxY) / 2f, centre.y, 0.001f);
-        Assert.AreEqual((minZ + maxZ) / 2f, centre.z, 0.001f);
+        Assert.AreEqual((minX + maxX) / 2f * scale, centre.x, 0.001f);
+        Assert.AreEqual((minY + maxY) / 2f * scale, centre.y, 0.001f);
+        Assert.AreEqual((minZ + maxZ) / 2f * scale, centre.z, 0.001f);
     }
 
     [DataTestMethod]
@@ -65,6 +67,12 @@ public class FlyingEnemyCollisionTests
         var attack = CreateAttackShip(pitch);
         var oldAttack = CreateAttackShip(pitch);
         oldAttack.CrashBoxes = PreviousAttackBoxes();
+        foreach (var corner in oldAttack.CrashBoxes.SelectMany(box => box))
+        {
+            corner.x *= 1.5f;
+            corner.y *= 1.5f;
+            corner.z *= 1.5f;
+        }
         var attackFrame = PrepareFrame(attack);
         var oldFrame = PrepareFrame(oldAttack);
         var shipFrame = PrepareFrame(CreateShip(pitch));
@@ -100,14 +108,16 @@ public class FlyingEnemyCollisionTests
     }
 
     [DataTestMethod]
-    [DataRow(63f, 0f, 189.5f, 400f, 100f, 90)]
-    [DataRow(70f, 0f, 189.5f, 400f, 100f, 90)]
-    [DataRow(63f, 100f, -80f, 600f, 100f, 60)]
-    [DataRow(70f, -100f, 80f, 600f, 100f, 30)]
-    [DataRow(63f, -200f, 230f, 100f, 650f, 144)]
-    [DataRow(70f, 150f, -40f, 200f, 550f, 90)]
-    public void AttackShip_PursuitReachesShipsRenderedCollisionBoxes(
-        float pitch, float mapY, float shipY, float shipZ, float attackZ, int fps)
+    [DataRow(63f, 0f, 189.5f, 400f, 100f, 90, false)]
+    [DataRow(70f, 0f, 189.5f, 400f, 100f, 90, false)]
+    [DataRow(63f, 100f, -80f, 600f, 100f, 60, false)]
+    [DataRow(70f, -100f, 80f, 600f, 100f, 30, false)]
+    [DataRow(63f, -200f, 230f, 100f, 650f, 144, false)]
+    [DataRow(70f, 150f, -40f, 200f, 550f, 90, false)]
+    [DataRow(63f, 0f, 189.5f, 400f, 100f, 90, true)]
+    [DataRow(70f, 0f, 189.5f, 400f, 100f, 60, true)]
+    public void AttackShip_HoldsVisibleFiringDistanceWithoutRamming(
+        float pitch, float mapY, float shipY, float shipZ, float attackZ, int fps, bool startTooClose)
     {
         var originalPitch = WorldViewSetup.CameraPitchDegrees;
         try
@@ -123,13 +133,18 @@ public class FlyingEnemyCollisionTests
             var attack = CreateAttackShip(pitch);
             attack.WorldPosition = new Vector3(49200f, 0f, 49500f);
             attack.ObjectOffsets = new Vector3(0f, 150f, attackZ);
+            if (startTooClose)
+            {
+                attack.WorldPosition = SurfacePositionSyncHelpers.GetShipRamTargetWorldPosition(attack);
+                attack.WorldPosition.x -= 300f;
+            }
             GameState.SurfaceState.AiObjects.Add(attack);
             var controls = (AttackShipControls)attack.Movement!;
             var lastUpdate = typeof(AttackShipControls).GetField("_lastMovementTime",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
             OmegaObject3D frame = null!;
 
-            for (int i = 0; i < fps * 4 && !attack.ImpactStatus!.HasCrashed; i++)
+            for (int i = 0; i < fps * 8 && !attack.ImpactStatus!.HasCrashed; i++)
             {
                 frame = CopyFrame(attack);
                 frame.IsOnScreen = true;
@@ -143,14 +158,19 @@ public class FlyingEnemyCollisionTests
 
             var actualCentre = GeometryMath.GetCenterOfBox(frame.GetAllCrashPointsWorld());
             var shipCentre = GeometryMath.GetCenterOfBox(shipFrame.GetAllCrashPointsWorld());
-            Assert.IsTrue(attack.ImpactStatus!.HasCrashed,
-                $"Pursuit must reach a real collision, not just report distance zero. Rendered centres: " +
-                $"Attack=({actualCentre.x:F1},{actualCentre.y:F1},{actualCentre.z:F1}), " +
-                $"Ship=({shipCentre.x:F1},{shipCentre.y:F1},{shipCentre.z:F1}).");
-            var impactFrame = CopyFrame(attack);
-            controls.MoveObject(impactFrame, null, null);
-            Assert.AreEqual(0, attack.ImpactStatus.ObjectHealth);
-            Assert.IsTrue(impactFrame.ObjectParts.All(part => part.PartName == "ExplodingPart"));
+            Assert.IsFalse(attack.ImpactStatus!.HasCrashed, "A ranged attacker must stop before ramming Ship.");
+            var horizontalDistance = VectorMath.Length(new Vector3(
+                actualCentre.x - shipCentre.x, 0f, actualCentre.z - shipCentre.z));
+            Assert.AreEqual(EnemySetup.AttackShipFiringDistance * ScreenSetup.ScreenScaleX,
+                horizontalDistance, 15f, "Measure the rendered collision centres, not raw world coordinates.");
+            Assert.AreEqual(shipCentre.y, actualCentre.y, 15f, "Hold Ship's height within the firing ring.");
+            Assert.IsTrue(ObjectPlacementHelpers.TryGetRenderPosition(frame,
+                ScreenSetup.screenSizeX / 2, ScreenSetup.screenSizeY / 2, out var x, out var y, out var z));
+            Assert.IsTrue(ProjectionMath.TryProjectVertex(GeometryMath.GetCenterOfBox(frame.CrashBoxes.SelectMany(box => box).ToList()),
+                x, y, z, ScreenSetup.perspectiveAdjustment, ScreenSetup.defaultObjectZoom, out var screen));
+            Assert.IsTrue(screen.x > 0 && screen.x < ScreenSetup.screenSizeX &&
+                          screen.y > 0 && screen.y < ScreenSetup.screenSizeY,
+                $"The firing position must remain visible: ({screen.x:F1}, {screen.y:F1}).");
         }
         finally
         {

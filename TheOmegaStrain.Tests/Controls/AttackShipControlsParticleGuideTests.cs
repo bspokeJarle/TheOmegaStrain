@@ -92,13 +92,13 @@ public class AttackShipControlsParticleGuideTests
             ship,
             "AttackShipLeftEngineStartGuide",
             "AttackShipLeftEngineDirectionGuide",
-            expectedLateralY: 28.5f);
+            expectedLateralY: 28.5f * 1.5f);
 
         AssertEngineGuideClearance(
             ship,
             "AttackShipRightEngineStartGuide",
             "AttackShipRightEngineDirectionGuide",
-            expectedLateralY: -28.5f);
+            expectedLateralY: -28.5f * 1.5f);
     }
 
     [TestMethod]
@@ -159,12 +159,12 @@ public class AttackShipControlsParticleGuideTests
 
         var rotatedNozzle = Rotate.RotatePoint(
             90f,
-            new Vector3 { x = -54.2f, y = 18.5f, z = 0f },
+            new Vector3 { x = -54.2f * 1.5f, y = 18.5f * 1.5f, z = 0f },
             'Z');
 
-        Assert.AreEqual(rotatedNozzle.x - 10f, spawn!.x, 0.01f,
+        Assert.AreEqual(rotatedNozzle.x - 10f * 1.5f, spawn!.x, 0.01f,
             "Rotated particle birth point should move slightly wider than the engine pod.");
-        Assert.IsTrue(spawn.y <= rotatedNozzle.y - 42f,
+        Assert.IsTrue(spawn.y <= rotatedNozzle.y - 42f * 1.5f,
             $"Particle birth y={spawn.y:F1}; expected clear behind rotated nozzle y={rotatedNozzle.y:F1}.");
     }
 
@@ -182,8 +182,8 @@ public class AttackShipControlsParticleGuideTests
         string directionPartName,
         float expectedLateralY)
     {
-        const float nozzleCapX = -54.2f;
-        const float minimumClearanceBehindNozzle = 42f;
+        const float nozzleCapX = -54.2f * 1.5f;
+        const float minimumClearanceBehindNozzle = 42f * 1.5f;
 
         var start = Centroid(GetGuideTriangle(ship, startPartName));
         var guide = Centroid(GetGuideTriangle(ship, directionPartName));
@@ -194,7 +194,7 @@ public class AttackShipControlsParticleGuideTests
             $"{startPartName} should stay centered on its engine pod.");
         Assert.IsTrue(guide.x < start.x,
             $"{directionPartName} must sit behind {startPartName} so exhaust velocity points away from the hull.");
-        Assert.AreEqual(14f, start.x - guide.x, 0.01f,
+        Assert.AreEqual(14f * 1.5f, start.x - guide.x, 0.01f,
             $"{directionPartName} should preserve the tuned exhaust guide distance.");
     }
 

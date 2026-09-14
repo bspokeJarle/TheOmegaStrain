@@ -553,6 +553,26 @@ public class ShipWeaponAudioTests
     }
 
     [TestMethod]
+    public void MoveObject_WhenEnemyRocketHitsFullHealthShip_IsFatalAndStartsExplosion()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        Assert.AreEqual(105, WeaponSetup.GetWeaponDamage("EnemyRocket"));
+        Assert.AreEqual(105, WeaponSetup.GetWeaponDamage("Rocket"));
+        fixture.Ship.ImpactStatus = new ImpactStatus
+        {
+            HasCrashed = true,
+            ObjectName = "EnemyRocket",
+            ObjectHealth = ShipSetup.DefaultShipHealth
+        };
+
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.AreEqual(0, fixture.Ship.ImpactStatus.ObjectHealth);
+        Assert.IsFalse(fixture.Ship.ImpactStatus.HasCrashed);
+        Assert.AreEqual("explosion_main", fixture.Audio.LastDefinitionId);
+    }
+
+    [TestMethod]
     public void LowAltitudeRunBonus_WhenAlreadyAwardedThisAttempt_DoesNotAwardAgain()
     {
         using var fixture = CreateReadyShip(withWeaponGuides: true);
@@ -576,6 +596,20 @@ public class ShipWeaponAudioTests
         Assert.IsTrue(GameState.GamePlayState.LowAltitudeRunAttemptBonusConsumed);
         Assert.AreEqual(GameSetup.LowAltitudeRunStyleBonusScore, GameState.GamePlayState.PlanetStyleBonusScore);
         Assert.AreEqual(1, lowAltitudeEvents);
+    }
+
+    [TestMethod]
+    public void RocketImpact_PlaysConfiguredExplosionAudioExactlyOnce()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        var weapons = new Weapons(new() { Rocket.CreateRocket(null!) }, fixture.Controls, fixture.Ship);
+        weapons.ConfigureAudio(fixture.Audio, new FakeSoundRegistry());
+        weapons.FireWeapon(new Vector3(1, 0, 0), new Vector3(), new Vector3(), WeaponType.Rocket, fixture.Ship, 0);
+        weapons.ActiveWeapons.Single().WeaponObject.ImpactStatus.HasCrashed = true;
+        for (int frame = 0; frame < 3; frame++) weapons.MoveWeapon(null, null);
+        Assert.AreEqual(1, fixture.Audio.PlayCount);
+        Assert.AreEqual("explosion_main", fixture.Audio.LastDefinitionId);
+        Assert.AreEqual(AudioPlayMode.OneShot, fixture.Audio.LastMode);
     }
 
     private static ShipFixture CreateReadyShip(bool withWeaponGuides, ISurface? parentSurface = null)

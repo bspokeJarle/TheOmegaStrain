@@ -68,20 +68,25 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
 
-            var AttackShip2 = AttackShip.CreateAttackShip(Surface);
-            AttackShip2.Rotation = new Vector3 { };
-            AttackShip2.ObjectOffsets = new Vector3 { x = 0, y = 150, z = 100 };
+            var attackShipWeapons = new List<I3dObject> { Rocket.CreateRocket(Surface) };
+            var attackShip = AttackShip.CreateAttackShip(Surface);
+            attackShip.Rotation = new Vector3 { };
+            attackShip.ObjectOffsets = new Vector3 { x = 0, y = 150, z = 100 };
             // Absolute authored game-start coordinates for workshop testing.
-            AttackShip2.WorldPosition = new Vector3 { x = 53870f, y = 0f, z = 55280f };
-            AttackShip2.ObjectName = "AttackShip";
-            AttackShip2.ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.AttackShipHealth };
-            AttackShip2.CrashBoxDebugMode = true;
-            AttackShip2.WeaponSystems = null;
-            AttackShip2.HasPowerUp = false;
-            AttackShip2.IsActive = true;
-            AttackShip2.Movement = new AttackShipControls();
-            world.WorldInhabitants.Add(AttackShip2);
-            GameState.SurfaceState.AiObjects.Add(AttackShip2);
+            attackShip.WorldPosition = new Vector3 { x = 53870f, y = 0f, z = 55280f };
+            attackShip.ObjectName = "AttackShip";
+            attackShip.ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.AttackShipHealth };
+            attackShip.CrashBoxDebugMode = false;
+            attackShip.HasPowerUp = false;
+            attackShip.IsActive = true;
+            attackShip.Movement = new AttackShipControls();
+            attackShip.WeaponSystems = new Weapons(attackShipWeapons, attackShip.Movement!, attackShip)
+            {
+                ShowAimAssist = false,
+                FireAsEnemyWeapon = true
+            };
+            world.WorldInhabitants.Add(attackShip);
+            GameState.SurfaceState.AiObjects.Add(attackShip);
 
             SpawnJumpingFish(world);
 
