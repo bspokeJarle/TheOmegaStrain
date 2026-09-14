@@ -34,7 +34,7 @@ namespace TheOmegaStrain.Wpf.Helpers
         /// <summary>
         /// Updates the minimap overlay with the correct cropped portion.
         /// </summary>
-        public static void  UpdateMapOverlay(System.Windows.Controls.Image mapOverlay, BitmapSource surfaceMapBitmap, int mapX, int mapY)
+        public static void UpdateMapOverlay(System.Windows.Controls.Image mapOverlay, BitmapSource surfaceMapBitmap, int mapX, int mapY)
         {
             if (mapX == 0 || mapY == 0) return; // Avoid division by zero or invalid map coordinates 
             if (surfaceMapBitmap != null && mapOverlay != null)
@@ -180,12 +180,13 @@ namespace TheOmegaStrain.Wpf.Helpers
             var biome = GameState.SurfaceState.SceneBiome;
 
             // BGRA format
-            byte[] greyPx    = { 180, 180, 180, 255 }; // Ship
-            byte[] blackPx   = { 0, 0, 0, 255 };       // Seeder
-            byte[] bluePx    = { 255, 80, 0, 255 };    // Drone
-            byte[] orangePx  = { 0, 140, 255, 255 };   // Decoy
+            byte[] greyPx = { 180, 180, 180, 255 }; // Ship
+            byte[] blackPx = { 0, 0, 0, 255 };       // Seeder
+            byte[] bluePx = { 255, 80, 0, 255 };    // Drone
+            byte[] attackShipPx = { 220, 50, 220, 255 };    // AttackShip
+            byte[] orangePx = { 0, 140, 255, 255 };   // Decoy
             byte[] powerupPx = { 255, 140, 30, 255 };  // PowerUp (strong blue)
-            byte[] swanPx    = { 240, 240, 240, 255 }; // SpaceSwan (white)
+            byte[] swanPx = { 240, 240, 240, 255 }; // SpaceSwan (white)
             byte[] zeppelinPx = { 0, 200, 200, 255 };   // ZeppelinBomber (yellow-green, BGRA)
 
             // Mothership - large marker flashing red/strong-red independently
@@ -297,6 +298,7 @@ namespace TheOmegaStrain.Wpf.Helpers
                             "Seeder" => blackPx,
                             "KamikazeDrone" => bluePx,
                             "DroneDecoy" => orangePx,
+                            "AttackShip" => attackShipPx,
                             "SpaceSwan" => swanPx,
                             "ZeppelinBomber" => null,
                             _ => null
@@ -457,7 +459,7 @@ namespace TheOmegaStrain.Wpf.Helpers
                     if (px >= 0 && pz >= 0 && px < w && pz < h)
                     {
                         int offset = pz * stride + px * 4;
-                        pixels[offset]     = bgra[0]; // B
+                        pixels[offset] = bgra[0]; // B
                         pixels[offset + 1] = bgra[1]; // G
                         pixels[offset + 2] = bgra[2]; // R
                         pixels[offset + 3] = bgra[3]; // A
@@ -478,7 +480,7 @@ namespace TheOmegaStrain.Wpf.Helpers
                     if (px >= 0 && pz >= 0 && px < w && pz < h)
                     {
                         int offset = pz * stride + px * 4;
-                        pixels[offset]     = bgra[0]; // B
+                        pixels[offset] = bgra[0]; // B
                         pixels[offset + 1] = bgra[1]; // G
                         pixels[offset + 2] = bgra[2]; // R
                         pixels[offset + 3] = bgra[3]; // A
@@ -499,7 +501,7 @@ namespace TheOmegaStrain.Wpf.Helpers
                     if (px >= 0 && pz >= 0 && px < w && pz < h)
                     {
                         int offset = pz * stride + px * 4;
-                        pixels[offset]     = bgra[0]; // B
+                        pixels[offset] = bgra[0]; // B
                         pixels[offset + 1] = bgra[1]; // G
                         pixels[offset + 2] = bgra[2]; // R
                         pixels[offset + 3] = bgra[3]; // A

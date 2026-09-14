@@ -11,11 +11,11 @@ namespace TheOmegaStrain.Wpf
     {
         protected override void OnStartup(StartupEventArgs e)
         {
-            if (SteamManager.RequestRestartThroughSteamIfNecessary(SteamGameConfig.RuntimeAppId))
-            {
-                Shutdown();
-                return;
-            }
+            // if (SteamManager.RequestRestartThroughSteamIfNecessary(SteamGameConfig.RuntimeAppId))
+            // {
+            //     Shutdown();
+            //     return;
+            // }
 
             base.OnStartup(e);
         }

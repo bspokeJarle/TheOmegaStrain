@@ -48,25 +48,39 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             //Add ship as first inhabitant
             var ship = Ship.CreateShip(Surface);
             //Generate 2D map for the surface, maxtrees and maxhouses set
-            Surface.Create2DMap(30000,15000, GameMode, "Scene1SurfaceRecording_20260830_205856.retro");
+            Surface.Create2DMap(30000, 15000, GameMode, "Scene1SurfaceRecording_20260830_205856.retro");
             var weapons = new List<I3dObject> { Lazer.CreateLazer(Surface), Bullet.CreateBullet(Surface) };
             ship.Rotation = new Vector3 { };
             ship.WorldPosition = new Vector3 { };
             ship.ObjectName = "Ship";
-            ship.ImpactStatus = new ImpactStatus { ObjectHealth = ShipSetup.DefaultShipHealth };
+            ship.ImpactStatus = new ImpactStatus { ObjectHealth = 32643 }; // I'm invincible >:)
             ship.CrashBoxDebugMode = false;
             ship.WeaponSystems = new Weapons(weapons, ship.Movement!, ship);
             world.WorldInhabitants.Add(ship);
 
             // Guidance arrow — on-screen indicator pointing toward closest seeder
             var guidanceArrow = SeederGuidanceArrow.CreateSeederGuidanceArrow(Surface);
-            guidanceArrow.ObjectOffsets = new Vector3 { x = 0, y = -200, z = 200 };
+            guidanceArrow.ObjectOffsets = new Vector3 { x = 0, y = -100, z = 200 };
             guidanceArrow.Rotation = new Vector3 { x = WorldViewSetup.SurfaceFacingObjectPitchDegrees, y = 0, z = 90 };
             guidanceArrow.WorldPosition = new Vector3 { };
             guidanceArrow.ObjectName = "SeederGuidanceArrow";
             guidanceArrow.ImpactStatus = new ImpactStatus { };
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
+
+            var attackShip = AttackShip.CreateAttackShip(Surface);
+            //attackShip.WorldPosition = new Vector3 { x = 0, y = 0, z = 0 };
+            attackShip.Rotation = new Vector3 { x = 0, y = 0, z = 0 };
+            attackShip.ObjectOffsets = new Vector3 { x = 0, y = -200, z = 100 };
+            attackShip.WorldPosition = new Vector3 { x = 53870f, y = 0f, z = 55280f };
+            attackShip.ObjectName = "AttackShip";
+            attackShip.ImpactStatus = new ImpactStatus { };
+            attackShip.CrashBoxDebugMode = false;
+            attackShip.WeaponSystems = null;
+            attackShip.IsActive = true;
+            attackShip.Movement = new AttackShipControls();
+            GameState.SurfaceState.AiObjects.Add(attackShip);
+            world.WorldInhabitants.Add(attackShip);
 
             SpawnJumpingFish(world);
 
@@ -184,7 +198,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             }
 
 
-            var treePlacements = SurfaceGeneration.FindTreePlacementAreas(GameState.SurfaceState.Global2DMap,Surface.GlobalMapSize(),Surface.TileSize(),Surface.MaxHeight(), 30000);
+            var treePlacements = SurfaceGeneration.FindTreePlacementAreas(GameState.SurfaceState.Global2DMap, Surface.GlobalMapSize(), Surface.TileSize(), Surface.MaxHeight(), 30000);
             SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), treePlacements, radius: 1);
             var treeIndex = 0;
             foreach (var treePlacement in treePlacements)
@@ -204,7 +218,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
                 tree.Movement = new TreeControls();
                 tree.ImpactStatus = new ImpactStatus { };
                 tree.CrashBoxDebugMode = false;
-                if (tree.SurfaceBasedId>0) world.WorldInhabitants.Add(tree);
+                if (tree.SurfaceBasedId > 0) world.WorldInhabitants.Add(tree);
             }
 
             var housePlacements = SurfaceGeneration.FindHousePlacementAreas(GameState.SurfaceState.Global2DMap, Surface.GlobalMapSize(), Surface.MaxHeight(), treePlacements, 15000);
@@ -226,7 +240,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
                 house.Movement = new HouseControls();
                 house.ImpactStatus = new ImpactStatus { };
                 house.CrashBoxDebugMode = false;
-                if (house.SurfaceBasedId>0) world.WorldInhabitants.Add(house);
+                if (house.SurfaceBasedId > 0) world.WorldInhabitants.Add(house);
             }
 
             LeafTreePlacementHelpers.AddLeafTrees(

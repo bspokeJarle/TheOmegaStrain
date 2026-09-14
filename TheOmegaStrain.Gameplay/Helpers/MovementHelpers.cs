@@ -76,7 +76,7 @@ namespace TheOmegaStrain.Gameplay.Helpers
             };
         }
 
-        public static Vector3 GetVectorToTarget(Vector3 from, Vector3 target)
+        public static Vector3 GetVectorToTarget(IVector3 from, IVector3 target)
         {
             return new Vector3
             {
@@ -105,11 +105,11 @@ namespace TheOmegaStrain.Gameplay.Helpers
         }
 
         public static PursuitStep GetPursuitStep(
-            Vector3 currentPosition,
-            Vector3 targetPosition,
-            Vector3 currentVelocity,
+            IVector3 currentPosition,
+            IVector3 targetPosition,
+            IVector3 currentVelocity,
             float deltaSeconds,
-            Vector3? forcedMovementDirection = null)
+            IVector3? forcedMovementDirection = null)
         {
             var targetVector = GetDirectionAndDistanceWorld(currentPosition, targetPosition);
             var speedPerSecond = GetLength(currentVelocity);
@@ -200,7 +200,7 @@ namespace TheOmegaStrain.Gameplay.Helpers
                 OmegaObjectHelpers.MoveAngleTowards(currentZ, targetZ, maxDelta));
         }
 
-        public static Vector3 Normalize(Vector3 vector)
+        public static Vector3 Normalize(IVector3 vector)
         {
             var length = GetLength(vector);
             if (length <= 0.00001f)
@@ -216,12 +216,12 @@ namespace TheOmegaStrain.Gameplay.Helpers
             };
         }
 
-        public static float GetLength(Vector3 vector)
+        public static float GetLength(IVector3 vector)
         {
             return MathF.Sqrt((vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z));
         }
 
-        public static float Dot(Vector3 a, Vector3 b)
+        public static float Dot(IVector3 a, IVector3 b)
         {
             return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
         }
@@ -301,7 +301,7 @@ namespace TheOmegaStrain.Gameplay.Helpers
         // ------------------------------------------------------------
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static MoveVector GetDirectionAndDistanceWorld(Vector3 from, Vector3 to)
+        public static MoveVector GetDirectionAndDistanceWorld(IVector3 from, IVector3 to)
         {
             var vectorToTarget = GetVectorToTarget(from, to);
 
