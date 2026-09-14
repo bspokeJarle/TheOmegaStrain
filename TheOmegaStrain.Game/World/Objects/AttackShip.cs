@@ -12,6 +12,8 @@ namespace TheOmegaStrain.Game.World.Objects
     public static class AttackShip
     {
         private const float ZoomRatio = 1f;
+        // Expand each collision box equally without shifting the navigation/map centre.
+        private const float CrashBoxPadding = 12f;
         private const float EngineNozzleCapX = -54.2f;
         private const float EngineParticleStartX = -100f;
         private const float EngineParticleGuideX = -114f;
@@ -177,20 +179,27 @@ namespace TheOmegaStrain.Game.World.Objects
             return new List<List<IVector3>>
             {
                 // Main fuselage, nose and cockpit.
-                OmegaObject3DHelpers.GenerateCrashBoxCorners(
+                CreatePaddedCrashBox(
                     V(-38f, -15f, -7f),
                     V(48f, 15f, 12.5f)),
 
                 // +Y wing and engine.
-                OmegaObject3DHelpers.GenerateCrashBoxCorners(
+                CreatePaddedCrashBox(
                     V(-54.5f, 10f, -6.5f),
                     V(8f, 36f, 15f)),
 
                 // -Y wing and engine.
-                OmegaObject3DHelpers.GenerateCrashBoxCorners(
+                CreatePaddedCrashBox(
                     V(-54.5f, -36f, -6.5f),
                     V(8f, -10f, 15f))
             };
+        }
+
+        private static List<IVector3> CreatePaddedCrashBox(Vector3 min, Vector3 max)
+        {
+            return OmegaObject3DHelpers.GenerateCrashBoxCorners(
+                V(min.x - CrashBoxPadding, min.y - CrashBoxPadding, min.z - CrashBoxPadding),
+                V(max.x + CrashBoxPadding, max.y + CrashBoxPadding, max.z + CrashBoxPadding));
         }
 
         private static List<Vector3> Ring(int n, float x, float ry, float rz, float yo = 0, float zo = 0) { var p = new List<Vector3>(n); for (int i = 0; i < n; i++) { float a = (float)(2 * Math.PI * i / n); p.Add(V(x, yo + ry * (float)Math.Cos(a), zo + rz * (float)Math.Sin(a))); } return p; }

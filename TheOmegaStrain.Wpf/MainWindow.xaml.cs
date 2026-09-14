@@ -54,8 +54,8 @@ namespace TheOmegaStrain.Wpf
     public partial class MainWindow : Window
     {
         private const bool enableLogging = false;
-        private const bool enableFileLogging = LiveGameLoop.EnableCpuHeadroomLogging;
-        private const bool EnableSteamDiagnostics = true;
+        private const bool enableFileLogging = true;
+        private const bool EnableSteamDiagnostics = false;
         private readonly DrawingVisualHost visualHost = new();
         private bool _useDirect3D11;
         private Direct3D11ProjectedTriangleRenderer? _direct3DRenderer;

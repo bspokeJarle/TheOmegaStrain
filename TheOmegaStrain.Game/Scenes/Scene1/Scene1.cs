@@ -68,6 +68,21 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
 
+            var AttackShip2 = AttackShip.CreateAttackShip(Surface);
+            AttackShip2.Rotation = new Vector3 { };
+            AttackShip2.ObjectOffsets = new Vector3 { x = 0, y = 150, z = 100 };
+            // Absolute authored game-start coordinates for workshop testing.
+            AttackShip2.WorldPosition = new Vector3 { x = 53870f, y = 0f, z = 55280f };
+            AttackShip2.ObjectName = "AttackShip";
+            AttackShip2.ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.AttackShipHealth };
+            AttackShip2.CrashBoxDebugMode = true;
+            AttackShip2.WeaponSystems = null;
+            AttackShip2.HasPowerUp = false;
+            AttackShip2.IsActive = true;
+            AttackShip2.Movement = new AttackShipControls();
+            world.WorldInhabitants.Add(AttackShip2);
+            GameState.SurfaceState.AiObjects.Add(AttackShip2);
+
             SpawnJumpingFish(world);
 
             //Add drones that will be waiting until the player has a Decoy powerup
@@ -79,7 +94,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
                 var kamikaze = KamikazeDrone.CreateKamikazeDrone(Surface, speedMultiplier: KamikazeDroneSpeedMultiplier);
                 kamikaze.WorldPosition = new Vector3 { x = (95700 + rmd.Next(-25000, 25000)) * ws, y = 0, z = (92000 + rmd.Next(-25000, 25000)) * ws };
                 kamikaze.Rotation = new Vector3 { };
-                kamikaze.ObjectOffsets = new Vector3 { x = 0, y = 150, z = 400 };
+                kamikaze.ObjectOffsets = new Vector3 { x = 0, y = 0, z = 400 };
                 kamikaze.ObjectName = "KamikazeDrone";
                 kamikaze.ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.KamikazeDroneHealth };
                 kamikaze.CrashBoxDebugMode = false;

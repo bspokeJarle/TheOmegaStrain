@@ -11,6 +11,68 @@ public class AttackShipControlsParticleGuideTests
     private static readonly OmegaMeshRotation Rotate = new();
 
     [TestMethod]
+    public void LethalCrash_StartsExplosionAndClearsCollisionBoxesWithoutPursuit()
+    {
+        var ship = AttackShip.CreateAttackShip(null!);
+        ship.WorldPosition = new Vector3(50000f, 0f, 50000f);
+        ship.ObjectOffsets = new Vector3(0f, -150f, 100f);
+        ship.ImpactStatus = new ImpactStatus
+        {
+            ObjectHealth = 155, HasCrashed = true, ObjectName = "Ship"
+        };
+        var controls = new AttackShipControls();
+        controls.MoveObject(ship, null, null);
+        Assert.IsTrue(ship.ImpactStatus.ObjectHealth <= 0);
+        Assert.IsFalse(ship.ImpactStatus.HasCrashed == true);
+        Assert.AreEqual(0, ship.CrashBoxes.Count);
+        Assert.AreEqual(50000f, ship.WorldPosition.x);
+        Assert.AreEqual(50000f, ship.WorldPosition.z);
+        Assert.IsNull(controls.ShipTargetWorldPosition);
+    }
+
+    [TestMethod]
+    public void MoveObject_PublishesTransformSoOriginalAndRenderCopyHaveSameMapMarker()
+    {
+        var oldSurface = TheOmegaStrain.Common.CommonGlobalState.GameState.SurfaceState;
+        var oldShip = TheOmegaStrain.Common.CommonGlobalState.GameState.ShipState;
+        try
+        {
+            TheOmegaStrain.Common.CommonGlobalState.GameState.SurfaceState = new SurfaceState
+            {
+                GlobalMapPosition = new Vector3(50000f, 0f, 50000f)
+            };
+            TheOmegaStrain.Common.CommonGlobalState.GameState.ShipState =
+                new TheOmegaStrain.Common.CommonGlobalState.States.ShipState
+                {
+                    ShipObjectOffsets = new Vector3()
+                };
+            var original = AttackShip.CreateAttackShip(null!);
+            var renderCopy = AttackShip.CreateAttackShip(null!);
+            renderCopy.ObjectId = original.ObjectId;
+            renderCopy.WorldPosition = new Vector3(50500f, 0f, 50400f);
+            renderCopy.ObjectOffsets = new Vector3(35f, -150f, 100f);
+            renderCopy.Rotation = new Vector3(63f, 40f, 90f);
+            TheOmegaStrain.Common.CommonGlobalState.GameState.SurfaceState.AiObjects.Add(original);
+
+            new AttackShipControls().MoveObject(renderCopy, null, null);
+
+            var expected = SurfacePositionSyncHelpers.GetMinimapMarkerWorldPosition(renderCopy)!;
+            var actual = SurfacePositionSyncHelpers.GetMinimapMarkerWorldPosition(original)!;
+            Assert.AreEqual(expected.x, actual.x, 0.001f);
+            Assert.AreEqual(expected.z, actual.z, 0.001f);
+            Assert.AreEqual(renderCopy.Rotation.y, original.Rotation.y);
+            Assert.AreEqual(renderCopy.ObjectOffsets.y, original.ObjectOffsets.y);
+            Assert.AreNotSame(renderCopy.Rotation, original.Rotation);
+            Assert.AreNotSame(renderCopy.ObjectOffsets, original.ObjectOffsets);
+        }
+        finally
+        {
+            TheOmegaStrain.Common.CommonGlobalState.GameState.SurfaceState = oldSurface;
+            TheOmegaStrain.Common.CommonGlobalState.GameState.ShipState = oldShip;
+        }
+    }
+
+    [TestMethod]
     public void CreateAttackShip_HidesParticleGuideParts()
     {
         var ship = AttackShip.CreateAttackShip(parentSurface: null!);
