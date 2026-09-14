@@ -178,6 +178,22 @@ namespace TheOmegaStrain.Gameplay.Helpers
             return OmegaObjectHelpers.GetHeadingFromDirection(movementDirection.x, movementDirection.z);
         }
 
+        /// <summary>
+        /// Inverse of <see cref="GetHeadingFromMovementDirection"/>: converts a heading
+        /// rotation back into a normalized forward direction on the XZ plane. Heading is
+        /// carried in the Z angle (degrees), matching GeometryMath.GetHeadingFromDirection.
+        /// </summary>
+        public static Vector3 GetForwardDirectionFromHeading(Vector3 rotation)
+        {
+            var radians = rotation.z * (MathF.PI / 180f);
+            return new Vector3
+            {
+                x = MathF.Cos(radians),
+                y = 0f,
+                z = MathF.Sin(radians)
+            };
+        }
+
         public static (float X, float Y, float Z) MoveRotationTowards(
             float currentX,
             float currentY,

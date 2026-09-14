@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {
-    public sealed class AttackShipControls : IObjectMovement
+    public sealed class AttackShip2Controls : IObjectMovement
     {
         // Engines emit a steady stream, alternating frames to keep the particle count sane.
         private const int FramesBetweenReleases = 2;

@@ -12,6 +12,7 @@ using TheOmegaStrain.Gameplay.Controls.JumpingFishControls;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Intrinsics.Arm;
+using TheOmegaStrain.Gameplay.Helpers;
 
 namespace TheOmegaStrain.Game.Scenes.Scene1
 {
@@ -67,6 +68,21 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             guidanceArrow.ImpactStatus = new ImpactStatus { };
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
+
+            var attackShip = AttackShip.CreateAttackShip(Surface);
+            attackShip.Rotation = new Vector3 { x = WorldViewSetup.SurfaceFacingObjectPitchDegrees, y = 0, z = 90 };
+            attackShip.ObjectOffsets = new Vector3 { x = 0, y = 150, z = 100 };
+            attackShip.WorldPosition = new Vector3 { x = 71000f, y = 0, z = 72400f };
+
+            attackShip.ObjectName = "AttackShip";
+            attackShip.ImpactStatus = new ImpactStatus { };
+            attackShip.CrashBoxDebugMode = false;
+            attackShip.WeaponSystems = null;
+            attackShip.HasPowerUp = false;
+            attackShip.IsActive = true;
+            attackShip.Movement = new AttackShipControls();
+            world.WorldInhabitants.Add(attackShip);
+            GameState.SurfaceState.AiObjects.Add(attackShip);
 
             SpawnJumpingFish(world);
 

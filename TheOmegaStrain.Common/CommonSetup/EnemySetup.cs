@@ -11,6 +11,7 @@ namespace TheOmegaStrain.Common.CommonSetup
     {
         public const int SeederHealth = 55;
         public const int KamikazeDroneHealth = 55;
+        public const int AttackShipHealth = 155;
         public const int KamikazeDroneCollisionDamage = 50;
         public const int DroneDecoyCollisionDamage = 55;
         public const int BomberBombCollisionDamage = 75;

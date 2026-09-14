@@ -159,7 +159,11 @@ public sealed class SteamManager : IDisposable
 
         try
         {
-            return SteamAPI.RestartAppIfNecessary(new AppId_t(appId));
+            // Disabled for local Release runs so the app never asks Steam to relaunch it
+            // (which triggers the Windows "open steam:// link" prompt when Steam isn't
+            // handling the app). Re-enable for real Steam builds.
+            //return SteamAPI.RestartAppIfNecessary(new AppId_t(appId));
+            return false;
         }
         catch
         {
