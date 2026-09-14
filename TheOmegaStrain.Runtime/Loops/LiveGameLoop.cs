@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using TheOmegaStrain.Game.Scenes.Scene1;
 
 namespace TheOmegaStrain.Runtime.Loops
 {
@@ -274,6 +275,11 @@ namespace TheOmegaStrain.Runtime.Loops
             mergeMs = phaseTimer.Mark();
 
             var activeScene = world.SceneHandler.GetActiveScene();
+
+            if (activeScene is Scene1 scene && FrameCounter % 500 == 0)
+            {
+                scene.SpawnAttackShip(world);
+            }
 
             if (!gameplayPausedForVictoryReward)
                 HandleBiomassWarnings();
