@@ -29,6 +29,7 @@ namespace TheOmegaStrain.Runtime.Loops
         private const bool EnableAdaptiveGc = true;
         private static int PerfLogInterval => ScreenSetup.RuntimeTargetFps;
         private static int AdaptiveGcMinFrameInterval => ScreenSetup.RuntimeTargetFps;
+        private const int AttackShipSpawnTime = 250;
 
         private long FrameCounter = 0;
         private readonly FramePerformanceTracker framePerformanceTracker = new();
@@ -104,6 +105,7 @@ namespace TheOmegaStrain.Runtime.Loops
         private const float VictoryRewardHoldSeconds = 1.25f;
         private PlanetRewardBreakdown? _victoryRewardBreakdown;
         private int _lastAppliedVictoryReward;
+        public bool ShouldSpawnAttackShip => FrameCounter % AttackShipSpawnTime == 0;
         private static readonly NotImplementedTypeDisposalGuard<IObjectMovement> movementDisposalGuard =
             new(static movement => movement.Dispose());
 
@@ -275,8 +277,8 @@ namespace TheOmegaStrain.Runtime.Loops
             mergeMs = phaseTimer.Mark();
 
             var activeScene = world.SceneHandler.GetActiveScene();
-
-            if (activeScene is Scene1 scene && FrameCounter % 500 == 0)
+            
+            if (ShouldSpawnAttackShip && activeScene is Scene1 scene)
             {
                 scene.SpawnAttackShip(world);
             }

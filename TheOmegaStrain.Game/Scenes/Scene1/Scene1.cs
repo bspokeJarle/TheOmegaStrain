@@ -68,8 +68,6 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
 
-            SpawnAttackShip(world);
-
             SpawnJumpingFish(world);
 
             //Add drones that will be waiting until the player has a Decoy powerup
@@ -251,12 +249,13 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
         public void SpawnAttackShip(I3dWorld world)
         {
             var rmd = new Random();
+            var worldPosition = GameState.ShipState.ShipWorldPosition;
 
             var attackShip = AttackShip.CreateAttackShip(Surface);
             attackShip.Rotation = new Vector3 { };
             attackShip.ObjectOffsets = new Vector3 { x = 0, y = 150, z = 100 };
             // Absolute authored game-start coordinates for workshop testing.
-            attackShip.WorldPosition = new Vector3 { x = 53870f + rmd.Next(-250, 250), y = 0, z = 55280 + rmd.Next(-250, 250) };
+            attackShip.WorldPosition = new Vector3 { x = worldPosition.x + rmd.Next(-25, 25), y = 0, z = worldPosition.z + rmd.Next(-25, 25) };
             attackShip.ObjectName = "AttackShip";
             attackShip.ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.AttackShipHealth };
             attackShip.CrashBoxDebugMode = true;
