@@ -14,6 +14,53 @@ namespace TheOmegaStrain.Game.Projection
         internal const double MaximumPerspectiveScale = 2.5;
 
         /// <summary>
+        /// Converts a caster's render anchor to Surface-local shadow coordinates.
+        /// Both inputs are render positions, with the same screen-centre convention.
+        /// The returned X/Z can be used to sample ground Y from the rotated Surface.
+        /// </summary>
+        public static bool TryGetSurfaceLocalShadowAnchor(
+            RenderPosition casterPosition,
+            RenderPosition surfacePosition,
+            out float localX,
+            out float localZ)
+        {
+            return TryGetSurfaceLocalShadowAnchor(casterPosition, surfacePosition, out localX, out _, out localZ);
+        }
+
+        /// <summary>
+        /// Also returns the caster's Y in Surface vertex units, so its clearance
+        /// can be measured against sampled ground Y without mixing in pixel scale.
+        /// This Y is the caster's height coordinate, not the ground height.
+        /// </summary>
+        public static bool TryGetSurfaceLocalShadowAnchor(
+            RenderPosition casterPosition,
+            RenderPosition surfacePosition,
+            out float localX,
+            out float localY,
+            out float localZ)
+        {
+            localX = localY = localZ = 0f;
+            double perspective = ScreenSetup.perspectiveAdjustment;
+            double casterDepth = ClampRenderDepth(casterPosition.Z, perspective);
+            double surfaceDepth = ClampRenderDepth(surfacePosition.Z, perspective);
+
+            // Use the renderer's projection, including zoom and its near-depth cap.
+            if (!ProjectionMath.TryProjectVertex(new Vector3(1f, 0f, 0f),
+                    0, 0, casterDepth, perspective, ScreenSetup.defaultObjectZoom, out var unit)
+                || !double.IsFinite(unit.x) || unit.x <= 0)
+                return false;
+
+            // Projection is vertex.xy * scale + objectPosition.xy. An object's
+            // translation therefore cannot be copied straight into shadow vertices.
+            localX = (float)((casterPosition.X - surfacePosition.X) / unit.x);
+            localY = (float)((casterPosition.Y - surfacePosition.Y) / unit.x);
+            // The denominator is perspective + objectDepth - vertex.z. Match the
+            // caster's depth by SUBTRACTING it from Surface's depth, not vice versa.
+            localZ = (float)(surfaceDepth - casterDepth);
+            return float.IsFinite(localX) && float.IsFinite(localY) && float.IsFinite(localZ);
+        }
+
+        /// <summary>
         /// Projects a collision centre for HUD markers. Authoritative AI objects have
         /// unrotated geometry; pass false to rotate only the calculated centre.
         /// Returns its unscaled render-space centre too, so detection includes current offsets.

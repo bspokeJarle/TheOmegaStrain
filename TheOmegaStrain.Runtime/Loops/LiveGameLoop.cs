@@ -258,10 +258,16 @@ namespace TheOmegaStrain.Runtime.Loops
                     weaponsManager.HandleWeapons(inhabitant, weaponObjectList, particleObjectList);
                 }
 
-                if (GameState.SettingsState.EnhancedShadowsEnabled)
-                    objectShadowManager.HandleObjectShadow(inhabitant, shadowObjectList);
                 renderedList.Add(inhabitant);
 
+            }
+            // Flying enemies can precede Surface in the scene list. Wait until
+            // its rotated cache is current; last frame's terrain hides shadows
+            // under the ground while scrolling or changing altitude.
+            if (GameState.SettingsState.EnhancedShadowsEnabled)
+            {
+                foreach (var inhabitant in renderedList)
+                    objectShadowManager.HandleObjectShadow(inhabitant, shadowObjectList);
             }
             moveRotateMs = phaseTimer.Mark();
 
