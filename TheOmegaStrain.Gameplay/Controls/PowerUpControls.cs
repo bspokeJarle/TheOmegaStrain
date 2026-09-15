@@ -105,12 +105,17 @@ namespace TheOmegaStrain.Gameplay.Controls
                 return theObject;
             }
 
-            if (theObject.Rotation != null) theObject.Rotation.y = Yrotation;
-            if (theObject.Rotation != null) theObject.Rotation.x = BaseXRotation;
-            if (theObject.Rotation != null) theObject.Rotation.z = Zrotation;
+            // Shields spin side-to-side (Z) instead of the default top-to-bottom (Y) tumble
+            bool spinsOnZ = theObject.PowerUpType == PowerUpType.Shield;
 
-            // Visual spin around Y
-            Yrotation += BaseYRotationIncrementPerFrame * GameState.FrameScale90;
+            if (theObject.Rotation != null) theObject.Rotation.y = spinsOnZ ? BaseYRotation : Yrotation;
+            if (theObject.Rotation != null) theObject.Rotation.x = BaseXRotation;
+            if (theObject.Rotation != null) theObject.Rotation.z = spinsOnZ ? Zrotation : BaseZRotation;
+
+            if (spinsOnZ)
+                Zrotation += BaseYRotationIncrementPerFrame * GameState.FrameScale90;
+            else
+                Yrotation += BaseYRotationIncrementPerFrame * GameState.FrameScale90;
 
             // Keep offsets visually in sync with surface scrolling
             SyncMovement(theObject);

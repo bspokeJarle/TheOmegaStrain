@@ -767,11 +767,11 @@ namespace TheOmegaStrain.Gameplay.Controls
             return pos.z > maxZ || pos.z < minZ || pos.x < minX || pos.x > maxX || pos.y < minY || pos.y > maxY;
         }
 
-        // Rocket curve tuning: amplitude of the lateral sine wave during powered flight.
-        // The curve starts at zero, peaks at half the curve duration, and returns to zero
-        // before fuel runs out so the final approach is straight toward the target.
-        private const float RocketCurveAmplitude = 180f;          // max lateral deviation in world units
-        private const float RocketCurveDurationFraction = 0.65f;  // fraction of fuel time the curve occupies
+        // Rocket weave: the heading is tilted off the aim each frame, so the wave is actually
+        // flown rather than applied as a positional shove. Runs the whole fuel duration.
+        // Lateral excursion ends up near velocity * Strength / (2*pi*Frequency) world units.
+        private const float RocketWaveStrength = 0.35f;   // tangent of max heading offset (~19 degrees)
+        private const float RocketWaveFrequency = 0.75f;  // oscillations per second
 
         private static IVector3 Add(IVector3 a, IVector3 b) =>
             ToVector3(VectorMath.Add(a, b));

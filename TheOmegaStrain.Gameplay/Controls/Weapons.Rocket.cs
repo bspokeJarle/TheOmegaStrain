@@ -29,13 +29,13 @@ namespace TheOmegaStrain.Gameplay.Controls
             // Initial aim. Enemy rockets may retarget until they enter the final approach.
             // Movement below changes ObjectOffsets, so convert only the world direction's Z.
             IVector3 direction;
+            var target = SurfacePositionSyncHelpers.GetShipRamTargetWorldPosition(rocketStart);
+            var launch = RocketFlightHelpers.CalculateLaunchSolution(ToVector3(worldPosition), target);
             bool guidanceLocked = false;
             if (FireAsEnemyWeapon)
             {
                 if (GameState.ShipState?.ShipWorldPosition == null || GameState.ShipState.ShipObjectOffsets == null)
                     return;
-                var target = SurfacePositionSyncHelpers.GetShipRamTargetWorldPosition(rocketStart);
-                var launch = RocketFlightHelpers.CalculateLaunchSolution(ToVector3(worldPosition), target);
                 direction = new Vector3(launch.Direction.x, launch.Direction.y, -launch.Direction.z);
                 guidanceLocked = launch.DistanceToShip <= WeaponSetup.RocketGuidanceLockDistance;
             }
@@ -85,7 +85,12 @@ namespace TheOmegaStrain.Gameplay.Controls
                 Velocity = WeaponSetup.RocketVelocity,
                 Trajectory = direction,
                 RocketGuidanceLocked = guidanceLocked,
-                RocketState = new RocketFlightState { Physics = physics },
+                RocketState = new RocketFlightState
+                {
+                    Physics = physics,
+                    BaseTrajectory = direction,
+                    WavePhase = (instance.ObjectId % 8) * (MathF.PI / 4f)
+                },
                 // Impact ends flight; a spent rocket also explodes outside screen bounds.
                 // Travel distance and launch age do not stop the motor.
                 MaxRange = float.PositiveInfinity,
@@ -122,7 +127,11 @@ namespace TheOmegaStrain.Gameplay.Controls
                 return;
 
             var direction = new Vector3(aim.Direction.x, aim.Direction.y, -aim.Direction.z);
-            SetRocketDirection(weapon, direction);
+            // Steer the weave off this aim instead of snapping the nose straight at Ship.
+            if (weapon.RocketState != null)
+                weapon.RocketState.BaseTrajectory = direction;
+            else
+                SetRocketDirection(weapon, direction);
         }
 
         private void SetRocketDirection(ActiveWeapon weapon, IVector3 direction)
@@ -212,32 +221,28 @@ namespace TheOmegaStrain.Gameplay.Controls
         private void MovePoweredRocket(ActiveWeapon rocket, float deltaSeconds)
         {
             UpdateRocketGuidance(rocket, allowRetarget: true);
-            var travel = Scale(rocket.Trajectory, rocket.Velocity * deltaSeconds);
 
-            float curveDuration = WeaponSetup.RocketFuelSeconds * RocketCurveDurationFraction;
-            float rocketPoweredSeconds = rocket.RocketState!.PoweredSeconds;
-            if (rocketPoweredSeconds > 0f && rocketPoweredSeconds < curveDuration)
+            var state = rocket.RocketState!;
+            var baseDirection = state.BaseTrajectory ?? rocket.Trajectory;
+
+            // Cross with world-up keeps the weave horizontal; fall back if aim is near vertical.
+            var base3 = new Vector3(baseDirection.x, baseDirection.y, baseDirection.z);
+            var lateral = Cross(base3, new Vector3(0f, 1f, 0f));
+            if (Magnitude(lateral) < 0.001f)
+                lateral = Cross(base3, new Vector3(0f, 0f, 1f));
+
+            if (Magnitude(lateral) > 0.001f)
             {
-                // Choose a lateral axis perpendicular to the flight direction.
-                // Cross with world-up (0,1,0) gives a horizontal lateral; fall back to (0,0,1)
-                // if the trajectory is nearly vertical.
-                var traj3 = new Vector3(rocket.Trajectory.x, rocket.Trajectory.y, rocket.Trajectory.z);
-                var up = new Vector3(0f, 1f, 0f);
-                var lateral = Cross(traj3, up);
-                if (Magnitude(lateral) < 0.001f)
-                {
-                    var altUp = new Vector3(0f, 0f, 1f);
-                    lateral = Cross(traj3, altUp);
-                }
                 lateral = ToVector3(Normalize(lateral));
-
-                // Sine wave: 0 → 1 → 0 over the curve duration.
-                // sin(pi * t / curveDuration) == 0 at t=0, 1 at t=half, 0 at t=curveDuration.
-                float sine = MathF.Sin(MathF.PI * rocketPoweredSeconds / curveDuration);
-                var curveOffset = Scale(lateral, RocketCurveAmplitude * sine);
-
-                travel = Add(travel, curveOffset);
+                // Steer, don't displace: tilt the heading off the aim so the weave is flown,
+                // stays frame-rate independent, and the nose banks into each sweep.
+                float wave = MathF.Sin(2f * MathF.PI * RocketWaveFrequency * state.PoweredSeconds + state.WavePhase);
+                var steered = Normalize(Add(baseDirection, Scale(lateral, RocketWaveStrength * wave)));
+                if (Magnitude(steered) > 0.00001f)
+                    SetRocketDirection(rocket, ToVector3(steered));
             }
+
+            var travel = Scale(rocket.Trajectory, rocket.Velocity * deltaSeconds);
 
             SetRocketPosition(rocket, Add(rocket.WeaponObject.ObjectOffsets,
                 Add(travel, Scale(ParentVelocityLocal, deltaSeconds))));

@@ -133,19 +133,27 @@ namespace TheOmegaStrain.Game.World.Objects
         //  SHIELD GEOMETRY
         // ----------------------------------------------------
         //
-        // Heater-shield silhouette (rounded top, tapering to a bottom point)
-        // extruded along Y. Front/back are fan-triangulated from a centroid
-        // apex; the rim is a ring of side quads.
+        // Heater-shield silhouette (rounded top, tapering to a bottom point).
+        // Three outline rings extrude and taper along Y to give the plate real
+        // depth plus a curved bevel between the flat rim and the domed face:
+        //   outer ring  -> straight rim wall (the shield's edge thickness)
+        //   bevel ring  -> inset + pushed forward, the curved transition
+        //   apex point  -> pushed forward again, domes the inner face
+        // A silver cross band and a gem quad sit on the inner face as symbols.
         //
-        // 12 outline points: 12 front + 12 back + 12 rim quads (24 tris) = 48 triangles.
+        // 12 back + 24 rim quads + 24 bevel quads + 12 face + 2 gem = 74 triangles.
         //
 
-        private const float ShieldDepth = 9f;
-        private const string ShieldFrontColor = "5FA8E0";
-        private const string ShieldBackColor = "2E5F91";
-        private const string ShieldEmblemColor = "F2C230";
-        private const string ShieldRimLightColor = "C9CDD6";
-        private const string ShieldRimDarkColor = "6E7480";
+        private const float ShieldEdgeDepth = 16f;
+        private const float ShieldBevelInset = 6f;
+        private const float ShieldApexPush = 4f;
+        private const float ShieldBevelScale = 0.82f;
+
+        private const string ShieldGoldLight = "E8C55A";
+        private const string ShieldGoldMid = "D4AF37";
+        private const string ShieldGoldDark = "9C7A22";
+        private const string ShieldCrossColor = "ECEAF2";
+        private const string ShieldGemColor = "B31B3D";
 
         private static readonly (float x, float z)[] ShieldOutline =
         {
@@ -159,33 +167,56 @@ namespace TheOmegaStrain.Game.World.Objects
             var tris = new List<ITriangleMeshWithColorAndTexture>();
             int count = ShieldOutline.Length;
 
-            var front = new Vector3[count];
-            var back = new Vector3[count];
+            float outerFrontY = -ShieldEdgeDepth;
+            float bevelFrontY = -(ShieldEdgeDepth + ShieldBevelInset);
+            float apexY = -(ShieldEdgeDepth + ShieldBevelInset + ShieldApexPush);
+            float backY = ShieldEdgeDepth;
+
+            var outerFront = new Vector3[count];
+            var bevelFront = new Vector3[count];
+            var outerBack = new Vector3[count];
             for (int i = 0; i < count; i++)
             {
                 var (x, z) = ShieldOutline[i];
-                front[i] = new Vector3 { x = x, y = -ShieldDepth, z = z };
-                back[i] = new Vector3 { x = x, y = ShieldDepth, z = z };
+                outerFront[i] = new Vector3 { x = x, y = outerFrontY, z = z };
+                bevelFront[i] = new Vector3 { x = x * ShieldBevelScale, y = bevelFrontY, z = z * ShieldBevelScale };
+                outerBack[i] = new Vector3 { x = x, y = backY, z = z };
             }
 
-            var frontApex = new Vector3 { x = 0f, y = -ShieldDepth, z = 6f };
-            var backApex = new Vector3 { x = 0f, y = ShieldDepth, z = 6f };
-            var center = new Vector3 { x = 0f, y = 0f, z = 6f };
+            var frontApex = new Vector3 { x = 0f, y = apexY, z = 5f };
+            var backApex = new Vector3 { x = 0f, y = backY, z = 5f };
+            var center = new Vector3 { x = 0f, y = -3f, z = 5f };
 
             for (int i = 0; i < count; i++)
             {
                 int next = (i + 1) % count;
 
-                // Vertical emblem band through the top peak and bottom point
-                bool emblem = i is 1 or 2 or 3 or 7 or 8 or 9;
-                string faceColor = emblem ? ShieldEmblemColor : ShieldFrontColor;
+                // Silver cross band through the top peak and bottom point
+                bool cross = i is 1 or 2 or 3 or 7 or 8 or 9;
+                string faceColor = cross ? ShieldCrossColor : ShieldGoldMid;
 
-                tris.Add(CreateTriangleOutward(frontApex, front[i], front[next], center, faceColor));
-                tris.Add(CreateTriangleOutward(backApex, back[next], back[i], center, ShieldBackColor));
+                // Domed inner face
+                tris.Add(CreateTriangleOutward(frontApex, bevelFront[i], bevelFront[next], center, faceColor));
 
-                string rimColor = i % 2 == 0 ? ShieldRimLightColor : ShieldRimDarkColor;
-                AddQuadOutward(tris, front[i], front[next], back[next], back[i], center, rimColor);
+                // Flat back face
+                tris.Add(CreateTriangleOutward(backApex, outerBack[next], outerBack[i], center, ShieldGoldDark));
+
+                // Curved bevel between the outer rim and the domed face
+                string bevelColor = i % 2 == 0 ? ShieldGoldLight : ShieldGoldMid;
+                AddQuadOutward(tris, outerFront[i], outerFront[next], bevelFront[next], bevelFront[i], center, bevelColor);
+
+                // Straight rim wall, giving the plate its edge thickness
+                string rimColor = i % 2 == 0 ? ShieldGoldLight : ShieldGoldDark;
+                AddQuadOutward(tris, outerFront[i], outerFront[next], outerBack[next], outerBack[i], center, rimColor);
             }
+
+            // Gem symbol set just proud of the domed face
+            float gemY = apexY - 2f;
+            var gemTop = new Vector3 { x = 0f, y = gemY, z = 15f };
+            var gemRight = new Vector3 { x = 6f, y = gemY, z = 5f };
+            var gemBottom = new Vector3 { x = 0f, y = gemY, z = -5f };
+            var gemLeft = new Vector3 { x = -6f, y = gemY, z = 5f };
+            AddQuadOutward(tris, gemTop, gemRight, gemBottom, gemLeft, center, ShieldGemColor);
 
             return tris;
         }

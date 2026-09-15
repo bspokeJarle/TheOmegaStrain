@@ -50,6 +50,8 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
         private readonly Image _minimap;
         private readonly Rectangle _powerBarBackground;
         private readonly Rectangle _powerBarFill;
+        private readonly Rectangle _shieldBarBackground;
+        private readonly Rectangle _shieldBarFill;
         private readonly Image _powerupLazerIcon;
         private readonly Image _powerupDecoyIcon;
         private readonly Image _powerupBulletIcon;
@@ -97,14 +99,21 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
         private const double MiniMapW = 500;
         private const double MiniMapH = 210;
 
-        // FPS line — adjusted from your earlier values to sit inside the top middle label slot
+        // FPS line ï¿½ adjusted from your earlier values to sit inside the top middle label slot
         private const double FpsX = 870;
         private const double FpsY = 28;
-        // Ship power (health) vertical bar — replaces the old active-powerup icon slot
+        // Ship power (health) vertical bar ï¿½ replaces the old active-powerup icon slot
         private const double PowerBarX = 1314;
         private const double PowerBarY = 22;
         private const double PowerBarW = 18;
         private const double PowerBarH = 35;
+
+        // Shield charge vertical bar ï¿½ sits right next to the health bar, same size
+        private const double ShieldBarX = PowerBarX + PowerBarW + 10;
+        private const double ShieldBarY = PowerBarY;
+        private const double ShieldBarW = PowerBarW;
+        private const double ShieldBarH = PowerBarH;
+        private static readonly Brush ShieldBarFillBrush = new SolidColorBrush(Color.FromArgb(220, 80, 170, 255));
 
         private const double PowerupBulletX = 845;
         private const double PowerupDecoyX = 945;
@@ -113,7 +122,7 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
         private const double PowerupRowY = 85;
         private const double PowerupIconSize = 48;
 
-        // Enemy bars (icon on left, bar on right — below the powerup row)
+        // Enemy bars (icon on left, bar on right ï¿½ below the powerup row)
         // Icon size and bar height match the existing HUD elements (48px icons, 16px bars).
         // Bar width fills from after the icon to the right edge of the center indentation.
         private const double EnemyIconSize = 75;
@@ -179,12 +188,12 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
                 Width = MiniMapW,
                 Height = MiniMapH,
                 Opacity = 0.90,
-                Stretch = Stretch.UniformToFill // keeps it visually tighter / less “smeared”
+                Stretch = Stretch.UniformToFill // keeps it visually tighter / less ï¿½smearedï¿½
             };
             Canvas.SetLeft(_minimap, MiniMapX);
             Canvas.SetTop(_minimap, MiniMapY);
 
-            // Viewport indicator — semi-transparent cyan outline on top of the minimap
+            // Viewport indicator ï¿½ semi-transparent cyan outline on top of the minimap
             _viewportRect = new Rectangle
             {
                 Stroke = new SolidColorBrush(Color.FromArgb(160, 0, 255, 255)),
@@ -226,6 +235,27 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
             };
             Canvas.SetLeft(_powerBarFill, PowerBarX);
             Canvas.SetTop(_powerBarFill, PowerBarY);
+
+            // ----- Shield charge vertical bar -----
+            _shieldBarBackground = new Rectangle
+            {
+                Width = ShieldBarW,
+                Height = ShieldBarH,
+                Fill = new SolidColorBrush(Color.FromArgb(80, 255, 255, 255)),
+                Opacity = 0.5
+            };
+            Canvas.SetLeft(_shieldBarBackground, ShieldBarX);
+            Canvas.SetTop(_shieldBarBackground, ShieldBarY);
+
+            _shieldBarFill = new Rectangle
+            {
+                Width = ShieldBarW,
+                Height = 0,
+                Fill = ShieldBarFillBrush,
+                Opacity = 0.9
+            };
+            Canvas.SetLeft(_shieldBarFill, ShieldBarX);
+            Canvas.SetTop(_shieldBarFill, ShieldBarY + ShieldBarH);
 
             _powerupLazerIcon = CreatePowerupIcon(PowerupLazerX, PowerupRowY, PowerupIconSize);
             _powerupDecoyIcon = CreatePowerupIcon(PowerupDecoyX, PowerupRowY, PowerupIconSize);
@@ -285,6 +315,8 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
             _canvas.Children.Add(_fpsCenter);
             _canvas.Children.Add(_powerBarBackground);
             _canvas.Children.Add(_powerBarFill);
+            _canvas.Children.Add(_shieldBarBackground);
+            _canvas.Children.Add(_shieldBarFill);
             _canvas.Children.Add(_powerupLazerIcon);
             _canvas.Children.Add(_powerupDecoyIcon);
             _canvas.Children.Add(_powerupBulletIcon);
@@ -364,7 +396,7 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
             _canvas.Width = DesignWidth;
             _canvas.Height = DesignHudHeight;
 
-            // Center line – numbers only (labels are in PNG)
+            // Center line ï¿½ numbers only (labels are in PNG)
             var activePowerup = string.IsNullOrWhiteSpace(gameplay.ActivePowerup) ? "LAZER" : gameplay.ActivePowerup.ToUpperInvariant();
 
             _fpsCenter.Text = $"{fps}                       {triangles}";
@@ -378,6 +410,9 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
 
             // Ship power (health) vertical bar: fills bottom-to-top, green?red
             UpdatePowerBar(gameplay);
+
+            // Shield charge vertical bar: fills bottom-to-top as Shield powerups are collected
+            UpdateShieldBar(gameplay);
 
             SetBarFill(_altBarFill, gameplay.Alt);
 
@@ -410,7 +445,7 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
         /// <summary>
         /// Positions and sizes the viewport rectangle overlay on the minimap.
         /// The minimap shows a cropped portion of the full bitmap.
-        /// The viewport (18×18 tiles) is centered on the ship (center of the crop).
+        /// The viewport (18ï¿½18 tiles) is centered on the ship (center of the crop).
         /// </summary>
         private void UpdateViewportRect()
         {
@@ -467,6 +502,19 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
             }
 
             _powerBarFill.Fill = new SolidColorBrush(Color.FromArgb(220, r, g, 0));
+        }
+
+        private void UpdateShieldBar(GamePlayState gameplay)
+        {
+            float pct = GamePlayState.MaxShieldPoints > 0f
+                ? Clamp01(gameplay.ShieldPoints / GamePlayState.MaxShieldPoints)
+                : 0f;
+
+            double fillH = ShieldBarH * pct;
+
+            _shieldBarFill.Height = fillH;
+            // Anchor to bottom: push the top down so the bar grows upward
+            Canvas.SetTop(_shieldBarFill, ShieldBarY + (ShieldBarH - fillH));
         }
 
         private void UpdateSpeedPowerupIcon(int speedPowerUpLevel)

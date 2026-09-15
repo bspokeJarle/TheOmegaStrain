@@ -1504,40 +1504,40 @@ namespace TheOmegaStrain.Gameplay.Controls
                     }
                     _motherShipCollisionCooldown = DateTime.Now;
                     int ramDamage = ShipSetup.DefaultShipHealth / 2;
-                    theObject.ImpactStatus.ObjectHealth -= ramDamage;
+                    ApplyShipDamage(theObject, ramDamage);
                     if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] MotherShip ram! Damage={ramDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (crashedWith == "AttackShip")
                 {
-                    theObject.ImpactStatus.ObjectHealth -= EnemySetup.AttackShipCollisionDamage;
+                    ApplyShipDamage(theObject, EnemySetup.AttackShipCollisionDamage);
                     if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] AttackShip hit! Damage={EnemySetup.AttackShipCollisionDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (crashedWith == "BomberBomb")
                 {
-                    theObject.ImpactStatus.ObjectHealth -= EnemySetup.BomberBombCollisionDamage;
+                    ApplyShipDamage(theObject, EnemySetup.BomberBombCollisionDamage);
                     if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] BomberBomb hit! Damage={EnemySetup.BomberBombCollisionDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (EnemySetup.IsEnemyTypeValid(crashedWith))
                 {
-                    theObject.ImpactStatus.ObjectHealth -= EnemySetup.KamikazeDroneCollisionDamage;
+                    ApplyShipDamage(theObject, EnemySetup.KamikazeDroneCollisionDamage);
                     if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] Enemy hit! Damage={EnemySetup.KamikazeDroneCollisionDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (WeaponSetup.IsWeaponTypeValid(crashedWith))
                 {
                     int weaponDamage = WeaponSetup.GetWeaponDamage(crashedWith);
-                    theObject.ImpactStatus.ObjectHealth -= weaponDamage;
+                    ApplyShipDamage(theObject, weaponDamage);
                     if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] Weapon hit! Damage={weaponDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (crashedWith == "EnemyLazer")
                 {
                     int weaponDamage = WeaponSetup.GetWeaponDamage("Lazer");
-                    theObject.ImpactStatus.ObjectHealth -= weaponDamage;
+                    ApplyShipDamage(theObject, weaponDamage);
                     if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] EnemyLazer hit! Damage={weaponDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (crashedWith == "EnemyLazerMedium")
                 {
                     int weaponDamage = WeaponSetup.GetWeaponDamage("Lazer") * 2;
-                    theObject.ImpactStatus.ObjectHealth -= weaponDamage;
+                    ApplyShipDamage(theObject, weaponDamage);
                     if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] EnemyLazerMedium hit! Damage={weaponDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (crashedWith == "Surface" ||
@@ -1570,7 +1570,7 @@ namespace TheOmegaStrain.Gameplay.Controls
                         BeginSurfaceBounceRecovery(reenableGravityAtTop: true);
 
                         int landingDamage = CalculateSurfaceLandingDamage(landingSpeed);
-                        theObject.ImpactStatus.ObjectHealth -= landingDamage;
+                        ApplyShipDamage(theObject, landingDamage);
                     }
 
                     if (theObject.ImpactStatus.ObjectHealth > 0)
@@ -2393,6 +2393,15 @@ namespace TheOmegaStrain.Gameplay.Controls
                 new AudioPlayOptions { VolumeOverride = 1.0f });
         }
 
+        // Shield points absorb damage before it reaches ship health.
+        private static void ApplyShipDamage(I3dObject theObject, int damage)
+        {
+            if (damage <= 0) return;
+            float leftover = GameState.GamePlayState.AbsorbDamageWithShield(damage);
+            if (leftover > 0f)
+                theObject.ImpactStatus.ObjectHealth -= (int)MathF.Round(leftover);
+        }
+
         private void CollectPowerUp(I3dObject ship)
         {
             var aiObjects = GameState.SurfaceState.AiObjects;
@@ -2408,9 +2417,13 @@ namespace TheOmegaStrain.Gameplay.Controls
 
                     bool isTutorialScene = GameState.GamePlayState.CurrentSceneType == SceneTypes.Tutorial;
                     var gameplay = GameState.GamePlayState;
-                    bool isSpeedPowerUp = obj.PowerUpType != PowerUpType.Standard;
+                    bool isSpeedPowerUp = obj.PowerUpType is PowerUpType.TravelSpeedLevel1 or PowerUpType.TravelSpeedLevel2;
                     bool progressionChanged;
-                    if (isSpeedPowerUp)
+                    if (obj.PowerUpType == PowerUpType.Shield)
+                    {
+                        progressionChanged = gameplay.ApplyShieldPowerUp();
+                    }
+                    else if (isSpeedPowerUp)
                     {
                         progressionChanged = gameplay.ApplySpeedPowerUp(obj.PowerUpType);
                     }

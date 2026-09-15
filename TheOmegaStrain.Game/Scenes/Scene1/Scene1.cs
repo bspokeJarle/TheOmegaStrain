@@ -58,13 +58,22 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             ship.WeaponSystems = new Weapons(weapons, ship.Movement!, ship);
             world.WorldInhabitants.Add(ship);
 
-            // Shield powerup — visual placeholder at the ship's spawn point; pickup effect lands later
+            // Shield powerup — spawns at a random world position; renderer scrolls it
+            // relative to the ship via WorldPosition, so it stays put (only rotating)
+            // until the ship flies to it. Also shows up on the minimap like other pickups.
+            var shieldSpawnRandom = new Random();
             var shieldPowerUp = PowerUp.CreatePowerup(Surface, PowerUpType.Shield);
-            shieldPowerUp.WorldPosition = new Vector3 { };
-            shieldPowerUp.ObjectOffsets = new Vector3 { x = 0, y = -200, z = 900 };
+            shieldPowerUp.WorldPosition = new Vector3
+            {
+                x = shieldSpawnRandom.Next(20000, 90000) * ws,
+                y = 0,
+                z = shieldSpawnRandom.Next(20000, 90000) * ws
+            };
+            shieldPowerUp.ObjectOffsets = new Vector3 { x = 0, y = -200, z = 600 };
             shieldPowerUp.ImpactStatus = new ImpactStatus { ObjectName = "PowerUp" };
             shieldPowerUp.Movement = new PowerUpControls();
             shieldPowerUp.CrashBoxDebugMode = false;
+            shieldPowerUp.IsActive = true;
             world.WorldInhabitants.Add(shieldPowerUp);
             GameState.SurfaceState.AiObjects.Add(shieldPowerUp);
 
@@ -77,6 +86,16 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             guidanceArrow.ImpactStatus = new ImpactStatus { };
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
+
+            // PowerUp guidance arrow — same on-screen level as the seeder arrow, points at the closest powerup
+            var powerUpGuidanceArrow = PowerUpGuidanceArrow.CreatePowerUpGuidanceArrow(Surface);
+            powerUpGuidanceArrow.ObjectOffsets = new Vector3 { x = 150, y = -200, z = 200 };
+            powerUpGuidanceArrow.Rotation = new Vector3 { x = WorldViewSetup.SurfaceFacingObjectPitchDegrees, y = 0, z = 90 };
+            powerUpGuidanceArrow.WorldPosition = new Vector3 { };
+            powerUpGuidanceArrow.ObjectName = "PowerUpGuidanceArrow";
+            powerUpGuidanceArrow.ImpactStatus = new ImpactStatus { };
+            powerUpGuidanceArrow.CrashBoxDebugMode = false;
+            world.WorldInhabitants.Add(powerUpGuidanceArrow);
 
             var attackShipWeapons = new List<I3dObject> { Rocket.CreateRocket(Surface) };
             var attackShip = AttackShip.CreateAttackShip(Surface);

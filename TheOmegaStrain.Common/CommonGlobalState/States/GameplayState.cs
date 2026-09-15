@@ -490,6 +490,42 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
             return true;
         }
 
+        // Shield: each Shield powerup picked up fills the HUD shield bar by one
+        // stack's worth of absorb capacity. Damage drains ShieldPoints before Health.
+        public const int MaxShieldCharge = 3;
+        public const float ShieldPointsPerCharge = 40f;
+        public const float MaxShieldPoints = MaxShieldCharge * ShieldPointsPerCharge;
+
+        private float _shieldPoints;
+        public float ShieldPoints
+        {
+            get => _shieldPoints;
+            set => _shieldPoints = Math.Clamp(value, 0f, MaxShieldPoints);
+        }
+
+        public bool ApplyShieldPowerUp()
+        {
+            if (ShieldPoints >= MaxShieldPoints)
+                return false;
+
+            ShieldPoints += ShieldPointsPerCharge;
+            return true;
+        }
+
+        /// <summary>
+        /// Drains ShieldPoints by up to <paramref name="amount"/> and returns the
+        /// leftover damage that should still be applied to Health.
+        /// </summary>
+        public float AbsorbDamageWithShield(float amount)
+        {
+            if (amount <= 0f) return 0f;
+            if (ShieldPoints <= 0f) return amount;
+
+            float absorbed = Math.Min(ShieldPoints, amount);
+            ShieldPoints -= absorbed;
+            return amount - absorbed;
+        }
+
         public int LaserAmmo { get; set; } = -1;   // -1 means infinite
         public int RocketAmmo { get; set; } = 10;
         public int BulletAmmo { get; set; } = -1;  // -1 means infinite
