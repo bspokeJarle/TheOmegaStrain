@@ -13,8 +13,17 @@ namespace TheOmegaStrain.Common.CommonSetup
         {
             ("Lazer", 55),
             ("Bullet", 21),
-            ("Rocket", 31)
+            ("Rocket", RocketDamage),
+            ("EnemyRocket", RocketDamage)
         };
+
+
+        public const int RocketDamage = 105;
+        public const float RocketMaxRange = 1500f;
+        public const float RocketVelocity = 500f;
+        public const float RocketGuidanceLockDistance = 100f;
+        public const float RocketFuelSeconds = 3f;
+        public const float RocketGravityStrength = 300f;
 
         // Lazer crashbox extents (local coords, adjustable per axis)
         // X = lateral (left/right), Y = longitudinal (beam direction), Z = vertical (up/down)

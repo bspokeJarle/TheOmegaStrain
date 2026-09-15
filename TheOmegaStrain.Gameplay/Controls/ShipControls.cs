@@ -1507,6 +1507,10 @@ namespace TheOmegaStrain.Gameplay.Controls
                     theObject.ImpactStatus.ObjectHealth -= ramDamage;
                     if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] MotherShip ram! Damage={ramDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
+                else if (crashedWith == "AttackShip")
+                {
+                    theObject.ImpactStatus.ObjectHealth -= EnemySetup.AttackShipCollisionDamage;
+                }
                 else if (crashedWith == "BomberBomb")
                 {
                     theObject.ImpactStatus.ObjectHealth -= EnemySetup.BomberBombCollisionDamage;
@@ -2400,6 +2404,20 @@ namespace TheOmegaStrain.Gameplay.Controls
                         continue;
 
                     obj.CrashBoxes = new List<List<IVector3>>();
+
+                    if (obj.PowerUpType == PowerUpType.Health)
+                    {
+                        // Med-kit pickup: restore health (capped at the starting maximum) and
+                        // skip score/progression/checkpoint — a heal is not a run objective.
+                        int currentHealth = ship.ImpactStatus?.ObjectHealth ?? 0;
+                        if (ship.ImpactStatus != null)
+                            ship.ImpactStatus.ObjectHealth = Math.Min(
+                                ShipSetup.DefaultShipHealth, currentHealth + ShipSetup.MedKitHealAmount);
+
+                        if (_audio != null && _powerupSound != null)
+                            _audio.Play(_powerupSound, AudioPlayMode.OneShot, new AudioPlayOptions());
+                        break;
+                    }
 
                     bool isTutorialScene = GameState.GamePlayState.CurrentSceneType == SceneTypes.Tutorial;
                     var gameplay = GameState.GamePlayState;

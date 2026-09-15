@@ -42,6 +42,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
         public float MotherShipSmallAggression { get; } = 0.90f;
         public float KamikazeDroneSpeedMultiplier { get; } = 0.90f;
 
+
         public void SetupScene(I3dWorld world)
         {
             var ws = SurfaceSetup.WorldScale;
@@ -72,10 +73,10 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             var attackShip = AttackShip.CreateAttackShip(Surface);
             attackShip.Rotation = new Vector3 { x = WorldViewSetup.SurfaceFacingObjectPitchDegrees, y = 0, z = 90 };
             attackShip.ObjectOffsets = new Vector3 { x = 0, y = 150, z = 100 };
-            attackShip.WorldPosition = new Vector3 { x = 71000f, y = 0, z = 72400f };
+            attackShip.WorldPosition = new Vector3 { x = 65000f, y = 0, z = 72400f };
 
             attackShip.ObjectName = "AttackShip";
-            attackShip.ImpactStatus = new ImpactStatus { };
+            attackShip.ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.AttackShipHealth };
             attackShip.CrashBoxDebugMode = false;
             attackShip.WeaponSystems = null;
             attackShip.HasPowerUp = false;
@@ -83,6 +84,30 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             attackShip.Movement = new AttackShipControls();
             world.WorldInhabitants.Add(attackShip);
             GameState.SurfaceState.AiObjects.Add(attackShip);
+            var attackShipWeapons = new List<I3dObject> { Rocket.CreateRocket(Surface) };
+            // Fire rockets at Ship as an enemy; no aim assist (that is a player-only cue).
+            attackShip.WeaponSystems = new Weapons(attackShipWeapons, attackShip.Movement!, attackShip)
+            {
+                ShowAimAssist = false,
+                FireAsEnemyWeapon = true
+            };
+
+            var medkitPickup = MedKitPickup.CreateMedKit(Surface);
+            medkitPickup.Rotation = new Vector3 { x = 0, y = 0, z = 180 };
+            medkitPickup.ObjectOffsets = new Vector3 { x = 0, y = 150, z = 400 };
+            medkitPickup.WorldPosition = new Vector3 { x = 99500f * ws, y = 0, z = 95200f * ws };
+            // The med-kit is a PowerUp of the Health type: collection, disappear-on-touch
+            // and the heal effect all run through the existing power-up pipeline.
+            medkitPickup.ObjectName = "PowerUp";
+            medkitPickup.PowerUpType = PowerUpType.Health;
+            medkitPickup.ImpactStatus = new ImpactStatus { ObjectName = "PowerUp" };
+            medkitPickup.CrashBoxDebugMode = false;
+            medkitPickup.WeaponSystems = null;
+            medkitPickup.HasPowerUp = false;
+            medkitPickup.IsActive = true;
+            medkitPickup.Movement = new MedKitPickupControls();
+            world.WorldInhabitants.Add(medkitPickup);
+            GameState.SurfaceState.AiObjects.Add(medkitPickup);
 
             SpawnJumpingFish(world);
 
