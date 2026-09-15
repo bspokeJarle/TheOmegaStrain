@@ -1,0 +1,4 @@
+interface:
+  display_name: "RetroMesh Object Builder"
+  short_description: "Build game-independent RetroMesh models to a face budget"
+  default_prompt: "Use $retromesh-create-object to build a truck with about 1000 triangles for my RetroMesh game, following its coordinate and object conventions."
