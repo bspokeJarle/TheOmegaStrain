@@ -73,7 +73,9 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             attackShip.Rotation = new Vector3 { };
             attackShip.ObjectOffsets = new Vector3 { x = 0, y = 150, z = 100 };
             // Absolute authored game-start coordinates for workshop testing.
-            attackShip.WorldPosition = new Vector3 { x = 53870f, y = 0f, z = 55280f };
+            var rmd = new Random();
+            var attackShipSpawnOffset = rmd.Next(0, 2) == 0 ? rmd.Next(-3000, -2499) : rmd.Next(2500, 3001);
+            attackShip.WorldPosition = new Vector3 { x = 57350f + attackShipSpawnOffset, y = 0, z = 57450f + attackShipSpawnOffset };
             attackShip.ObjectName = "AttackShip";
             attackShip.ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.AttackShipHealth };
             attackShip.CrashBoxDebugMode = false;
@@ -93,8 +95,6 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             //Add drones that will be waiting until the player has a Decoy powerup
             for (int i = 0; i < 4; i++)
             {
-                var rmd = new Random();
-
                 //Add Kamikaze drones
                 var kamikaze = KamikazeDrone.CreateKamikazeDrone(Surface, speedMultiplier: KamikazeDroneSpeedMultiplier);
                 kamikaze.WorldPosition = new Vector3 { x = (95700 + rmd.Next(-25000, 25000)) * ws, y = 0, z = (92000 + rmd.Next(-25000, 25000)) * ws };

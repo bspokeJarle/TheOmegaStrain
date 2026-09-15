@@ -21,7 +21,11 @@ namespace TheOmegaStrain.Gameplay.Controls
         private const int ParticleThrust = 3;
         private const float SecondsPerScreenCrossing = 3f;
         private const float MaximumMovementDeltaSeconds = 0.1f;
+        private const float SecondRocketDelaySeconds = 1f;
+        private readonly Func<bool> _shouldFireSecondRocket;
         private bool _hadActiveRocket;
+        private bool _secondRocketPending;
+        private DateTime? _firstRocketFiredUtc;
         private DateTime? _lastRocketRemovedUtc;
         /// <summary>Seconds to wait after the previous rocket leaves ActiveWeapons.</summary>
         public float RocketReloadDelaySeconds { get; set; } = EnemySetup.AttackShipRocketReloadDelaySeconds;
@@ -53,6 +57,11 @@ namespace TheOmegaStrain.Gameplay.Controls
         // Compensated target for our world origin, not ShipState's raw world coordinates.
         public Vector3? ShipTargetWorldPosition { get; private set; }
         public Vector3? DirectionToShip { get; private set; }
+
+        public AttackShipControls(Func<bool>? shouldFireSecondRocket = null)
+        {
+            _shouldFireSecondRocket = shouldFireSecondRocket ?? (() => Random.Shared.NextDouble() < 0.5);
+        }
 
         public I3dObject MoveObject(I3dObject theObject, IAudioPlayer? audioPlayer, ISoundRegistry? soundRegistry)
         {
@@ -332,7 +341,11 @@ namespace TheOmegaStrain.Gameplay.Controls
             // Track cleanup even while off-screen or missing guides. Do not restart the timer
             // on every empty frame. This controller is shared by the owner's render copies.
             if (_hadActiveRocket && activeRockets == 0)
+            {
                 _lastRocketRemovedUtc = nowUtc;
+                _secondRocketPending = false;
+                _firstRocketFiredUtc = null;
+            }
             _hadActiveRocket = activeRockets > 0;
 
             if (!theObject.IsOnScreen || !theObject.IsActive || theObject.WorldPosition == null ||
@@ -352,7 +365,10 @@ namespace TheOmegaStrain.Gameplay.Controls
             float elapsed = _lastRocketRemovedUtc.HasValue
                 ? (float)(nowUtc - _lastRocketRemovedUtc.Value).TotalSeconds
                 : float.PositiveInfinity;
-            if (!RocketFireHelpers.CanFireAfterReload(theObject.IsOnScreen, elapsed,
+            bool firingSecondRocket = _secondRocketPending && activeRockets == 1 &&
+                _firstRocketFiredUtc.HasValue &&
+                (nowUtc - _firstRocketFiredUtc.Value).TotalSeconds >= SecondRocketDelaySeconds;
+            if (!firingSecondRocket && !RocketFireHelpers.CanFireAfterReload(theObject.IsOnScreen, elapsed,
                     RocketReloadDelaySeconds, activeRockets))
                 return;
 
@@ -367,7 +383,11 @@ namespace TheOmegaStrain.Gameplay.Controls
                 theObject.WorldPosition, WeaponType.Rocket, theObject, 0);
             // Failed launches do not consume a reload; wait for a successful rocket's cleanup.
             if (weapons.ActiveWeapons.Count > activeBefore)
+            {
                 _hadActiveRocket = true;
+                _secondRocketPending = !firingSecondRocket && _shouldFireSecondRocket();
+                _firstRocketFiredUtc = _secondRocketPending ? nowUtc : null;
+            }
         }
     }
 }

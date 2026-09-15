@@ -22,7 +22,8 @@ public readonly record struct RocketFlightStep(
 
 public readonly record struct RocketLaunchSolution(
     Vector3 Direction,
-    float DistanceToShip);
+    float DistanceToShip,
+    float FlightDurationSeconds);
 
 public static class RocketFlightHelpers
 {
@@ -30,12 +31,49 @@ public static class RocketFlightHelpers
 
     public static RocketLaunchSolution CalculateLaunchSolution(
         Vector3 rocketWorldPosition,
-        Vector3 shipWorldPosition)
+        Vector3 shipWorldPosition,
+        float launchSpeed = WeaponSetup.RocketVelocity,
+        float gravityAcceleration = WeaponSetup.RocketGravityStrength)
     {
         var launchVector = MovementHelpers.GetDirectionAndDistanceWorld(
             rocketWorldPosition,
             shipWorldPosition);
-        return new RocketLaunchSolution(launchVector.Direction, launchVector.Length);
+        var displacement = VectorMath.Subtract(shipWorldPosition, rocketWorldPosition);
+        float horizontalDistance = MathF.Sqrt(
+            displacement.x * displacement.x + displacement.z * displacement.z);
+        float speed = MathF.Max(0f, launchSpeed);
+        float gravity = MathF.Max(0f, gravityAcceleration);
+
+        if (speed <= 0.00001f || gravity <= 0.00001f || horizontalDistance <= 0.00001f)
+        {
+            float directDuration = speed <= 0.00001f ? 0f : launchVector.Length / speed;
+            return new RocketLaunchSolution(launchVector.Direction, launchVector.Length, directDuration);
+        }
+
+        float speedSquared = speed * speed;
+        float discriminant = speedSquared * speedSquared - gravity *
+            (gravity * horizontalDistance * horizontalDistance - 2f * displacement.y * speedSquared);
+        if (discriminant < 0f)
+        {
+            return new RocketLaunchSolution(
+                launchVector.Direction,
+                launchVector.Length,
+                launchVector.Length / speed);
+        }
+
+        float tangent = (speedSquared - MathF.Sqrt(discriminant)) /
+            (gravity * horizontalDistance);
+        float cosine = 1f / MathF.Sqrt(1f + tangent * tangent);
+        float sine = tangent * cosine;
+        float horizontalX = displacement.x / horizontalDistance;
+        float horizontalZ = displacement.z / horizontalDistance;
+        var direction = new Vector3(
+            horizontalX * cosine,
+            -sine,
+            horizontalZ * cosine);
+        float flightDuration = horizontalDistance / (speed * cosine);
+
+        return new RocketLaunchSolution(direction, launchVector.Length, flightDuration);
     }
 
     public static bool HasFuel(

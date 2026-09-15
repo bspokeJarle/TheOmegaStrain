@@ -29,7 +29,6 @@ namespace TheOmegaStrain.Gameplay.Controls
             // Initial aim. Enemy rockets may retarget until they enter the final approach.
             // Movement below changes ObjectOffsets, so convert only the world direction's Z.
             IVector3 direction;
-            bool guidanceLocked = false;
             if (FireAsEnemyWeapon)
             {
                 if (GameState.ShipState?.ShipWorldPosition == null || GameState.ShipState.ShipObjectOffsets == null)
@@ -37,7 +36,6 @@ namespace TheOmegaStrain.Gameplay.Controls
                 var target = SurfacePositionSyncHelpers.GetShipRamTargetWorldPosition(rocketStart);
                 var launch = RocketFlightHelpers.CalculateLaunchSolution(ToVector3(worldPosition), target);
                 direction = new Vector3(launch.Direction.x, launch.Direction.y, -launch.Direction.z);
-                guidanceLocked = launch.DistanceToShip <= WeaponSetup.RocketGuidanceLockDistance;
             }
             else
             {
@@ -84,7 +82,6 @@ namespace TheOmegaStrain.Gameplay.Controls
                 LastUpdateUtc = firedUtc,
                 Velocity = WeaponSetup.RocketVelocity,
                 Trajectory = direction,
-                RocketGuidanceLocked = guidanceLocked,
                 RocketState = new RocketFlightState { Physics = physics },
                 // Impact ends flight; a spent rocket also explodes outside screen bounds.
                 // Travel distance and launch age do not stop the motor.
@@ -161,9 +158,15 @@ namespace TheOmegaStrain.Gameplay.Controls
 
         private void MoveRocket(ActiveWeapon rocket, float deltaSeconds)
         {
-            // Split the frame at fuel depletion so no frame gets both a full powered
-            // step and a full gravity step. Guidance never resumes after the transition.
             var state = rocket.RocketState!;
+            if (rocket.WeaponObject.ObjectName == "EnemyRocket")
+            {
+                MoveEnemyProjectile(rocket, deltaSeconds);
+                return;
+            }
+
+            // Split the frame at fuel depletion so no frame gets both a full powered
+            // step and a full gravity step.
             float poweredSeconds = 0f;
             if (!state.IsFalling)
             {
@@ -211,15 +214,33 @@ namespace TheOmegaStrain.Gameplay.Controls
 
         private void MovePoweredRocket(ActiveWeapon rocket, float deltaSeconds)
         {
-            UpdateRocketGuidance(rocket, allowRetarget: true);
             var travel = Scale(rocket.Trajectory, rocket.Velocity * deltaSeconds);
             SetRocketPosition(rocket, Add(rocket.WeaponObject.ObjectOffsets,
                 Add(travel, Scale(ParentVelocityLocal, deltaSeconds))));
             rocket.DistanceTraveled += Magnitude(travel);
             rocket.RocketState!.PoweredSeconds = MathF.Min(WeaponSetup.RocketFuelSeconds,
                 rocket.RocketState.PoweredSeconds + deltaSeconds);
-            // Lock on the frame we enter the last 100 units, before Ship can move again.
-            UpdateRocketGuidance(rocket, allowRetarget: false);
+        }
+
+        private void MoveEnemyProjectile(ActiveWeapon rocket, float deltaSeconds)
+        {
+            var state = rocket.RocketState!;
+            MoveFallingRocket(rocket, deltaSeconds);
+            state.PoweredSeconds = MathF.Min(
+                WeaponSetup.RocketFuelSeconds,
+                state.PoweredSeconds + deltaSeconds);
+            state.IsFalling = !RocketFlightHelpers.HasFuel(
+                state.PoweredSeconds,
+                WeaponSetup.RocketFuelSeconds);
+
+            if (state.IsFalling && IsRocketOutsideScreenBounds(rocket))
+            {
+                StartRocketExplosion(rocket);
+                return;
+            }
+
+            if (rocket.WeaponObject.Movement is RocketControls controls)
+                controls.UpdateWeaponParticles(rocket.WeaponObject, deltaSeconds, !state.IsFalling);
         }
 
         private void BeginRocketFall(ActiveWeapon rocket)
@@ -228,7 +249,6 @@ namespace TheOmegaStrain.Gameplay.Controls
             if (state.IsFalling) return;
 
             state.IsFalling = true;
-            rocket.RocketGuidanceLocked = true;
             state.Physics.Thrust = 0f;
             // Seed momentum ONCE. Physics owns velocity and gravity from this point onward.
             state.Physics.Velocity = Add(Scale(rocket.Trajectory, rocket.Velocity), ParentVelocityLocal);
