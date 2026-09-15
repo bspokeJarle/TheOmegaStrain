@@ -219,6 +219,9 @@ namespace TheOmegaStrain.Gameplay.Controls
                 );
             }
 
+            if (weaponType == WeaponType.Rocket)
+                LaunchRocket(trajectory, startPosition, worldPosition, parentShip);
+
             return this;
         }
 

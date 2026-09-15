@@ -23,4 +23,13 @@ public static class RocketFireHelpers
                secondsSinceSuccessfulLaunch >= requiredCooldown &&
                activeRocketCount == 0;
     }
+
+    public static bool CanFireAfterReload(
+        bool isAttackShipVisible,
+        float secondsSinceRocketRemoved,
+        float reloadDelaySeconds,
+        int activeRocketCount)
+    {
+        return isAttackShipVisible && activeRocketCount == 0 && secondsSinceRocketRemoved >= MathF.Max(0f, reloadDelaySeconds);
+    }
 }

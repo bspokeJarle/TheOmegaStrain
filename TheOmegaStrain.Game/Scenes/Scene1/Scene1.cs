@@ -9,6 +9,8 @@ using TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls;
 using TheOmegaStrain.Gameplay.Controls.MotherShipSmallControls;
 using TheOmegaStrain.Gameplay.Controls.SpaceSwanControls;
 using TheOmegaStrain.Gameplay.Controls.JumpingFishControls;
+using TheOmegaStrain.Gameplay.Controls.AttackShipControls;
+using TheOmegaStrain.Gameplay.Controls.RocketControls;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Intrinsics.Arm;
@@ -67,6 +69,34 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             guidanceArrow.ImpactStatus = new ImpactStatus { };
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
+
+            var attackShipWeapons = new List<I3dObject> { Rocket.CreateRocket(Surface) };
+            var AttackShip2 = AttackShip.CreateAttackShip(Surface);
+                AttackShip2.Rotation = new Vector3 { };
+                AttackShip2.ObjectOffsets = new Vector3 { x = 0, y = 150, z = 100 };
+                AttackShip2.WorldPosition = new Vector3 { x = 53870f, y = 0f, z = 55280f };
+                AttackShip2.ObjectName = "AttackShip";
+                AttackShip2.ImpactStatus = new ImpactStatus { };
+                AttackShip2.CrashBoxDebugMode = false;
+                AttackShip2.WeaponSystems = new Weapons(attackShipWeapons, AttackShip2.Movement!, AttackShip2);;
+                AttackShip2.HasPowerUp = false;
+                AttackShip2.IsActive = true;
+                AttackShip2.Movement = new AttackShipControls();
+                world.WorldInhabitants.Add(AttackShip2);
+                GameState.SurfaceState.AiObjects.Add(AttackShip2); // if out of screen. Move script will not be called, since object is not active.
+
+            var Rocket2 = Rocket.CreateRocket(Surface);
+                Rocket2.Rotation = new Vector3 { };
+                Rocket2.ObjectOffsets = new Vector3 { x = 0, y = 150, z = -500 };
+                Rocket2.WorldPosition = new Vector3 { x = 0, y = 0, z = 0 };
+                Rocket2.ObjectName = "Rocket";
+                Rocket2.ImpactStatus = new ImpactStatus { };
+                Rocket2.CrashBoxDebugMode = false;
+                Rocket2.WeaponSystems = new Weapons(attackShipWeapons, Rocket2.Movement!, Rocket2);;
+                Rocket2.HasPowerUp = false;
+                Rocket2.IsActive = true;
+                Rocket2.Movement = new RocketControls();
+                world.WorldInhabitants.Add(Rocket2);
 
             SpawnJumpingFish(world);
 

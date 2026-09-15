@@ -20,5 +20,7 @@ namespace TheOmegaStrain.Domain
         public WeaponType WeaponType { get; set; }
         IVector3 IActiveWeapon.Velocity { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         IVector3 IActiveWeapon.Acceleration { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public bool RocketGuidanceLoced { get; set; }
+        public RocketFlightState? ROcketState { get; set; }
     }
 }

@@ -21,7 +21,7 @@ namespace TheOmegaStrain.Game.World.Objects
     /// </summary>
     public static class Rocket
     {
-        private const float ZoomRatio = 1f;
+        private const float ZoomRatio = 3.5f;
 
         private const string BodyColor = "B8BDC6";
         private const string BodyMid = "8B919B";

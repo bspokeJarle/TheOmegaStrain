@@ -13,7 +13,8 @@ namespace TheOmegaStrain.Common.CommonSetup
         {
             ("Lazer", 55),
             ("Bullet", 21),
-            ("Rocket", 31)
+            ("Rocket", RocketDamage),
+            ("EnemyRocket", RocketDamage)
         };
 
         // Lazer crashbox extents (local coords, adjustable per axis)
@@ -70,6 +71,12 @@ namespace TheOmegaStrain.Common.CommonSetup
         public static float RocketAimAssistConeDot  = 0.85f;  // ~32° half-angle
         public static float RocketAimAssistStrength = 0.70f;
         public static float RocketAimAssistMaxRange = 2500f;
+        public const int RocketDamage = 105;
+        public const float RocktMaxRange = 1500f;
+        public const float RocketVelocity = 750f;
+        public const float RocketGuidanceLockDistance = 100f;
+        public const float RocketFuelSeconds = 3f;
+        public const float RocketGravityStrength = 300f;
 
         public static bool IsWeaponTypeValid(string weaponName)
         {
