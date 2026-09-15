@@ -10,7 +10,7 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {
-    public class Weapons : IWeapon
+    public partial class Weapons : IWeapon
     {
         private static bool enableLogging = false;
         private static readonly int maxZ = 1200;
@@ -57,6 +57,8 @@ namespace TheOmegaStrain.Gameplay.Controls
             _audio = audioPlayer;
             _thudSound = soundRegistry.Get("lazer_thud");
             _lazerSound = soundRegistry.Get("lazer_main");
+            if (soundRegistry.TryGet("explosion_main", out var rocketExplosion))
+                _rocketExplosionSound = rocketExplosion;
         }
 
         public Weapons(List<I3dObject> weapons, IObjectMovement parent, OmegaObject3D ship)
@@ -218,6 +220,9 @@ namespace TheOmegaStrain.Gameplay.Controls
                     $"with dir={dir} globalmapposition={worldPosition} at {DateTime.UtcNow}"
                 );
             }
+
+            if (weaponType == WeaponType.Rocket)
+                LaunchRocket(trajectory, startPosition, worldPosition, parentShip);
 
             return this;
         }
@@ -418,14 +423,15 @@ namespace TheOmegaStrain.Gameplay.Controls
 
         public IEnumerable<I3dObject> Get3DObjects()
         {
-            if (ActiveWeapons.Count == 0) yield break;
             foreach (ActiveWeapon w in ActiveWeapons)
             {
-                if (Expired(w))
+                if (w.WeaponType != WeaponType.Rocket && Expired(w))
                     continue;
 
                 yield return w.WeaponObject;
             }
+            foreach (var rocket in _explodingRockets)
+                yield return rocket.WeaponObject;
         }
 
         public void HandleHit(I3dObject weaponObject, bool hasCrashed, string objectName)
@@ -454,15 +460,22 @@ namespace TheOmegaStrain.Gameplay.Controls
             if (ShowAimAssist) UpdateAimAssistTarget();
 
             DateTime now = DateTime.UtcNow;
+            UpdateRocketExplosions();
 
             for (int i = 0; i < ActiveWeapons.Count; i++)
             {
                 ActiveWeapon w = ActiveWeapons[i] as ActiveWeapon;
+                if (w == null) continue;
+                if (w.WeaponType == WeaponType.Rocket)
+                {
+                    UpdateRocket(w, now);
+                    continue;
+                }
 
                 //If weapon has crashed, handle hit effects
                 if (w.WeaponObject.ImpactStatus.HasCrashed) HandleHit(w.WeaponObject, w.WeaponObject.ImpactStatus.HasCrashed, w.WeaponObject.ImpactStatus.ObjectName);
 
-                if (w == null || Expired(w) || OutOfBounds(w.WeaponObject.ObjectOffsets) || w.WeaponObject.ImpactStatus.HasCrashed)
+                if (Expired(w) || OutOfBounds(w.WeaponObject.ObjectOffsets) || w.WeaponObject.ImpactStatus.HasCrashed)
                     continue;
 
                 double dt = w.LastUpdateUtc == default(DateTime)
@@ -500,7 +513,16 @@ namespace TheOmegaStrain.Gameplay.Controls
             for (int i = ActiveWeapons.Count - 1; i >= 0; i--)
             {
                 ActiveWeapon w = ActiveWeapons[i] as ActiveWeapon;
-                if (w != null && Expired(w) || OutOfBounds(w.WeaponObject.ObjectOffsets) || w.WeaponObject.ImpactStatus.HasCrashed)
+                if (w?.WeaponType == WeaponType.Rocket)
+                {
+                    if (w.RocketState?.IsExploding == true)
+                    {
+                        // The explosion remains renderable through _explodingRockets.
+                        ActiveWeapons.RemoveAt(i);
+                    }
+                    continue;
+                }
+                if (w != null && (Expired(w) || OutOfBounds(w.WeaponObject.ObjectOffsets) || w.WeaponObject.ImpactStatus.HasCrashed))
                 {
                     if (Logger.ShouldLog(enableLogging)) Logger.Log(
                         $"[WeaponSystem] {w.WeaponType} name={w.WeaponObject.ObjectName} expired/out/crashed " +
@@ -520,7 +542,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
             foreach (var w in ActiveWeapons)
             {
-                if (w is not ActiveWeapon aw || Expired(aw))
+                if (w is not ActiveWeapon aw || (aw.WeaponType != WeaponType.Rocket && Expired(aw)))
                     continue;
 
                 if (aw.WeaponObject?.CrashBoxes != null)
@@ -745,6 +767,12 @@ namespace TheOmegaStrain.Gameplay.Controls
             return pos.z > maxZ || pos.z < minZ || pos.x < minX || pos.x > maxX || pos.y < minY || pos.y > maxY;
         }
 
+        // Rocket curve tuning: amplitude of the lateral sine wave during powered flight.
+        // The curve starts at zero, peaks at half the curve duration, and returns to zero
+        // before fuel runs out so the final approach is straight toward the target.
+        private const float RocketCurveAmplitude = 180f;          // max lateral deviation in world units
+        private const float RocketCurveDurationFraction = 0.65f;  // fraction of fuel time the curve occupies
+
         private static IVector3 Add(IVector3 a, IVector3 b) =>
             ToVector3(VectorMath.Add(a, b));
 
@@ -763,5 +791,14 @@ namespace TheOmegaStrain.Gameplay.Controls
         {
             return new Vector3(vector.x, vector.y, vector.z);
         }
+
+        /// <summary>Cross product of two Vector3 values.</summary>
+        private static Vector3 Cross(Vector3 a, Vector3 b) =>
+            new Vector3
+            {
+                x = a.y * b.z - a.z * b.y,
+                y = a.z * b.x - a.x * b.z,
+                z = a.x * b.y - a.y * b.x
+            };
     }
 }

@@ -1507,15 +1507,15 @@ namespace TheOmegaStrain.Gameplay.Controls
                     theObject.ImpactStatus.ObjectHealth -= ramDamage;
                     if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] MotherShip ram! Damage={ramDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
+                else if (crashedWith == "AttackShip")
+                {
+                    theObject.ImpactStatus.ObjectHealth -= EnemySetup.AttackShipCollisionDamage;
+                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] AttackShip hit! Damage={EnemySetup.AttackShipCollisionDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
+                }
                 else if (crashedWith == "BomberBomb")
                 {
                     theObject.ImpactStatus.ObjectHealth -= EnemySetup.BomberBombCollisionDamage;
                     if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] BomberBomb hit! Damage={EnemySetup.BomberBombCollisionDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
-                }
-                else if (crashedWith == "AttackShip")
-                {
-                    theObject.ImpactStatus.ObjectHealth -= EnemySetup.AttackShipCollisionDamage;
-                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] AttackShip ram! Damage={EnemySetup.AttackShipCollisionDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (EnemySetup.IsEnemyTypeValid(crashedWith))
                 {

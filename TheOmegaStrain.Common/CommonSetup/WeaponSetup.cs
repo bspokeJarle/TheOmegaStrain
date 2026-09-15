@@ -13,8 +13,19 @@ namespace TheOmegaStrain.Common.CommonSetup
         {
             ("Lazer", 55),
             ("Bullet", 21),
-            ("Rocket", 31)
+            ("Rocket", RocketDamage),
+            ("EnemyRocket", RocketDamage)
         };
+
+        // Short-range workshop rocket, using the existing active-weapon movement loop.
+        public const int RocketDamage = 105;
+        // Maximum distance to Ship at launch only; does not stop or detonate a flying rocket.
+        public const float RocketMaxRange = 1500f;
+        public const float RocketVelocity = 750f;
+        public const float RocketGuidanceLockDistance = 100f;
+        public const float RocketFuelSeconds = 3f;
+        // ApplyForces uses positive Y down. No thrust or drag after fuel depletion.
+        public const float RocketGravityStrength = 300f;
 
         // Lazer crashbox extents (local coords, adjustable per axis)
         // X = lateral (left/right), Y = longitudinal (beam direction), Z = vertical (up/down)

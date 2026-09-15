@@ -80,6 +80,12 @@ namespace TheOmegaStrain.Runtime.Collision
             bool isWeaponShipPair =
                 (flagsA.IsWeapon && flagsB.IsShip) ||
                 (flagsB.IsWeapon && flagsA.IsShip);
+            bool isEnemyRocketShipPair =
+                (flagsA.Name == "EnemyRocket" && flagsB.IsShip) ||
+                (flagsB.Name == "EnemyRocket" && flagsA.IsShip);
+            bool isEnemyRocketEnemyPair =
+                (flagsA.Name == "EnemyRocket" && flagsB.IsEnemy) ||
+                (flagsB.Name == "EnemyRocket" && flagsA.IsEnemy);
             bool isEnemyLazerEnemyPair =
                 ((flagsA.Name == "EnemyLazer" || flagsA.Name == "EnemyLazerMedium") && flagsB.IsEnemy) ||
                 ((flagsB.Name == "EnemyLazer" || flagsB.Name == "EnemyLazerMedium") && flagsA.IsEnemy);
@@ -90,6 +96,9 @@ namespace TheOmegaStrain.Runtime.Collision
             bool isShip = flagsA.IsShip || flagsB.IsShip;
             bool isSurface = flagsA.IsSurface || flagsB.IsSurface;
             bool isShipSurfacePair = isShip && isSurface;
+            bool isRocketSurfacePair =
+                ((flagsA.Name == "Rocket" || flagsA.Name == "EnemyRocket") && flagsB.IsSurface) ||
+                ((flagsB.Name == "Rocket" || flagsB.Name == "EnemyRocket") && flagsA.IsSurface);
             bool isDecoySurfacePair =
                 (flagsA.Name == "DroneDecoy" && flagsB.IsSurface) ||
                 (flagsB.Name == "DroneDecoy" && flagsA.IsSurface);
@@ -118,8 +127,12 @@ namespace TheOmegaStrain.Runtime.Collision
             if ((isInhabitantStatic || isOtherStatic) &&
                 !_shouldCheckStaticObjectsThisFrame &&
                 !isTerrainAvoidanceAiObstaclePair &&
+                !isRocketSurfacePair &&
                 !isShipSurfacePair) return true;
             if (isParticle && isShip) return true;
+            // Exhaust/weather/explosion particles are effects, not Rocket impact targets.
+            if (isParticle && (flagsA.Name == "Rocket" || flagsA.Name == "EnemyRocket" ||
+                               flagsB.Name == "Rocket" || flagsB.Name == "EnemyRocket")) return true;
             if (isParticle && (flagsA.IsEnemy || flagsB.IsEnemy)) return true;
             if (isBothParticles) return true;
             if (isParticle && _skipParticles) return true;
@@ -129,7 +142,8 @@ namespace TheOmegaStrain.Runtime.Collision
             if (isDecoyShipPair) return true;
             if (isDecoyParticlePair) return true;
             if (isPowerUp && !isPowerUpShipPair) return true;
-            if (isWeaponShipPair) return true;
+            if (isWeaponShipPair && !isEnemyRocketShipPair) return true;
+            if (isEnemyRocketEnemyPair) return true;
             if (isEnemyLazerEnemyPair) return true;
             if (isEnemyLazerSurfacePair) return true;
             if (isLazer && isParticle || isSeeder && isParticle) return true;
@@ -214,8 +228,12 @@ namespace TheOmegaStrain.Runtime.Collision
             }
 
             var effectiveMaxCrashDistance = isLazer ? MaxCrashDistance * 2 : MaxCrashDistance;
+            // Surface spans the viewport; its centre may be far from the tile a rocket hits.
+            bool isRocketSurfacePair = isSurface &&
+                (flagsA.Name == "Rocket" || flagsA.Name == "EnemyRocket" ||
+                 flagsB.Name == "Rocket" || flagsB.Name == "EnemyRocket");
             bool isShipEnemyPair = isShip && !isSurface && !isParticle && !isLazer;
-            if (!isShipEnemyPair && !isBomberBombSurfacePair && !isTerrainAvoidanceAiObstaclePair && distance > effectiveMaxCrashDistance)
+            if (!isShipEnemyPair && !isRocketSurfacePair && !isBomberBombSurfacePair && !isTerrainAvoidanceAiObstaclePair && distance > effectiveMaxCrashDistance)
             {
                 SkippedByDistance++;
                 return;

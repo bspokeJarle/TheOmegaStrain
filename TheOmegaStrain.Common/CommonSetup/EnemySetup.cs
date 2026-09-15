@@ -12,8 +12,13 @@ namespace TheOmegaStrain.Common.CommonSetup
         public const int SeederHealth = 55;
         public const int KamikazeDroneHealth = 55;
         public const int AttackShipHealth = 155;
+        public const int AttackShipCollisionDamage = 50;
+        public const float AttackShipFiringDistance = 500f;
+        public const float AttackShipApproachSlowdownDistance = 400f;
+        public const float AttackShipPositionTolerance = 10f;
+        // Delay starts when the previous Rocket leaves ActiveWeapons, not at launch.
+        public const float AttackShipRocketReloadDelaySeconds = 10f;
         public const int KamikazeDroneCollisionDamage = 50;
-        public const int AttackShipCollisionDamage = 90;
         public const int DroneDecoyCollisionDamage = 55;
         public const int BomberBombCollisionDamage = 75;
         public const int MotherShipSmallHealth = 1430;

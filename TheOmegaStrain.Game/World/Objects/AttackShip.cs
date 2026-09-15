@@ -11,7 +11,13 @@ namespace TheOmegaStrain.Game.World.Objects
 {
     public static class AttackShip
     {
-        private const float ZoomRatio = 1f;
+        // Scale hull, crash boxes and both guide pairs together in the factory.
+        private const float ZoomRatio = 1.5f;
+        private const float NoseTipX = 48f;
+        // Ship's weapon guides run from local Y = 40 to -200; AttackShip fires along +X.
+        private const float RocketWeaponGuideDistance = 240f;
+        // Expand each collision box equally without shifting the navigation/map centre.
+        private const float CrashBoxPadding = 12f;
         private const float EngineNozzleCapX = -54.2f;
         private const float EngineParticleStartX = -100f;
         private const float EngineParticleGuideX = -114f;
@@ -41,6 +47,8 @@ namespace TheOmegaStrain.Game.World.Objects
             AddPart(ship, "AttackShipLeftEngineDirectionGuide", BuildEngineDirectionGuide(EngineParticleLateralOffsetY), false);
             AddPart(ship, "AttackShipRightEngineStartGuide", BuildEngineStartGuide(-EngineParticleLateralOffsetY), false);
             AddPart(ship, "AttackShipRightEngineDirectionGuide", BuildEngineDirectionGuide(-EngineParticleLateralOffsetY), false);
+            AddPart(ship, "WeaponStartGuide", BuildRocketWeaponGuide(NoseTipX, "00ff00"), false);
+            AddPart(ship, "WeaponDirectionGuide", BuildRocketWeaponGuide(NoseTipX + RocketWeaponGuideDistance, "ff0000"), false);
             // Three crash boxes approximate the fuselage and both wing/engine sections.
             ship.CrashBoxes = BuildCrashBoxes();
             // Exhaust styling, mirroring ShipControls.ApplyThrustParticleStyle: the default
@@ -57,6 +65,7 @@ namespace TheOmegaStrain.Game.World.Objects
             };
 
             OmegaObject3DHelpers.ApplyScaleToObject(ship, ZoomRatio);
+            // Guides stay hidden so the shadow is generated from the hull only.
             OmegaObject3DHelpers.AddSimplifiedShadowPart(ship, useFlatQuad: true);
             return ship;
         }
@@ -64,7 +73,7 @@ namespace TheOmegaStrain.Game.World.Objects
         private static List<ITriangleMeshWithColorAndTexture> BuildNose()
         {
             var t = new List<ITriangleMeshWithColorAndTexture>(); const int n = 12;
-            var tip = V(48, 0, 0); var r1 = Ring(n, 40, 4, 3.4f); var r2 = Ring(n, 30, 7, 5.2f); var r3 = Ring(n, 18, 10.5f, 6.4f);
+            var tip = V(NoseTipX, 0, 0); var r1 = Ring(n, 40, 4, 3.4f); var r2 = Ring(n, 30, 7, 5.2f); var r3 = Ring(n, 18, 10.5f, 6.4f);
             for (int i = 0; i < n; i++)
             {
                 int j = (i + 1) % n; var c1 = i % 2 == 0 ? BodyLight : BodyMid; var c2 = i % 2 == 0 ? BodyMid : BodyDark;
@@ -140,6 +149,22 @@ namespace TheOmegaStrain.Game.World.Objects
             return t;
         }
 
+        private static List<ITriangleMeshWithColorAndTexture> BuildRocketWeaponGuide(float x, string color)
+        {
+            // Weapons use vert1 as the launch/aim anchor; keep both anchors on the nose axis.
+            return new List<ITriangleMeshWithColorAndTexture>
+            {
+                new TriangleMeshWithColor
+                {
+                    Color = color,
+                    vert1 = V(x, 0f, 0f),
+                    vert2 = V(x, -6f, 8f),
+                    vert3 = V(x, 6f, 8f),
+                    noHidden = true
+                }
+            };
+        }
+
         private static List<ITriangleMeshWithColorAndTexture> BuildEngineStartGuide(float y)
         {
             // Clear of the nozzle cap so large exhaust particles are born behind the hull.
@@ -177,20 +202,27 @@ namespace TheOmegaStrain.Game.World.Objects
             return new List<List<IVector3>>
             {
                 // Main fuselage, nose and cockpit.
-                OmegaObject3DHelpers.GenerateCrashBoxCorners(
+                CreatePaddedCrashBox(
                     V(-38f, -15f, -7f),
                     V(48f, 15f, 12.5f)),
 
                 // +Y wing and engine.
-                OmegaObject3DHelpers.GenerateCrashBoxCorners(
+                CreatePaddedCrashBox(
                     V(-54.5f, 10f, -6.5f),
                     V(8f, 36f, 15f)),
 
                 // -Y wing and engine.
-                OmegaObject3DHelpers.GenerateCrashBoxCorners(
+                CreatePaddedCrashBox(
                     V(-54.5f, -36f, -6.5f),
                     V(8f, -10f, 15f))
             };
+        }
+
+        private static List<IVector3> CreatePaddedCrashBox(Vector3 min, Vector3 max)
+        {
+            return OmegaObject3DHelpers.GenerateCrashBoxCorners(
+                V(min.x - CrashBoxPadding, min.y - CrashBoxPadding, min.z - CrashBoxPadding),
+                V(max.x + CrashBoxPadding, max.y + CrashBoxPadding, max.z + CrashBoxPadding));
         }
 
         private static List<Vector3> Ring(int n, float x, float ry, float rz, float yo = 0, float zo = 0) { var p = new List<Vector3>(n); for (int i = 0; i < n; i++) { float a = (float)(2 * Math.PI * i / n); p.Add(V(x, yo + ry * (float)Math.Cos(a), zo + rz * (float)Math.Sin(a))); } return p; }

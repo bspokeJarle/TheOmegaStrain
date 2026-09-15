@@ -30,9 +30,12 @@ namespace TheOmegaStrain.Game.World.Objects
             ISurface parentSurface,
             PowerUpType powerUpType = PowerUpType.Standard)
         {
-            var body = powerUpType == PowerUpType.Standard
-                ? PlusSignBody()
-                : TravelSpeedBody(powerUpType == PowerUpType.TravelSpeedLevel2 ? 3 : 2);
+            var body = powerUpType switch
+            {
+                PowerUpType.Standard => PlusSignBody(),
+                PowerUpType.Shield => ShieldBody(),
+                _ => TravelSpeedBody(powerUpType == PowerUpType.TravelSpeedLevel2 ? 3 : 2)
+            };
             var crash = PlusSignCrashBoxes();
 
             var powerup = new OmegaObject3D
@@ -54,7 +57,12 @@ namespace TheOmegaStrain.Game.World.Objects
             {
                 powerup.ObjectParts.Add(new OmegaObjectPart3D
                 {
-                    PartName = powerUpType == PowerUpType.Standard ? "PowerUpBody" : "TravelSpeedPowerUpBody",
+                    PartName = powerUpType switch
+                    {
+                        PowerUpType.Standard => "PowerUpBody",
+                        PowerUpType.Shield => "ShieldPowerUpBody",
+                        _ => "TravelSpeedPowerUpBody"
+                    },
                     Triangles = body,
                     IsVisible = true
                 });
@@ -117,6 +125,67 @@ namespace TheOmegaStrain.Game.World.Objects
                 -ArmLength, ArmLength,
                 -ArmDepth, ArmDepth,
                 FrontColor, BackColor, TopColor, BottomColor, SideDarkColor, SideLightColor);
+
+            return tris;
+        }
+
+        // ----------------------------------------------------
+        //  SHIELD GEOMETRY
+        // ----------------------------------------------------
+        //
+        // Heater-shield silhouette (rounded top, tapering to a bottom point)
+        // extruded along Y. Front/back are fan-triangulated from a centroid
+        // apex; the rim is a ring of side quads.
+        //
+        // 12 outline points: 12 front + 12 back + 12 rim quads (24 tris) = 48 triangles.
+        //
+
+        private const float ShieldDepth = 9f;
+        private const string ShieldFrontColor = "5FA8E0";
+        private const string ShieldBackColor = "2E5F91";
+        private const string ShieldEmblemColor = "F2C230";
+        private const string ShieldRimLightColor = "C9CDD6";
+        private const string ShieldRimDarkColor = "6E7480";
+
+        private static readonly (float x, float z)[] ShieldOutline =
+        {
+            (-32f, 40f), (-18f, 46f), (0f, 48f), (18f, 46f), (32f, 40f),
+            (34f, 10f), (26f, -18f), (12f, -40f), (0f, -52f),
+            (-12f, -40f), (-26f, -18f), (-34f, 10f)
+        };
+
+        public static List<ITriangleMeshWithColorAndTexture> ShieldBody()
+        {
+            var tris = new List<ITriangleMeshWithColorAndTexture>();
+            int count = ShieldOutline.Length;
+
+            var front = new Vector3[count];
+            var back = new Vector3[count];
+            for (int i = 0; i < count; i++)
+            {
+                var (x, z) = ShieldOutline[i];
+                front[i] = new Vector3 { x = x, y = -ShieldDepth, z = z };
+                back[i] = new Vector3 { x = x, y = ShieldDepth, z = z };
+            }
+
+            var frontApex = new Vector3 { x = 0f, y = -ShieldDepth, z = 6f };
+            var backApex = new Vector3 { x = 0f, y = ShieldDepth, z = 6f };
+            var center = new Vector3 { x = 0f, y = 0f, z = 6f };
+
+            for (int i = 0; i < count; i++)
+            {
+                int next = (i + 1) % count;
+
+                // Vertical emblem band through the top peak and bottom point
+                bool emblem = i is 1 or 2 or 3 or 7 or 8 or 9;
+                string faceColor = emblem ? ShieldEmblemColor : ShieldFrontColor;
+
+                tris.Add(CreateTriangleOutward(frontApex, front[i], front[next], center, faceColor));
+                tris.Add(CreateTriangleOutward(backApex, back[next], back[i], center, ShieldBackColor));
+
+                string rimColor = i % 2 == 0 ? ShieldRimLightColor : ShieldRimDarkColor;
+                AddQuadOutward(tris, front[i], front[next], back[next], back[i], center, rimColor);
+            }
 
             return tris;
         }

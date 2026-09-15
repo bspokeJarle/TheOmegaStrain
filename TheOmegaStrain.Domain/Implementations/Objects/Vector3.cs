@@ -20,5 +20,6 @@ namespace TheOmegaStrain.Domain
 
         public static Vector3 operator *(float s, Vector3 v)
             => new Vector3(v.x * s, v.y * s, v.z * s);
+
     }
 }

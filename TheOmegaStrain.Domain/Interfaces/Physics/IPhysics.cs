@@ -25,7 +25,7 @@ namespace TheOmegaStrain.Domain
         void Bounce(Vector3 normal, ImpactDirection? direction);
         void TiltStabilization(ref IVector3 tiltState);
         string? ExplosionColorOverride { get; set; }
-        I3dObject ExplodeObject(I3dObject explodingObject, float explosionForece);
+        I3dObject ExplodeObject(I3dObject explodingObject, float explosionForce);
         I3dObject UpdateExplosion(I3dObject explodingObject, DateTime deltaTime);
 
         float FallVelocity { get; set; }

@@ -1,15 +1,12 @@
 using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Domain;
-using System;
 using System.Collections.Generic;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {
     /// <summary>
-    /// Movement and exhaust control for the Rocket.
-    ///
-    /// The rocket has a single engine, so it only uses the primary guide pair
-    /// (RocketParticlesStartGuide / RocketParticlesDirectionGuide).
+    /// Single-engine exhaust adapter. Weapons owns a fired rocket's position,
+    /// orientation and fuel; UpdateWeaponParticles consumes its already-rotated guides.
     /// </summary>
     public sealed class RocketControls : IObjectMovement
     {
@@ -20,35 +17,21 @@ namespace TheOmegaStrain.Gameplay.Controls
         private const int FramesBetweenReleases = 2;
         private const int ParticleThrust = 3;
 
-        // Degrees per frame the rocket spins around its own long axis.
-        private const float RollSpeed = 2f;
-
         public ITriangleMeshWithColorAndTexture? StartCoordinates { get; set; }
         public ITriangleMeshWithColorAndTexture? GuideCoordinates { get; set; }
         public ITriangleMeshWithColorAndTexture? RearEngineStartCoordinates { get; set; }
         public ITriangleMeshWithColorAndTexture? RearEngineGuideCoordinates { get; set; }
-        public I3dObject ParentObject { get; set; }
-        public IPhysics Physics { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        // LiveGameLoop deep-copies every inhabitant each frame and the cloner gives the copy
-        // its own Rotation vector, so anything written to theObject.Rotation is discarded when
-        // the copy dies. The controller instance is shared between frames, so the accumulated
-        // angle has to live here or the rocket would never actually turn.
-        private float _accumulatedX;
+        public I3dObject ParentObject { get; set; } = null!;
+        public IPhysics Physics { get; set; } = new Physics.Physics();
 
         private int _framesSinceRelease;
+        private float _weaponEmissionSeconds;
         private readonly OmegaMeshRotation _rotate = new();
 
         public I3dObject MoveObject(I3dObject theObject, IAudioPlayer? audioPlayer, ISoundRegistry? soundRegistry)
         {
             ParentObject = theObject;
-
-            var rotation = theObject.Rotation as Vector3 ?? new Vector3();
-            rotation.x += _accumulatedX;
-            theObject.Rotation = rotation;
-
-            _accumulatedX += RollSpeed;
-
+            // Standalone scene objects use this path. Fired weapons are advanced by Weapons.
             ReleaseParticles(theObject);
             if (theObject.Particles?.Particles.Count > 0)
                 theObject.Particles.MoveParticles();
@@ -74,6 +57,39 @@ namespace TheOmegaStrain.Gameplay.Controls
 
             _framesSinceRelease = 0;
 
+            EmitExhaust(theObject, start, guide);
+        }
+
+        /// <summary>Weapons supplies already-rotated geometry; do not rotate these guides twice.</summary>
+        public void UpdateWeaponParticles(I3dObject theObject, float deltaSeconds, bool hasFuel)
+        {
+            ParentObject = theObject;
+            if (hasFuel)
+            {
+                _weaponEmissionSeconds += deltaSeconds;
+                const float interval = FramesBetweenReleases / 90f;
+                if (_weaponEmissionSeconds >= interval)
+                {
+                    _weaponEmissionSeconds %= interval;
+                    var startPart = theObject.ObjectParts.Find(p => p.PartName == StartGuidePartName);
+                    var guidePart = theObject.ObjectParts.Find(p => p.PartName == DirectionGuidePartName);
+                    if (startPart?.Triangles.Count > 0 && guidePart?.Triangles.Count > 0)
+                        EmitExhaust(theObject, startPart.Triangles[0], guidePart.Triangles[0]);
+                }
+            }
+            else
+            {
+                _weaponEmissionSeconds = 0f;
+            }
+
+            // Existing particles finish naturally; only NEW engine emissions stop with fuel.
+            if (theObject.Particles?.Particles.Count > 0)
+                theObject.Particles.MoveParticles();
+        }
+
+        private void EmitExhaust(I3dObject theObject, ITriangleMeshWithColorAndTexture start,
+            ITriangleMeshWithColorAndTexture guide)
+        {
             var worldPosition = new Vector3
             {
                 x = theObject.WorldPosition?.x ?? 0f,

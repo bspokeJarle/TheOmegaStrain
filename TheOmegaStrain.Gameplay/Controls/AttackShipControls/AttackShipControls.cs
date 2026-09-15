@@ -1,101 +1,144 @@
-using TheOmegaStrain.Common.OmegaEngineAdapters;
-using TheOmegaStrain.Gameplay.Helpers;
-using TheOmegaStrain.Common.CommonGlobalState;
-using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
+using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Helpers;
+using static TheOmegaStrain.Domain.WeaponHelpers;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {
+    /// <summary>
+    /// Ranged pursuit: hold a firing ring around Ship, launch one rocket, then reload
+    /// after cleanup. This controller survives the render loop's per-frame object copies.
+    /// </summary>
     public sealed class AttackShipControls : IObjectMovement
     {
         // Engines emit a steady stream, alternating frames to keep the particle count sane.
         private const int FramesBetweenReleases = 2;
         private const int ParticleThrust = 3;
         private const float SecondsPerScreenCrossing = 3f;
-        private const float MaximumMovementDeltaSeconds = 1f;
-        private const double PositionLogIntervalSeconds = 1;
-        private const int overFlowMarginY = 150;
-        private const int overFlowMarginZ = 250;
+        private const float MaximumMovementDeltaSeconds = 0.1f;
+        private bool _hadActiveRocket;
+        private DateTime? _lastRocketRemovedUtc;
+        /// <summary>Seconds to wait after the previous rocket leaves ActiveWeapons.</summary>
+        public float RocketReloadDelaySeconds { get; set; } = EnemySetup.AttackShipRocketReloadDelaySeconds;
+        private ITriangleMeshWithColorAndTexture? _weaponStartGuide;
+        private ITriangleMeshWithColorAndTexture? _weaponDirectionGuide;
 
         public ITriangleMeshWithColorAndTexture? StartCoordinates { get; set; }
         public ITriangleMeshWithColorAndTexture? GuideCoordinates { get; set; }
         public ITriangleMeshWithColorAndTexture? RearEngineStartCoordinates { get; set; }
         public ITriangleMeshWithColorAndTexture? RearEngineGuideCoordinates { get; set; }
-        public I3dObject ParentObject { get; set; }
+        public I3dObject ParentObject { get; set; } = null!;
         public IPhysics Physics { get; set; } = new Physics.Physics();
-        public Vector3? ShipTargetWorldPosition { get; private set; }
-        public Vector3? DirectionToShip { get; private set; }
+        private IAudioPlayer? _audio;
+        private SoundDefinition? _explosionSound;
+        private bool _isExploding;
+        private DateTime _explosionDeltaTime;
+        private Vector3? _explosionWorldPosition;
+        private Vector3? _explosionObjectOffsets;
+        private Vector3? _explosionRotation;
+
         // Controllers survive the engine's per-frame deep copies of scene objects.
         // Keep the authoritative position and captured scene height here.
         private float? _initialOffsetY;
-        public DateTime LastMovementDateTime;
         private DateTime? _lastMovementTime;
-        private DateTime _lastPositionLogTime = DateTime.MinValue;
+
         private int _framesSinceRelease;
         private readonly OmegaMeshRotation _rotate = new();
         private Vector3? _trackedWorldPosition;
-        private bool _isExploding = false;
-        private DateTime _explosionDeltaTime;
-
-        private Vector3 _explosionWorldPosition;
-        private Vector3 _explosionObjectOffsets;
-
-        private Vector3? _storedWorldPosition;
-        private bool _storedWorldPositionInitialized;
-
+        // Compensated target for our world origin, not ShipState's raw world coordinates.
+        public Vector3? ShipTargetWorldPosition { get; private set; }
+        public Vector3? DirectionToShip { get; private set; }
 
         public I3dObject MoveObject(I3dObject theObject, IAudioPlayer? audioPlayer, ISoundRegistry? soundRegistry)
         {
             ParentObject = theObject;
-            var now = DateTime.Now;
-            float deltaSeconds = GetMovementDeltaSeconds(now);
-
+            ConfigureAudio(audioPlayer, soundRegistry);
+            // Existing projectiles must still advance/clean up while their owner explodes.
+            theObject.WeaponSystems?.MoveWeapon(audioPlayer, soundRegistry);
+            // Handle the collision transform before navigation can move the object.
+            if (!_isExploding && theObject.ImpactStatus?.HasCrashed == true)
+                HandleCrash(theObject);
             if (_isExploding)
             {
-                if (_explosionWorldPosition != null)
-                {
-                    theObject.WorldPosition = _explosionWorldPosition;
-                }
-
-                if (_explosionObjectOffsets != null)
-                {
-                    theObject.ObjectOffsets = _explosionObjectOffsets;
-                }
-
+                theObject.WorldPosition = KamikazeDroneMovementHelpers.ToVector3(_explosionWorldPosition);
+                theObject.ObjectOffsets = KamikazeDroneMovementHelpers.ToVector3(_explosionObjectOffsets);
+                theObject.Rotation = KamikazeDroneMovementHelpers.ToVector3(_explosionRotation);
+                theObject.CrashBoxes = new List<List<IVector3>>();
                 Physics.UpdateExplosion(theObject, _explosionDeltaTime);
                 ExplosionParticleHelpers.MoveParticles(theObject);
                 if (theObject.ImpactStatus?.HasExploded == true)
-                {
                     theObject.ObjectParts = new List<I3dObjectPart>();
-                }
-
-                _storedWorldPosition = KamikazeDroneMovementHelpers.ToVector3(theObject.WorldPosition);
-                _storedWorldPositionInitialized = theObject.WorldPosition != null;
-                SyncAuthoritativePosition(theObject);
-                LastMovementDateTime = DateTime.Now;
                 return theObject;
             }
-            if (theObject.ImpactStatus?.HasCrashed == true && !_isExploding)
-            {
-                HandleCrash(theObject);
-            }
-
+            var now = DateTime.Now;
+            float deltaSeconds = GetMovementDeltaSeconds(now);
             RestoreMovementState(theObject);
             PursueShip(theObject, deltaSeconds);
-            SyncAuthoritativePosition(theObject);
 
             // Apply the view correction after navigation and before emitting exhaust.
             SurfacePositionSyncHelpers.AddSurfacePitchHeightCorrectionY(
                 theObject, WorldViewSetup.SurfacePitchDegrees);
-            LogPosition(theObject, now);
+            SyncAuthoritativeTransform(theObject);
+            UpdateFire(theObject, DateTime.UtcNow);
 
             ReleaseParticles(theObject);
             if (theObject.Particles?.Particles.Count > 0)
                 theObject.Particles.MoveParticles();
 
             return theObject;
+        }
+
+        private void HandleCrash(I3dObject theObject)
+        {
+            if (theObject.ImpactStatus == null)
+            {
+                return;
+            }
+
+            int currentHealth = theObject.ImpactStatus.ObjectHealth ?? EnemySetup.AttackShipHealth;
+            int damage = theObject.ImpactStatus.ObjectName switch
+            {
+                "Ship" => currentHealth,
+                string objectName when WeaponSetup.IsWeaponTypeValid(objectName) => WeaponSetup.GetWeaponDamage(objectName),
+                _ => currentHealth
+            };
+
+            theObject.ImpactStatus.ObjectHealth = currentHealth - damage;
+
+            if (theObject.ImpactStatus.ObjectHealth > 0)
+            {
+                HitSparkEffects.ReleaseHitSparks(theObject, this, theObject.ImpactStatus.ObjectName);
+                theObject.ImpactStatus.HasCrashed = false;
+                return;
+            }
+
+            if (_audio != null && _explosionSound != null)
+            {
+                var audioPosition = ((OmegaObject3D)theObject).GetAudioPosition();
+                _audio.Play(
+                    _explosionSound,
+                    AudioPlayMode.OneShot,
+                    new AudioPlayOptions
+                    {
+                        WorldPosition = new System.Numerics.Vector3(audioPosition.x, audioPosition.y, audioPosition.z)
+                    });
+            }
+
+            _isExploding = true;
+            _explosionDeltaTime = DateTime.Now;
+            _explosionWorldPosition = KamikazeDroneMovementHelpers.ToVector3(theObject.WorldPosition);
+            _explosionObjectOffsets = KamikazeDroneMovementHelpers.ToVector3(theObject.ObjectOffsets);
+            _explosionRotation = KamikazeDroneMovementHelpers.ToVector3(theObject.Rotation);
+
+            ExplosionParticleHelpers.ReleaseExplosionParticles(theObject, this);
+            Physics.ExplodeObject(theObject, 200f);
+            theObject.CrashBoxes = new List<List<IVector3>>();
+            theObject.ImpactStatus.HasCrashed = false;
         }
 
         private float GetMovementDeltaSeconds(DateTime now)
@@ -121,110 +164,92 @@ namespace TheOmegaStrain.Gameplay.Controls
             if (_trackedWorldPosition != null)
                 theObject.WorldPosition = new Vector3(
                     _trackedWorldPosition.x, _trackedWorldPosition.y, _trackedWorldPosition.z);
-
         }
 
         private void PursueShip(I3dObject theObject, float deltaSeconds)
         {
-            // Use the Drone's converted Ship crash centre, including its fallback
-            // to ShipWorldPosition. Raw ShipState coordinates use a different origin.
-            ShipTargetWorldPosition = KamikazeDroneMovementHelpers.GetShipCrashCenterWorldPosition();
+            // Resolve Ship's collision centre in our world-origin coordinate system.
+            // The shared helper accounts for both offsets and the reversed world-Z axis.
+            ShipTargetWorldPosition = GameState.ShipState?.ShipCrashCenterWorldPosition == null &&
+                GameState.ShipState?.ShipWorldPosition == null
+                ? null
+                : SurfacePositionSyncHelpers.GetShipRamTargetWorldPosition(theObject);
+            if (ShipTargetWorldPosition != null && theObject.IsOnScreen)
+            {
+                // MoveObject adds this correction to ObjectOffsets.y after movement.
+                // Include it in the target without applying it twice to the object.
+                ShipTargetWorldPosition.y -= SurfacePositionSyncHelpers.GetSurfacePitchHeightCorrectionY(
+                    theObject, WorldViewSetup.SurfacePitchDegrees);
+            }
             DirectionToShip = ShipTargetWorldPosition == null
                 ? null
                 : MovementHelpers.GetVectorToTarget(
-                    KamikazeDroneMovementHelpers.GetDroneCrashCenterWorldPosition(theObject),
+                    KamikazeDroneMovementHelpers.ToVector3(theObject.WorldPosition),
                     ShipTargetWorldPosition);
 
             if (ShipTargetWorldPosition != null && _trackedWorldPosition != null)
             {
-                var centre = KamikazeDroneMovementHelpers.GetDroneCrashCenterWorldPosition(theObject);
-                var velocity = MovementHelpers.GetVelocityTowardsTarget(centre, ShipTargetWorldPosition,
-                    MovementHelpers.GetScreenCrossingSpeed(SecondsPerScreenCrossing));
-                var step = MovementHelpers.GetPursuitStep(centre, ShipTargetWorldPosition, velocity, deltaSeconds);
+                var position = KamikazeDroneMovementHelpers.ToVector3(theObject.WorldPosition);
+                // Hold a horizontal firing ring, matching the existing standoff approach pattern.
+                // Match Ship's height rather than stopping far above/below the visible play area.
+                var toShipHorizontal = new Vector3(DirectionToShip!.x, 0f, DirectionToShip.z);
+                var horizontalLength = MovementHelpers.GetLength(toShipHorizontal);
+                var approachDirection = horizontalLength > 0.001f
+                    ? KamikazeDroneMovementHelpers.ToVector3(VectorMath.Normalize(toShipHorizontal))
+                    : new Vector3(1f, 0f, 0f);
+                float firingDistance = EnemySetup.AttackShipFiringDistance * ScreenSetup.ScreenScaleX;
+                var station = MovementHelpers.MoveAlongDirection(
+                    ShipTargetWorldPosition, approachDirection, -firingDistance);
+                var stationDistance = MovementHelpers.GetDirectionAndDistanceWorld(position, station).Length;
+                float throttle = stationDistance <= EnemySetup.AttackShipPositionTolerance ? 0f :
+                    Math.Clamp(stationDistance / EnemySetup.AttackShipApproachSlowdownDistance, 0f, 1f);
+                var velocity = MovementHelpers.GetVelocityTowardsTarget(position, station,
+                    MovementHelpers.GetScreenCrossingSpeed(SecondsPerScreenCrossing) * throttle);
+                var step = MovementHelpers.GetPursuitStep(position, station, velocity, deltaSeconds);
                 if (step.HasMovement)
                 {
-                    // Stop at the target instead of stepping past it on a long frame.
+                    // Also backs away if Ship enters the firing ring; never overshoot the station.
                     _trackedWorldPosition = MovementHelpers.MoveAlongDirection(
                         _trackedWorldPosition, step.MovementDirection,
-                        MathF.Min(step.MoveDistance, MovementHelpers.GetLength(DirectionToShip!)));
+                        MathF.Min(step.MoveDistance, step.DistanceToTarget));
                     theObject.WorldPosition = new Vector3(
                         _trackedWorldPosition.x, _trackedWorldPosition.y, _trackedWorldPosition.z);
-                    var heading = MovementHelpers.GetHeadingFromMovementDirection(step.MovementDirection);
-                    theObject.Rotation = new Vector3(heading.X, heading.Y, heading.Z);
                 }
+                // Keep facing Ship even while holding station or backing away.
+                var heading = MovementHelpers.GetHeadingFromMovementDirection(DirectionToShip);
+                theObject.Rotation = new Vector3(heading.X, heading.Y, heading.Z);
             }
-
         }
 
-        private void SyncAuthoritativePosition(I3dObject theObject)
+        private void SyncAuthoritativeTransform(I3dObject theObject)
         {
-            // Keep the original used by visibility checks in sync with the moving copy.
+            // The minimap reads the original, including its rotated collision centre.
+            // Copy values so later changes to the render copy cannot mutate that snapshot.
             foreach (var original in GameState.SurfaceState.AiObjects)
+            {
                 if (original.ObjectId == theObject.ObjectId && _trackedWorldPosition != null)
+                {
+                    if (ReferenceEquals(original, theObject)) return;
                     original.WorldPosition = new Vector3(
                         _trackedWorldPosition.x, _trackedWorldPosition.y, _trackedWorldPosition.z);
+                    original.ObjectOffsets = KamikazeDroneMovementHelpers.ToVector3(theObject.ObjectOffsets);
+                    original.Rotation = KamikazeDroneMovementHelpers.ToVector3(theObject.Rotation);
+                    return;
+                }
+            }
         }
 
-        private void LogPosition(I3dObject theObject, DateTime now)
+        public void Dispose()
         {
-            if (Logger.EnableFileLogging && (now - _lastPositionLogTime).TotalSeconds >= PositionLogIntervalSeconds)
-            {
-                _lastPositionLogTime = now;
-                var position = theObject.WorldPosition;
-                var shipPosition = GameState.ShipState?.ShipWorldPosition;
-                var target = ShipTargetWorldPosition;
-                string distance = target == null ? "unavailable" :
-                    MovementHelpers.GetLength(MovementHelpers.GetVectorToTarget(
-                        KamikazeDroneMovementHelpers.GetDroneCrashCenterWorldPosition(theObject),
-                        target)).ToString("F1");
-                Logger.Log(
-                    $"Id={theObject.ObjectId} OnScreen={theObject.IsOnScreen} " +
-                    $"WorldPosition=({position?.x:F1}, {position?.y:F1}, {position?.z:F1}) " +
-                    $"ShipWorldPosition=({shipPosition?.x:F1}, {shipPosition?.y:F1}, {shipPosition?.z:F1}) " +
-                    $"ShipTarget=({target?.x:F1}, {target?.y:F1}, {target?.z:F1}) " +
-                    $"DistanceToShip={distance}",
-                    "AttackShip");
-            }
-
+            _audio = null;
+            _explosionSound = null;
         }
 
-        public void Dispose() { }
-        public void ConfigureAudio(IAudioPlayer? audioPlayer, ISoundRegistry? soundRegistry) { }
-
-        private void HandleCrash(I3dObject theObject)
+        public void ConfigureAudio(IAudioPlayer? audioPlayer, ISoundRegistry? soundRegistry)
         {
-            if (theObject.ImpactStatus == null)
-            {
-                return;
-            }
-
-            int currentHealth = theObject.ImpactStatus.ObjectHealth ?? EnemySetup.AttackShipHealth;
-            int damage = theObject.ImpactStatus.ObjectName switch
-            {
-                "Ship" => EnemySetup.AttackShipHealth,
-                string objectName when WeaponSetup.IsWeaponTypeValid(objectName) => WeaponSetup.GetWeaponDamage(objectName),
-                _ => currentHealth
-            };
-
-            theObject.ImpactStatus.ObjectHealth = currentHealth - damage;
-
-            if (theObject.ImpactStatus.ObjectHealth > 0)
-            {
-                HitSparkEffects.ReleaseHitSparks(theObject, this, theObject.ImpactStatus.ObjectName);
-                theObject.ImpactStatus.HasCrashed = false;
-                return;
-            }
-
-
-            _isExploding = true;
-            _explosionDeltaTime = DateTime.Now;
-            _explosionWorldPosition = theObject.WorldPosition as Vector3 ?? KamikazeDroneMovementHelpers.ToVector3(theObject.WorldPosition);
-            _explosionObjectOffsets = theObject.ObjectOffsets as Vector3 ?? KamikazeDroneMovementHelpers.ToVector3(theObject.ObjectOffsets);
-
-            ExplosionParticleHelpers.ReleaseExplosionParticles(theObject, this);
-            Physics.ExplodeObject(theObject, 200f);
-            theObject.CrashBoxes = new List<List<IVector3>>();
-            theObject.ImpactStatus.HasCrashed = false;
+            if (_audio != null || audioPlayer == null || soundRegistry == null) return;
+            _audio = audioPlayer;
+            _explosionSound = soundRegistry.Get("explosion_main");
         }
 
         public void ReleaseParticles(I3dObject theObject)
@@ -291,6 +316,58 @@ namespace TheOmegaStrain.Gameplay.Controls
             if (GuideCoord != null) RearEngineGuideCoordinates = GuideCoord;
         }
 
-        public void SetWeaponGuideCoordinates(ITriangleMeshWithColorAndTexture StartCoord, ITriangleMeshWithColorAndTexture GuideCoord) { }
+        public void SetWeaponGuideCoordinates(ITriangleMeshWithColorAndTexture StartCoord, ITriangleMeshWithColorAndTexture GuideCoord)
+        {
+            // LiveGameLoop supplies start and direction in separate calls.
+            if (StartCoord != null) _weaponStartGuide = StartCoord;
+            if (GuideCoord != null) _weaponDirectionGuide = GuideCoord;
+        }
+
+        private void UpdateFire(I3dObject theObject, DateTime nowUtc)
+        {
+            var weapons = theObject.WeaponSystems;
+            if (weapons == null) return;
+            int activeRockets = weapons.ActiveWeapons.Count(w =>
+                w is ActiveWeapon active && active.WeaponType == WeaponType.Rocket);
+            // Track cleanup even while off-screen or missing guides. Do not restart the timer
+            // on every empty frame. This controller is shared by the owner's render copies.
+            if (_hadActiveRocket && activeRockets == 0)
+                _lastRocketRemovedUtc = nowUtc;
+            _hadActiveRocket = activeRockets > 0;
+
+            if (!theObject.IsOnScreen || !theObject.IsActive || theObject.WorldPosition == null ||
+                GameState.ShipState?.ShipWorldPosition == null)
+                return;
+            // Wait until LiveGameLoop has bound the pair, as MotherShipMedium does.
+            if (_weaponStartGuide == null || _weaponDirectionGuide == null)
+                return;
+
+            // Use the same offset-compensated target as navigation, not raw Ship coordinates.
+            float distanceToShip = MovementHelpers.GetDirectionAndDistanceWorld(
+                KamikazeDroneMovementHelpers.ToVector3(theObject.WorldPosition),
+                SurfacePositionSyncHelpers.GetShipRamTargetWorldPosition(theObject)).Length;
+            if (distanceToShip > WeaponSetup.RocketMaxRange)
+                return;
+
+            float elapsed = _lastRocketRemovedUtc.HasValue
+                ? (float)(nowUtc - _lastRocketRemovedUtc.Value).TotalSeconds
+                : float.PositiveInfinity;
+            if (!RocketFireHelpers.CanFireAfterReload(theObject.IsOnScreen, elapsed,
+                    RocketReloadDelaySeconds, activeRockets))
+                return;
+
+            // The loop binds guides after movement; use this frame's orientation at launch.
+            _weaponStartGuide = GetCurrentFrameRotatedGuide(theObject, "WeaponStartGuide");
+            _weaponDirectionGuide = GetCurrentFrameRotatedGuide(theObject, "WeaponDirectionGuide");
+            if (_weaponStartGuide == null || _weaponDirectionGuide == null)
+                return;
+
+            int activeBefore = weapons.ActiveWeapons.Count;
+            weapons.FireWeapon(_weaponDirectionGuide.vert1, _weaponStartGuide.vert1,
+                theObject.WorldPosition, WeaponType.Rocket, theObject, 0);
+            // Failed launches do not consume a reload; wait for a successful rocket's cleanup.
+            if (weapons.ActiveWeapons.Count > activeBefore)
+                _hadActiveRocket = true;
+        }
     }
 }

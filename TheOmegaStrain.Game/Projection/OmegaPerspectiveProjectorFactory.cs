@@ -24,8 +24,20 @@ namespace TheOmegaStrain.Game.Projection
                 viewport,
                 static () => new ProjectedTriangleMesh(),
                 TryResolveRenderPosition,
-                static obj => obj.ObjectName == "Star" || obj.CheckInhabitantVisibility(),
+                ShouldProjectObject,
                 static obj => obj.CrashBoxDebugMode == true);
+        }
+
+        private static bool ShouldProjectObject(OmegaObject3D obj)
+        {
+            // Rockets travel through ObjectOffsets; WorldPosition remains their launch
+            // anchor. Their particles inherit that anchor too. Let normal screen/depth
+            // culling use their actual render position, not distance to the launch point.
+            if (obj.ObjectName is "Rocket" or "EnemyRocket" ||
+                (obj.ObjectName == "Particle" && obj.ImpactStatus?.ObjectName is "Rocket" or "EnemyRocket"))
+                return true;
+
+            return obj.ObjectName == "Star" || obj.CheckInhabitantVisibility();
         }
 
         private static bool TryResolveRenderPosition(

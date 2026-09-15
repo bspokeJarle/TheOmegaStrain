@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using TheOmegaStrain.Game.World;
 using TheOmegaStrain.Game.Helpers;
@@ -17,11 +17,11 @@ namespace TheOmegaStrain.Game.World.Objects
     ///  Y = lateral
     /// +Z = up
     ///
-    /// Length is ~21 units, about 20% of AttackShip's ~102-unit length.
+    /// Authored length is ~21 units, before the factory's uniform scale.
     /// </summary>
     public static class Rocket
     {
-        private const float ZoomRatio = 1f;
+        private const float ZoomRatio = 3.5f;
 
         private const string BodyColor = "B8BDC6";
         private const string BodyMid = "8B919B";
@@ -63,14 +63,10 @@ namespace TheOmegaStrain.Game.World.Objects
 
             rocket.CrashBoxes = BuildCrashBoxes();
 
-            // Movement should be assigned by the caller, or here once the
-            // exact heat-seeking controls contract is decided.
-            //
-            // Example:
-            // if (heatSeeking)
-            //     rocket.Movement = new HeatSeekingRocketControls();
+            // Geometry template only. Weapons creates independent movement, physics
+            // and particles per launch; the heatSeeking variant is only a model name.
 
-            OmegaObject3DHelpers.ApplyScaleToObject(rocket, ZoomRatio);
+            ApplyScaleToObject(rocket, ZoomRatio);
             return rocket;
         }
 
