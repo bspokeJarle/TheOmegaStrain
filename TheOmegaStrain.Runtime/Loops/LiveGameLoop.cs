@@ -12,6 +12,7 @@ using TheOmegaStrain.Common.GamePlayHelpers;
 using TheOmegaStrain.Common.Persistence;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Audio.Services;
+using TheOmegaStrain.Common.Diagnostics;
 using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Gameplay.Controls.SeederControls;
 using System;
@@ -30,6 +31,7 @@ namespace TheOmegaStrain.Runtime.Loops
         private static int AdaptiveGcMinFrameInterval => ScreenSetup.RuntimeTargetFps;
 
         private long FrameCounter = 0;
+        private DateTime _nextWarningLog;
         private readonly FramePerformanceTracker framePerformanceTracker = new();
         private readonly FramePhaseTimer phaseTimer = new();
         private int AiUpdateCounter = 0;
@@ -38,6 +40,7 @@ namespace TheOmegaStrain.Runtime.Loops
         private readonly ObjectFrameTransformer objectFrameTransformer = new();
         private readonly ParticleManager particleManager = new();
         private readonly WeaponsManager weaponsManager = new();
+        private readonly IncomingThreatWarningManager incomingThreatWarnings = new();
         private readonly ObjectShadowManager objectShadowManager = new();
         private readonly List<OmegaObject3D> activeWorldBuffer = new();
         private readonly List<OmegaObject3D> deepCopiedWorldBuffer = new();
@@ -114,6 +117,9 @@ namespace TheOmegaStrain.Runtime.Loops
         {
             framePerformanceTracker.RestartFrame();
             FrameCounter++;
+            bool logWarnings = ThreatWarningDiagnostics.ShouldSample(ref _nextWarningLog);
+            if (logWarnings)
+                ThreatWarningDiagnostics.Write($"LOOP frame={FrameCounter} phase={GameState.GamePlayState.Phase} scene={GameState.GamePlayState.SceneIndex} paused={world.IsPaused} ai={GameState.SurfaceState.AiObjects.Count} inhabitants={world.WorldInhabitants.Count}");
             GameState.WeatherVisualState.DecayImpactFlash(3.2f * GameState.ClampedDeltaTime);
             EnsureExplosionCleanupSubscription(world.EventBus);
             bool logPhaseTiming = Logger.ShouldLog(EnableCpuHeadroomLogging) && (FrameCounter % PerfLogInterval == 0);
@@ -202,6 +208,7 @@ namespace TheOmegaStrain.Runtime.Loops
             prepMs = phaseTimer.Mark();
 
             bool gameplayPausedForVictoryReward = GameState.GamePlayState.IsVictoryRewardPauseActive;
+            OmegaObject3D? warningShip = null;
 
             foreach (var inhabitant in deepCopiedWorld)
             {
@@ -222,6 +229,7 @@ namespace TheOmegaStrain.Runtime.Loops
                 if (inhabitant.ObjectName == "Ship")
                 {
                     ShipCopy = inhabitant;
+                    warningShip = inhabitant;
                 }
                 if (inhabitant.ObjectName == "Surface")
                 {
@@ -274,6 +282,8 @@ namespace TheOmegaStrain.Runtime.Loops
             mergeMs = phaseTimer.Mark();
 
             var activeScene = world.SceneHandler.GetActiveScene();
+            if (logWarnings)
+                ThreatWarningDiagnostics.Write($"GATES sceneType={activeScene?.SceneType} paused={world.IsPaused} death={_deathSequenceStarted} victory={_victorySequenceStarted} victoryPause={gameplayPausedForVictoryReward} phase={GameState.GamePlayState.Phase} overlay={GameState.ScreenOverlayState.Type} showOverlay={GameState.ScreenOverlayState.ShowOverlay} fade={GameState.WorldFade.Phase} shipFrame={warningShip?.ObjectId} renderCount={renderedList.Count}");
 
             if (!gameplayPausedForVictoryReward)
                 HandleBiomassWarnings();
@@ -357,6 +367,15 @@ namespace TheOmegaStrain.Runtime.Loops
             infectionMs = phaseTimer.Mark();
 
             projectedCoordinates = worldProjector.ProjectToTriangles(renderedList, FrameCounter, projectedCoordinates);
+            incomingThreatWarnings.UpdateFromWorld(warningShip,
+                GameState.SurfaceState.AiObjects, GameState.GamePlayState,
+                !world.IsPaused && !_deathSequenceStarted && !_victorySequenceStarted &&
+                (activeScene?.SceneType is SceneTypes.Game or SceneTypes.Simulation) &&
+                GameState.ScreenOverlayState.Type == ScreenOverlayType.Game &&
+                !GameState.ScreenOverlayState.ShowOverlay &&
+                !GameState.WorldFade.IsFadeOutPendingOrActive && !GameState.WorldFade.IsFadeInPendingOrActive &&
+                !GameState.WorldFade.IsBlack,
+                audioPlayer, soundRegistry);
             projectMs = phaseTimer.Mark();
 
             if (!gameplayPausedForVictoryReward)
@@ -1003,6 +1022,7 @@ namespace TheOmegaStrain.Runtime.Loops
 
         private void CompleteWorldFadeReset(I3dWorld world)
         {
+            incomingThreatWarnings.Reset(GameState.GamePlayState);
             StopNonMusicAudio();
             CleanupWorldObjects(world.WorldInhabitants.OfType<OmegaObject3D>().ToList());
             world.WorldInhabitants.Clear();

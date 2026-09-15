@@ -168,6 +168,7 @@ namespace TheOmegaStrain.Game.SceneManagement
             scenes[currentSceneIndex] = newScene;
             GameState.ScreenOverlayState.HardHide();
             newScene.SetupGameOverlay();
+            gps.Phase = GamePhase.Playing;
             ApplySceneSettings(newScene);
             newScene.SetupScene((GameWorld)world);
             ApplySceneSettings(newScene);
@@ -255,6 +256,7 @@ namespace TheOmegaStrain.Game.SceneManagement
             scenes[currentSceneIndex] = newScene;
             GameState.ScreenOverlayState.HardHide();
             newScene.SetupGameOverlay();
+            gps.Phase = GamePhase.Playing;
             ApplySceneSettings(newScene);
             newScene.SetupScene((GameWorld)world);
             ApplySceneSettings(newScene);
@@ -542,6 +544,15 @@ namespace TheOmegaStrain.Game.SceneManagement
                     }
                 }
 
+                if (!shouldRestoreCheckpoint)
+                {
+                    // A fresh scene uses its own enemies, not counters from a previous
+                    // planet. Capture missing arrival state only after player progress
+                    // and decoy-driven activation have been restored.
+                    SyncGameplayEnemyCountsFromScene(resetInitialCounts: true);
+                    CapturePlanetStartSnapshotIfNeeded(GetActiveScene());
+                }
+
                 _pendingSavedState = null;
             }
         }
@@ -754,6 +765,7 @@ namespace TheOmegaStrain.Game.SceneManagement
             if (scene.SceneType == SceneTypes.Game || scene.SceneType == SceneTypes.Simulation)
             {
                 scene.SetupGameOverlay();
+                GameState.GamePlayState.Phase = GamePhase.Playing;
             }
         }
 
@@ -1301,6 +1313,7 @@ namespace TheOmegaStrain.Game.SceneManagement
 
                 if (Logger.ShouldLog(enableLogging)) Logger.Log($"Scenehandler: Game keypress. Overlay Type={overlay.Type} Show={overlay.ShowOverlay}", "General");
                 scene.SetupGameOverlay();
+                GameState.GamePlayState.Phase = GamePhase.Playing;
             }
         }
 

@@ -18,6 +18,9 @@ namespace TheOmegaStrain.Common.CommonSetup
         public const float AttackShipPositionTolerance = 10f;
         // Delay starts when the previous Rocket leaves ActiveWeapons, not at launch.
         public const float AttackShipRocketReloadDelaySeconds = 10f;
+        // HUD/audio detection only: never changes enemy AI, weapon range or collision.
+        public const float IncomingThreatWarningRange = 2000f;
+        public const float IncomingThreatWarningReleaseRange = 2200f;
         public const int KamikazeDroneCollisionDamage = 50;
         public const int DroneDecoyCollisionDamage = 55;
         public const int BomberBombCollisionDamage = 75;

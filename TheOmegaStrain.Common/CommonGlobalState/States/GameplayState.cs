@@ -455,6 +455,12 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
         public float AimAssistTargetScreenX { get; set; } = 0f;
         public float AimAssistTargetScreenY { get; set; } = 0f;
 
+        // Directional warning uses the same screen-space overlay path as aim assist.
+        public bool IncomingThreatWarningActive { get; set; }
+        public float IncomingThreatWarningScreenX { get; set; }
+        public float IncomingThreatWarningScreenY { get; set; }
+        public float IncomingThreatWarningAngle { get; set; }
+
         // PowerUp progression: each collected PowerUp unlocks the next weapon tier
         public int PowerUpsCollected { get; set; } = 0;
         public bool IsDecoyUnlocked => PowerUpsCollected >= 1;
@@ -670,6 +676,11 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
             AimAssistTargetActive = false;
             AimAssistTargetScreenX = 0f;
             AimAssistTargetScreenY = 0f;
+
+            IncomingThreatWarningActive = false;
+            IncomingThreatWarningScreenX = 0f;
+            IncomingThreatWarningScreenY = 0f;
+            IncomingThreatWarningAngle = 0f;
 
             SelectedWeapon = WeaponType.Bullet;
             ActivePowerup = "BULLET";

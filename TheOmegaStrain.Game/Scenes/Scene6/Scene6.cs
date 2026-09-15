@@ -101,6 +101,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene6
                 GameState.SurfaceState.AiObjects.Add(kamikaze);
             }
 
+            AttackShipPlacementHelpers.AddAttackShipGroup(world, Surface, count: 1, spawnSpread: 55000);
+
             SeederPlacementHelpers.AddSeederGroup(
                 world,
                 Surface,
@@ -849,6 +851,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene6
                 "Sand contamination identified as Omega Strain vector.\n" +
                 "Twenty-one seeders detected across dune fields.\n" +
                 "Kamikaze escort: FOURTEEN units. Bomber wing: SIX.\n" +
+                "Rocket-equipped AttackShips: ONE.\n" +
                 "Spread delay: 1.8 seconds. Bio-tolerance: 15.0%.\n\n" +
                 "DIRECTIVE:\n" +
                 "Destroy all seeders before the desert biome collapses entirely.";

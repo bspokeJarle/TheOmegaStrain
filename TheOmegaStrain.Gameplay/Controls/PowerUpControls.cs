@@ -28,6 +28,10 @@ namespace TheOmegaStrain.Gameplay.Controls
 
         // Explosion:
         private const float ExplosionForce = 100f;
+        // Total time from spawn, including the existing half-second appearance animation.
+        public const float CollectionTravelSeconds = 1.5f;
+        // The controller is shared by this drop's frame copies, not by other drops.
+        private float _collectionElapsedSeconds;
 
         public ITriangleMeshWithColorAndTexture? StartCoordinates { get; set; }
         public ITriangleMeshWithColorAndTexture? GuideCoordinates { get; set; }
@@ -143,6 +147,8 @@ namespace TheOmegaStrain.Gameplay.Controls
                 theObject,
                 WorldViewSetup.SurfacePitchDegrees);
 
+            SeekShip(theObject);
+
             // Push positions back to original in AiObjects
             SyncToOriginal(theObject);
 
@@ -170,6 +176,30 @@ namespace TheOmegaStrain.Gameplay.Controls
             }
 
             theObject.ObjectOffsets = SurfacePositionSyncHelpers.GetSurfaceSyncedObjectOffsets(theObject, _syncY, SyncFactorY);
+        }
+
+        private void SeekShip(I3dObject theObject)
+        {
+            if (GameState.ShipState.ShipObjectOffsets == null ||
+                GameState.ShipState.ShipImpactStatus?.HasExploded == true)
+                return;
+
+            float dt = GameState.ClampedDeltaTime;
+            float remaining = MathF.Max(dt, CollectionTravelSeconds - _collectionElapsedSeconds);
+            _collectionElapsedSeconds = MathF.Min(CollectionTravelSeconds, _collectionElapsedSeconds + dt);
+            if (_spawnAnimating || dt <= 0f)
+                return;
+
+            // Resolve after surface sync and spawn offsets: raw Ship.WorldPosition
+            // alone would miss the ship, especially in depth (world/local Z is reversed).
+            var target = SurfacePositionSyncHelpers.GetShipRamTargetWorldPosition(theObject);
+            var current = CopyVector(theObject.WorldPosition);
+            float distance = MovementHelpers.GetDirectionAndDistanceWorld(current, target).Length;
+            var velocity = MovementHelpers.GetVelocityTowardsTarget(current, target, distance / remaining);
+            var step = MovementHelpers.GetPursuitStep(current, target, velocity, dt);
+            theObject.WorldPosition = MovementHelpers.MoveAlongDirection(
+                current, step.MovementDirection, MathF.Min(distance, step.MoveDistance));
+            // Do not award here: normal Ship collision owns pickup, audio and persistence.
         }
 
         private static void SyncToOriginal(I3dObject deepCopy)
@@ -235,6 +265,7 @@ namespace TheOmegaStrain.Gameplay.Controls
         public void Dispose()
         {
             _syncInitialized = false;
+            _collectionElapsedSeconds = 0f;
             _syncY = 0;
             _spawnAnimating = true;
             _spawnFrame = 0f;

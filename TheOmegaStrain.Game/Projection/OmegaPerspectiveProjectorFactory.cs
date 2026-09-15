@@ -13,6 +13,35 @@ namespace TheOmegaStrain.Game.Projection
         // perspective size (before the normal ObjectZoom is applied).
         internal const double MaximumPerspectiveScale = 2.5;
 
+        /// <summary>
+        /// Projects a collision centre for HUD markers. Authoritative AI objects have
+        /// unrotated geometry; pass false to rotate only the calculated centre.
+        /// Returns its unscaled render-space centre too, so detection includes current offsets.
+        /// </summary>
+        public static bool TryProjectCrashCenter(
+            OmegaObject3D obj, out Vector3 renderCenter, out Vector3 screenCenter, bool geometryAlreadyRotated = true)
+        {
+            renderCenter = new Vector3();
+            screenCenter = new Vector3();
+            if (!ObjectPlacementHelpers.TryGetRenderPosition(obj, 0, 0, out var x, out var y, out var z))
+                return false;
+
+            // Frame and live weapon boxes are already rotated; AI template boxes are not.
+            var localCenter = geometryAlreadyRotated
+                ? ObjectCollisionGeometry.GetLocalCrashCenter(obj)
+                : ObjectCollisionGeometry.GetRotatedLocalCrashCenter(obj);
+            renderCenter = new Vector3((float)x + localCenter.x, (float)y + localCenter.y, (float)z + localCenter.z);
+            if (!ProjectionMath.TryProjectVertex(localCenter,
+                    x + ScreenSetup.screenSizeX / 2, y + ScreenSetup.screenSizeY / 2,
+                    ClampRenderDepth(z, ScreenSetup.perspectiveAdjustment),
+                    ScreenSetup.perspectiveAdjustment, ScreenSetup.defaultObjectZoom, out var projected))
+                return false;
+
+            screenCenter = new Vector3((float)projected.x, (float)projected.y, 0f);
+            return float.IsFinite(renderCenter.x) && float.IsFinite(renderCenter.y) && float.IsFinite(renderCenter.z)
+                && float.IsFinite(screenCenter.x) && float.IsFinite(screenCenter.y);
+        }
+
         public static IWorldProjector<OmegaObject3D, ProjectedTriangleMesh> Create()
         {
             return Create(new ScreenSetupProjectionViewport());

@@ -91,6 +91,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene8
                 GameState.SurfaceState.AiObjects.Add(kamikaze);
             }
 
+            AttackShipPlacementHelpers.AddAttackShipGroup(world, Surface, count: 3, spawnSpread: 58000);
+
             SeederPlacementHelpers.AddSeederGroup(
                 world,
                 Surface,
@@ -274,6 +276,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene8
                 "All previous planets compromised. This is the final canopy perimeter.\n" +
                 "Twenty-five seeders confirmed. Kamikaze escort: EIGHTEEN units.\n" +
                 "Bomber wing: EIGHT. Large-class war carrier: MAXIMUM aggression.\n" +
+                "Rocket-equipped AttackShips: THREE.\n" +
                 "Spread delay: 1.2 seconds. Bio-tolerance: 13.0%.\n" +
                 "Kill Seeders first; every Seeder destroyed slows the infection cascade.\n\n" +
                 "DIRECTIVE:\n" +

@@ -9,6 +9,7 @@ using TheOmegaStrain.Game.World;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.Diagnostics;
 using TheOmegaStrain.Common.GamePlayHelpers;
 using TheOmegaStrain.Common.Persistence;
 using TheOmegaStrain.Domain;
@@ -56,6 +57,8 @@ namespace TheOmegaStrain.Wpf
         private const bool enableLogging = false;
         private const bool enableFileLogging = LiveGameLoop.EnableCpuHeadroomLogging;
         private const bool EnableSteamDiagnostics = false;
+        private DateTime _nextWarningTickLog;
+        private DateTime _nextWarningHudLog;
         private readonly DrawingVisualHost visualHost = new();
         private bool _useDirect3D11;
         private Direct3D11ProjectedTriangleRenderer? _direct3DRenderer;
@@ -125,6 +128,10 @@ namespace TheOmegaStrain.Wpf
         private readonly System.Windows.Shapes.Ellipse _aimAssistInner;
         private const double AimAssistIndicatorSize = 90;
 
+        private readonly Canvas _incomingThreatCanvas;
+        private readonly System.Windows.Shapes.Polygon _incomingThreatArrow;
+        private readonly RotateTransform _incomingThreatRotation = new();
+
         private bool isFading = false;
         private bool _isFadingIn = false;
         private int Fps = 0;
@@ -139,10 +146,13 @@ namespace TheOmegaStrain.Wpf
         {
             ScreenSetup.ConfigureRuntimeTargetFps(_currentDisplayRefreshHz);
 
-            Logger.EnableFileLogging = enableFileLogging;
+            Logger.EnableFileLogging = enableFileLogging || ThreatWarningDiagnostics.Enabled;
             if (Logger.EnableFileLogging)
             {
                 Logger.ClearLog();
+                ThreatWarningDiagnostics.Write($"START executable={Environment.ProcessPath} cwd={Environment.CurrentDirectory} base={AppContext.BaseDirectory} runtime={typeof(LiveGameLoop).Assembly.Location} build={typeof(LiveGameLoop).Module.ModuleVersionId}");
+                ThreatWarningDiagnostics.Write($"ASSETS registry={Path.GetFullPath(AudioSetup.SoundRegistryPath)} exists={File.Exists(AudioSetup.SoundRegistryPath)}");
+                Logger.Flush();
                 if (enableFileLogging)
                     Logger.Log($"[PerfLogging] enabled targetFps={TargetFps} targetFrameMs={TargetFrameIntervalMs:0.###} displayRefreshHz={_currentDisplayRefreshHz} source=StartupFallback");
             }
@@ -311,6 +321,20 @@ namespace TheOmegaStrain.Wpf
             _aimAssistCanvas.Children.Add(_aimAssistOuter);
             _aimAssistCanvas.Children.Add(_aimAssistInner);
             OverlayRoot.Children.Add(_aimAssistCanvas);
+
+            // Screen-space HUD, like the aim reticle: works with both WPF and Direct3D.
+            _incomingThreatCanvas = new Canvas { IsHitTestVisible = false, Visibility = Visibility.Collapsed };
+            Panel.SetZIndex(_incomingThreatCanvas, 11);
+            _incomingThreatArrow = new System.Windows.Shapes.Polygon
+            {
+                Points = new PointCollection { new(22, 0), new(-14, -12), new(-6, 0), new(-14, 12) },
+                Fill = Brushes.Red,
+                Stroke = Brushes.OrangeRed,
+                StrokeThickness = 2,
+                RenderTransform = _incomingThreatRotation
+            };
+            _incomingThreatCanvas.Children.Add(_incomingThreatArrow);
+            OverlayRoot.Children.Add(_incomingThreatCanvas);
 
             timer.Interval = TimeSpan.FromMilliseconds(8);
             CompositionTarget.Rendering += Handle3dWorldRendering;
@@ -617,6 +641,29 @@ namespace TheOmegaStrain.Wpf
 
         private void HandleKeys(object sender, KeyEventArgs e)
         {
+            try
+            {
+                if (MenuSceneSaveShortcut.TryHandle(e.Key, Keyboard.IsKeyDown(Key.C), e.IsRepeat,
+                    GameState.ScreenOverlayState, GameState.GamePlayState.CurrentSceneType,
+                    sceneIndex => GameStatePersistence.SetSavedSceneForActivePlayer(sceneIndex)))
+                {
+                    e.Handled = true;
+                    return;
+                }
+            }
+            catch (IOException ex)
+            {
+                Logger.Log($"Could not save scene selection: {ex.Message}", "General");
+                e.Handled = true;
+                return;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Logger.Log($"Could not save scene selection: {ex.Message}", "General");
+                e.Handled = true;
+                return;
+            }
+
             bool overlayWasShowing = GameState.ScreenOverlayState.ShowOverlay;
             bool isSettingsPageKey = GameState.ScreenOverlayState is
                 { ShowOverlay: true, Type: ScreenOverlayType.Settings } &&
@@ -1311,6 +1358,8 @@ namespace TheOmegaStrain.Wpf
 
         private async void Handle3dWorld(double dtSeconds)
         {
+            if (ThreatWarningDiagnostics.ShouldSample(ref _nextWarningTickLog))
+                ThreatWarningDiagnostics.Write($"UI-TICK dt={dtSeconds:0.###} phase={GameState.GamePlayState.Phase} paused={world.IsPaused} overlay={GameState.ScreenOverlayState.Type} showOverlay={GameState.ScreenOverlayState.ShowOverlay} fading={isFading} worldFade={GameState.WorldFade.Phase} d3d={_useDirect3D11}");
             if (Logger.ShouldLog(enableLogging))
             {
                 var nowTicks = Stopwatch.GetTimestamp();
@@ -1401,6 +1450,7 @@ namespace TheOmegaStrain.Wpf
 
                 // Aim assist target indicator
                 UpdateAimAssistIndicator(gameplay);
+                UpdateIncomingThreatWarning(gameplay);
 
             }
 
@@ -1783,6 +1833,27 @@ namespace TheOmegaStrain.Wpf
             double innerSize = AimAssistIndicatorSize * 0.5;
             Canvas.SetLeft(_aimAssistInner, cx - innerSize / 2);
             Canvas.SetTop(_aimAssistInner, cy - innerSize / 2);
+        }
+
+        private void UpdateIncomingThreatWarning(GamePlayState gameplay)
+        {
+            if (ThreatWarningDiagnostics.ShouldSample(ref _nextWarningHudLog))
+                ThreatWarningDiagnostics.Write($"HUD active={gameplay.IncomingThreatWarningActive} phase={gameplay.Phase} paused={world.IsPaused} fading={isFading} victoryPause={gameplay.IsVictoryRewardPauseActive} overlay={GameState.ScreenOverlayState.Type} showOverlay={GameState.ScreenOverlayState.ShowOverlay} xy=({gameplay.IncomingThreatWarningScreenX:0.#},{gameplay.IncomingThreatWarningScreenY:0.#}) angle={gameplay.IncomingThreatWarningAngle:0.#} canvas={_incomingThreatCanvas.Visibility} effectiveVisible={_incomingThreatCanvas.IsVisible} parent={VisualTreeHelper.GetParent(_incomingThreatCanvas)?.GetType().Name}");
+            if (!gameplay.IncomingThreatWarningActive || !gameplay.IsPlaying || world.IsPaused || isFading ||
+                gameplay.IsVictoryRewardPauseActive ||
+                GameState.ScreenOverlayState.Type != ScreenOverlayType.Game || GameState.ScreenOverlayState.ShowOverlay)
+            {
+                _incomingThreatCanvas.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            // Same time-based pulse as aim assist, with a visible minimum between flashes.
+            double phase = (DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond) % 600.0 / 600.0;
+            _incomingThreatArrow.Opacity = 0.25 + 0.75 * (0.5 + 0.5 * Math.Sin(phase * Math.PI * 2));
+            _incomingThreatRotation.Angle = gameplay.IncomingThreatWarningAngle;
+            Canvas.SetLeft(_incomingThreatArrow, gameplay.IncomingThreatWarningScreenX);
+            Canvas.SetTop(_incomingThreatArrow, gameplay.IncomingThreatWarningScreenY);
+            _incomingThreatCanvas.Visibility = Visibility.Visible;
         }
 
         private static string ResolveVideoPath(string clipPath)

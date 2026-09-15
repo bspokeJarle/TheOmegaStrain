@@ -10,6 +10,8 @@ public class ShipAiVoiceSoundRegistrationTests
 {
     private static readonly (string Id, string File, string Usage)[] ShipAiVoiceSounds =
     [
+        ("ship_enemy_incoming_warning", "Warning,_enemy_incoming!_Automated_Warning_Voice.mp3", "ShipEnemyIncomingWarning"),
+        ("ship_drone_incoming_warning", "Warning,_drone_incoming!_Automated_Warning_Voice.mp3", "ShipDroneIncomingWarning"),
         ("ship_ai_clean_loop", "OmegaStrain_clean_loop.mp3", "ShipAiVoiceCleanLoop"),
         ("ship_ai_great_flying", "OmegaStrain_great_flying.mp3", "ShipAiVoiceGreatFlying"),
         ("ship_ai_low_altitude_bonus", "OmegaStrain_low_altitude_bonus.mp3", "ShipAiVoiceLowAltitudeBonus"),
@@ -64,6 +66,48 @@ public class ShipAiVoiceSoundRegistrationTests
     }
 
     private static string? FindRepoRoot()
+    {
+        return FindRepositoryDirectory();
+    }
+
+    [DataTestMethod]
+    [DataRow("ship_enemy_incoming_warning")]
+    [DataRow("ship_drone_incoming_warning")]
+    public void IncomingWarning_JsonResolvesAnAudibleOneShotFile(string id)
+    {
+        var root = FindRepoRoot()!;
+        string folder = Path.Combine(root, "TheOmegaStrain.Wpf", "Soundeffects");
+        var definition = new JsonSoundRegistry(Path.Combine(folder, "sounds.json")).Get(id);
+        using var reader = new NAudio.Wave.AudioFileReader(Path.Combine(folder, definition.File));
+        float peak = 0;
+        long decodedSamples = 0;
+        long lastAudibleSample = 0;
+        var samples = new float[4096];
+        int count;
+        while ((count = reader.Read(samples, 0, samples.Length)) > 0)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                float amplitude = Math.Abs(samples[i]);
+                peak = Math.Max(peak, amplitude);
+                if (amplitude > 0.01f) lastAudibleSample = decodedSamples + i;
+            }
+            decodedSamples += count;
+        }
+        // Measure decoded audio, not the MP3 header's estimated duration.
+        double samplesPerSecond = reader.WaveFormat.SampleRate * reader.WaveFormat.Channels;
+        double durationSeconds = decodedSamples / samplesPerSecond;
+        Assert.AreEqual(0.15, durationSeconds - definition.Segments.End, 0.001,
+            "Trim only the final 0.15 seconds through JSON, without editing the audio asset.");
+        Assert.IsTrue(durationSeconds > 0 && durationSeconds < 3.25,
+            "Warning spacing must cover the full clip.");
+        Assert.IsTrue(definition.Segments.End > lastAudibleSample / samplesPerSecond,
+            "The configured ending must preserve the audible warning.");
+        Assert.IsTrue(peak > 0.01f, "The decoded file must contain an audible signal.");
+        Assert.IsFalse(definition.Settings.Is3D, "Cockpit warnings must not be distance-attenuated.");
+    }
+
+    private static string? FindRepositoryDirectory()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir != null)
