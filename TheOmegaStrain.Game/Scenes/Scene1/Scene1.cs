@@ -3,6 +3,7 @@ using TheOmegaStrain.Game.World.Objects;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.GamePlayHelpers;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls;
@@ -227,9 +228,30 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
 
             var treePlacements = SurfaceGeneration.FindTreePlacementAreas(GameState.SurfaceState.Global2DMap,Surface.GlobalMapSize(),Surface.TileSize(),Surface.MaxHeight(), 30000);
             SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), treePlacements, radius: 1);
+
+            // A single teddy-bear prop placed on the first free tile just off the landing
+            // platform, so it sits close to where the ship spawns. The tree loop below skips
+            // any tile already claimed by a land-based object.
+            if (TryFindTeddySpawnTile(GameState.SurfaceState.Global2DMap, out int teddyTileX, out int teddyTileZ))
+            {
+                var teddyBear = TeddyBear.CreateTeddyBear(Surface);
+                teddyBear.WorldPosition = new Vector3 { x = 0, y = 0, z = 0 };
+                teddyBear.SurfaceBasedId = GameState.SurfaceState.Global2DMap[teddyTileZ, teddyTileX].mapId;
+                GameState.SurfaceState.Global2DMap[teddyTileZ, teddyTileX].hasLandbasedObject = true;
+                teddyBear.ObjectOffsets = new Vector3 { x = 40 * ScreenSetup.ScreenScaleX, y = LandBasedObjectSetup.SurfaceFootprintOffsetYScaled, z = 400 };
+                teddyBear.Rotation = new Vector3 { x = WorldViewSetup.SurfaceFacingObjectPitchDegrees, y = 0, z = 0 };
+                teddyBear.ObjectName = "TeddyBear";
+                teddyBear.Movement = new TeddyBearControls();
+                teddyBear.ImpactStatus = new ImpactStatus { };
+                teddyBear.CrashBoxDebugMode = false;
+                if (teddyBear.SurfaceBasedId > 0) world.WorldInhabitants.Add(teddyBear);
+            }
+
             var treeIndex = 0;
             foreach (var treePlacement in treePlacements)
             {
+                if (GameState.SurfaceState.Global2DMap[treePlacement.y, treePlacement.x].hasLandbasedObject)
+                    continue;
                 treeIndex++;
                 //Debug.WriteLine($"Tree placement: {treePlacement.x} {treePlacement.y}");
                 //TODO: We need design more trees
@@ -285,6 +307,51 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
                 towerPlacements,
                 treePlacements,
                 housePlacements);
+        }
+
+        // Finds the nearest usable tile just off the landing platform for the teddy-bear
+        // prop, so it spawns close to the ship. Rings outward from a point a couple of tiles
+        // in front (+Z) of the platform edge and returns the first tile that is in bounds,
+        // off the platform (with a one-tile buffer), unclaimed, and has a valid surface id.
+        private static bool TryFindTeddySpawnTile(SurfaceData[,] map, out int tileX, out int tileZ)
+        {
+            tileX = -1;
+            tileZ = -1;
+
+            int rows = map.GetLength(0); // z
+            int cols = map.GetLength(1); // x
+            var (centerX, centerZ) = LandingPlatformHelpers.GetLandingPlatformCenterTile(map);
+            int half = LandingPlatformHelpers.LandingPlatformSizeTiles / 2;
+
+            int startX = centerX;
+            int startZ = centerZ + half + 2;
+
+            for (int radius = 0; radius < 40; radius++)
+            {
+                for (int dz = -radius; dz <= radius; dz++)
+                {
+                    for (int dx = -radius; dx <= radius; dx++)
+                    {
+                        // Only visit the outer ring of this radius so tiles closest to the
+                        // start point (nearest the ship) are considered first.
+                        if (Math.Max(Math.Abs(dx), Math.Abs(dz)) != radius) continue;
+
+                        int x = startX + dx;
+                        int z = startZ + dz;
+                        if (x < 0 || z < 0 || x >= cols || z >= rows) continue;
+                        if (LandingPlatformHelpers.IsLandingPlatformTile(map, x, z, bufferTiles: 1)) continue;
+
+                        var cell = map[z, x];
+                        if (cell.mapId <= 0 || cell.hasLandbasedObject) continue;
+
+                        tileX = x;
+                        tileZ = z;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         public void SetupGameOverlay()
