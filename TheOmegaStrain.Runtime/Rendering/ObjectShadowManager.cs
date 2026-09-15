@@ -40,8 +40,10 @@ namespace TheOmegaStrain.Runtime.Rendering
 
         public static float BaseScale = SurfaceGroundProjectionHelpers.DefaultShadowBaseScale;
         public static float FreeFlyingShadowScale = 1.8f;
+        public static float DefaultFlyingShadowSizeMultiplier = 0.65f;
         public static float SpaceSwanShadowScale = 0.9f;
         public static float MotherShipShadowSizeMultiplier = 0.65f;
+        public static float ZeppelinShadowSizeMultiplier = 0.65f;
         public static float ShipShadowSizeMultiplier = 1.15f;
         // Shared reference stays just below Seeder's 48-unit body radius even
         // with the multiplier (40 * 1.15 = 46), and below Ship's footprint.
@@ -53,7 +55,7 @@ namespace TheOmegaStrain.Runtime.Rendering
         // and surface-bound objects keep their separate, static anchoring.
         // Positive inward offset subtracts Surface-vertex Z, away from the lower
         // screen edge. Vertex Z has the opposite sign to an object's render Z.
-        public static float TerrainShadowInwardOffset = 230f;
+        public static float TerrainShadowInwardOffset = 250f;
         public static float TerrainShadowSideOffset = -12f;
         public static float TerrainShadowSurfaceLift = 10f;
         private static readonly OmegaMeshRotation ShadowRotation = new();
@@ -331,6 +333,12 @@ namespace TheOmegaStrain.Runtime.Rendering
                 || name.Equals("MotherShipMedium", StringComparison.OrdinalIgnoreCase)
                 || name.Equals("MotherShipLarge", StringComparison.OrdinalIgnoreCase))
                 scale *= MotherShipShadowSizeMultiplier;
+            else if (name.Equals("ZeppelinBomber", StringComparison.OrdinalIgnoreCase))
+                scale *= ZeppelinShadowSizeMultiplier;
+            // Reduce the remaining standard flying shadows, without applying
+            // another reduction to Ship, Seeder, Swan or the tuned large ships.
+            else if (isFreeFlying && !hasComparableShadow && !isSpaceSwan)
+                scale *= DefaultFlyingShadowSizeMultiplier;
 
             // Reuse the pre-built silhouette and the engine's planar projection.
 

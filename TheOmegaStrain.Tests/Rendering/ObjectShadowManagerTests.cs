@@ -21,6 +21,8 @@ public class ObjectShadowManagerTests
     private float previousShadowInwardOffset;
     private float previousShadowSideOffset;
     private float previousMotherShipShadowSizeMultiplier;
+    private float previousZeppelinShadowSizeMultiplier;
+    private float previousDefaultFlyingShadowSizeMultiplier;
 
     [TestInitialize]
     public void Setup()
@@ -33,6 +35,8 @@ public class ObjectShadowManagerTests
         previousShadowInwardOffset = ObjectShadowManager.TerrainShadowInwardOffset;
         previousShadowSideOffset = ObjectShadowManager.TerrainShadowSideOffset;
         previousMotherShipShadowSizeMultiplier = ObjectShadowManager.MotherShipShadowSizeMultiplier;
+        previousZeppelinShadowSizeMultiplier = ObjectShadowManager.ZeppelinShadowSizeMultiplier;
+        previousDefaultFlyingShadowSizeMultiplier = ObjectShadowManager.DefaultFlyingShadowSizeMultiplier;
         GameState.SurfaceState = new SurfaceState
         {
             GlobalMapPosition = new Vector3(),
@@ -58,6 +62,8 @@ public class ObjectShadowManagerTests
         ObjectShadowManager.TerrainShadowInwardOffset = previousShadowInwardOffset;
         ObjectShadowManager.TerrainShadowSideOffset = previousShadowSideOffset;
         ObjectShadowManager.MotherShipShadowSizeMultiplier = previousMotherShipShadowSizeMultiplier;
+        ObjectShadowManager.ZeppelinShadowSizeMultiplier = previousZeppelinShadowSizeMultiplier;
+        ObjectShadowManager.DefaultFlyingShadowSizeMultiplier = previousDefaultFlyingShadowSizeMultiplier;
     }
 
     [TestMethod]
@@ -377,7 +383,7 @@ public class ObjectShadowManagerTests
                 new ObjectShadowManager().HandleObjectShadow(caster, shadows);
                 Assert.AreEqual(1, shadows.Count);
                 var triangle = shadows[0].ObjectParts[0].Triangles[0];
-                float expectedScale = MathF.Max(0.2f, 1.8f - clearance * 0.0002f);
+                float expectedScale = MathF.Max(0.2f, 1.8f - clearance * 0.0002f) * 0.65f;
                 Assert.AreEqual(originalWidth * expectedScale, triangle.vert2.x - triangle.vert1.x, 0.001f,
                     $"Same ground clearance must give the same silhouette scale: cameraZ={cameraZ}, clearance={clearance}.");
             }
@@ -405,8 +411,9 @@ public class ObjectShadowManagerTests
         manager.HandleObjectShadow(caster, shadows);
 
         Assert.AreEqual(2, shadows.Count);
-        float scale = ObjectShadowManager.BaseScale * ObjectShadowManager.FreeFlyingShadowScale
-            - (100f / ScreenSetup.defaultObjectZoom) * ObjectShadowManager.AltitudeShrinkFactor;
+        float scale = (ObjectShadowManager.BaseScale * ObjectShadowManager.FreeFlyingShadowScale
+            - (100f / ScreenSetup.defaultObjectZoom) * ObjectShadowManager.AltitudeShrinkFactor)
+            * ObjectShadowManager.DefaultFlyingShadowSizeMultiplier;
         foreach (var shadow in shadows)
         {
             var projected = shadow.ObjectParts[0].Triangles[0];
@@ -808,7 +815,21 @@ public class ObjectShadowManagerTests
     [DataRow("MotherShipMedium", 70f)]
     [DataRow("MotherShipLarge", 63f)]
     [DataRow("MotherShipLarge", 70f)]
-    public void MotherShipShadow_Is35PercentSmallerAroundUnchangedAnchor(string name, float pitch)
+    [DataRow("ZeppelinBomber", 63f)]
+    [DataRow("ZeppelinBomber", 70f)]
+    [DataRow("KamikazeDrone", 63f)]
+    [DataRow("KamikazeDrone", 70f)]
+    [DataRow("AttackShip", 63f)]
+    [DataRow("AttackShip", 70f)]
+    [DataRow("BomberBomb", 63f)]
+    [DataRow("BomberBomb", 70f)]
+    [DataRow("DroneDecoy", 63f)]
+    [DataRow("DroneDecoy", 70f)]
+    [DataRow("PowerUp", 63f)]
+    [DataRow("PowerUp", 70f)]
+    [DataRow("JumpingFish", 63f)]
+    [DataRow("JumpingFish", 70f)]
+    public void FlyingShadow_Is35PercentSmallerAroundUnchangedAnchor(string name, float pitch)
     {
         WorldViewSetup.ConfigurePitch(pitch);
         var surface = CreateTiltedFlatSurface(pitch);
@@ -817,7 +838,14 @@ public class ObjectShadowManagerTests
         {
             "MotherShipSmall" => MotherShipSmall.CreateMotherShipSmall(surface),
             "MotherShipMedium" => MotherShipMedium.CreateMotherShipMedium(surface),
-            _ => MotherShipLarge.CreateMotherShipLarge(surface)
+            "MotherShipLarge" => MotherShipLarge.CreateMotherShipLarge(surface),
+            "ZeppelinBomber" => ZeppelinBomber.CreateZeppelinBomber(surface),
+            "KamikazeDrone" => KamikazeDrone.CreateKamikazeDrone(surface),
+            "AttackShip" => AttackShip.CreateAttackShip(surface),
+            "BomberBomb" => BomberBomb.CreateBomberBomb(surface),
+            "DroneDecoy" => DecoyBeacon.CreateDecoyBeacon(surface),
+            "PowerUp" => PowerUp.CreatePowerup(surface),
+            _ => JumpingFish.CreateJumpingFish(surface)
         };
         caster.WorldPosition = new Vector3();
         caster.Rotation = new Vector3(pitch, 0f, 30f);
@@ -833,9 +861,13 @@ public class ObjectShadowManagerTests
             caster.ObjectOffsets = new Vector3(0f, 100f - height, 400f);
             var baseline = new List<OmegaObject3D>();
             ObjectShadowManager.MotherShipShadowSizeMultiplier = 1f;
+            ObjectShadowManager.ZeppelinShadowSizeMultiplier = 1f;
+            ObjectShadowManager.DefaultFlyingShadowSizeMultiplier = 1f;
             manager.HandleObjectShadow(caster, baseline);
             var reduced = new List<OmegaObject3D>();
             ObjectShadowManager.MotherShipShadowSizeMultiplier = 0.65f;
+            ObjectShadowManager.ZeppelinShadowSizeMultiplier = 0.65f;
+            ObjectShadowManager.DefaultFlyingShadowSizeMultiplier = 0.65f;
             manager.HandleObjectShadow(caster, reduced);
             Assert.AreEqual(1, baseline.Count);
             Assert.AreEqual(1, reduced.Count);
@@ -852,6 +884,38 @@ public class ObjectShadowManagerTests
             Assert.AreEqual(100f - height, caster.ObjectOffsets.y);
             Assert.AreEqual(400f, caster.ObjectOffsets.z);
         }
+    }
+
+    [DataTestMethod]
+    [DataRow("Ship")]
+    [DataRow("Seeder")]
+    [DataRow("SpaceSwan")]
+    [DataRow("MotherShipSmall")]
+    [DataRow("MotherShipMedium")]
+    [DataRow("MotherShipLarge")]
+    [DataRow("ZeppelinBomber")]
+    [DataRow("PolarBear")]
+    public void DefaultFlyingSizeAdjustment_DoesNotReduceAlreadyTunedOrSurfaceBoundShadows(string name)
+    {
+        var surface = CreateTiltedFlatSurface(WorldViewSetup.SurfacePitchDegrees);
+        var caster = CreateFreeFlyingShadowCaster(surface, 0f, 400f, 0f);
+        caster.ObjectName = name;
+        if (name == "PolarBear")
+        {
+            caster.SurfaceBasedId = 1;
+            surface.RotatedSurfaceTriangles[0].landBasedPosition = 1;
+        }
+        SetRotatedFootprint(caster, WorldViewSetup.SurfacePitchDegrees);
+        var baseline = new List<OmegaObject3D>();
+        var reduced = new List<OmegaObject3D>();
+        var manager = new ObjectShadowManager();
+        ObjectShadowManager.DefaultFlyingShadowSizeMultiplier = 1f;
+        manager.HandleObjectShadow(caster, baseline);
+        ObjectShadowManager.DefaultFlyingShadowSizeMultiplier = 0.65f;
+        manager.HandleObjectShadow(caster, reduced);
+        Assert.AreEqual(1, baseline.Count);
+        Assert.AreEqual(1, reduced.Count);
+        CollectionAssert.AreEqual(SnapshotVertices(baseline[0]), SnapshotVertices(reduced[0]));
     }
 
     private static (float X, float Y, float Z)[] SnapshotVertices(OmegaObject3D obj) =>
