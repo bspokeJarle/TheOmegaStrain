@@ -1,6 +1,7 @@
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.Persistence;
 using TheOmegaStrain.Domain;
+using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Gameplay.Audio.Services;
 
 namespace TheOmegaStrain.Game.Scenes.Scene1
@@ -11,6 +12,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
         private I3dWorld? _world;
         private bool _dronesActivated;
         private bool _motherShipActivated;
+        private ShieldPowerUpSpawner? _shieldSpawner;
 
         public bool IsVictory { get; private set; }
         public bool IsDefeat { get; private set; }
@@ -21,6 +23,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             _world = world;
             _dronesActivated = false;
             _motherShipActivated = IsRestoredMotherShipPhase();
+            _shieldSpawner = new ShieldPowerUpSpawner();
             IsVictory = false;
             IsDefeat = false;
         }
@@ -33,6 +36,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
         {
             if (IsVictory || IsDefeat) return;
 
+            _shieldSpawner?.Update(_world);
             CheckDroneActivation();
             CheckMotherShipActivation();
             CheckVictoryCondition();

@@ -53,29 +53,16 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             ship.Rotation = new Vector3 { };
             ship.WorldPosition = new Vector3 { };
             ship.ObjectName = "Ship";
-            ship.ImpactStatus = new ImpactStatus { ObjectHealth = 1000000 };
+            ship.ImpactStatus = new ImpactStatus { ObjectHealth = ShipSetup.DefaultShipHealth };
             ship.CrashBoxDebugMode = false;
             ship.WeaponSystems = new Weapons(weapons, ship.Movement!, ship);
             world.WorldInhabitants.Add(ship);
 
-            // Shield powerup — spawns at a random world position; renderer scrolls it
-            // relative to the ship via WorldPosition, so it stays put (only rotating)
-            // until the ship flies to it. Also shows up on the minimap like other pickups.
-            var shieldSpawnRandom = new Random();
-            var shieldPowerUp = PowerUp.CreatePowerup(Surface, PowerUpType.Shield);
-            shieldPowerUp.WorldPosition = new Vector3
-            {
-                x = shieldSpawnRandom.Next(20000, 90000) * ws,
-                y = 0,
-                z = shieldSpawnRandom.Next(20000, 90000) * ws
-            };
-            shieldPowerUp.ObjectOffsets = new Vector3 { x = 0, y = -200, z = 600 };
-            shieldPowerUp.ImpactStatus = new ImpactStatus { ObjectName = "PowerUp" };
-            shieldPowerUp.Movement = new PowerUpControls();
-            shieldPowerUp.CrashBoxDebugMode = false;
-            shieldPowerUp.IsActive = true;
-            world.WorldInhabitants.Add(shieldPowerUp);
-            GameState.SurfaceState.AiObjects.Add(shieldPowerUp);
+            // Shield bubble — opaque faceted "energy field" around the ship, visible
+            // only while GamePlayState.ShieldPoints > 0.
+            world.WorldInhabitants.Add(ShieldBubble.CreateShieldBubble(Surface));
+
+            // Shield powerups are spawned and replenished at random by Scene1Director.
 
             // Guidance arrow — on-screen indicator pointing toward closest seeder
             var guidanceArrow = SeederGuidanceArrow.CreateSeederGuidanceArrow(Surface);
