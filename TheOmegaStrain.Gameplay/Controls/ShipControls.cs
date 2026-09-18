@@ -76,6 +76,7 @@ namespace TheOmegaStrain.Gameplay.Controls
         private const float CannonRecoilDistance = 20f;
         private const float CannonRecoilReturnFraction = 0.6f;
         private const string MuzzleFlashPartName = "MuzzleFlash";
+        private const string ShieldGlowPartName = "ShieldGlow";
         private const float MuzzleFlashDurationSeconds = 0.08f;
         private const string BulletMuzzleFlashColor = "fff8c8";
         private const string LazerMuzzleFlashColor = "bfffff";
@@ -1331,6 +1332,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             lastUpdateTime = now;
 
             GameState.GamePlayState.Update(deltaTime);
+            UpdateShieldGlow(theObject);
             ExpireUnsafeSurfaceHit(now);
 
             bool shipCrashDetectionSuppressed = IsShipCrashDetectionSuppressed();
@@ -1504,41 +1506,41 @@ namespace TheOmegaStrain.Gameplay.Controls
                     }
                     _motherShipCollisionCooldown = DateTime.Now;
                     int ramDamage = ShipSetup.DefaultShipHealth / 2;
-                    theObject.ImpactStatus.ObjectHealth -= ramDamage;
-                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] MotherShip ram! Damage={ramDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
+                    int appliedDamage = ApplyIncomingDamage(theObject, ramDamage);
+                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] MotherShip ram! Damage={appliedDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (crashedWith == "AttackShip")
                 {
-                    theObject.ImpactStatus.ObjectHealth -= EnemySetup.AttackShipCollisionDamage;
-                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] AttackShip hit! Damage={EnemySetup.AttackShipCollisionDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
+                    int appliedDamage = ApplyIncomingDamage(theObject, EnemySetup.AttackShipCollisionDamage);
+                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] AttackShip hit! Damage={appliedDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (crashedWith == "BomberBomb")
                 {
-                    theObject.ImpactStatus.ObjectHealth -= EnemySetup.BomberBombCollisionDamage;
-                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] BomberBomb hit! Damage={EnemySetup.BomberBombCollisionDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
+                    int appliedDamage = ApplyIncomingDamage(theObject, EnemySetup.BomberBombCollisionDamage);
+                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] BomberBomb hit! Damage={appliedDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (EnemySetup.IsEnemyTypeValid(crashedWith))
                 {
-                    theObject.ImpactStatus.ObjectHealth -= EnemySetup.KamikazeDroneCollisionDamage;
-                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] Enemy hit! Damage={EnemySetup.KamikazeDroneCollisionDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
+                    int appliedDamage = ApplyIncomingDamage(theObject, EnemySetup.KamikazeDroneCollisionDamage);
+                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] Enemy hit! Damage={appliedDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (WeaponSetup.IsWeaponTypeValid(crashedWith))
                 {
                     int weaponDamage = WeaponSetup.GetWeaponDamage(crashedWith);
-                    theObject.ImpactStatus.ObjectHealth -= weaponDamage;
-                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] Weapon hit! Damage={weaponDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
+                    int appliedDamage = ApplyIncomingDamage(theObject, weaponDamage);
+                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] Weapon hit! Damage={appliedDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (crashedWith == "EnemyLazer")
                 {
                     int weaponDamage = WeaponSetup.GetWeaponDamage("Lazer");
-                    theObject.ImpactStatus.ObjectHealth -= weaponDamage;
-                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] EnemyLazer hit! Damage={weaponDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
+                    int appliedDamage = ApplyIncomingDamage(theObject, weaponDamage);
+                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] EnemyLazer hit! Damage={appliedDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (crashedWith == "EnemyLazerMedium")
                 {
                     int weaponDamage = WeaponSetup.GetWeaponDamage("Lazer") * 2;
-                    theObject.ImpactStatus.ObjectHealth -= weaponDamage;
-                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] EnemyLazerMedium hit! Damage={weaponDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
+                    int appliedDamage = ApplyIncomingDamage(theObject, weaponDamage);
+                    if (Logger.ShouldLog(logging)) Logger.Log($"[ShipCrash] EnemyLazerMedium hit! Damage={appliedDamage}, NewHealth={theObject.ImpactStatus.ObjectHealth}");
                 }
                 else if (crashedWith == "Surface" ||
                          theObject.ImpactStatus.ImpactDirection == ImpactDirection.Top ||
@@ -1570,7 +1572,7 @@ namespace TheOmegaStrain.Gameplay.Controls
                         BeginSurfaceBounceRecovery(reenableGravityAtTop: true);
 
                         int landingDamage = CalculateSurfaceLandingDamage(landingSpeed);
-                        theObject.ImpactStatus.ObjectHealth -= landingDamage;
+                        ApplyIncomingDamage(theObject, landingDamage);
                     }
 
                     if (theObject.ImpactStatus.ObjectHealth > 0)
@@ -1989,6 +1991,16 @@ namespace TheOmegaStrain.Gameplay.Controls
             return Math.Max(MinSurfaceLandingDamage, (int)(speed * HighSpeedSurfaceLandingDamageMultiplier));
         }
 
+        private static int ApplyIncomingDamage(I3dObject ship, int normalDamage)
+        {
+            if (ship.ImpactStatus == null)
+                return 0;
+
+            int appliedDamage = GameState.GamePlayState.CalculateIncomingDamage(normalDamage);
+            ship.ImpactStatus.ObjectHealth = (ship.ImpactStatus.ObjectHealth ?? 0) - appliedDamage;
+            return appliedDamage;
+        }
+
         public void ApplyLocalTiltToMesh(int tilt, I3dObject inhabitant)
         {
             if (ParentObject == null) return;
@@ -2289,6 +2301,20 @@ namespace TheOmegaStrain.Gameplay.Controls
             SetPartColor(theObject, "RearEngine", rearColor);
         }
 
+        private void UpdateShieldGlow(I3dObject theObject)
+        {
+            var gameplay = GameState.GamePlayState;
+            bool isVisible = gameplay.IsShieldActive && !isExploding;
+            SetPartVisibility(theObject, ShieldGlowPartName, isVisible);
+            if (!isVisible)
+                return;
+
+            float pulse = 0.5f + 0.5f * MathF.Sin(gameplay.ShieldSecondsLeft * 5f);
+            int green = 205 + (int)(50f * pulse);
+            int blue = 220 + (int)(35f * pulse);
+            SetPartColor(theObject, ShieldGlowPartName, $"20{green:X2}{blue:X2}");
+        }
+
         /// <summary>
         /// Linearly interpolates between the idle (dark red) and active (yellow)
         /// engine colors. <paramref name="t"/> is clamped to [0, 1].
@@ -2408,9 +2434,14 @@ namespace TheOmegaStrain.Gameplay.Controls
 
                     bool isTutorialScene = GameState.GamePlayState.CurrentSceneType == SceneTypes.Tutorial;
                     var gameplay = GameState.GamePlayState;
-                    bool isSpeedPowerUp = obj.PowerUpType != PowerUpType.Standard;
                     bool progressionChanged;
-                    if (isSpeedPowerUp)
+                    if (obj.PowerUpType == PowerUpType.Shield)
+                    {
+                        gameplay.ActivateShield();
+                        progressionChanged = true;
+                    }
+                    else if (obj.PowerUpType == PowerUpType.TravelSpeedLevel1 ||
+                             obj.PowerUpType == PowerUpType.TravelSpeedLevel2)
                     {
                         progressionChanged = gameplay.ApplySpeedPowerUp(obj.PowerUpType);
                     }

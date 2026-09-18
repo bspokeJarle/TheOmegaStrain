@@ -30,9 +30,12 @@ namespace TheOmegaStrain.Game.World.Objects
             ISurface parentSurface,
             PowerUpType powerUpType = PowerUpType.Standard)
         {
-            var body = powerUpType == PowerUpType.Standard
-                ? PlusSignBody()
-                : TravelSpeedBody(powerUpType == PowerUpType.TravelSpeedLevel2 ? 3 : 2);
+            var body = powerUpType switch
+            {
+                PowerUpType.Standard => PlusSignBody(),
+                PowerUpType.Shield => ShieldBody(),
+                _ => TravelSpeedBody(powerUpType == PowerUpType.TravelSpeedLevel2 ? 3 : 2)
+            };
             var crash = PlusSignCrashBoxes();
 
             var powerup = new OmegaObject3D
@@ -54,7 +57,12 @@ namespace TheOmegaStrain.Game.World.Objects
             {
                 powerup.ObjectParts.Add(new OmegaObjectPart3D
                 {
-                    PartName = powerUpType == PowerUpType.Standard ? "PowerUpBody" : "TravelSpeedPowerUpBody",
+                    PartName = powerUpType switch
+                    {
+                        PowerUpType.Standard => "PowerUpBody",
+                        PowerUpType.Shield => "ShieldPowerUpBody",
+                        _ => "TravelSpeedPowerUpBody"
+                    },
                     Triangles = body,
                     IsVisible = true
                 });
@@ -131,6 +139,46 @@ namespace TheOmegaStrain.Game.World.Objects
 
             for (int i = 0; i < count; i++)
                 AddLightningBolt(tris, startX + (i * spacing), scale);
+
+            return tris;
+        }
+
+        public static List<ITriangleMeshWithColorAndTexture> ShieldBody()
+        {
+            const float depth = 10f;
+            const string shieldFront = "22E6D0";
+            const string shieldBack = "087F91";
+            const string shieldEdge = "66FFF0";
+
+            var outline = new[]
+            {
+                new Vector3 { x = -32f, y = -depth, z =  28f },
+                new Vector3 { x =  32f, y = -depth, z =  28f },
+                new Vector3 { x =  36f, y = -depth, z =  -5f },
+                new Vector3 { x =  22f, y = -depth, z = -30f },
+                new Vector3 { x =   0f, y = -depth, z = -42f },
+                new Vector3 { x = -22f, y = -depth, z = -30f },
+                new Vector3 { x = -36f, y = -depth, z =  -5f }
+            };
+
+            var tris = new List<ITriangleMeshWithColorAndTexture>();
+            var center = new Vector3 { x = 0f, y = 0f, z = -5f };
+            var frontCenter = new Vector3 { x = 0f, y = -depth, z = -5f };
+            var backCenter = new Vector3 { x = 0f, y = depth, z = -5f };
+
+            for (int i = 0; i < outline.Length; i++)
+            {
+                int next = (i + 1) % outline.Length;
+                var frontA = outline[i];
+                var frontB = outline[next];
+                var backA = new Vector3 { x = frontA.x, y = depth, z = frontA.z };
+                var backB = new Vector3 { x = frontB.x, y = depth, z = frontB.z };
+
+                tris.Add(CreateTriangleOutward(frontCenter, frontA, frontB, center, shieldFront));
+                tris.Add(CreateTriangleOutward(backCenter, backB, backA, center, shieldBack));
+                tris.Add(CreateTriangleOutward(frontA, backA, backB, center, shieldEdge));
+                tris.Add(CreateTriangleOutward(frontA, backB, frontB, center, shieldEdge));
+            }
 
             return tris;
         }

@@ -29,6 +29,7 @@ namespace TheOmegaStrain.Game.World.Objects
             var topCannonDirectionGuide = CannonDirectionGuide();
             var muzzleFlash = MuzzleFlashTriangles();
             var winglets = WingletTriangles();
+            var shieldGlow = ShieldGlowRing();
 
 
             // Add orb as an inhabitant
@@ -46,6 +47,7 @@ namespace TheOmegaStrain.Game.World.Objects
             ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "WeaponStartGuide", Triangles = CannonStartGuide()!, IsVisible = false });
             ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "MuzzleFlash", Triangles = muzzleFlash!, IsVisible = false });
             ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "Winglets", Triangles = winglets!, IsVisible = true });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "ShieldGlow", Triangles = shieldGlow, IsVisible = false });
 
             var crashBoxes = new List<List<IVector3>>();
             crashBoxes.Add(CreateCrashBoxFromTriangles(
@@ -75,6 +77,47 @@ namespace TheOmegaStrain.Game.World.Objects
             OmegaObject3DHelpers.AddSimplifiedShadowPart(ship, useFlatQuad: true);
 
             return ship;
+        }
+
+        public static List<ITriangleMeshWithColorAndTexture> ShieldGlowRing()
+        {
+            const int segments = 16;
+            const float outerRadiusX = 96f;
+            const float outerRadiusY = 104f;
+            const float innerRadiusX = 84f;
+            const float innerRadiusY = 91f;
+            const float ringHeight = 12f;
+            var triangles = new List<ITriangleMeshWithColorAndTexture>(segments * 2);
+
+            for (int i = 0; i < segments; i++)
+            {
+                float angleA = i * (2f * System.MathF.PI / segments);
+                float angleB = (i + 1) * (2f * System.MathF.PI / segments);
+                var outerA = new Vector3 { x = System.MathF.Cos(angleA) * outerRadiusX, y = System.MathF.Sin(angleA) * outerRadiusY, z = ringHeight };
+                var outerB = new Vector3 { x = System.MathF.Cos(angleB) * outerRadiusX, y = System.MathF.Sin(angleB) * outerRadiusY, z = ringHeight };
+                var innerA = new Vector3 { x = System.MathF.Cos(angleA) * innerRadiusX, y = System.MathF.Sin(angleA) * innerRadiusY, z = ringHeight };
+                var innerB = new Vector3 { x = System.MathF.Cos(angleB) * innerRadiusX, y = System.MathF.Sin(angleB) * innerRadiusY, z = ringHeight };
+                string color = i % 2 == 0 ? "22E6D0" : "66FFF0";
+
+                triangles.Add(new TriangleMeshWithColor
+                {
+                    Color = color,
+                    vert1 = outerA,
+                    vert2 = outerB,
+                    vert3 = innerB,
+                    noHidden = true
+                });
+                triangles.Add(new TriangleMeshWithColor
+                {
+                    Color = color,
+                    vert1 = outerA,
+                    vert2 = innerB,
+                    vert3 = innerA,
+                    noHidden = true
+                });
+            }
+
+            return triangles;
         }
 
         private static List<IVector3> CreateCrashBoxFromTriangles(

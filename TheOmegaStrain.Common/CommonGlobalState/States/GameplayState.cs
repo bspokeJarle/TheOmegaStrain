@@ -169,6 +169,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
             Health = cp.Health;
             PowerUpsCollected = cp.PowerUpsCollected;
             SpeedPowerUpLevel = cp.SpeedPowerUpLevel;
+            ShieldSecondsLeft = 0f;
             TotalShotsFired = cp.TotalShotsFired;
             TotalKills = cp.TotalKills;
             TotalDeaths = cp.TotalDeaths + 1;
@@ -272,6 +273,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
             Health = PlanetStartHealth;
             PowerUpsCollected = PlanetStartPowerUpsCollected;
             SpeedPowerUpLevel = PlanetStartSpeedPowerUpLevel;
+            ShieldSecondsLeft = 0f;
             SeedersRemaining = PlanetStartSeedersRemaining;
             DronesRemaining = PlanetStartDronesRemaining;
             MotherShipsRemaining = PlanetStartMotherShipsRemaining;
@@ -466,6 +468,27 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
         public bool IsDecoyUnlocked => PowerUpsCollected >= 1;
         public bool IsLazerUnlocked => PowerUpsCollected >= 2;
 
+        [System.Text.Json.Serialization.JsonIgnore]
+        public float ShieldSecondsLeft { get; private set; }
+        public bool IsShieldActive => ShieldSecondsLeft > 0f;
+        public float ShieldRemainingFraction => Math.Clamp(
+            ShieldSecondsLeft / GameSetup.ShieldDurationSeconds,
+            0f,
+            1f);
+
+        public void ActivateShield()
+        {
+            ShieldSecondsLeft = GameSetup.ShieldDurationSeconds;
+        }
+
+        public int CalculateIncomingDamage(int normalDamage)
+        {
+            if (normalDamage <= 0 || !IsShieldActive)
+                return Math.Max(0, normalDamage);
+
+            return Math.Max(1, (int)MathF.Ceiling(normalDamage * GameSetup.ShieldDamageMultiplier));
+        }
+
         private int _speedPowerUpLevel;
         public int SpeedPowerUpLevel
         {
@@ -526,6 +549,12 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
                 if (InvulnerableSecondsLeft < 0f) InvulnerableSecondsLeft = 0f;
             }
 
+            if (ShieldSecondsLeft > 0f)
+            {
+                ShieldSecondsLeft -= dtSeconds;
+                if (ShieldSecondsLeft < 0f) ShieldSecondsLeft = 0f;
+            }
+
             if (LaserCooldownLeft > 0f)
             {
                 LaserCooldownLeft -= dtSeconds;
@@ -554,6 +583,9 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
             if (InvulnerableSecondsLeft > 0f) return;
             if (Phase == GamePhase.GameOver || Phase == GamePhase.Outro) return;
 
+            if (IsShieldActive)
+                amount *= GameSetup.ShieldDamageMultiplier;
+
             Health -= amount;
             if (Health < 0f) Health = 0f;
 
@@ -581,6 +613,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
 
             Health = MaxHealth;
             InvulnerableSecondsLeft = 1.0f;
+            ShieldSecondsLeft = 0f;
             ResetPlanetAttemptRuntimeBonuses();
 
             if (Lives < 0) Lives = 0;
@@ -686,6 +719,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
             ActivePowerup = "BULLET";
             PowerUpsCollected = 0;
             SpeedPowerUpLevel = 0;
+            ShieldSecondsLeft = 0f;
             LaserAmmo = -1;
             RocketAmmo = 10;
             BulletAmmo = -1;

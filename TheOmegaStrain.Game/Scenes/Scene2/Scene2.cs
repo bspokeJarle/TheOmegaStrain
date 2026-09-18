@@ -126,6 +126,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene2
                 world.WorldInhabitants.Add(spaceSwan);
                 GameState.SurfaceState.AiObjects.Add(spaceSwan);
             }
+            ShieldPowerUpPlacementHelpers.AssignToSpaceSwans(GameState.SurfaceState.AiObjects, sceneNumber: 2);
 
             //Get the surface viewport based on the global Map Position
             //Important: In a Scene, Surface should be amongst the first objects added to the world

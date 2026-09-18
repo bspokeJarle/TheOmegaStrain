@@ -553,6 +553,26 @@ public class ShipWeaponAudioTests
     }
 
     [TestMethod]
+    public void MoveObject_WhenDroneHitsShieldedShip_AppliesTwentyPercentDamage()
+    {
+        using var fixture = CreateReadyShip(withWeaponGuides: true);
+        GameState.GamePlayState.ActivateShield();
+        fixture.Ship.ImpactStatus = new ImpactStatus
+        {
+            HasCrashed = true,
+            ObjectName = "KamikazeDrone",
+            ObjectHealth = ShipSetup.DefaultShipHealth
+        };
+
+        fixture.Controls.MoveObject(fixture.Ship, audioPlayer: null, soundRegistry: null);
+
+        Assert.AreEqual(
+            ShipSetup.DefaultShipHealth - (int)(EnemySetup.KamikazeDroneCollisionDamage * GameSetup.ShieldDamageMultiplier),
+            fixture.Ship.ImpactStatus.ObjectHealth);
+        Assert.IsFalse(fixture.Ship.ImpactStatus.HasCrashed);
+    }
+
+    [TestMethod]
     public void MoveObject_WhenEnemyRocketHitsFullHealthShip_IsFatalAndStartsExplosion()
     {
         using var fixture = CreateReadyShip(withWeaponGuides: true);

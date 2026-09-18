@@ -4,6 +4,7 @@ namespace TheOmegaStrain.Domain
     {
         Standard = 0,
         TravelSpeedLevel1 = 1,
-        TravelSpeedLevel2 = 2
+        TravelSpeedLevel2 = 2,
+        Shield = 3
     }
 }
