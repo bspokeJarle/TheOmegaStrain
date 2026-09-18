@@ -47,25 +47,32 @@ internal static class TerrainShadowProjectionHelpers
             if (heights.TryGetValue(key, out var cached))
                 return cached;
 
-            float? height = null;
-            if (float.IsFinite(vertex.x) && float.IsFinite(vertex.z))
-            {
-                foreach (var tile in surfaceTriangles)
-                {
-                    if (!ContainsXZ(tile, vertex))
-                        continue;
-
-                    containingTile[0] = tile;
-                    if (SurfaceGroundProjectionHelpers.TryGetSurfaceGroundPoint(
-                            containingTile, vertex.x, vertex.z, out _, out float y, out _)
-                        && float.IsFinite(y))
-                        height = y;
-                    break;
-                }
-            }
+            float? height = TryGetHeight(surfaceTriangles, vertex, containingTile, out float y) ? y : null;
             heights[key] = height;
             return height;
         }
+    }
+
+    // Shared strict sampling: neither terrain draping nor edge assistance may
+    // use the engine sampler's nearest-tile fallback outside the actual surface.
+    internal static bool TryGetHeight(
+        IReadOnlyList<ITriangleMeshWithColorAndTexture> surfaceTriangles,
+        IVector3 point,
+        ITriangleMeshWithColorAndTexture[] containingTile,
+        out float height)
+    {
+        height = 0f;
+        if (!float.IsFinite(point.x) || !float.IsFinite(point.z))
+            return false;
+        foreach (var tile in surfaceTriangles)
+        {
+            if (!ContainsXZ(tile, point))
+                continue;
+            containingTile[0] = tile;
+            return SurfaceGroundProjectionHelpers.TryGetSurfaceGroundPoint(
+                containingTile, point.x, point.z, out _, out height, out _) && float.IsFinite(height);
+        }
+        return false;
     }
 
     private static bool ContainsXZ(ITriangleMeshWithColorAndTexture tile, IVector3 point)

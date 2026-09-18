@@ -507,7 +507,10 @@ public class LiveGameLoopCleanupTests
                 var field = typeof(LiveGameLoop).GetField("shadowObjectBuffer", BindingFlags.Instance | BindingFlags.NonPublic)!;
                 var shadows = (List<OmegaObject3D>)field.GetValue(loop)!;
                 Assert.AreEqual(1, shadows.Count, "A caster before Surface must also cast a shadow on the first frame.");
-                var vertex = shadows[0].ObjectParts[0].Triangles[0].vert1;
+                // The comparable footprint is centred on the collision anchor;
+                // its first authored vertex is no longer the reference point.
+                var vertex = GeometryMath.GetCenterOfBox(shadows[0].ObjectParts[0].Triangles
+                    .SelectMany(t => new[] { t.vert1, t.vert2, t.vert3 }).ToList());
                 float factor = ScreenSetup.perspectiveAdjustment / (ScreenSetup.perspectiveAdjustment + 400f + frame.Z)
                     * ScreenSetup.defaultObjectZoom;
                 float targetX = -frame.X / factor + ObjectShadowManager.TerrainShadowSideOffset;

@@ -365,12 +365,17 @@ namespace TheOmegaStrain.Gameplay.Physics
         // never references from the current frame object.
         private List<ExplodingTriangle> _explodingTriangles = new();
         private bool _isExploding = false;
+        public const string ExplosionShadowReferencePartName = "ExplosionShadowReference";
+        private List<ITriangleMeshWithColorAndTexture> _explosionShadowReference = new();
 
         public string? ExplosionColorOverride { get; set; }
 
         public I3dObject ExplodeObject(I3dObject originalObject, float explosionForce = 200f)
         {
             _explodingTriangles.Clear();
+            // Keep the intact low-poly footprint for shadow alignment. Its exploding
+            // counterpart already uses the same simulation as the visible debris.
+            _explosionShadowReference = OmegaObjectHelpers.CopyPartTriangles(originalObject, "Shadow");
             _isExploding = true;
             RaiseExplosionFlash(explosionForce);
 
@@ -420,10 +425,7 @@ namespace TheOmegaStrain.Gameplay.Physics
                 partIndex++;
             }
 
-            foreach (var part in originalObject.ObjectParts)
-            {
-                part.PartName = "ExplodingPart";
-            }
+            MarkAsExplodingParts(originalObject);
 
             return originalObject;
         }
@@ -522,12 +524,29 @@ namespace TheOmegaStrain.Gameplay.Physics
             return explodingObject;
         }
 
-        private static void MarkAsExplodingParts(I3dObject explodingObject)
+        private void MarkAsExplodingParts(I3dObject explodingObject)
         {
             foreach (var part in explodingObject.ObjectParts)
             {
-                part.PartName = "ExplodingPart";
+                // The hidden shadow must remain discoverable while its triangles scatter.
+                if (part.PartName != "Shadow" && part.PartName != ExplosionShadowReferencePartName)
+                    part.PartName = "ExplodingPart";
             }
+
+            if (_explosionShadowReference.Count == 0)
+                return;
+
+            var reference = explodingObject.ObjectParts.Find(part => part.PartName == ExplosionShadowReferencePartName);
+            if (reference == null)
+            {
+                // Append only: explosion state addresses the original parts by index.
+                reference = new OmegaObjectPart3D { PartName = ExplosionShadowReferencePartName, IsVisible = false };
+                explodingObject.ObjectParts.Add(reference);
+            }
+
+            // Reapply to fresh frame copies; rendering rotates these copies, never
+            // the physics-owned reference. Normal parent cleanup removes both parts.
+            reference.Triangles = OmegaObjectHelpers.CopyTriangles(_explosionShadowReference);
         }
 
         private static TriangleMeshWithColor CopyExplosionTriangle(TriangleMeshWithColor triangle)

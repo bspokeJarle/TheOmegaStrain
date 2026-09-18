@@ -138,7 +138,9 @@ namespace TheOmegaStrain.Game.Projection
             return false;
         }
 
-        internal static double ClampRenderDepth(double screenZ, double perspectiveAdjustment)
+        // Shared with shadow viewport checks so near objects use the renderer's
+        // exact depth cap, rather than a second approximation of perspective.
+        public static double ClampRenderDepth(double screenZ, double perspectiveAdjustment)
         {
             if (perspectiveAdjustment <= 0)
                 return screenZ;

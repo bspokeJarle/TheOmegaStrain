@@ -6,6 +6,7 @@ using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Runtime.Rendering;
 using TheOmegaStrain.Game.Projection;
 using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Game.Helpers;
 
 namespace TheOmegaStrain.Tests.Rendering;
 
@@ -99,7 +100,7 @@ public class ObjectShadowManagerTests
             var shadowVertex = shadows[0].ObjectParts[0].Triangles[0].vert1;
 
             Assert.AreEqual(
-                25f - ObjectShadowManager.FreeFlyingShadowSurfaceLift,
+                25f - ObjectShadowManager.TerrainShadowSurfaceLift,
                 shadowVertex.y,
                 0.001f,
                 "Free-flying shadows should use barycentric surface Y under the object, not the nearest tile center.");
@@ -140,7 +141,7 @@ public class ObjectShadowManagerTests
     }
 
     [TestMethod]
-    public void FreeFlyingShadow_IsClampedToHorizonWhenOffsetPushesItAboveTerrain()
+    public void FreeFlyingShadow_StaysOnTerrainDespiteVerticalShadowOffset()
     {
         ObjectShadowManager.TerrainShadowInwardOffset = 0f;
         ObjectShadowManager.TerrainShadowSideOffset = 0f;
@@ -178,10 +179,10 @@ public class ObjectShadowManagerTests
             var shadowVertex = shadows[0].ObjectParts[0].Triangles[0].vert1;
 
             Assert.AreEqual(
-                ObjectShadowManager.ShadowHorizonMargin,
+                25f - ObjectShadowManager.TerrainShadowSurfaceLift,
                 shadowVertex.y,
                 0.001f,
-                "Shadow anchors must be clamped to the terrain horizon instead of floating above the surface.");
+                "Per-vertex terrain sampling must override an offset that would leave the shadow floating.");
         }
         finally
         {
@@ -210,20 +211,15 @@ public class ObjectShadowManagerTests
                 caster.ObjectOffsets = new Vector3(0f, 500f - clearance * factor, 400f);
                 caster.Rotation = new Vector3(pitch, 0f, heading);
                 new ObjectFrameTransformer().RotateObjectGeometry(caster);
+                // Match collision-centre clearance, not differently authored origins.
+                var centre = ObjectCollisionGeometry.GetLocalCrashCenter(caster);
+                caster.ObjectOffsets = new Vector3(-centre.x, 500f - clearance * factor - centre.y, 400f - centre.z);
                 var shadows = new List<OmegaObject3D>();
                 new ObjectShadowManager().HandleObjectShadow(caster, shadows);
                 Assert.AreEqual(1, shadows.Count);
                 float inwardZ = -ObjectShadowManager.TerrainShadowInwardOffset;
                 var anchor = new Vector3(ObjectShadowManager.TerrainShadowSideOffset,
                     inwardZ / MathF.Tan(pitch * MathF.PI / 180f) - ObjectShadowManager.TerrainShadowSurfaceLift, inwardZ);
-                if (isShip)
-                {
-                    SurfaceGroundProjectionHelpers.TryGetFrontmostSurfaceGroundPoint(surface.RotatedSurfaceTriangles,
-                        0f, out float x, out float y, out float z);
-                    anchor = new Vector3(x + ObjectShadowManager.StaticOffsetX,
-                        y - ObjectShadowManager.ShipShadowSurfaceLift + ObjectShadowManager.StaticOffsetY,
-                        z + ObjectShadowManager.StaticOffsetZ);
-                }
                 float radius = shadows[0].ObjectParts[0].Triangles
                     .SelectMany(t => new[] { t.vert1, t.vert2, t.vert3 })
                     .Max(v => MathF.Sqrt(GeometryMath.GetDistanceSquared(v, anchor)));
@@ -232,6 +228,118 @@ public class ObjectShadowManagerTests
                     $"{caster.ObjectName}: equal clearance must produce the same reference radius, independent of authored mesh size.");
             }
         }
+    }
+
+    [DataTestMethod]
+    [DynamicData(nameof(FlyingShadowSyncCases), DynamicDataSourceType.Method)]
+    public void FlyingCasters_CoincidentCollisionCentresHaveCoincidentShadowAnchors(
+        float pitch, float heading, int width, int height, string name)
+    {
+        ScreenSetup.Initialize(width, height);
+        WorldViewSetup.ConfigurePitch(pitch);
+        var surface = CreateTiltedFlatSurface(pitch);
+        var surfaceOffsets = new Vector3(70f, 500f, 400f);
+        GameState.SurfaceState.SurfaceViewportObject.ObjectOffsets = surfaceOffsets;
+        var ship = Ship.CreateShip(surface);
+        ship.ObjectName = "Ship";
+        ship.WorldPosition = new Vector3(); // Ship is screen-fixed, the other caster is world-positioned.
+        ship.Rotation = new Vector3(pitch, 0f, heading);
+        var caster = CreateShadowCaster(name, surface);
+        caster.ObjectName = name;
+        caster.ObjectOffsets = new Vector3(35f, -200f, 600f);
+        caster.Rotation = new Vector3(pitch, 0f, heading + 45f);
+        var transformer = new ObjectFrameTransformer();
+        transformer.RotateObjectGeometry(ship);
+        transformer.RotateObjectGeometry(caster);
+        var shipLocalCentre = ObjectCollisionGeometry.GetLocalCrashCenter(ship);
+        var casterLocalCentre = ObjectCollisionGeometry.GetLocalCrashCenter(caster);
+        var shipGeometry = SnapshotVertices(ship);
+        var casterGeometry = SnapshotVertices(caster);
+        var shipBoxes = SnapshotCrashBoxes(ship);
+        var casterBoxes = SnapshotCrashBoxes(caster);
+
+        foreach (var camera in new[] { new Vector3(95100f, 0f, 95200f), new Vector3(95800f, 40f, 94900f) })
+        foreach (float depth in new[] { name == "Ship" || name == "Seeder" ? -1100f : -400f, 400f, 900f })
+        {
+            GameState.SurfaceState.GlobalMapPosition = camera;
+            ship.ObjectOffsets = new Vector3(0f, 150f, depth);
+            // Place the two real, differently shaped/rotated collision centres
+            // together. Raw WorldPosition equality is NOT sufficient in Omega.
+            var shipCentre = VectorMath.Add(ship.ObjectOffsets, shipLocalCentre);
+            caster.WorldPosition = new Vector3(
+                camera.x + shipCentre.x - caster.ObjectOffsets.x - casterLocalCentre.x,
+                camera.y + shipCentre.y - caster.ObjectOffsets.y - casterLocalCentre.y,
+                camera.z + caster.ObjectOffsets.z + casterLocalCentre.z - shipCentre.z);
+            var casterWorldBefore = (caster.WorldPosition.x, caster.WorldPosition.y, caster.WorldPosition.z);
+            var casterOffsetsBefore = (caster.ObjectOffsets.x, caster.ObjectOffsets.y, caster.ObjectOffsets.z);
+            Assert.IsTrue(ObjectPlacementHelpers.TryGetRenderPosition(caster, 0, 0, out _, out _, out _));
+            var actualCasterCentre = VectorMath.Add(CrashBoxTransform.GetEffectiveCrashOffset(caster,
+                (x, y, z) => new Vector3(x, y, z)), casterLocalCentre);
+            AssertPointEqual(shipCentre, actualCasterCentre);
+
+            var shipShadows = new List<OmegaObject3D>();
+            var casterShadows = new List<OmegaObject3D>();
+            var manager = new ObjectShadowManager();
+            manager.HandleObjectShadow(ship, shipShadows);
+            manager.HandleObjectShadow(caster, casterShadows);
+            Assert.AreEqual(1, shipShadows.Count);
+            Assert.AreEqual(1, casterShadows.Count);
+            var shipAnchor = ShadowBoundsCentre(shipShadows[0]);
+            var casterAnchor = ShadowBoundsCentre(casterShadows[0]);
+            AssertPointEqual(shipAnchor, casterAnchor);
+
+            // Independent flat-plane expectation, including the renderer's near
+            // depth cap. This also rejects two equally wrong, camera-fixed anchors.
+            float perspective = ScreenSetup.perspectiveAdjustment;
+            float cappedDepth = MathF.Max(shipCentre.z, perspective / 2.5f - perspective);
+            float expectedX = (shipCentre.x - surfaceOffsets.x) * (perspective + cappedDepth)
+                / (perspective * ScreenSetup.defaultObjectZoom) + ObjectShadowManager.TerrainShadowSideOffset;
+            float expectedZ = surfaceOffsets.z - cappedDepth - ObjectShadowManager.TerrainShadowInwardOffset;
+            float expectedY = expectedZ / MathF.Tan(pitch * MathF.PI / 180f) - ObjectShadowManager.TerrainShadowSurfaceLift;
+            AssertPointEqual(new Vector3(expectedX, expectedY, expectedZ), shipAnchor);
+
+            Assert.IsTrue(ProjectionMath.TryProjectVertex(shipAnchor, surfaceOffsets.x, surfaceOffsets.y, surfaceOffsets.z,
+                perspective, ScreenSetup.defaultObjectZoom, out var shipScreen));
+            Assert.IsTrue(ProjectionMath.TryProjectVertex(casterAnchor, surfaceOffsets.x, surfaceOffsets.y, surfaceOffsets.z,
+                perspective, ScreenSetup.defaultObjectZoom, out var casterScreen));
+            Assert.AreEqual(shipScreen.x, casterScreen.x, 0.03);
+            Assert.AreEqual(shipScreen.y, casterScreen.y, 0.03);
+            Assert.AreEqual(casterWorldBefore, (caster.WorldPosition.x, caster.WorldPosition.y, caster.WorldPosition.z));
+            Assert.AreEqual(casterOffsetsBefore, (caster.ObjectOffsets.x, caster.ObjectOffsets.y, caster.ObjectOffsets.z));
+        }
+        CollectionAssert.AreEqual(shipGeometry, SnapshotVertices(ship));
+        CollectionAssert.AreEqual(casterGeometry, SnapshotVertices(caster));
+        CollectionAssert.AreEqual(shipBoxes, SnapshotCrashBoxes(ship));
+        CollectionAssert.AreEqual(casterBoxes, SnapshotCrashBoxes(caster));
+    }
+
+    [DataTestMethod]
+    [DataRow(63f)]
+    [DataRow(70f)]
+    public void SeederShadow_FollowsStationaryCasterWhenCameraMovesAndReturns(float pitch)
+    {
+        WorldViewSetup.ConfigurePitch(pitch);
+        var surface = CreateTiltedFlatSurface(pitch);
+        var seeder = Seeder.CreateSeeder(surface);
+        seeder.ObjectName = "Seeder";
+        seeder.WorldPosition = new Vector3(95100f, 0f, 95200f);
+        seeder.ObjectOffsets = new Vector3(0f, 100f, 400f);
+        seeder.Rotation = new Vector3(pitch, 0f, 0f);
+        new ObjectFrameTransformer().RotateObjectGeometry(seeder);
+        var anchors = new List<IVector3>();
+        foreach (float travel in new[] { 0f, 150f, 0f })
+        {
+            GameState.SurfaceState.GlobalMapPosition = new Vector3(95100f + travel, 0f, 95200f + travel);
+            var shadows = new List<OmegaObject3D>();
+            new ObjectShadowManager().HandleObjectShadow(seeder, shadows);
+            Assert.AreEqual(1, shadows.Count);
+            anchors.Add(ShadowBoundsCentre(shadows[0]));
+        }
+        Assert.IsTrue(anchors[1].x < anchors[0].x);
+        Assert.AreEqual(anchors[0].z - 150f, anchors[1].z, 0.02f);
+        AssertPointEqual(anchors[0], anchors[2]);
+        Assert.AreEqual(95100f, seeder.WorldPosition.x);
+        Assert.AreEqual(95200f, seeder.WorldPosition.z);
     }
 
     [DataTestMethod]
@@ -268,8 +376,8 @@ public class ObjectShadowManagerTests
         });
 
         var projector = OmegaPerspectiveProjectorFactory.Create();
-        float? previousShadowY = null;
-        float? previousShadowRhw = null;
+        double? previousShadowY = null;
+        double? previousShadowRhw = null;
         foreach (var camera in new[] { (X: -220f, Z: -400f), (X: 0f, Z: 0f), (X: 220f, Z: 400f) })
         {
             GameState.SurfaceState.GlobalMapPosition = new Vector3(1000f + camera.X, 0f, 1000f + camera.Z);
@@ -278,17 +386,22 @@ public class ObjectShadowManagerTests
             Assert.AreEqual(1, shadows.Count);
             var triangles = projector.ProjectToTriangles(new List<OmegaObject3D> { caster, shadows[0] }, null);
             var body = triangles.Single(t => t.PartName == "CasterBody");
-            var shadow = triangles.Single(t => t.PartName == "ObjectShadow");
-            Assert.AreEqual(body.X1, shadow.X1, 1, "Shadow must follow the caster AFTER perspective projection.");
-            Assert.AreEqual(body.Rhw1, shadow.Rhw1, 0.00001f,
+            // Airborne casters centre the silhouette on the reference point rather
+            // than retaining this fixture's first vertex as the anchor.
+            var anchor = ShadowBoundsCentre(shadows[0]);
+            var viewport = new ProjectionViewport(width, height, ScreenSetup.perspectiveAdjustment, ScreenSetup.defaultObjectZoom);
+            Assert.IsTrue(ProjectionMath.TryProjectVertexWithReciprocalW(anchor,
+                width / 2 + 70, height / 2 + 100, 400, viewport, out var shadowScreen, out var shadowRhw));
+            Assert.AreEqual(body.X1, shadowScreen.x, 1.0, "Shadow must follow the caster AFTER perspective projection.");
+            Assert.AreEqual(body.Rhw1, shadowRhw, 0.00001f,
                 "Shadow and caster must recede together, not move in opposite depth directions.");
             if (previousShadowY.HasValue)
             {
-                Assert.IsTrue(shadow.Y1 < previousShadowY.Value, "As the object recedes, its shadow must move back toward the horizon.");
-                Assert.IsTrue(shadow.Rhw1 < previousShadowRhw!.Value, "The shadow must shrink in perspective as the caster moves away.");
+                Assert.IsTrue(shadowScreen.y < previousShadowY.Value, "As the object recedes, its shadow must move back toward the horizon.");
+                Assert.IsTrue(shadowRhw < previousShadowRhw!.Value, "The shadow must shrink in perspective as the caster moves away.");
             }
-            previousShadowY = shadow.Y1;
-            previousShadowRhw = shadow.Rhw1;
+            previousShadowY = shadowScreen.y;
+            previousShadowRhw = shadowRhw;
         }
     }
 
@@ -315,7 +428,7 @@ public class ObjectShadowManagerTests
         new ObjectShadowManager().HandleObjectShadow(caster, shadows);
 
         Assert.AreEqual(1, shadows.Count);
-        var center = TriangleCenter(shadows[0].ObjectParts[0].Triangles[0]);
+        var center = ShadowBoundsCentre(shadows[0]);
         float objectX = 90f - cameraX;
         float objectZ = 450f + cameraZ;
         float factor = ScreenSetup.perspectiveAdjustment / (ScreenSetup.perspectiveAdjustment + objectZ) * ScreenSetup.defaultObjectZoom;
@@ -323,7 +436,7 @@ public class ObjectShadowManagerTests
         float groundY = groundZ / MathF.Tan(pitch * MathF.PI / 180f);
         Assert.AreEqual((objectX - 70f) / factor, center.x, 0.001f, "Vertex positions are scaled, whereas object translations are not.");
         Assert.AreEqual(groundZ, center.z, 0.001f, "Surface vertex Z has the opposite sign to object depth.");
-        Assert.AreEqual(groundY - ObjectShadowManager.FreeFlyingShadowSurfaceLift, center.y, 0.001f, "Sample ground at the corrected X/Z.");
+        Assert.AreEqual(groundY - ObjectShadowManager.TerrainShadowSurfaceLift, center.y, 0.001f, "Sample ground at the corrected X/Z.");
     }
 
     [DataTestMethod]
@@ -403,6 +516,7 @@ public class ObjectShadowManagerTests
         var original = caster.ObjectParts[0].Triangles[0];
         var originalVertices = new[] { original.vert1, original.vert2, original.vert3 };
         var before = originalVertices.Select(v => new Vector3(v.x, v.y, v.z)).ToArray();
+        var footprintCentre = GeometryMath.GetCenterOfBox(originalVertices.ToList());
         var originalOffsets = new Vector3(caster.ObjectOffsets.x, caster.ObjectOffsets.y, caster.ObjectOffsets.z);
         var shadows = new List<OmegaObject3D>();
 
@@ -420,9 +534,9 @@ public class ObjectShadowManagerTests
             var vertices = new[] { projected.vert1, projected.vert2, projected.vert3 };
             for (int i = 0; i < vertices.Length; i++)
             {
-                Assert.AreEqual(before[i].x * scale, vertices[i].x, 0.001f);
-                Assert.AreEqual(before[i].y * scale - ObjectShadowManager.FreeFlyingShadowSurfaceLift, vertices[i].y, 0.001f);
-                Assert.AreEqual(before[i].z * scale, vertices[i].z, 0.001f);
+                Assert.AreEqual((before[i].x - footprintCentre.x) * scale, vertices[i].x, 0.001f);
+                Assert.AreEqual((before[i].y - footprintCentre.y) * scale - ObjectShadowManager.TerrainShadowSurfaceLift, vertices[i].y, 0.001f);
+                Assert.AreEqual((before[i].z - footprintCentre.z) * scale, vertices[i].z, 0.001f);
                 Assert.AreEqual(before[i].x, originalVertices[i].x);
                 Assert.AreEqual(before[i].y, originalVertices[i].y);
                 Assert.AreEqual(before[i].z, originalVertices[i].z);
@@ -434,42 +548,29 @@ public class ObjectShadowManagerTests
     }
 
     [DataTestMethod]
-    [DataRow("Ship")]
     [DataRow("PolarBear")]
-    public void ShipAndSurfaceBoundShadows_KeepAnchorAndSilhouetteProportions(string name)
+    public void SurfaceBoundShadows_KeepAnchorAndSilhouetteProportions(string name)
     {
         var surface = CreateTiltedFlatSurface(WorldViewSetup.SurfacePitchDegrees);
         var caster = CreateFreeFlyingShadowCaster(surface, 0f, 400f, 0f);
         caster.ObjectName = name;
         SetRotatedFootprint(caster, WorldViewSetup.SurfacePitchDegrees);
-        bool isShip = name == "Ship";
-        float baseX, baseY, baseZ;
-        if (isShip)
-        {
-            Assert.IsTrue(SurfaceGroundProjectionHelpers.TryGetFrontmostSurfaceGroundPoint(
-                surface.RotatedSurfaceTriangles, 0f, out baseX, out baseY, out baseZ));
-            baseY -= ObjectShadowManager.ShipShadowSurfaceLift;
-        }
-        else
-        {
-            caster.SurfaceBasedId = 1;
-            surface.RotatedSurfaceTriangles[0].landBasedPosition = 1;
-            var center = TriangleCenter(surface.RotatedSurfaceTriangles[0]);
-            baseX = center.x + ObjectShadowManager.TowerShadowNudgeX;
-            baseY = center.y - ObjectShadowManager.TowerShadowSurfaceLift + ObjectShadowManager.TowerShadowNudgeY;
-            baseZ = center.z + ObjectShadowManager.TowerShadowNudgeZ;
-        }
+        caster.SurfaceBasedId = 1;
+        surface.RotatedSurfaceTriangles[0].landBasedPosition = 1;
+        var center = TriangleCenter(surface.RotatedSurfaceTriangles[0]);
+        float baseX = center.x + ObjectShadowManager.TowerShadowNudgeX;
+        float baseY = center.y - ObjectShadowManager.TowerShadowSurfaceLift + ObjectShadowManager.TowerShadowNudgeY;
+        float baseZ = center.z + ObjectShadowManager.TowerShadowNudgeZ;
         float horizonY = surface.RotatedSurfaceTriangles.Min(t => MathF.Min(t.vert1.y, MathF.Min(t.vert2.y, t.vert3.y)));
         baseY = MathF.Max(baseY, horizonY + ObjectShadowManager.ShadowHorizonMargin);
         var expected = ObjectShadowProjectionMath.ProjectModelTriangleShadow(caster.ObjectParts[0].Triangles[0],
             new ObjectShadowProjectionOptions
             {
                 ShadowBaseX = baseX, ShadowBaseY = baseY, ShadowBaseZ = baseZ,
-                ShadowOffsetX = isShip ? ObjectShadowManager.StaticOffsetX : 0f,
-                ShadowOffsetY = isShip ? ObjectShadowManager.StaticOffsetY : 0f,
+                ShadowOffsetX = 0f,
+                ShadowOffsetY = 0f,
                 ShadowOffsetZ = ObjectShadowManager.StaticOffsetZ,
-                Scale = MathF.Max(ObjectShadowManager.MinScale, ObjectShadowManager.BaseScale - 100f * ObjectShadowManager.AltitudeShrinkFactor)
-                    * (isShip ? 1.15f : 1f),
+                Scale = MathF.Max(ObjectShadowManager.MinScale, ObjectShadowManager.BaseScale - 100f * ObjectShadowManager.AltitudeShrinkFactor),
                 ShadowSlopeX = ObjectShadowManager.ShadowSlopeX,
                 ShadowSlopeY = ObjectShadowManager.ShadowSlopeY,
                 VertexStretchBoost = ObjectShadowManager.VertexStretchBoost,
@@ -482,15 +583,6 @@ public class ObjectShadowManagerTests
         Assert.AreEqual(1, shadows.Count);
         var result = shadows[0].ObjectParts[0].Triangles[0];
         var expectedVertices = new[] { expected.Vertex1, expected.Vertex2, expected.Vertex3 };
-        if (isShip)
-        {
-            var anchor = new Vector3(baseX + ObjectShadowManager.StaticOffsetX,
-                baseY + ObjectShadowManager.StaticOffsetY, baseZ + ObjectShadowManager.StaticOffsetZ);
-            float radius = expectedVertices.Max(v => MathF.Sqrt(GeometryMath.GetDistanceSquared(v, anchor)));
-            float targetRadius = 40f * (1f - 50f * 0.0002f) * 1.15f;
-            expectedVertices = expectedVertices.Select(v => VectorMath.Add(anchor,
-                VectorMath.Multiply(VectorMath.Subtract(v, anchor), targetRadius / radius))).ToArray();
-        }
         var actualVertices = new[] { result.vert1, result.vert2, result.vert3 };
         for (int i = 0; i < actualVertices.Length; i++)
         {
@@ -501,14 +593,13 @@ public class ObjectShadowManagerTests
     }
 
     [DataTestMethod]
-    [DataRow(63f)]
-    [DataRow(70f)]
-    public void SeederShadow_FollowsRidgeAtEveryVertexWithoutChangingCaster(float pitch)
+    [DynamicData(nameof(FlyingShadowTerrainCases), DynamicDataSourceType.Method)]
+    public void FlyingShadow_FollowsRidgeAtEveryVertexWithoutChangingCaster(float pitch, string name)
     {
         WorldViewSetup.ConfigurePitch(pitch);
         var surface = CreateTiltedFlatSurface(pitch);
-        var caster = Seeder.CreateSeeder(surface);
-        caster.ObjectName = "Seeder";
+        var caster = CreateShadowCaster(name, surface);
+        caster.ObjectName = name;
         caster.WorldPosition = new Vector3();
         caster.ObjectOffsets = new Vector3(0f, -300f, 0f);
         new ObjectFrameTransformer().RotateObjectGeometry(caster);
@@ -517,22 +608,25 @@ public class ObjectShadowManagerTests
         float sine = MathF.Sin(pitch * MathF.PI / 180f);
         float tangent = MathF.Tan(pitch * MathF.PI / 180f);
 
+        var beforeBoxes = SnapshotCrashBoxes(caster);
+        // Include enough terrain for the large mothership footprint as well.
+        const float ridgeWidth = 2000f;
         // Replace the terrain between frames, as the real scrolling Surface does.
         foreach (float ridgeHeight in new[] { 50f, 100f, 50f })
         {
             var rotation = new OmegaMeshRotation();
             IVector3 Point(float x, float y) => rotation.RotatePoint(pitch,
-                new Vector3(x, y, ridgeHeight * (1f - MathF.Abs(x) / 300f)), 'X');
+                new Vector3(x, y, ridgeHeight * (1f - MathF.Abs(x) / ridgeWidth)), 'X');
             var tiles = new List<ITriangleMeshWithColorAndTexture>();
-            foreach (float x in new[] { -300f, 0f })
+            foreach (float x in new[] { -ridgeWidth, 0f })
             {
                 tiles.Add(new TriangleMeshWithColor
                 {
-                    vert1 = Point(x, -500f), vert2 = Point(x + 300f, -500f), vert3 = Point(x + 300f, 500f)
+                    vert1 = Point(x, -2000f), vert2 = Point(x + ridgeWidth, -2000f), vert3 = Point(x + ridgeWidth, 2000f)
                 });
                 tiles.Add(new TriangleMeshWithColor
                 {
-                    vert1 = Point(x, -500f), vert2 = Point(x + 300f, 500f), vert3 = Point(x, 500f)
+                    vert1 = Point(x, -2000f), vert2 = Point(x + ridgeWidth, 2000f), vert3 = Point(x, 2000f)
                 });
             }
             surface.RotatedSurfaceTriangles = tiles;
@@ -541,17 +635,18 @@ public class ObjectShadowManagerTests
             Assert.AreEqual(1, shadows.Count);
             var vertices = shadows[0].ObjectParts[0].Triangles
                 .SelectMany(t => new[] { t.vert1, t.vert2, t.vert3 }).ToArray();
-            Assert.IsTrue(vertices.Any(v => v.x < -10f) && vertices.Any(v => v.x > 10f));
+            Assert.IsTrue(vertices.Max(v => v.x) > vertices.Min(v => v.x));
             foreach (var vertex in vertices)
             {
                 // Independent analytic height of this piecewise-linear ridge
                 // AFTER X rotation: y = z*cot(pitch) - elevation/sin(pitch).
-                float elevation = ridgeHeight * (1f - MathF.Abs(vertex.x) / 300f);
+                float elevation = ridgeHeight * (1f - MathF.Abs(vertex.x) / ridgeWidth);
                 float groundY = vertex.z / tangent - elevation / sine;
                 Assert.AreEqual(groundY - 10f, vertex.y, 0.002f,
                     "Each corner must follow its own terrain height, not a plane at the centre.");
             }
             CollectionAssert.AreEqual(before, SnapshotVertices(caster), "Shared body, guide and shadow geometry must remain untouched.");
+            CollectionAssert.AreEqual(beforeBoxes, SnapshotCrashBoxes(caster));
             Assert.AreEqual(-300f, caster.ObjectOffsets.y);
             Assert.AreEqual(0f, caster.WorldPosition.y);
         }
@@ -637,6 +732,8 @@ public class ObjectShadowManagerTests
     [DataTestMethod]
     [DataRow(63f, "Seeder")]
     [DataRow(70f, "Seeder")]
+    [DataRow(63f, "Ship")]
+    [DataRow(70f, "Ship")]
     [DataRow(63f, "AttackShip")]
     [DataRow(70f, "AttackShip")]
     [DataRow(63f, "KamikazeDrone")]
@@ -694,7 +791,7 @@ public class ObjectShadowManagerTests
                     Assert.AreEqual(before[i].X - 12f, after[i].X, 0.002f);
                     Assert.AreEqual(before[i].Z - 200f, after[i].Z, 0.002f,
                         "The anchor offset must not be multiplied by the height-dependent footprint scale.");
-                    float lift = name == "Seeder" ? 10f : 20f;
+                    float lift = ObjectShadowManager.TerrainShadowSurfaceLift;
                     Assert.AreEqual(after[i].Z / MathF.Tan(pitch * MathF.PI / 180f) - lift, after[i].Y, 0.002f,
                         "Sample terrain at the shifted point before applying the lift.");
                 }
@@ -766,9 +863,10 @@ public class ObjectShadowManagerTests
         WorldViewSetup.ConfigurePitch(pitch);
         var caster = SpaceSwan.CreateSpaceSwan(CreateTiltedFlatSurface(pitch));
         caster.WorldPosition = new Vector3();
-        caster.ObjectOffsets = new Vector3(0f, 500f, 0f);
         caster.Rotation = new Vector3(pitch, 0f, 0f);
         new ObjectFrameTransformer().RotateObjectGeometry(caster);
+        var centre = ObjectCollisionGeometry.GetLocalCrashCenter(caster);
+        caster.ObjectOffsets = new Vector3(-centre.x, 500f - centre.y, -centre.z);
         var source = caster.ObjectParts.Single(p => p.PartName == "Shadow").Triangles
             .SelectMany(t => new[] { t.vert1, t.vert2, t.vert3 }).ToArray();
         var shadows = new List<OmegaObject3D>();
@@ -781,7 +879,6 @@ public class ObjectShadowManagerTests
     }
 
     [DataTestMethod]
-    [DataRow("Ship")]
     [DataRow("PolarBear")]
     public void StaticShadow_IgnoresFlyingPlacementOffset(string name)
     {
@@ -834,31 +931,20 @@ public class ObjectShadowManagerTests
         WorldViewSetup.ConfigurePitch(pitch);
         var surface = CreateTiltedFlatSurface(pitch);
         GameState.SurfaceState.SurfaceViewportObject.ObjectOffsets.z = 400f;
-        var caster = name switch
-        {
-            "MotherShipSmall" => MotherShipSmall.CreateMotherShipSmall(surface),
-            "MotherShipMedium" => MotherShipMedium.CreateMotherShipMedium(surface),
-            "MotherShipLarge" => MotherShipLarge.CreateMotherShipLarge(surface),
-            "ZeppelinBomber" => ZeppelinBomber.CreateZeppelinBomber(surface),
-            "KamikazeDrone" => KamikazeDrone.CreateKamikazeDrone(surface),
-            "AttackShip" => AttackShip.CreateAttackShip(surface),
-            "BomberBomb" => BomberBomb.CreateBomberBomb(surface),
-            "DroneDecoy" => DecoyBeacon.CreateDecoyBeacon(surface),
-            "PowerUp" => PowerUp.CreatePowerup(surface),
-            _ => JumpingFish.CreateJumpingFish(surface)
-        };
+        var caster = CreateShadowCaster(name, surface);
         caster.WorldPosition = new Vector3();
         caster.Rotation = new Vector3(pitch, 0f, 30f);
         new ObjectFrameTransformer().RotateObjectGeometry(caster);
         var original = SnapshotVertices(caster);
+        var centre = ObjectCollisionGeometry.GetLocalCrashCenter(caster);
         float anchorZ = -ObjectShadowManager.TerrainShadowInwardOffset;
         var anchor = new Vector3(ObjectShadowManager.TerrainShadowSideOffset,
-            anchorZ / MathF.Tan(pitch * MathF.PI / 180f) - ObjectShadowManager.FreeFlyingShadowSurfaceLift,
+            anchorZ / MathF.Tan(pitch * MathF.PI / 180f) - ObjectShadowManager.TerrainShadowSurfaceLift,
             anchorZ);
         var manager = new ObjectShadowManager();
         foreach (float height in new[] { 0f, 300f, 10000f })
         {
-            caster.ObjectOffsets = new Vector3(0f, 100f - height, 400f);
+            caster.ObjectOffsets = new Vector3(-centre.x, 100f - height - centre.y, 400f - centre.z);
             var baseline = new List<OmegaObject3D>();
             ObjectShadowManager.MotherShipShadowSizeMultiplier = 1f;
             ObjectShadowManager.ZeppelinShadowSizeMultiplier = 1f;
@@ -881,8 +967,8 @@ public class ObjectShadowManagerTests
                 Assert.AreEqual(anchor.z + (before[i].Z - anchor.z) * 0.65f, after[i].Z, 0.002f);
             }
             CollectionAssert.AreEqual(original, SnapshotVertices(caster));
-            Assert.AreEqual(100f - height, caster.ObjectOffsets.y);
-            Assert.AreEqual(400f, caster.ObjectOffsets.z);
+            Assert.AreEqual(100f - height - centre.y, caster.ObjectOffsets.y);
+            Assert.AreEqual(400f - centre.z, caster.ObjectOffsets.z);
         }
     }
 
@@ -917,6 +1003,60 @@ public class ObjectShadowManagerTests
         Assert.AreEqual(1, reduced.Count);
         CollectionAssert.AreEqual(SnapshotVertices(baseline[0]), SnapshotVertices(reduced[0]));
     }
+
+    private static readonly string[] FlyingShadowNames =
+    {
+        "Ship", "Seeder", "AttackShip", "KamikazeDrone", "MotherShipSmall", "MotherShipMedium",
+        "MotherShipLarge", "ZeppelinBomber", "BomberBomb", "SpaceSwan", "DroneDecoy", "PowerUp", "JumpingFish"
+    };
+
+    public static IEnumerable<object[]> FlyingShadowTerrainCases()
+    {
+        foreach (float pitch in new[] { 63f, 70f })
+        foreach (string name in FlyingShadowNames)
+            yield return new object[] { pitch, name };
+    }
+
+    public static IEnumerable<object[]> FlyingShadowSyncCases()
+    {
+        foreach (float pitch in new[] { 63f, 70f })
+        foreach (string name in FlyingShadowNames)
+        {
+            yield return new object[] { pitch, 0f, 1500, 1024, name };
+            yield return new object[] { pitch, 90f, 2560, 1440, name };
+        }
+    }
+
+    private static OmegaObject3D CreateShadowCaster(string name, Surface surface) => name switch
+    {
+        "Ship" => Ship.CreateShip(surface),
+        "Seeder" => Seeder.CreateSeeder(surface),
+        "AttackShip" => AttackShip.CreateAttackShip(surface),
+        "KamikazeDrone" => KamikazeDrone.CreateKamikazeDrone(surface),
+        "MotherShipSmall" => MotherShipSmall.CreateMotherShipSmall(surface),
+        "MotherShipMedium" => MotherShipMedium.CreateMotherShipMedium(surface),
+        "MotherShipLarge" => MotherShipLarge.CreateMotherShipLarge(surface),
+        "ZeppelinBomber" => ZeppelinBomber.CreateZeppelinBomber(surface),
+        "BomberBomb" => BomberBomb.CreateBomberBomb(surface),
+        "SpaceSwan" => SpaceSwan.CreateSpaceSwan(surface),
+        "DroneDecoy" => DecoyBeacon.CreateDecoyBeacon(surface),
+        "PowerUp" => PowerUp.CreatePowerup(surface),
+        "JumpingFish" => JumpingFish.CreateJumpingFish(surface),
+        _ => throw new ArgumentOutOfRangeException(nameof(name))
+    };
+
+    private static IVector3 ShadowBoundsCentre(OmegaObject3D shadow) => GeometryMath.GetCenterOfBox(
+        shadow.ObjectParts.SelectMany(p => p.Triangles).SelectMany(t => new[] { t.vert1, t.vert2, t.vert3 }).ToList());
+
+    private static void AssertPointEqual(IVector3 expected, IVector3 actual)
+    {
+        Assert.AreEqual(expected.x, actual.x, 0.02f, "X");
+        Assert.AreEqual(expected.y, actual.y, 0.02f, "Y");
+        Assert.AreEqual(expected.z, actual.z, 0.02f, "Z");
+    }
+
+    private static (float X, float Y, float Z)[] SnapshotCrashBoxes(OmegaObject3D obj) =>
+        obj.CrashBoxes.SelectMany(b => b).Select(v => (v.x, v.y, v.z)).ToArray();
 
     private static (float X, float Y, float Z)[] SnapshotVertices(OmegaObject3D obj) =>
         obj.ObjectParts.SelectMany(p => p.Triangles)
