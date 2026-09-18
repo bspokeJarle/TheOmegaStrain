@@ -1,5 +1,6 @@
 using System;
 using RetroMesh.Engine;
+using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 
 namespace TheOmegaStrain.Gameplay.Helpers;
@@ -25,7 +26,7 @@ public readonly record struct RocketLaunchSolution(
 
 public static class RocketFlightHelpers
 {
-    public const float DefaultFuelDurationSeconds = 5f;
+    public const float DefaultFuelDurationSeconds = WeaponSetup.RocketFuelSeconds;
 
     public static RocketLaunchSolution CalculateLaunchSolution(
         Vector3 rocketWorldPosition,
@@ -46,6 +47,11 @@ public static class RocketFlightHelpers
                elapsedFlightSeconds < fuelDurationSeconds;
     }
 
+    /// <summary>
+    /// Pure workshop calculation for fixed-direction flight. The live weapon uses
+    /// Weapons.MoveFallingRocket and IPhysics.ApplyForces instead; do not run both.
+    /// VerticalVelocity is additional gravity velocity, excluding launchDirection.Y.
+    /// </summary>
     public static RocketFlightStep CalculateStep(
         IVector3 launchDirection,
         float forwardSpeed,

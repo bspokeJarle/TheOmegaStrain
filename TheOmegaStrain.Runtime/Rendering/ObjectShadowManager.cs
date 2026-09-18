@@ -2,6 +2,8 @@ using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
+using TheOmegaStrain.Game.Projection;
+using TheOmegaStrain.Gameplay.Physics;
 using System;
 using System.Collections.Generic;
 
@@ -17,10 +19,10 @@ namespace TheOmegaStrain.Runtime.Rendering
         //
         // Quick map:
         //   ShadowColor              - silhouette fill color ("000000" = black)
-        //   StaticOffsetX/Y/Z        - pre-projection push for ship / free-flying
-        //                              (tower-like branch ignores these)
+        //   StaticOffsetX/Y/Z        - legacy tuning (Ship now shares Seeder's anchor)
         //   BaseScale                - overall silhouette size multiplier
         //   FreeFlyingShadowScale    - extra size boost for airborne enemies
+        //   ShipShadowSizeMultiplier - shared Ship/Seeder reference size adjustment
         //   AltitudeShrinkFactor     - how fast shadow shrinks as object climbs
         //   MinScale                 - lower clamp for the shrink
         //   TowerShadowSurfaceLift   - pull tower/tree shadow toward camera (-Y)
@@ -39,7 +41,28 @@ namespace TheOmegaStrain.Runtime.Rendering
 
         public static float BaseScale = SurfaceGroundProjectionHelpers.DefaultShadowBaseScale;
         public static float FreeFlyingShadowScale = 1.8f;
-        public static float AltitudeShrinkFactor = SurfaceGroundProjectionHelpers.DefaultShadowAltitudeShrinkFactor;
+        public static float DefaultFlyingShadowSizeMultiplier = 0.65f;
+        public static float SpaceSwanShadowScale = 0.9f;
+        public static float MotherShipShadowSizeMultiplier = 0.65f;
+        public static float ZeppelinShadowSizeMultiplier = 0.65f;
+        public static float ShipShadowSizeMultiplier = 1.15f;
+        // Shared reference stays just below Seeder's 48-unit body radius even
+        // with the multiplier (40 * 1.15 = 46), and below Ship's footprint.
+        public const float ComparableShadowBaseRadius = 40f;
+        // Clear local terrain variations across the flat silhouette, not just
+        // its centre. This changes only shadow Y, never the caster's position.
+        public const float FreeFlyingShadowSurfaceLift = 20f;
+        // Shared flying-shadow placement in rotated Surface vertex units. Ship
+        // also uses this placement; surface-bound objects keep their own anchors.
+        // Positive inward offset subtracts Surface-vertex Z, away from the lower
+        // screen edge. Vertex Z has the opposite sign to an object's render Z.
+        public static float TerrainShadowInwardOffset = 250f;
+        public static float TerrainShadowSideOffset = -12f;
+        public static float TerrainShadowSurfaceLift = 10f;
+        private static readonly OmegaMeshRotation ShadowRotation = new();
+        // Gentle height response: 300 units now shrinks the base scale by 6%,
+        // instead of 60%. Perspective still handles apparent camera distance.
+        public static float AltitudeShrinkFactor = 0.0002f;
         public static float MinScale = SurfaceGroundProjectionHelpers.DefaultShadowMinScale;
 
         public static float TowerShadowSurfaceLift = 10f;
@@ -56,12 +79,8 @@ namespace TheOmegaStrain.Runtime.Rendering
         // nearer the horizon, decrease to keep them further down the surface.
         public static float ShadowHorizonMargin = 4f;
 
-        // Ship-only lift. The ship anchors to the frontmost ground tile, which is
-        // always at ground level. On raised geometry (landing platform) the ship
-        // shadow therefore ends up UNDER the platform surface and is hidden. This
-        // pulls the ship shadow toward the camera (-Y = up-screen after the tilt)
-        // so it clears the platform. Increase if it still hides, decrease if the
-        // shadow floats too high above flat ground.
+        // Retained for API compatibility. Ship now samples terrain per vertex
+        // with TerrainShadowSurfaceLift, exactly like Seeder.
         public static float ShipShadowSurfaceLift = 36f;
 
         // Tower-like per-axis nudge applied AFTER the matched-tile anchor, so
@@ -86,9 +105,8 @@ namespace TheOmegaStrain.Runtime.Rendering
         //     v'.x = v.x + v.z * ShadowSlopeX   where ShadowSlopeX = -Lx / Lz
         //     v'.y = v.y + v.z * ShadowSlopeY   where ShadowSlopeY = -Ly / Lz
         //     v'.z = 0
-        // This is applied UNIFORMLY to every object's Shadow part — no per-type skew,
-        // no flatten/zScale fudge factors. Verts at z=0 stay anchored at the base;
-        // verts at z=H land at (x + H*slopeX, y + H*slopeY, 0).
+        // Surface-bound shadows retain this directional-light projection.
+        // Ship and free-flying shadows use zero slopes to stay under their caster.
         //
         // With Lx=0.35, Ly=0, Lz=-1 the sun leans slightly to the right and straight
         // down in surface-local space, so every shadow falls the same short distance
@@ -122,7 +140,7 @@ namespace TheOmegaStrain.Runtime.Rendering
         /// </summary>
         public void HandleObjectShadow(OmegaObject3D inhabitant, List<OmegaObject3D> shadowList)
         {
-            if (!inhabitant.HasShadow)
+            if (!inhabitant.HasShadow || inhabitant.ImpactStatus?.HasExploded == true)
                 return;
 
             var surfaceObj = GameState.SurfaceState.SurfaceViewportObject;
@@ -133,19 +151,16 @@ namespace TheOmegaStrain.Runtime.Rendering
             if (rotatedTiles == null || rotatedTiles.Count == 0)
                 return;
 
-            // Object X position relative to surface in surface-local space.
+            // Render-position offsets before perspective projection.
             //
             // Flying enemies (seeders, drones, bomber, swan...) move via WorldPosition
             // — the AI only updates WorldPosition, not ObjectOffsets.x/z. The renderer
             // places them at screen X = screenCenter - localWorld.x + ObjectOffsets.x
             // (see ObjectPlacementHelpers.TryGetRenderPosition).
             //
-            // Tile vertices live in surface-local space (they're rotated but carry
-            // the surface's own ObjectOffsets in screen-space), so surface-local X
-            // for any object equals:
-            //     objectScreenX - surfaceScreenX
-            // where objectScreenX = -localWorld.x + ObjectOffsets.x and
-            //       surfaceScreenX = surface.ObjectOffsets.x.
+            // These translations are added AFTER perspective scaling. Free-flying
+            // shadow anchors must be converted to Surface vertex space below;
+            // copying the translation into a vertex would scale it a second time.
             //
             // For objects without a WorldPosition (player ship, towers), localWorld
             // is null and objectScreenX collapses to ObjectOffsets.x.
@@ -154,11 +169,13 @@ namespace TheOmegaStrain.Runtime.Rendering
                                + (inhabitant.ObjectOffsets?.x ?? 0f);
             float objScreenY = (localWorld != null ? -localWorld.y : 0f)
                                + (inhabitant.ObjectOffsets?.y ?? 0f);
-            // Z (vertical on screen) is the scroll axis; tiles are laid out in the
-            // X–Z plane. localWorld.z uses +Z forward (see GetLocalWorldPosition),
-            // so object screen Z = +localWorld.z + ObjectOffsets.z.
+            // Object depth and vertex depth have opposite signs in ProjectionMath:
+            // the denominator is perspective + objectScreenZ - vertex.z.
             float objScreenZ = (localWorld != null ? localWorld.z : 0f)
                                + (inhabitant.ObjectOffsets?.z ?? 0f);
+            var casterRenderPosition = new RenderPosition(
+                objScreenX + ScreenSetup.screenSizeX / 2,
+                objScreenY + ScreenSetup.screenSizeY / 2, objScreenZ);
             float surfScreenX = surfaceObj.ObjectOffsets.x;
             float surfScreenY = surfaceObj.ObjectOffsets.y;
             float surfScreenZ = surfaceObj.ObjectOffsets.z;
@@ -168,13 +185,33 @@ namespace TheOmegaStrain.Runtime.Rendering
             // Classify object once (avoid repeated string allocations / contains checks).
             // IMPORTANT: use exact equality for "Ship" — substring match would also
             // catch names like "MotherShipSmall" and wrongly route it to the ship
-            // branch (which anchors to the frontmost platform tile). Tower classifier
+            // branch. Tower classifier
             // stays substring-based because it's genuinely tower-like whenever the
             // name contains "tower" or a SurfaceBasedId is set.
             string name = inhabitant.ObjectName ?? string.Empty;
             bool isShip = name.Equals("Ship", StringComparison.OrdinalIgnoreCase);
+            bool isSeeder = name.Equals("Seeder", StringComparison.OrdinalIgnoreCase);
+            bool isSpaceSwan = name.Equals("SpaceSwan", StringComparison.OrdinalIgnoreCase);
+            bool hasComparableShadow = isShip || isSeeder;
             bool isTowerLike = !isShip && (inhabitant.SurfaceBasedId != null
                                            || name.IndexOf("tower", StringComparison.OrdinalIgnoreCase) >= 0);
+            bool isFreeFlying = !isShip && !isTowerLike;
+            bool usesUprightFootprint = isFreeFlying || isShip;
+            // Every airborne caster shares the collision reference and terrain
+            // projection. Surface-bound objects retain their matched-tile path.
+            bool conformsToTerrain = usesUprightFootprint;
+
+            if (conformsToTerrain)
+            {
+                // LiveGameLoop has ALREADY rotated the frame's crash boxes. Read
+                // their centre without rotating twice. Use the same additive
+                // offsets as CrashBoxTransform, including Z: coincident collision
+                // centres must produce coincident shadow anchors.
+                var centre = ObjectCollisionGeometry.GetLocalCrashCenter(inhabitant);
+                objScreenX += centre.x;
+                objScreenY += centre.y;
+                objScreenZ += centre.z;
+            }
 
             // Compute only the shadow base actually needed for this object type.
             // All *BaseX/Y/Z are in SURFACE-LOCAL space because the shadow OmegaObject3D
@@ -183,24 +220,9 @@ namespace TheOmegaStrain.Runtime.Rendering
             float shadowBaseX = targetX;
             float shadowBaseY;
             float shadowBaseZ = 0f;
+            float flyingAltitude = 0f;
 
-            if (isShip)
-            {
-                if (!SurfaceGroundProjectionHelpers.TryGetFrontmostSurfaceGroundPoint(
-                        rotatedTiles,
-                        targetX,
-                        out shadowBaseX,
-                        out shadowBaseY,
-                        out shadowBaseZ))
-                    return;
-
-                // Lift the ship shadow up-screen so it stays visible on top of
-                // raised geometry (landing platform) instead of being occluded
-                // by it. On flat ground the lift is small enough to still read
-                // as a shadow sitting on the surface.
-                shadowBaseY -= ShipShadowSurfaceLift;
-            }
-            else if (isTowerLike)
+            if (isTowerLike)
             {
                 // Direct tile lookup by SurfaceBasedId (O(N) scan, single pass, no closure)
                 ITriangleMeshWithColorAndTexture matchedTile = null;
@@ -253,45 +275,61 @@ namespace TheOmegaStrain.Runtime.Rendering
             }
             else
             {
-                // Free-flying: mirror the ship branch but take ONLY Y (ground depth)
-                // from the surface under the object. X and Z come straight from the object, so
-                // the shadow tracks the object's continuous world-space position and
-                // does NOT snap/jump as tile centers change from frame to frame.
-                //   - X from the OBJECT (lateral, continuous)
-                //   - Z from the OBJECT (scroll axis, continuous)
-                //   - Y interpolated from the surface triangle under the object
-                shadowBaseX = targetX;
-                shadowBaseZ = targetZ;
-
-                // Objects can sit far outside the visible tile grid (e.g. mother
-                // ships spawn ~1500 units behind the viewport during descent).
-                // TryGetSurfaceGroundPoint always succeeds: when no triangle
-                // contains the point it falls back to the NEAREST tile center,
-                // which snaps the shadow to an arbitrary viewport edge and makes
-                // it appear far in front of the object. There is no ground under
-                // the object in that case, so skip the shadow entirely.
-                if (!IsWithinSurfaceBounds(rotatedTiles, targetX, targetZ))
+                // Match the caster AFTER perspective projection. Surface uses its
+                // own render anchor, so convert the caster's position into its
+                // vertex space before choosing a ground tile. In particular, Z
+                // must run the opposite way to object-position Z.
+                if (!OmegaPerspectiveProjectorFactory.TryGetSurfaceLocalShadowAnchor(
+                        new RenderPosition(objScreenX, objScreenY, objScreenZ),
+                        new RenderPosition(surfScreenX, surfScreenY, surfScreenZ),
+                        out shadowBaseX, out float casterLocalY, out shadowBaseZ))
                     return;
 
-                if (!TryGetSurfaceGroundPoint(rotatedTiles, targetX, targetZ, out _, out float groundY, out _))
+                if (!TryGetSurfaceGroundPoint(rotatedTiles, shadowBaseX, shadowBaseZ, out _, out float groundY, out _))
                     return;
 
                 shadowBaseY = groundY;
+                // Both values are in Surface vertex units. Do not subtract the
+                // caster's screen-offset Y from unprojected ground Y. Measure
+                // before the shadow-only lift/nudge so those cannot change size.
+                flyingAltitude = MathF.Max(0f, groundY - casterLocalY);
+
+                // Ship and flying casters use the same nudge before scaling and
+                // projection. Size uses the original clearance, not the nudged
+                // terrain. Do not add a separate map-corner correction here.
+                shadowBaseX += TerrainShadowSideOffset;
+                shadowBaseZ -= TerrainShadowInwardOffset;
+                // Visible foreground casters get a bottom-edge adjustment before
+                // strict terrain draping below. Others retain the early rejection.
+                if (!inhabitant.IsOnScreen && !IsWithinSurfaceBounds(rotatedTiles, shadowBaseX, shadowBaseZ))
+                    return;
+                if ((TerrainShadowSideOffset != 0f || TerrainShadowInwardOffset != 0f)
+                    && !TryGetSurfaceGroundPoint(rotatedTiles, shadowBaseX, shadowBaseZ, out _, out shadowBaseY, out _))
+                    return;
             }
 
-            // Altitude for scaling: gap between object screen Y and ground screen Y.
-            // Free-flying objects get a larger base scale so their shadow reads
-            // clearly even at altitude; altitude shrink still applies so the
-            // shadow shrinks as the object climbs.
-            float groundScreenY = !isShip && !isTowerLike ? surfScreenY + shadowBaseY : surfScreenY;
-            float altitude = MathF.Max(0f, groundScreenY - objScreenY);
-            float baseScale = (isShip || isTowerLike) ? BaseScale : BaseScale * FreeFlyingShadowScale;
+            // Ship and Seeder share a height curve and reference footprint.
+            // Other objects retain their existing size tuning.
+            float altitude = !isTowerLike ? flyingAltitude : MathF.Max(0f, surfScreenY - objScreenY);
+            float baseScale = isSpaceSwan ? BaseScale * SpaceSwanShadowScale
+                : (hasComparableShadow || isTowerLike) ? BaseScale : BaseScale * FreeFlyingShadowScale;
             float scale = MathF.Max(MinScale, baseScale - altitude * AltitudeShrinkFactor);
+            if (hasComparableShadow)
+                scale *= ShipShadowSizeMultiplier;
+            // Apply after height scaling/clamping: all three mothership shadows
+            // become 35% smaller without moving their ground anchors.
+            if (name.Equals("MotherShipSmall", StringComparison.OrdinalIgnoreCase)
+                || name.Equals("MotherShipMedium", StringComparison.OrdinalIgnoreCase)
+                || name.Equals("MotherShipLarge", StringComparison.OrdinalIgnoreCase))
+                scale *= MotherShipShadowSizeMultiplier;
+            else if (name.Equals("ZeppelinBomber", StringComparison.OrdinalIgnoreCase))
+                scale *= ZeppelinShadowSizeMultiplier;
+            // Reduce the remaining standard flying shadows, without applying
+            // another reduction to Ship, Seeder, Swan or the tuned large ships.
+            else if (isFreeFlying && !hasComparableShadow && !isSpaceSwan)
+                scale *= DefaultFlyingShadowSizeMultiplier;
 
-            // Planar projection (see ShadowSlopeX/Y comment at top of file). One
-            // formula for every object type: the silhouette is projected onto the
-            // ground plane along the global light direction, then translated to
-            // shadowBaseX/Y/Z (which has already been chosen per-object type).
+            // Reuse the pre-built silhouette and the engine's planar projection.
 
             var shadowParts = new List<I3dObjectPart>(1);
 
@@ -299,13 +337,13 @@ namespace TheOmegaStrain.Runtime.Rendering
             // (IsVisible = false, added at object creation) get a shadow. No
             // fallback to projecting full meshes — that cost is forbidden.
             I3dObjectPart simplifiedShadowPart = null;
+            I3dObjectPart explosionShadowReference = null;
             for (int i = 0; i < inhabitant.ObjectParts.Count; i++)
             {
                 if (inhabitant.ObjectParts[i].PartName == "Shadow")
-                {
                     simplifiedShadowPart = inhabitant.ObjectParts[i];
-                    break;
-                }
+                else if (inhabitant.ObjectParts[i].PartName == Physics.ExplosionShadowReferencePartName)
+                    explosionShadowReference = inhabitant.ObjectParts[i];
             }
 
             if (simplifiedShadowPart == null
@@ -313,17 +351,15 @@ namespace TheOmegaStrain.Runtime.Rendering
                 || simplifiedShadowPart.Triangles.Count == 0)
                 return;
 
-            // Static ShadowOffsetX/Y was a pre-projection fudge; with proper planar
-            // projection the shadow direction comes entirely from ShadowSlopeX/Y.
-            // Keep a small static push only for ship/free-flying (where it provides
-            // the ground anchor below the on-screen model); zero it for tower-like.
-            float shadowOffsetX = isTowerLike ? 0f : StaticOffsetX;
-            float shadowOffsetY = isTowerLike ? 0f : StaticOffsetY;
+            // Airborne casters must not receive different post-anchor offsets.
+            float shadowOffsetX = 0f;
+            float shadowOffsetY = 0f;
+            float shadowOffsetZ = usesUprightFootprint ? 0f : StaticOffsetZ;
+            if (usesUprightFootprint)
+                shadowBaseY -= FreeFlyingShadowSurfaceLift;
 
-            // All shadows are parented to the surface's ObjectOffsets so they
-            // scroll and depth-sort with the terrain. The ship/tower-like/
-            // free-flying branches above have already baked any OO delta into
-            // shadowBaseX (via targetX), so no special parenting is needed.
+            // Geometry is now in Surface vertex space, including the perspective
+            // conversion for flying casters. Render it with Surface's own offsets.
             Vector3 shadowObjectOffsets = new Vector3
             {
                 x = surfaceObj.ObjectOffsets.x,
@@ -350,7 +386,7 @@ namespace TheOmegaStrain.Runtime.Rendering
             // off the surface and the shadow appears as a floating shape in the
             // sky behind the terrain. Clamping instead of discarding keeps the
             // shadow present but pinned to the far edge of the ground.
-            if (TryGetSurfaceHorizonY(rotatedTiles, out float horizonY))
+            if (!conformsToTerrain && TryGetSurfaceHorizonY(rotatedTiles, out float horizonY))
             {
                 float minAllowedY = horizonY + ShadowHorizonMargin;
                 if (shadowBaseY < minAllowedY)
@@ -360,46 +396,54 @@ namespace TheOmegaStrain.Runtime.Rendering
             {
                 var part = simplifiedShadowPart;
 
-                var shadowTriangles = new List<ITriangleMeshWithColorAndTexture>(part.Triangles.Count);
                 var projectionOptions = CreateObjectShadowProjectionOptions(
                     shadowBaseX,
                     shadowBaseY,
                     shadowBaseZ,
                     shadowOffsetX,
                     shadowOffsetY,
-                    StaticOffsetZ,
-                    scale);
+                    shadowOffsetZ,
+                    scale,
+                    usesUprightFootprint);
 
-                for (int i = 0; i < part.Triangles.Count; i++)
+                var shadowTriangles = ProjectShadowFootprint(part, projectionOptions, usesUprightFootprint);
+
+                if (conformsToTerrain)
                 {
-                    var tri = part.Triangles[i];
-                    var projected = ObjectShadowProjectionMath.ProjectModelTriangleShadow(tri, projectionOptions);
+                    // Align/size against the intact footprint, not the expanding
+                    // debris bounds. Otherwise normalization cancels the explosion.
+                    var alignmentTriangles = explosionShadowReference?.Triangles.Count > 0
+                        ? ProjectShadowFootprint(explosionShadowReference, projectionOptions, usesUprightFootprint)
+                        : shadowTriangles;
+                    AlignShadowFootprint(shadowTriangles,
+                        new Vector3(shadowBaseX + shadowOffsetX, shadowBaseY + shadowOffsetY, shadowBaseZ + shadowOffsetZ),
+                        hasComparableShadow ? ComparableShadowBaseRadius * scale : null, alignmentTriangles);
+                }
 
-                    // 1. Project each vertex onto the model-space ground plane (z=0)
-                    //    along the global light direction, using the boosted slopes
-                    //    so tall silhouettes (tower/tree prisms) actually stretch.
-                    //    Verts at z=0 stay put; verts at z=H land at
-                    //    (x + H*vStretchX, y + H*vStretchY, 0).
-
-                    // 2. Rotate that flat silhouette by the surface tilt (X = 70°)
-                    //    so it lies in the tilted ground plane. A point (x, y, 0)
-                    //    rotated about X becomes (x, y*cos, y*sin).
-                    //    The silhouette is scaled, then added to shadowBase (which
-                    //    comes from the already-rotated tile mesh). shadow.Rotation
-                    //    is (0,0,0) so LiveGameLoop does NOT rotate these again.
-                    shadowTriangles.Add(new TriangleMeshWithColor
+                // Size and rotation must be final BEFORE sampling terrain. Only
+                // generated shadow vertices change, never the caster or its offsets.
+                if (conformsToTerrain)
+                {
+                    if (inhabitant.IsOnScreen)
                     {
-                        Color = ShadowColor,
-                        vert1 = ToVector3(projected.Vertex1),
-                        vert2 = ToVector3(projected.Vertex2),
-                        vert3 = ToVector3(projected.Vertex3),
-                        noHidden = true
-                    });
+                        var viewport = new ProjectionViewport(ScreenSetup.screenSizeX, ScreenSetup.screenSizeY,
+                            ScreenSetup.perspectiveAdjustment, ScreenSetup.defaultObjectZoom);
+                        ShadowViewportHelpers.KeepForegroundVisible(inhabitant, casterRenderPosition,
+                            shadowTriangles, rotatedTiles,
+                            new RenderPosition(viewport.ScreenCenterX + surfScreenX, viewport.ScreenCenterY + surfScreenY, surfScreenZ),
+                            viewport, TerrainShadowSurfaceLift);
+                    }
+                    TerrainShadowProjectionHelpers.ConformToSurface(
+                        shadowTriangles, rotatedTiles, TerrainShadowSurfaceLift);
+                    if (shadowTriangles.Count == 0)
+                        return;
                 }
 
                 shadowParts.Add(new OmegaObjectPart3D
                 {
-                    PartName = "ObjectShadow",
+                    // Render separated black fragments through the existing particle
+                    // shadow path, without the glow used for visible explosion debris.
+                    PartName = explosionShadowReference != null ? RenderPipelineMarkers.ParticleShadowPartName : "ObjectShadow",
                     Triangles = shadowTriangles,
                     IsVisible = true
                 });
@@ -416,6 +460,66 @@ namespace TheOmegaStrain.Runtime.Rendering
                 ObjectOffsets = shadowObjectOffsets,
                 Rotation = new Vector3 { x = 0, y = 0, z = 0 }
             });
+        }
+
+        private static List<ITriangleMeshWithColorAndTexture> ProjectShadowFootprint(
+            I3dObjectPart part, ObjectShadowProjectionOptions options, bool usesUprightFootprint)
+        {
+            var triangles = new List<ITriangleMeshWithColorAndTexture>(part.Triangles.Count);
+            foreach (var source in part.Triangles)
+            {
+                var triangle = usesUprightFootprint ? RemoveSurfacePitch(source) : source;
+                // The existing projector flattens in model space and adds Surface
+                // pitch once. Terrain draping below supplies the final per-vertex Y.
+                var projected = ObjectShadowProjectionMath.ProjectModelTriangleShadow(triangle, options);
+                triangles.Add(new TriangleMeshWithColor
+                {
+                    Color = ShadowColor,
+                    vert1 = ToVector3(projected.Vertex1),
+                    vert2 = ToVector3(projected.Vertex2),
+                    vert3 = ToVector3(projected.Vertex3),
+                    noHidden = true
+                });
+            }
+            return triangles;
+        }
+
+        private static void AlignShadowFootprint(List<ITriangleMeshWithColorAndTexture> triangles, Vector3 anchor,
+            float? radius, List<ITriangleMeshWithColorAndTexture> alignmentTriangles)
+        {
+            // Centre the footprint on the common anchor. An authored model
+            // origin must not reintroduce an alignment difference. Only Ship and
+            // Seeder share a reference radius; all other sizes remain unchanged.
+            // Only generated shadow copies change, never the caster's geometry.
+            var vertices = new List<IVector3>(alignmentTriangles.Count * 3);
+            foreach (var triangle in alignmentTriangles)
+            {
+                vertices.Add(triangle.vert1);
+                vertices.Add(triangle.vert2);
+                vertices.Add(triangle.vert3);
+            }
+            var centre = GeometryMath.GetCenterOfBox(vertices);
+            float factor = 1f;
+            if (radius.HasValue)
+            {
+                float radiusSquared = 0f;
+                foreach (var triangle in alignmentTriangles)
+                {
+                    radiusSquared = MathF.Max(radiusSquared, GeometryMath.GetDistanceSquared(triangle.vert1, centre));
+                    radiusSquared = MathF.Max(radiusSquared, GeometryMath.GetDistanceSquared(triangle.vert2, centre));
+                    radiusSquared = MathF.Max(radiusSquared, GeometryMath.GetDistanceSquared(triangle.vert3, centre));
+                }
+                if (radiusSquared > 0.0001f)
+                    factor = radius.Value / MathF.Sqrt(radiusSquared);
+            }
+            foreach (var triangle in triangles)
+            {
+                triangle.vert1 = Resize(triangle.vert1);
+                triangle.vert2 = Resize(triangle.vert2);
+                triangle.vert3 = Resize(triangle.vert3);
+            }
+            Vector3 Resize(IVector3 vertex) => ToVector3(VectorMath.Add(anchor,
+                VectorMath.Multiply(VectorMath.Subtract(vertex, centre), factor)));
         }
 
         internal static bool TryGetSurfaceGroundPoint(
@@ -511,7 +615,8 @@ namespace TheOmegaStrain.Runtime.Rendering
             float shadowOffsetX,
             float shadowOffsetY,
             float shadowOffsetZ,
-            float scale)
+            float scale,
+            bool isFreeFlying)
         {
             return new ObjectShadowProjectionOptions
             {
@@ -522,10 +627,25 @@ namespace TheOmegaStrain.Runtime.Rendering
                 ShadowOffsetY = shadowOffsetY,
                 ShadowOffsetZ = shadowOffsetZ,
                 Scale = scale,
-                ShadowSlopeX = ShadowSlopeX,
-                ShadowSlopeY = ShadowSlopeY,
+                ShadowSlopeX = isFreeFlying ? 0f : ShadowSlopeX,
+                ShadowSlopeY = isFreeFlying ? 0f : ShadowSlopeY,
                 VertexStretchBoost = VertexStretchBoost,
                 SurfaceTiltDegrees = WorldViewSetup.SurfacePitchDegrees
+            };
+        }
+
+        private static ITriangleMeshWithColorAndTexture RemoveSurfacePitch(ITriangleMeshWithColorAndTexture triangle)
+        {
+            // LiveGameLoop already rotated every part, including the hidden Shadow.
+            // The engine projector expects an UNTILTED footprint and adds surface pitch
+            // itself. Undo only that pitch, keeping the object's heading/bank. Work on
+            // copies: never rotate the object's geometry, guides or crash boxes here.
+            float undoPitch = -WorldViewSetup.SurfacePitchDegrees;
+            return new TriangleMeshWithColor
+            {
+                vert1 = ShadowRotation.RotatePoint(undoPitch, triangle.vert1, 'X'),
+                vert2 = ShadowRotation.RotatePoint(undoPitch, triangle.vert2, 'X'),
+                vert3 = ShadowRotation.RotatePoint(undoPitch, triangle.vert3, 'X')
             };
         }
 

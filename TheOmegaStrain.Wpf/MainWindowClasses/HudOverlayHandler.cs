@@ -54,6 +54,7 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
         private readonly Image _powerupDecoyIcon;
         private readonly Image _powerupBulletIcon;
         private readonly Image _speedPowerupIcon;
+        private readonly Polygon _shieldIcon;
         private readonly BitmapImage? _speedLevel1IconSource;
         private readonly BitmapImage? _speedLevel2IconSource;
 
@@ -110,6 +111,7 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
         private const double PowerupDecoyX = 945;
         private const double PowerupLazerX = 1045;
         private const double SpeedPowerupX = 1145;
+        private const double ShieldPowerupX = 1245;
         private const double PowerupRowY = 85;
         private const double PowerupIconSize = 48;
 
@@ -238,6 +240,7 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
             _speedLevel2IconSource = TryLoadBitmapImage("GameGraphics\\speed_3_icon_48.png");
             _speedPowerupIcon = CreatePowerupIcon(SpeedPowerupX, PowerupRowY, PowerupIconSize);
             _speedPowerupIcon.Visibility = Visibility.Collapsed;
+            _shieldIcon = CreateShieldIcon(ShieldPowerupX, PowerupRowY, PowerupIconSize);
 
             // ----- Enemy icon + bar -----
             _droneIcon = CreatePowerupIcon(DroneRowX, DroneRowY, EnemyIconSize);
@@ -289,6 +292,7 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
             _canvas.Children.Add(_powerupDecoyIcon);
             _canvas.Children.Add(_powerupBulletIcon);
             _canvas.Children.Add(_speedPowerupIcon);
+            _canvas.Children.Add(_shieldIcon);
 
             _canvas.Children.Add(_altBarFill);
             _canvas.Children.Add(_thrBarFill);
@@ -375,6 +379,7 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
             _powerupLazerIcon.Opacity = !gameplay.IsLazerUnlocked ? 0.15
                 : activePowerup == "LAZER" ? 1.0 : 0.45;
             UpdateSpeedPowerupIcon(gameplay.SpeedPowerUpLevel);
+            UpdateShieldIcon(gameplay.ShieldRemainingFraction);
 
             // Ship power (health) vertical bar: fills bottom-to-top, green?red
             UpdatePowerBar(gameplay);
@@ -478,6 +483,43 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
                 ? _speedLevel2IconSource
                 : _speedLevel1IconSource;
             _speedPowerupIcon.Opacity = 1.0;
+        }
+
+        private void UpdateShieldIcon(float remainingFraction)
+        {
+            double scale = Clamp01(remainingFraction);
+            _shieldIcon.Visibility = scale > 0d ? Visibility.Visible : Visibility.Collapsed;
+            _shieldIcon.RenderTransform = new ScaleTransform(scale, scale);
+        }
+
+        private static Polygon CreateShieldIcon(double x, double y, double size)
+        {
+            var icon = new Polygon
+            {
+                Width = size,
+                Height = size,
+                Stretch = Stretch.Fill,
+                Fill = new SolidColorBrush(Color.FromArgb(190, 34, 230, 208)),
+                Stroke = new SolidColorBrush(Color.FromRgb(150, 255, 245)),
+                StrokeThickness = 3,
+                Points = new PointCollection
+                {
+                    new Point(6, 4),
+                    new Point(42, 4),
+                    new Point(45, 23),
+                    new Point(36, 39),
+                    new Point(24, 47),
+                    new Point(12, 39),
+                    new Point(3, 23)
+                },
+                RenderTransformOrigin = new Point(0.5, 0.5),
+                Visibility = Visibility.Collapsed,
+                IsHitTestVisible = false
+            };
+
+            Canvas.SetLeft(icon, x);
+            Canvas.SetTop(icon, y);
+            return icon;
         }
 
         private static Image CreatePowerupIcon(double x, double y, double size)

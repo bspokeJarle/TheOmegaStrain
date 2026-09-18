@@ -11,6 +11,68 @@ public class AttackShipControlsParticleGuideTests
     private static readonly OmegaMeshRotation Rotate = new();
 
     [TestMethod]
+    public void LethalCrash_StartsExplosionAndClearsCollisionBoxesWithoutPursuit()
+    {
+        var ship = AttackShip.CreateAttackShip(null!);
+        ship.WorldPosition = new Vector3(50000f, 0f, 50000f);
+        ship.ObjectOffsets = new Vector3(0f, -150f, 100f);
+        ship.ImpactStatus = new ImpactStatus
+        {
+            ObjectHealth = 155, HasCrashed = true, ObjectName = "Ship"
+        };
+        var controls = new AttackShipControls();
+        controls.MoveObject(ship, null, null);
+        Assert.IsTrue(ship.ImpactStatus.ObjectHealth <= 0);
+        Assert.IsFalse(ship.ImpactStatus.HasCrashed == true);
+        Assert.AreEqual(0, ship.CrashBoxes.Count);
+        Assert.AreEqual(50000f, ship.WorldPosition.x);
+        Assert.AreEqual(50000f, ship.WorldPosition.z);
+        Assert.IsNull(controls.ShipTargetWorldPosition);
+    }
+
+    [TestMethod]
+    public void MoveObject_PublishesTransformSoOriginalAndRenderCopyHaveSameMapMarker()
+    {
+        var oldSurface = TheOmegaStrain.Common.CommonGlobalState.GameState.SurfaceState;
+        var oldShip = TheOmegaStrain.Common.CommonGlobalState.GameState.ShipState;
+        try
+        {
+            TheOmegaStrain.Common.CommonGlobalState.GameState.SurfaceState = new SurfaceState
+            {
+                GlobalMapPosition = new Vector3(50000f, 0f, 50000f)
+            };
+            TheOmegaStrain.Common.CommonGlobalState.GameState.ShipState =
+                new TheOmegaStrain.Common.CommonGlobalState.States.ShipState
+                {
+                    ShipObjectOffsets = new Vector3()
+                };
+            var original = AttackShip.CreateAttackShip(null!);
+            var renderCopy = AttackShip.CreateAttackShip(null!);
+            renderCopy.ObjectId = original.ObjectId;
+            renderCopy.WorldPosition = new Vector3(50500f, 0f, 50400f);
+            renderCopy.ObjectOffsets = new Vector3(35f, -150f, 100f);
+            renderCopy.Rotation = new Vector3(63f, 40f, 90f);
+            TheOmegaStrain.Common.CommonGlobalState.GameState.SurfaceState.AiObjects.Add(original);
+
+            new AttackShipControls().MoveObject(renderCopy, null, null);
+
+            var expected = SurfacePositionSyncHelpers.GetMinimapMarkerWorldPosition(renderCopy)!;
+            var actual = SurfacePositionSyncHelpers.GetMinimapMarkerWorldPosition(original)!;
+            Assert.AreEqual(expected.x, actual.x, 0.001f);
+            Assert.AreEqual(expected.z, actual.z, 0.001f);
+            Assert.AreEqual(renderCopy.Rotation.y, original.Rotation.y);
+            Assert.AreEqual(renderCopy.ObjectOffsets.y, original.ObjectOffsets.y);
+            Assert.AreNotSame(renderCopy.Rotation, original.Rotation);
+            Assert.AreNotSame(renderCopy.ObjectOffsets, original.ObjectOffsets);
+        }
+        finally
+        {
+            TheOmegaStrain.Common.CommonGlobalState.GameState.SurfaceState = oldSurface;
+            TheOmegaStrain.Common.CommonGlobalState.GameState.ShipState = oldShip;
+        }
+    }
+
+    [TestMethod]
     public void CreateAttackShip_HidesParticleGuideParts()
     {
         var ship = AttackShip.CreateAttackShip(parentSurface: null!);
@@ -30,13 +92,13 @@ public class AttackShipControlsParticleGuideTests
             ship,
             "AttackShipLeftEngineStartGuide",
             "AttackShipLeftEngineDirectionGuide",
-            expectedLateralY: 28.5f);
+            expectedLateralY: 28.5f * 1.5f);
 
         AssertEngineGuideClearance(
             ship,
             "AttackShipRightEngineStartGuide",
             "AttackShipRightEngineDirectionGuide",
-            expectedLateralY: -28.5f);
+            expectedLateralY: -28.5f * 1.5f);
     }
 
     [TestMethod]
@@ -97,12 +159,12 @@ public class AttackShipControlsParticleGuideTests
 
         var rotatedNozzle = Rotate.RotatePoint(
             90f,
-            new Vector3 { x = -54.2f, y = 18.5f, z = 0f },
+            new Vector3 { x = -54.2f * 1.5f, y = 18.5f * 1.5f, z = 0f },
             'Z');
 
-        Assert.AreEqual(rotatedNozzle.x - 10f, spawn!.x, 0.01f,
+        Assert.AreEqual(rotatedNozzle.x - 10f * 1.5f, spawn!.x, 0.01f,
             "Rotated particle birth point should move slightly wider than the engine pod.");
-        Assert.IsTrue(spawn.y <= rotatedNozzle.y - 42f,
+        Assert.IsTrue(spawn.y <= rotatedNozzle.y - 42f * 1.5f,
             $"Particle birth y={spawn.y:F1}; expected clear behind rotated nozzle y={rotatedNozzle.y:F1}.");
     }
 
@@ -120,8 +182,8 @@ public class AttackShipControlsParticleGuideTests
         string directionPartName,
         float expectedLateralY)
     {
-        const float nozzleCapX = -54.2f;
-        const float minimumClearanceBehindNozzle = 42f;
+        const float nozzleCapX = -54.2f * 1.5f;
+        const float minimumClearanceBehindNozzle = 42f * 1.5f;
 
         var start = Centroid(GetGuideTriangle(ship, startPartName));
         var guide = Centroid(GetGuideTriangle(ship, directionPartName));
@@ -132,7 +194,7 @@ public class AttackShipControlsParticleGuideTests
             $"{startPartName} should stay centered on its engine pod.");
         Assert.IsTrue(guide.x < start.x,
             $"{directionPartName} must sit behind {startPartName} so exhaust velocity points away from the hull.");
-        Assert.AreEqual(14f, start.x - guide.x, 0.01f,
+        Assert.AreEqual(14f * 1.5f, start.x - guide.x, 0.01f,
             $"{directionPartName} should preserve the tuned exhaust guide distance.");
     }
 

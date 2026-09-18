@@ -202,9 +202,32 @@ namespace TheOmegaStrain.Game.World.Objects
 
             OmegaObject3DHelpers.ApplyScaleToObject(swan, ZoomRatio);
 
-            OmegaObject3DHelpers.AddSimplifiedShadowPart(swan, useFlatQuad: true);
+            AddSegmentedShadow(swan);
 
             return swan;
+        }
+
+        private static void AddSegmentedShadow(OmegaObject3D swan)
+        {
+            // One convex hull around the entire swan fills the gaps between its
+            // body, swept wings and tail. Reuse the engine's cheap hull generator
+            // per visible part instead, preserving the recognizable outline.
+            // Build once here, not from the full animated mesh every frame.
+            var triangles = new List<ITriangleMeshWithColorAndTexture>();
+            var partObject = new OmegaObject3D { ObjectId = 0 }; // Factory-only wrapper, never added to the world.
+            foreach (var part in swan.ObjectParts)
+            {
+                if (!part.IsVisible)
+                    continue;
+
+                partObject.ObjectParts.Clear();
+                partObject.ObjectParts.Add(part);
+                OmegaObject3DHelpers.AddSimplifiedShadowPart(partObject, useFlatQuad: true);
+                foreach (var generated in partObject.ObjectParts)
+                    if (generated.PartName == "Shadow")
+                        triangles.AddRange(generated.Triangles);
+            }
+            OmegaObject3DHelpers.AddCustomShadowPart(swan, triangles);
         }
 
         // ----------------------------------------------------

@@ -654,6 +654,22 @@
       }
     },
     {
+      "id": "ship_enemy_incoming_warning",
+      "usage": "ShipEnemyIncomingWarning",
+      "file": "Warning,_enemy_incoming!_Automated_Warning_Voice.mp3",
+      "segments": { "start": 0.0, "loopStart": 0.0, "loopEnd": 0.0, "end": 2.726 },
+      "settings": { "volume": 1.0, "maxVoices": 1, "is3D": false, "priority": 150 },
+      "speed": { "base": 1.0, "random": [ 0.0, 0.0 ], "min": 1.0, "max": 1.0 }
+    },
+    {
+      "id": "ship_drone_incoming_warning",
+      "usage": "ShipDroneIncomingWarning",
+      "file": "Warning,_drone_incoming!_Automated_Warning_Voice.mp3",
+      "segments": { "start": 0.0, "loopStart": 0.0, "loopEnd": 0.0, "end": 2.282 },
+      "settings": { "volume": 1.0, "maxVoices": 1, "is3D": false, "priority": 150 },
+      "speed": { "base": 1.0, "random": [ 0.0, 0.0 ], "min": 1.0, "max": 1.0 }
+    },
+    {
       "id": "ship_collision_warning",
       "usage": "ShipCollisionWarning",
       "file": "OmegeStrain_Ship_CollisionWarning.wav",

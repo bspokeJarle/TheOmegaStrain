@@ -9,6 +9,7 @@ using TheOmegaStrain.Game.World;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.Diagnostics;
 using TheOmegaStrain.Common.GamePlayHelpers;
 using TheOmegaStrain.Common.Persistence;
 using TheOmegaStrain.Domain;
@@ -55,7 +56,9 @@ namespace TheOmegaStrain.Wpf
     {
         private const bool enableLogging = false;
         private const bool enableFileLogging = LiveGameLoop.EnableCpuHeadroomLogging;
-        private const bool EnableSteamDiagnostics = true;
+        private const bool EnableSteamDiagnostics = false;
+        private DateTime _nextWarningTickLog;
+        private DateTime _nextWarningHudLog;
         private readonly DrawingVisualHost visualHost = new();
         private bool _useDirect3D11;
         private Direct3D11ProjectedTriangleRenderer? _direct3DRenderer;
@@ -84,6 +87,8 @@ namespace TheOmegaStrain.Wpf
         private int _minimapFrameSkip = 0;
         private readonly object _triangleListPoolLock = new();
         private readonly Stack<List<ProjectedTriangleMesh>> _triangleListPool = new();
+        private readonly List<ProjectedTriangleMesh> _lastPresentedFrame = new();
+        private long _lastDirect3DPresentTimestamp;
 
         // Overlay handlers
         private OverlayManager _overlayManager;
@@ -104,6 +109,9 @@ namespace TheOmegaStrain.Wpf
         private SteamGameplaySync? _steamGameplaySync;
         private const int SteamInputDetectionIntervalFrames = 60;
         private int _steamInputDetectionCountdown;
+        private bool _externalPauseRequested;
+        private bool _waitForXboxInputRelease;
+        private bool IsSteamOverlayActive => _steamManager?.IsOverlayActive == true;
 
         // MotherShip health bar (in-world overlay)
         private readonly Canvas _motherShipHealthBarCanvas;
@@ -125,6 +133,10 @@ namespace TheOmegaStrain.Wpf
         private readonly System.Windows.Shapes.Ellipse _aimAssistInner;
         private const double AimAssistIndicatorSize = 90;
 
+        private readonly Canvas _incomingThreatCanvas;
+        private readonly System.Windows.Shapes.Polygon _incomingThreatArrow;
+        private readonly RotateTransform _incomingThreatRotation = new();
+
         private bool isFading = false;
         private bool _isFadingIn = false;
         private int Fps = 0;
@@ -139,10 +151,13 @@ namespace TheOmegaStrain.Wpf
         {
             ScreenSetup.ConfigureRuntimeTargetFps(_currentDisplayRefreshHz);
 
-            Logger.EnableFileLogging = enableFileLogging;
+            Logger.EnableFileLogging = enableFileLogging || ThreatWarningDiagnostics.Enabled;
             if (Logger.EnableFileLogging)
             {
                 Logger.ClearLog();
+                ThreatWarningDiagnostics.Write($"START executable={Environment.ProcessPath} cwd={Environment.CurrentDirectory} base={AppContext.BaseDirectory} runtime={typeof(LiveGameLoop).Assembly.Location} build={typeof(LiveGameLoop).Module.ModuleVersionId}");
+                ThreatWarningDiagnostics.Write($"ASSETS registry={Path.GetFullPath(AudioSetup.SoundRegistryPath)} exists={File.Exists(AudioSetup.SoundRegistryPath)}");
+                Logger.Flush();
                 if (enableFileLogging)
                     Logger.Log($"[PerfLogging] enabled targetFps={TargetFps} targetFrameMs={TargetFrameIntervalMs:0.###} displayRefreshHz={_currentDisplayRefreshHz} source=StartupFallback");
             }
@@ -311,6 +326,20 @@ namespace TheOmegaStrain.Wpf
             _aimAssistCanvas.Children.Add(_aimAssistOuter);
             _aimAssistCanvas.Children.Add(_aimAssistInner);
             OverlayRoot.Children.Add(_aimAssistCanvas);
+
+            // Screen-space HUD, like the aim reticle: works with both WPF and Direct3D.
+            _incomingThreatCanvas = new Canvas { IsHitTestVisible = false, Visibility = Visibility.Collapsed };
+            Panel.SetZIndex(_incomingThreatCanvas, 11);
+            _incomingThreatArrow = new System.Windows.Shapes.Polygon
+            {
+                Points = new PointCollection { new(22, 0), new(-14, -12), new(-6, 0), new(-14, 12) },
+                Fill = Brushes.Red,
+                Stroke = Brushes.OrangeRed,
+                StrokeThickness = 2,
+                RenderTransform = _incomingThreatRotation
+            };
+            _incomingThreatCanvas.Children.Add(_incomingThreatArrow);
+            OverlayRoot.Children.Add(_incomingThreatCanvas);
 
             timer.Interval = TimeSpan.FromMilliseconds(8);
             CompositionTarget.Rendering += Handle3dWorldRendering;
@@ -617,6 +646,34 @@ namespace TheOmegaStrain.Wpf
 
         private void HandleKeys(object sender, KeyEventArgs e)
         {
+            if (IsSteamOverlayActive)
+            {
+                e.Handled = true;
+                return;
+            }
+            try
+            {
+                if (MenuSceneSaveShortcut.TryHandle(e.Key, Keyboard.IsKeyDown(Key.C), e.IsRepeat,
+                    GameState.ScreenOverlayState, GameState.GamePlayState.CurrentSceneType,
+                    sceneIndex => GameStatePersistence.SetSavedSceneForActivePlayer(sceneIndex)))
+                {
+                    e.Handled = true;
+                    return;
+                }
+            }
+            catch (IOException ex)
+            {
+                Logger.Log($"Could not save scene selection: {ex.Message}", "General");
+                e.Handled = true;
+                return;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Logger.Log($"Could not save scene selection: {ex.Message}", "General");
+                e.Handled = true;
+                return;
+            }
+
             bool overlayWasShowing = GameState.ScreenOverlayState.ShowOverlay;
             bool isSettingsPageKey = GameState.ScreenOverlayState is
                 { ShowOverlay: true, Type: ScreenOverlayType.Settings } &&
@@ -713,6 +770,8 @@ namespace TheOmegaStrain.Wpf
 
         private void HandleMouseInputForOverlay(object sender, MouseButtonEventArgs e)
         {
+            if (IsSteamOverlayActive)
+                return;
             var settings = GameState.SettingsState;
             settings.Normalize();
 
@@ -730,15 +789,42 @@ namespace TheOmegaStrain.Wpf
         {
             if (!XboxControllerInput.TryGetState(controllerIndex: 0, out var controllerState))
             {
+                // Detect the edge before the settings fallback changes the effective
+                // scheme to keyboard. Never auto-resume when the pad reconnects.
+                if (GameState.InputDeviceState.XboxControllerConnected &&
+                    GameState.SettingsState.ActiveControlScheme == ControlInputMode.XboxController)
+                    RequestExternalGameplayPause();
                 GameState.InputDeviceState.SetXboxControllerConnected(false);
                 ResetXboxMenuInputState();
                 _xboxPauseButtonWasDown = false;
                 _xboxExitButtonWasDown = false;
                 _xboxQuitHoldTracker.Reset();
+                _waitForXboxInputRelease = true;
                 return;
             }
 
             GameState.InputDeviceState.SetXboxControllerConnected(true);
+
+            if (IsSteamOverlayActive)
+            {
+                _waitForXboxInputRelease = true;
+                ResetXboxMenuInputState();
+                _xboxQuitHoldTracker.Reset();
+                return;
+            }
+            if (_waitForXboxInputRelease)
+            {
+                // Closing Steam's menu must not also confirm a game menu or resume.
+                if (!XboxControllerInput.HasButtonInput(controllerState) &&
+                    XboxMenuInputMapper.ToGameInputKey(controllerState) == GameInputKey.None)
+                {
+                    _waitForXboxInputRelease = false;
+                    _xboxPauseButtonWasDown = false;
+                    _xboxExitButtonWasDown = false;
+                }
+                ResetXboxMenuInputState();
+                return;
+            }
 
             if (TryHandleXboxQuitHold(controllerState))
                 return;
@@ -822,7 +908,7 @@ namespace TheOmegaStrain.Wpf
 
         private bool DispatchSceneInputKey(GameInputKey key)
         {
-            if (key == GameInputKey.None)
+            if (key == GameInputKey.None || IsSteamOverlayActive)
                 return false;
 
             var sceneTypeBeforeMenuExit = world?.SceneHandler?.GetActiveScene().SceneType;
@@ -1057,6 +1143,8 @@ namespace TheOmegaStrain.Wpf
 
         private void ToggleGameplayPause()
         {
+            if (IsSteamOverlayActive && world.IsPaused)
+                return;
             bool shouldPause = !world.IsPaused;
             world.IsPaused = shouldPause;
             isPaused = shouldPause;
@@ -1069,6 +1157,33 @@ namespace TheOmegaStrain.Wpf
                 ClearShipGameplayInputForPause();
             else
                 ResumeShipAfterGameplayPause();
+        }
+
+        private void RequestExternalGameplayPause()
+        {
+            if (IsGameplaySceneForPause() && GameState.GamePlayState.IsPlaying)
+                _externalPauseRequested = true;
+        }
+
+        private void ApplyExternalGameplayPause()
+        {
+            if (!_externalPauseRequested)
+                return;
+            if (!IsGameplaySceneForPause())
+            {
+                _externalPauseRequested = false;
+                return;
+            }
+            // Let scene fades and tutorial instructions finish through their own
+            // paths; then pause once normal gameplay is ready, never toggle twice.
+            if (isFading || GameState.WorldFade.Phase != WorldFadePhase.Idle ||
+                GameState.ScreenOverlayState.BlocksGameplayInput ||
+                GameState.GamePlayState.IsVictoryRewardPauseActive)
+                return;
+
+            if (!world.IsPaused && GameState.GamePlayState.IsPlaying)
+                ToggleGameplayPause();
+            _externalPauseRequested = false;
         }
 
         private static bool IsGameplaySceneForPause()
@@ -1311,6 +1426,8 @@ namespace TheOmegaStrain.Wpf
 
         private async void Handle3dWorld(double dtSeconds)
         {
+            if (ThreatWarningDiagnostics.ShouldSample(ref _nextWarningTickLog))
+                ThreatWarningDiagnostics.Write($"UI-TICK dt={dtSeconds:0.###} phase={GameState.GamePlayState.Phase} paused={world.IsPaused} overlay={GameState.ScreenOverlayState.Type} showOverlay={GameState.ScreenOverlayState.ShowOverlay} fading={isFading} worldFade={GameState.WorldFade.Phase} d3d={_useDirect3D11}");
             if (Logger.ShouldLog(enableLogging))
             {
                 var nowTicks = Stopwatch.GetTimestamp();
@@ -1326,7 +1443,10 @@ namespace TheOmegaStrain.Wpf
             _steamGameplaySync?.Update();
             UpdateSteamInputDetection();
             SynchronizeTutorialOverlayPause();
+            if (IsSteamOverlayActive)
+                RequestExternalGameplayPause();
             UpdateXboxMenuInput();
+            ApplyExternalGameplayPause();
 
             if (GameState.ScreenOverlayState.ShowDebugOverlay == false)
                 FpsText.Visibility = Visibility.Collapsed;
@@ -1401,6 +1521,7 @@ namespace TheOmegaStrain.Wpf
 
                 // Aim assist target indicator
                 UpdateAimAssistIndicator(gameplay);
+                UpdateIncomingThreatWarning(gameplay);
 
             }
 
@@ -1438,6 +1559,7 @@ namespace TheOmegaStrain.Wpf
             if (pauseFrameCount >= limitFrameCount)
             {
                 _lastWorldUpdateTimestamp = 0;
+                PresentPausedFrameForSteam();
                 return;
             }
 
@@ -1483,6 +1605,14 @@ namespace TheOmegaStrain.Wpf
                                 if (_useDirect3D11)
                                     Direct3DGraphicsSettings.Apply(screenCoordinates, GameState.SettingsState);
                                 worldRenderer.RenderTriangles(screenCoordinates);
+                                if (_useDirect3D11)
+                                {
+                                    // ProjectedTriangleMesh is a value type. Copy before
+                                    // returning the source list to the frame pool.
+                                    _lastPresentedFrame.Clear();
+                                    _lastPresentedFrame.AddRange(screenCoordinates);
+                                    _lastDirect3DPresentTimestamp = Stopwatch.GetTimestamp();
+                                }
                             }
                             finally
                             {
@@ -1502,6 +1632,23 @@ namespace TheOmegaStrain.Wpf
                     System.Threading.Interlocked.Exchange(ref _updateInProgress, 0);
                 }
             });
+        }
+
+        private void PresentPausedFrameForSteam()
+        {
+            if (_isShuttingDown || !_useDirect3D11 || _direct3DRenderer == null ||
+                _steamManager?.IsAvailable != true || _lastDirect3DPresentTimestamp == 0)
+                return;
+
+            long now = Stopwatch.GetTimestamp();
+            if (now - _lastDirect3DPresentTimestamp < Stopwatch.Frequency / 33)
+                return;
+
+            // Steam Overlay runs through D3D Present, even while gameplay is paused.
+            // Redraw the already-prepared frame at ~33 Hz: no world/AI/physics update,
+            // and no reapplying glow/shadow passes to the cached triangles.
+            _direct3DRenderer.RenderTriangles(_lastPresentedFrame);
+            _lastDirect3DPresentTimestamp = now;
         }
 
         private float CaptureWorldUpdateDeltaTime(float fallbackDeltaTime)
@@ -1783,6 +1930,27 @@ namespace TheOmegaStrain.Wpf
             double innerSize = AimAssistIndicatorSize * 0.5;
             Canvas.SetLeft(_aimAssistInner, cx - innerSize / 2);
             Canvas.SetTop(_aimAssistInner, cy - innerSize / 2);
+        }
+
+        private void UpdateIncomingThreatWarning(GamePlayState gameplay)
+        {
+            if (ThreatWarningDiagnostics.ShouldSample(ref _nextWarningHudLog))
+                ThreatWarningDiagnostics.Write($"HUD active={gameplay.IncomingThreatWarningActive} phase={gameplay.Phase} paused={world.IsPaused} fading={isFading} victoryPause={gameplay.IsVictoryRewardPauseActive} overlay={GameState.ScreenOverlayState.Type} showOverlay={GameState.ScreenOverlayState.ShowOverlay} xy=({gameplay.IncomingThreatWarningScreenX:0.#},{gameplay.IncomingThreatWarningScreenY:0.#}) angle={gameplay.IncomingThreatWarningAngle:0.#} canvas={_incomingThreatCanvas.Visibility} effectiveVisible={_incomingThreatCanvas.IsVisible} parent={VisualTreeHelper.GetParent(_incomingThreatCanvas)?.GetType().Name}");
+            if (!gameplay.IncomingThreatWarningActive || !gameplay.IsPlaying || world.IsPaused || isFading ||
+                gameplay.IsVictoryRewardPauseActive ||
+                GameState.ScreenOverlayState.Type != ScreenOverlayType.Game || GameState.ScreenOverlayState.ShowOverlay)
+            {
+                _incomingThreatCanvas.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            // Same time-based pulse as aim assist, with a visible minimum between flashes.
+            double phase = (DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond) % 600.0 / 600.0;
+            _incomingThreatArrow.Opacity = 0.25 + 0.75 * (0.5 + 0.5 * Math.Sin(phase * Math.PI * 2));
+            _incomingThreatRotation.Angle = gameplay.IncomingThreatWarningAngle;
+            Canvas.SetLeft(_incomingThreatArrow, gameplay.IncomingThreatWarningScreenX);
+            Canvas.SetTop(_incomingThreatArrow, gameplay.IncomingThreatWarningScreenY);
+            _incomingThreatCanvas.Visibility = Visibility.Visible;
         }
 
         private static string ResolveVideoPath(string clipPath)

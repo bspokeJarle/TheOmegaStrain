@@ -93,6 +93,17 @@ powerups, or story content into RetroMesh.
 - Do not add broad abstractions for a single use unless it matches an existing
   local pattern or clearly removes repeated complexity.
 
+## Line Endings
+
+- Follow `.gitattributes` and `.editorconfig`. Windows/.NET source files use
+  CRLF in the working tree; LF in Git's index is normal.
+- After every edit, including `apply_patch`, preserve the file's encoding/BOM
+  and restore its required working-tree line endings. Never leave mixed LF/CRLF.
+- Before finishing, check touched files with `git ls-files --eol` and run
+  `git diff --check`. Check newly created files as well as tracked files.
+- Fix only files touched by the task. Do not normalize the whole repository,
+  change global Git settings, or suppress line-ending warnings to hide the issue.
+
 ## Tests To Consider
 
 Use the source map for exact test files. Typical commands:

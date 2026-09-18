@@ -5,7 +5,10 @@ namespace TheOmegaStrain.Runtime.Rendering
 {
     public class WeaponsManager
     {
-        public void HandleWeapons(OmegaObject3D inhabitant, List<OmegaObject3D> weaponObjectList)
+        private readonly ParticleManager _particleManager = new();
+
+        public void HandleWeapons(OmegaObject3D inhabitant, List<OmegaObject3D> weaponObjectList,
+            List<OmegaObject3D>? particleObjectList = null)
         {
             if (inhabitant == null)
                 return;
@@ -15,18 +18,19 @@ namespace TheOmegaStrain.Runtime.Rendering
 
             var weaponSystem = inhabitant.WeaponSystems;
 
-            //Get finished weapons from the weapon system
+            // Weapons owns flight/cleanup; this adapter only collects meshes and effects.
             foreach (var obj in weaponSystem.Get3DObjects())
             {
                 if (obj is not OmegaObject3D weapon)
                     continue;
-                // Match ParentSurface til skipet dersom den mangler
+                // Projectile collision and particle shadows use the owner's surface.
                 if (weapon.ParentSurface == null)
                     weapon.ParentSurface = inhabitant.ParentSurface;
 
                 weaponObjectList.Add(weapon);
+                if (particleObjectList != null)
+                    _particleManager.HandleParticles(weapon, particleObjectList);
             }
         }
     }
 }
-

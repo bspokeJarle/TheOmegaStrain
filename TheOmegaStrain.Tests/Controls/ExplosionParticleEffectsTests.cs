@@ -168,6 +168,14 @@ public class ExplosionParticleEffectsTests
         Assert.IsNotNull(drone.Particles, "Exploding AI objects should keep their particle system during the explosion.");
         Assert.IsTrue(drone.Particles.Particles.Count > 0, "Explosion should release the particle stream.");
         Assert.IsTrue(drone.Particles.Particles.Any(particle => particle.Visible), "Explosion particles should be advanced immediately so they render on the explosion frame.");
+
+        // The renderer creates a new copy from the authoritative object every frame.
+        // Simulate that copy restoring the original boxes while the explosion continues.
+        drone.CrashBoxes = CreateCrashBoxes();
+        controls.MoveObject(drone, null, null);
+
+        Assert.AreEqual(0, drone.CrashBoxes.Count,
+            "An exploding drone must remain non-collidable so it cannot damage Ship on every explosion frame.");
     }
 
     private static void SetPrivateDateTime(object instance, string fieldName, DateTime value)

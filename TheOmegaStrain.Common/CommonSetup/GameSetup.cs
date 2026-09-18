@@ -5,7 +5,8 @@ namespace TheOmegaStrain.Common.CommonSetup
         public static float CollisionMarginX { get; set; } = 10f;
         public static float CollisionMarginY { get; set; } = 10f;
         public static float CollisionMarginZ { get; set; } = 20f;
-        public static float MaxKamikazeShipCenterCollisionDistance { get; set; } = 150f;
+        // Box overlap is still required; allow close wing/body contacts before deep penetration.
+        public static float MaxKamikazeShipCenterCollisionDistance { get; set; } = 180f;
         public static int MaxActiveDecoys { get; set; } = 3;
         public static int ShipShadowSubdivisionLevels { get; set; } = 2;
 
@@ -32,6 +33,8 @@ namespace TheOmegaStrain.Common.CommonSetup
         public static int ZeppelinBomberKillScore { get; set; } = 75;
         public static int DefaultKillScore { get; set; } = 25;
         public static int PowerUpCollectScore { get; set; } = 150;
+        public const float ShieldDurationSeconds = 45f;
+        public const float ShieldDamageMultiplier = 0.20f;
         public static int PlanetStyleBonusScoreCap { get; set; } = 2000;
         public static int CleanLoopStyleBonusScore { get; set; } = 250;
         public static int CollisionLoopStyleBonusScore { get; set; } = 0;

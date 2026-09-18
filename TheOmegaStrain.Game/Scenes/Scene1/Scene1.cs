@@ -79,7 +79,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
                 var kamikaze = KamikazeDrone.CreateKamikazeDrone(Surface, speedMultiplier: KamikazeDroneSpeedMultiplier);
                 kamikaze.WorldPosition = new Vector3 { x = (95700 + rmd.Next(-25000, 25000)) * ws, y = 0, z = (92000 + rmd.Next(-25000, 25000)) * ws };
                 kamikaze.Rotation = new Vector3 { };
-                kamikaze.ObjectOffsets = new Vector3 { x = 0, y = 150, z = 400 };
+                kamikaze.ObjectOffsets = new Vector3 { x = 0, y = 0, z = 400 };
                 kamikaze.ObjectName = "KamikazeDrone";
                 kamikaze.ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.KamikazeDroneHealth };
                 kamikaze.CrashBoxDebugMode = false;
@@ -133,6 +133,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
                 world.WorldInhabitants.Add(spaceSwan);
                 GameState.SurfaceState.AiObjects.Add(spaceSwan);
             }
+            ShieldPowerUpPlacementHelpers.AssignToSpaceSwans(GameState.SurfaceState.AiObjects, sceneNumber: 1);
 
             //Get the surface viewport based on the global Map Position
             //Important: In a Scene, Surface should be amongst the first objects added to the world

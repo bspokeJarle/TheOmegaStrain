@@ -183,6 +183,7 @@ namespace TheOmegaStrain.Wpf.Helpers
             byte[] greyPx    = { 180, 180, 180, 255 }; // Ship
             byte[] blackPx   = { 0, 0, 0, 255 };       // Seeder
             byte[] bluePx    = { 255, 80, 0, 255 };    // Drone
+            byte[] attackShipPx = { 220, 60, 220, 255 }; // AttackShip (magenta)
             byte[] orangePx  = { 0, 140, 255, 255 };   // Decoy
             byte[] powerupPx = { 255, 140, 30, 255 };  // PowerUp (strong blue)
             byte[] swanPx    = { 240, 240, 240, 255 }; // SpaceSwan (white)
@@ -296,6 +297,7 @@ namespace TheOmegaStrain.Wpf.Helpers
                         {
                             "Seeder" => blackPx,
                             "KamikazeDrone" => bluePx,
+                            "AttackShip" or "AttackShip2" => attackShipPx,
                             "DroneDecoy" => orangePx,
                             "SpaceSwan" => swanPx,
                             "ZeppelinBomber" => null,

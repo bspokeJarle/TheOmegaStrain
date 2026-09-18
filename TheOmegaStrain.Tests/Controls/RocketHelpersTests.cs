@@ -47,23 +47,23 @@ public class RocketHelpersTests
     }
 
     [TestMethod]
-    public void RocketHasFuelBeforeFiveSeconds()
+    public void RocketHasFuelBeforeThreeSeconds()
     {
-        Assert.IsTrue(RocketFlightHelpers.HasFuel(4.999f));
+        Assert.IsTrue(RocketFlightHelpers.HasFuel(2.999f));
     }
 
     [TestMethod]
-    public void RocketHasNoFuelFromFiveSeconds()
+    public void RocketHasNoFuelFromThreeSeconds()
     {
-        Assert.IsFalse(RocketFlightHelpers.HasFuel(5f));
-        Assert.IsFalse(RocketFlightHelpers.HasFuel(6f));
+        Assert.IsFalse(RocketFlightHelpers.HasFuel(3f));
+        Assert.IsFalse(RocketFlightHelpers.HasFuel(4f));
     }
 
     [TestMethod]
     public void ParticleEmissionStopsWithFuel()
     {
-        var powered = Step(elapsed: 4f, delta: 1f / 90f);
-        var ballistic = Step(elapsed: 5f, delta: 1f / 90f);
+        var powered = Step(elapsed: 2f, delta: 1f / 90f);
+        var ballistic = Step(elapsed: 3f, delta: 1f / 90f);
 
         Assert.IsTrue(powered.ShouldEmitMotorParticles);
         Assert.AreEqual(RocketFlightPhase.Powered, powered.Phase);

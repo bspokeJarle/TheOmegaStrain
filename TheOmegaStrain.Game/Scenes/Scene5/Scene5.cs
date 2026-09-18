@@ -144,6 +144,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene5
                 world.WorldInhabitants.Add(spaceSwan);
                 GameState.SurfaceState.AiObjects.Add(spaceSwan);
             }
+            ShieldPowerUpPlacementHelpers.AssignToSpaceSwans(GameState.SurfaceState.AiObjects, sceneNumber: 5);
 
             // Surface
             var surfaceObject = (OmegaObject3D)Surface.GetSurfaceViewPort();

@@ -289,6 +289,10 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
 
             if (_isExploding)
             {
+                // World objects are copied for each rendered frame. Keep collision disabled
+                // on every exploding copy so a destroyed drone cannot damage Ship repeatedly.
+                theObject.CrashBoxes = new List<List<IVector3>>();
+
                 if (_explosionWorldPosition != null)
                 {
                     theObject.WorldPosition = _explosionWorldPosition;

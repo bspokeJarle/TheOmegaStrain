@@ -164,9 +164,21 @@ namespace TheOmegaStrain.Game.Scenes.Intro
                 "  - Keyboard 1: Bullet | 2: Decoy | 3: Laser\n" +
                 "  - Xbox defaults: [X] Bullet | [Y] Decoy | [B] Laser\n" +
                 "  - Select a system, then use your configured FIRE control\n" +
-                "  - Decoys lure Kamikaze Drones away from your ship\n" +
+                "  - DECOY is the best way to fight Kamikaze Drones\n" +
                 "  - Seeder kills can drop PowerUps - fly into them to collect\n" +
                 "  - Some PowerUps permanently improve travel speed",
+                InfoFooter);
+
+            o.AddPage(
+                "RETROMESH // FIELD MANUAL",
+                "SHIELDS & DRONE DEFENCE",
+                "DEFENSIVE SYSTEMS:\n" +
+                "  - SpaceSwans can drop Shield pickups when destroyed\n" +
+                "  - Fly into a Shield pickup to activate it immediately\n" +
+                "  - Shield lasts 45 seconds and reduces normal damage to 20%\n" +
+                "  - The Shield icon shrinks in the HUD as protection runs out\n" +
+                "  - Your ship glows while Shield protection is active\n" +
+                "  - DECOY remains the best way to defeat Kamikaze Drones",
                 InfoFooter);
 
             o.AddPage(

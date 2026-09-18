@@ -6,10 +6,13 @@ public sealed class SteamManager : IDisposable
 {
     private bool disposed;
     private bool steamInputInitialized;
+    private Callback<GameOverlayActivated_t>? overlayActivatedCallback;
 
     public bool IsInitialized { get; private set; }
 
     public bool IsAvailable => IsInitialized;
+
+    public bool IsOverlayActive { get; private set; }
 
     public bool RestartRequested { get; private set; }
 
@@ -135,6 +138,9 @@ public sealed class SteamManager : IDisposable
 
             var initResult = SteamAPI.InitEx(out var steamError);
             IsInitialized = initResult == ESteamAPIInitResult.k_ESteamAPIInitResult_OK;
+            if (IsInitialized)
+                overlayActivatedCallback = Callback<GameOverlayActivated_t>.Create(
+                    overlay => IsOverlayActive = overlay.m_bActive != 0);
             LastError = IsInitialized
                 ? null
                 : string.IsNullOrWhiteSpace(steamError)
@@ -146,6 +152,7 @@ public sealed class SteamManager : IDisposable
         {
             LastError = exception.Message;
             IsInitialized = false;
+            IsOverlayActive = false;
             return false;
         }
     }
@@ -188,6 +195,7 @@ public sealed class SteamManager : IDisposable
         {
             LastError = exception.Message;
             IsInitialized = false;
+            IsOverlayActive = false;
         }
     }
 
@@ -221,6 +229,9 @@ public sealed class SteamManager : IDisposable
 
     public void Shutdown()
     {
+        overlayActivatedCallback?.Dispose();
+        overlayActivatedCallback = null;
+        IsOverlayActive = false;
         if (!IsInitialized)
         {
             return;
