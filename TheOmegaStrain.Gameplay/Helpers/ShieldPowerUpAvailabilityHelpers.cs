@@ -78,9 +78,13 @@ namespace TheOmegaStrain.Gameplay.Helpers
             if (carriersNeeded <= 0 || distantCarrierRank >= carriersNeeded)
                 return false;
 
+            float swanWorldY = carrier.WorldPosition.y;
             var target = SurfacePositionSyncHelpers.GetShipRamTargetWorldPosition(carrier);
             float side = distantCarrierRank == 0 ? -1f : 1f;
             target.x += side * ScreenSetup.screenSizeX * ShieldSupportTargetScreenWidth;
+            // Relocation only changes the horizontal world position. SpaceSwanControls
+            // already owns flight height through its normal ObjectOffsets/surface sync.
+            target.y = swanWorldY;
             carrier.WorldPosition = target;
             return true;
         }

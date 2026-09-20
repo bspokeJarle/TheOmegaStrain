@@ -102,6 +102,8 @@ public class ShieldPowerUpTests
             Assert.IsFalse(secondMoved);
             Assert.IsFalse(thirdMoved, "Only one Shield carrier should be brought into the combat area.");
             Assert.IsTrue(IsWithinVisibleArea(carriers[0]));
+            Assert.AreEqual(0f, carriers[0].WorldPosition!.y, 0.001f,
+                "Relocation must preserve the normal SpaceSwan world height.");
             Assert.AreEqual(12000f, carriers[1].WorldPosition!.x, 0.001f);
             Assert.AreEqual(14000f, carriers[2].WorldPosition!.x, 0.001f);
         }
@@ -250,7 +252,7 @@ public class ShieldPowerUpTests
         IsActive = true,
         IsOnScreen = false,
         WorldPosition = new Vector3 { x = worldX, z = worldX },
-        ObjectOffsets = new Vector3 { z = 600f },
+        ObjectOffsets = new Vector3 { y = -200f, z = 600f },
         ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.SpaceSwanHealth }
     };
 
