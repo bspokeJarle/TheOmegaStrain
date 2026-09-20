@@ -59,6 +59,8 @@ namespace TheOmegaStrain.Gameplay.Controls
             _lazerSound = soundRegistry.Get("lazer_main");
             if (soundRegistry.TryGet("explosion_main", out var rocketExplosion))
                 _rocketExplosionSound = rocketExplosion;
+            if (soundRegistry.TryGet("rocket_main", out var rocketFlightSound))
+                _rocketFlightSound = rocketFlightSound;
         }
 
         public Weapons(List<I3dObject> weapons, IObjectMovement parent, OmegaObject3D ship)

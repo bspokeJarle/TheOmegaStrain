@@ -358,6 +358,19 @@ public class IncomingThreatWarningTests
     }
 
     [TestMethod]
+    public void FailedAudio_DoesNotInterruptGameplayAndCanRetryLater()
+    {
+        var rocket = CreateObject("EnemyRocket", 2, 300f, 0f);
+
+        _manager.Update(new[] { _ship, rocket }, _gameplay, true, new ThrowingAudio(), _sounds);
+
+        Assert.IsTrue(_gameplay.IncomingThreatWarningActive);
+        _now = _now.AddSeconds(4);
+        Update(rocket);
+        Assert.AreEqual(1, _audio.SoundIds.Count);
+    }
+
+    [TestMethod]
     public void ReleaseMargin_AvoidsChatterAndAllowsARealReentry()
     {
         var drone = CreateObject("KamikazeDrone", 2, 1900f, 0f);
@@ -515,11 +528,11 @@ public class IncomingThreatWarningTests
         }
     }
 
-    private sealed class CapturingAudio : IAudioPlayer
+    private class CapturingAudio : IAudioPlayer
     {
         public List<string> SoundIds { get; } = new();
         public float MusicVolume { get; private set; } = 0.15f;
-        public IAudioInstance Play(SoundDefinition definition, AudioPlayMode mode, AudioPlayOptions? options = null)
+        public virtual IAudioInstance Play(SoundDefinition definition, AudioPlayMode mode, AudioPlayOptions? options = null)
         {
             SoundIds.Add(definition.Id);
             return new SilentInstance();
@@ -532,6 +545,12 @@ public class IncomingThreatWarningTests
         public void SetMusicVolume(float volume) => MusicVolume = volume;
         public void StopMusic() { }
         public void Update(double deltaTimeSeconds) { }
+    }
+
+    private sealed class ThrowingAudio : CapturingAudio
+    {
+        public override IAudioInstance Play(SoundDefinition definition, AudioPlayMode mode, AudioPlayOptions? options = null) =>
+            throw new InvalidOperationException("Test audio failure");
     }
 
     private sealed class SilentInstance : IAudioInstance

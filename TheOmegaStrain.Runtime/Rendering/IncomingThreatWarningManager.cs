@@ -186,7 +186,10 @@ public sealed class IncomingThreatWarningManager
             catch (Exception ex)
             {
                 if (DiagnosticsEnabled) WriteDiagnostic($"PLAY-ERROR {ex.GetType().Name}: {ex.Message}");
-                throw;
+                // Warning audio is optional feedback and must never interrupt the game loop.
+                // Leave the threats unannounced so a later warning can retry after the cooldown.
+                _nextWarningAt = _now().AddSeconds(3.25);
+                return;
             }
             if (DiagnosticsEnabled) WriteDiagnostic($"PLAY-RETURN id={soundId} instance={_warningInstance?.Id} playing={_warningInstance?.IsPlaying}");
             // Both supplied clips are under three seconds; leave a short speech gap.

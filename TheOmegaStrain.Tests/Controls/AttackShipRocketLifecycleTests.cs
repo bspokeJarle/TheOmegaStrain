@@ -426,15 +426,34 @@ public partial class AttackShipWeaponTests
             WorldPosition = new Vector3(), ObjectOffsets = new Vector3(),
             Rotation = new Vector3(pitch, 0, 0), CrashBoxesFollowRotation = true,
             ImpactStatus = new ImpactStatus(), IsOnScreen = true,
+            ObjectParts = new List<I3dObjectPart>
+            {
+                new OmegaObjectPart3D
+                {
+                    PartName = "VisibleSurfaceTile",
+                    IsVisible = true,
+                    Triangles = new List<ITriangleMeshWithColorAndTexture>
+                    {
+                        new TriangleMeshWithColor
+                        {
+                            Color = "ffffff",
+                            noHidden = true,
+                            vert1 = new Vector3(280, -30, 0),
+                            vert2 = new Vector3(360, -30, 0),
+                            vert3 = new Vector3(320, 30, 0)
+                        }
+                    }
+                }
+            },
             CrashBoxes = new()
             {
-                OmegaObject3DHelpers.GenerateCrashBoxCorners(new Vector3(1760, -30, -30), new Vector3(1840, 30, 30)),
-                OmegaObject3DHelpers.GenerateCrashBoxCorners(new Vector3(-1840, -30, -30), new Vector3(-1760, 30, 30))
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(new Vector3(280, -30, -30), new Vector3(360, 30, 30)),
+                OmegaObject3DHelpers.GenerateCrashBoxCorners(new Vector3(-360, -30, -30), new Vector3(-280, 30, 30))
             }
         };
         new ObjectFrameTransformer().RotateObjectGeometry(surface);
         rocket.WeaponObject.WorldPosition = new Vector3(50000, 0, 50000);
-        rocket.WeaponObject.ObjectOffsets = new Vector3(1800, -150, 0);
+        rocket.WeaponObject.ObjectOffsets = new Vector3(320, -150, 0);
         rocket.Trajectory = new Vector3();
         rocket.Velocity = 0;
         rocket.RocketState!.PoweredSeconds = 3;
@@ -475,6 +494,56 @@ public partial class AttackShipWeaponTests
         Assert.IsTrue(particles.Count > 0);
     }
 
+    [TestMethod]
+    public void AttackShip_UsesPositionedRocketLoopUntilItExplodes()
+    {
+        var owner = CreateAttackShip();
+        owner.WeaponSystems = null;
+        var audio = new RocketAudioSpy();
+        var sounds = new RocketSoundRegistry();
+
+        owner.Movement!.MoveObject(owner, audio, sounds);
+
+        var loop = audio.Plays.Single();
+        Assert.AreEqual("rocket_main", loop.SoundId);
+        Assert.AreEqual(AudioPlayMode.SegmentedLoop, loop.Mode);
+        Assert.IsTrue(loop.Instance.IsPlaying);
+        Assert.IsTrue(loop.Instance.PositionUpdates > 0);
+
+        owner.ImpactStatus = new ImpactStatus
+        {
+            HasCrashed = true,
+            ObjectName = "Ship",
+            ObjectHealth = EnemySetup.AttackShipHealth
+        };
+        owner.Movement.MoveObject(owner, audio, sounds);
+
+        Assert.IsFalse(loop.Instance.IsPlaying);
+    }
+
+    [TestMethod]
+    public void Rocket_UsesPositionedRocketLoopOnlyWhileMotorHasFuel()
+    {
+        var owner = CreateAttackShip();
+        Fire(owner, Now);
+        var rocket = (ActiveWeapon)owner.WeaponSystems!.ActiveWeapons.Single();
+        var audio = new RocketAudioSpy();
+        var sounds = new RocketSoundRegistry();
+
+        owner.WeaponSystems.MoveWeapon(audio, sounds);
+
+        var loop = audio.Plays.Single();
+        Assert.AreEqual("rocket_main", loop.SoundId);
+        Assert.AreEqual(AudioPlayMode.SegmentedLoop, loop.Mode);
+        Assert.IsTrue(loop.Instance.IsPlaying);
+        Assert.IsTrue(loop.Instance.PositionUpdates > 0);
+
+        StepRocket(owner, rocket, WeaponSetup.RocketFuelSeconds);
+
+        Assert.IsTrue(rocket.RocketState!.IsFalling);
+        Assert.IsFalse(loop.Instance.IsPlaying);
+    }
+
     private static void StepRocket(OmegaObject3D owner, ActiveWeapon rocket, float seconds) =>
         typeof(Weapons).GetMethod("MoveRocket", BindingFlags.Instance | BindingFlags.NonPublic)!
             .Invoke(owner.WeaponSystems, new object[] { rocket, seconds });
@@ -493,5 +562,67 @@ public partial class AttackShipWeaponTests
             IObjectMovement parentShip, int thrust, bool? explosion, float upwardVelocityBoost = 0f)
         { Emissions++; LastStart = startPosition; }
         public void MoveParticles() => MoveCalls++;
+    }
+
+    private sealed class RocketSoundRegistry : ISoundRegistry
+    {
+        public SoundDefinition Get(string id) => Create(id);
+
+        public bool TryGet(string id, out SoundDefinition definition)
+        {
+            definition = Create(id);
+            return true;
+        }
+
+        private static SoundDefinition Create(string id) => new()
+        {
+            Id = id,
+            Usage = id,
+            File = id + ".wav",
+            Settings = new SoundSettings { Volume = 0.6f, Is3D = true }
+        };
+    }
+
+    private sealed class RocketAudioSpy : IAudioPlayer
+    {
+        public List<RocketPlayCall> Plays { get; } = new();
+        public float MusicVolume { get; private set; } = 0.15f;
+
+        public IAudioInstance Play(SoundDefinition definition, AudioPlayMode mode, AudioPlayOptions? options = null)
+        {
+            var instance = new RocketAudioInstance(definition.Id);
+            Plays.Add(new RocketPlayCall(definition.Id, mode, instance));
+            return instance;
+        }
+
+        public void PlayOneShot(SoundDefinition definition, AudioPlayOptions? options = null) =>
+            Play(definition, AudioPlayMode.OneShot, options);
+        public void Stop(IAudioInstance instance, bool playEndSegment) => instance.Stop(playEndSegment);
+        public void StopAll() { }
+        public void StopNonMusic() { }
+        public void PlayMusic(SoundDefinition definition, float? volumeOverride = null) { }
+        public void SetMusicVolume(float volume) => MusicVolume = volume;
+        public void StopMusic() { }
+        public void Update(double deltaTimeSeconds) { }
+    }
+
+    private sealed record RocketPlayCall(
+        string SoundId,
+        AudioPlayMode Mode,
+        RocketAudioInstance Instance);
+
+    private sealed class RocketAudioInstance : IAudioInstance
+    {
+        public RocketAudioInstance(string soundId) => SoundId = soundId;
+
+        public Guid Id { get; } = Guid.NewGuid();
+        public string SoundId { get; }
+        public bool IsPlaying { get; private set; } = true;
+        public bool IsLooping => true;
+        public int PositionUpdates { get; private set; }
+        public void SetVolume(float volume) { }
+        public void SetSpeed(float speed) { }
+        public void SetWorldPosition(System.Numerics.Vector3 position) => PositionUpdates++;
+        public void Stop(bool playEndSegment) => IsPlaying = false;
     }
 }

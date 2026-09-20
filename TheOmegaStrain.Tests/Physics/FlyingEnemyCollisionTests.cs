@@ -98,13 +98,13 @@ public class FlyingEnemyCollisionTests
         nextFrame.Movement!.MoveObject(nextFrame, null, null);
         Assert.AreEqual(0, attack.ImpactStatus.ObjectHealth);
         Assert.AreEqual(0, nextFrame.CrashBoxes.Count);
-        Assert.IsTrue(nextFrame.ObjectParts.All(part => part.PartName == "ExplodingPart"));
+        AssertExplosionParts(nextFrame);
         Assert.IsTrue(attack.ObjectParts.All(part => part.PartName != "ExplodingPart"), "Do not mutate the template geometry.");
 
         var followingFrame = CopyFrame(attack);
         followingFrame.Movement!.MoveObject(followingFrame, null, null);
         Assert.AreEqual(0, followingFrame.CrashBoxes.Count);
-        Assert.IsTrue(followingFrame.ObjectParts.All(part => part.PartName == "ExplodingPart"));
+        AssertExplosionParts(followingFrame);
     }
 
     [DataTestMethod]
@@ -297,6 +297,13 @@ public class FlyingEnemyCollisionTests
         new ObjectFrameTransformer().RotateObjectGeometry(frame);
         Assert.IsTrue(ObjectPlacementHelpers.TryGetRenderPosition(frame, 800, 450, out _, out _, out _));
         return frame;
+    }
+
+    private static void AssertExplosionParts(I3dObject obj)
+    {
+        Assert.IsTrue(obj.ObjectParts.Any(part => part.PartName == "ExplodingPart"));
+        Assert.IsTrue(obj.ObjectParts.All(part =>
+            part.PartName is "ExplodingPart" or "Shadow" or "ExplosionShadowReference"));
     }
 
     private static List<List<IVector3>> PreviousAttackBoxes() => new()

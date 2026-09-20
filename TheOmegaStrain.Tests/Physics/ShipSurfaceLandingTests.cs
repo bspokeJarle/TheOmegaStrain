@@ -322,7 +322,7 @@ public class ShipSurfaceLandingTests
         Assert.IsFalse(ship.ImpactStatus.HasCrashed);
         Assert.AreEqual("Surface", ship.ImpactStatus.ObjectName);
         Assert.IsTrue(
-            ship.ObjectParts.All(part => part.PartName == "ExplodingPart"),
+            IsExploding(ship),
             "A ship below the surface floor should enter the normal explosion animation even without a reported crash.");
     }
 
@@ -836,6 +836,25 @@ public class ShipSurfaceLandingTests
             ImpactStatus = new ImpactStatus(),
             ObjectOffsets = new Vector3(),
             WorldPosition = new Vector3(),
+            ObjectParts = new List<I3dObjectPart>
+            {
+                new OmegaObjectPart3D
+                {
+                    PartName = $"{name}TestGeometry",
+                    IsVisible = true,
+                    Triangles = new List<ITriangleMeshWithColorAndTexture>
+                    {
+                        new TriangleMeshWithColor
+                        {
+                            Color = "ffffff",
+                            noHidden = true,
+                            vert1 = new Vector3 { x = -10, y = -10, z = 0 },
+                            vert2 = new Vector3 { x = 10, y = -10, z = 0 },
+                            vert3 = new Vector3 { x = 0, y = 10, z = 0 }
+                        }
+                    }
+                }
+            },
             CrashBoxes = new List<List<IVector3>>
             {
                 new()
@@ -926,8 +945,9 @@ public class ShipSurfaceLandingTests
 
     private static bool IsExploding(I3dObject ship)
     {
-        return ship.ObjectParts.Count > 0 &&
-               ship.ObjectParts.All(part => part.PartName == "ExplodingPart");
+        return ship.ObjectParts.Any(part => part.PartName == "ExplodingPart") &&
+               ship.ObjectParts.All(part =>
+                   part.PartName is "ExplodingPart" or "Shadow" or "ExplosionShadowReference");
     }
 
     private static void SetUnsafeSurfaceHitTime(ShipControls controls, DateTime hitTime)

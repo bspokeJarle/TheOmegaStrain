@@ -36,6 +36,8 @@ namespace TheOmegaStrain.Gameplay.Controls
         public IPhysics Physics { get; set; } = new Physics.Physics();
         private IAudioPlayer? _audio;
         private SoundDefinition? _explosionSound;
+        private SoundDefinition? _rocketSound;
+        private IAudioInstance? _rocketInstance;
         private bool _isExploding;
         private DateTime _explosionDeltaTime;
         private Vector3? _explosionWorldPosition;
@@ -65,6 +67,7 @@ namespace TheOmegaStrain.Gameplay.Controls
                 HandleCrash(theObject);
             if (_isExploding)
             {
+                StopRocketLoop(playEndSegment: false);
                 theObject.WorldPosition = KamikazeDroneMovementHelpers.ToVector3(_explosionWorldPosition);
                 theObject.ObjectOffsets = KamikazeDroneMovementHelpers.ToVector3(_explosionObjectOffsets);
                 theObject.Rotation = KamikazeDroneMovementHelpers.ToVector3(_explosionRotation);
@@ -79,6 +82,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             float deltaSeconds = GetMovementDeltaSeconds(now);
             RestoreMovementState(theObject);
             PursueShip(theObject, deltaSeconds);
+            UpdateRocketLoop(theObject);
 
             SyncAuthoritativeTransform(theObject);
             UpdateFire(theObject, DateTime.UtcNow);
@@ -127,6 +131,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             }
 
             _isExploding = true;
+            StopRocketLoop(playEndSegment: false);
             _explosionDeltaTime = DateTime.Now;
             _explosionWorldPosition = KamikazeDroneMovementHelpers.ToVector3(theObject.WorldPosition);
             _explosionObjectOffsets = KamikazeDroneMovementHelpers.ToVector3(theObject.ObjectOffsets);
@@ -231,8 +236,10 @@ namespace TheOmegaStrain.Gameplay.Controls
 
         public void Dispose()
         {
+            StopRocketLoop(playEndSegment: false);
             _audio = null;
             _explosionSound = null;
+            _rocketSound = null;
         }
 
         public void ConfigureAudio(IAudioPlayer? audioPlayer, ISoundRegistry? soundRegistry)
@@ -240,6 +247,71 @@ namespace TheOmegaStrain.Gameplay.Controls
             if (_audio != null || audioPlayer == null || soundRegistry == null) return;
             _audio = audioPlayer;
             _explosionSound = soundRegistry.Get("explosion_main");
+            if (soundRegistry.TryGet("rocket_main", out var rocketSound))
+                _rocketSound = rocketSound;
+        }
+
+        private void UpdateRocketLoop(I3dObject theObject)
+        {
+            if (_audio == null || _rocketSound == null || theObject is not OmegaObject3D concrete)
+                return;
+
+            if (theObject.IsOnScreen)
+            {
+                var audioPosition = concrete.GetAudioPosition();
+                EnsureRocketLoop(new System.Numerics.Vector3(
+                    audioPosition.x, audioPosition.y, audioPosition.z),
+                    _rocketSound.Settings.Volume);
+                return;
+            }
+
+            var globalPosition = GameState.SurfaceState?.GlobalMapPosition;
+            var attackShipPosition = theObject.WorldPosition;
+            if (globalPosition == null || attackShipPosition == null)
+            {
+                StopRocketLoop(playEndSegment: false);
+                return;
+            }
+
+            float distanceSquared = OmegaObjectHelpers.GetDistanceSquared(globalPosition, attackShipPosition);
+            float maxDistance = AudioSetup.OffscreenAiAudioMaxDistance;
+            if (distanceSquared > maxDistance * maxDistance)
+            {
+                StopRocketLoop(playEndSegment: false);
+                return;
+            }
+
+            float normalizedDistance = MathF.Sqrt(distanceSquared) / maxDistance;
+            float volume = _rocketSound.Settings.Volume *
+                MathF.Pow(1f - normalizedDistance, AudioSetup.OffscreenAiAudioCurveExponent);
+            float dx = attackShipPosition.x - globalPosition.x;
+            EnsureRocketLoop(new System.Numerics.Vector3(dx, 0f, 0f), volume);
+        }
+
+        private void EnsureRocketLoop(System.Numerics.Vector3 position, float volume)
+        {
+            if (_audio == null || _rocketSound == null)
+                return;
+
+            if (_rocketInstance == null || !_rocketInstance.IsPlaying)
+            {
+                _rocketInstance = _audio.Play(
+                    _rocketSound,
+                    AudioPlayMode.SegmentedLoop,
+                    new AudioPlayOptions { WorldPosition = position });
+            }
+
+            _rocketInstance.SetVolume(volume);
+            _rocketInstance.SetWorldPosition(position);
+        }
+
+        private void StopRocketLoop(bool playEndSegment)
+        {
+            if (_rocketInstance == null)
+                return;
+
+            _rocketInstance.Stop(playEndSegment);
+            _rocketInstance = null;
         }
 
         public void ReleaseParticles(I3dObject theObject)

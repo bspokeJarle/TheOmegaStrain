@@ -13,5 +13,7 @@ namespace TheOmegaStrain.Domain
         public bool IsFalling { get; set; }
         public bool IsExploding { get; set; }
         public DateTime ExplosionStarted { get; set; }
+        // One loop per launch. ActiveWeapon state is shared across frame copies.
+        public IAudioInstance? FlightSoundInstance { get; set; }
     }
 }

@@ -14,6 +14,7 @@ namespace TheOmegaStrain.Gameplay.Controls
     {
         private readonly List<ActiveWeapon> _explodingRockets = new();
         private SoundDefinition? _rocketExplosionSound;
+        private SoundDefinition? _rocketFlightSound;
 
         private void LaunchRocket(IVector3 trajectory, IVector3 startPosition, IVector3 worldPosition, I3dObject parentShip)
         {
@@ -160,6 +161,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             if (rocket.RocketState == null) return;
             if (rocket.WeaponObject.ImpactStatus.HasCrashed)
             {
+                StopRocketFlightSound(rocket, playEndSegment: false);
                 StartRocketExplosion(rocket);
                 return;
             }
@@ -202,6 +204,11 @@ namespace TheOmegaStrain.Gameplay.Controls
 
             if (rocket.WeaponObject.Movement is RocketControls controls)
                 controls.UpdateWeaponParticles(rocket.WeaponObject, deltaSeconds, !state.IsFalling);
+
+            if (state.IsFalling)
+                StopRocketFlightSound(rocket, playEndSegment: true);
+            else
+                UpdateRocketFlightSound(rocket);
         }
 
         private static bool IsRocketOutsideScreenBounds(ActiveWeapon rocket)
@@ -241,6 +248,7 @@ namespace TheOmegaStrain.Gameplay.Controls
             state.IsFalling = true;
             rocket.RocketGuidanceLocked = true;
             state.Physics.Thrust = 0f;
+            StopRocketFlightSound(rocket, playEndSegment: true);
             // Seed momentum ONCE. Physics owns velocity and gravity from this point onward.
             state.Physics.Velocity = Add(Scale(rocket.Trajectory, rocket.Velocity), ParentVelocityLocal);
         }
@@ -285,6 +293,7 @@ namespace TheOmegaStrain.Gameplay.Controls
         {
             var state = rocket.RocketState!;
             if (state.IsExploding) return;
+            StopRocketFlightSound(rocket, playEndSegment: false);
             state.IsExploding = true;
             state.IsFalling = true;
             state.Physics.Thrust = 0f;
@@ -309,6 +318,39 @@ namespace TheOmegaStrain.Gameplay.Controls
 
             // Free the launch slot now, but retain the visual effect until it has finished.
             _explodingRockets.Add(rocket);
+        }
+
+        private void UpdateRocketFlightSound(ActiveWeapon rocket)
+        {
+            if (_audio == null || _rocketFlightSound == null ||
+                rocket.WeaponObject is not OmegaObject3D concrete || rocket.RocketState == null)
+                return;
+
+            var audioPosition = concrete.GetAudioPosition();
+            var position = new System.Numerics.Vector3(
+                audioPosition.x, audioPosition.y, audioPosition.z);
+            var instance = rocket.RocketState.FlightSoundInstance;
+            if (instance == null || !instance.IsPlaying)
+            {
+                instance = _audio.Play(
+                    _rocketFlightSound,
+                    AudioPlayMode.SegmentedLoop,
+                    new AudioPlayOptions { WorldPosition = position });
+                rocket.RocketState.FlightSoundInstance = instance;
+            }
+
+            instance.SetVolume(_rocketFlightSound.Settings.Volume);
+            instance.SetWorldPosition(position);
+        }
+
+        private static void StopRocketFlightSound(ActiveWeapon rocket, bool playEndSegment)
+        {
+            var instance = rocket.RocketState?.FlightSoundInstance;
+            if (instance == null)
+                return;
+
+            instance.Stop(playEndSegment);
+            rocket.RocketState!.FlightSoundInstance = null;
         }
 
         private void UpdateRocketExplosions()
