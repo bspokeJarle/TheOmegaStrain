@@ -9,8 +9,6 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters
     public static class SurfacePositionSyncHelpers
     {
         public const float DefaultEnemySurfaceSyncFactorY = 2.5f;
-        public const float LowAngleBackgroundCorrectionFactor = 1.5f;
-        public const float NormalAndHighBackgroundLiftPerWorldUnit = 0.02f;
 
         private static Vector3 CreateVector(float x, float y, float z) => new(x, y, z);
 
@@ -28,74 +26,6 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters
                 initialOffsetY,
                 syncFactorY,
                 CreateVector);
-        }
-
-        /// <summary>
-        /// Returns the extra screen-Y correction relative to Omega's original 70°
-        /// presentation. Existing object offsets were authored for that angle, so
-        /// applying the complete plane slope would count the original tilt twice.
-        /// The viewport centre (surface-local Z = 0) is the neutral point, and
-        /// terrain height is deliberately excluded so flying objects do not bob.
-        /// </summary>
-        public static float GetSurfacePitchHeightCorrectionY(float surfaceLongitudinalDistance, float pitchDegrees)
-        {
-            float pitchRadians = pitchDegrees * (MathF.PI / 180f);
-            float originalPitchRadians = OmegaWorldViewSetup.OriginalWorldPitchDegrees * (MathF.PI / 180f);
-            float currentCosine = MathF.Cos(pitchRadians);
-            float originalCosine = MathF.Cos(originalPitchRadians);
-
-            if (!float.IsFinite(surfaceLongitudinalDistance)
-                || !float.IsFinite(currentCosine)
-                || !float.IsFinite(originalCosine))
-                return 0f;
-
-            // World Z is the unrotated longitudinal distance along the surface.
-            // X rotation projects that distance onto Y by cos(pitch). Existing
-            // offsets already contain the original 70-degree presentation, so
-            // only the difference between the two projections is added.
-            float correction = surfaceLongitudinalDistance * (currentCosine - originalCosine);
-
-            if (surfaceLongitudinalDistance > 0f)
-            {
-                // From the viewport centre toward the player, preserve the
-                // original combat height exactly. Depth correction here made
-                // nearby targets unnecessarily difficult to hit.
-                return 0f;
-            }
-
-            // Low needs the stronger angle correction. Normal and High instead
-            // receive a small explicit upward lift toward the horizon; High is
-            // Omega's original angle and therefore has no angle delta of its own.
-            if (pitchDegrees <= 56.5f)
-                return correction * LowAngleBackgroundCorrectionFactor;
-
-            return correction + surfaceLongitudinalDistance * NormalAndHighBackgroundLiftPerWorldUnit;
-        }
-
-        /// <summary>
-        /// Calculates an object's Z relative to the visible surface, then converts
-        /// that local position to the matching ground-plane Y correction.
-        /// </summary>
-        public static float GetSurfacePitchHeightCorrectionY(I3dObject obj, float pitchDegrees)
-        {
-            var worldPosition = obj.WorldPosition;
-            float surfaceLongitudinalDistance = worldPosition == null || WorldPositionMath.IsOrigin(worldPosition)
-                ? 0f
-                : worldPosition.z - GameState.SurfaceState.GlobalMapPosition.z;
-
-            return GetSurfacePitchHeightCorrectionY(surfaceLongitudinalDistance, pitchDegrees);
-        }
-
-        /// <summary>
-        /// Adds only the camera-angle correction to an already calculated object
-        /// position. Movement controllers remain responsible for the base Y.
-        /// </summary>
-        public static void AddSurfacePitchHeightCorrectionY(I3dObject obj, float pitchDegrees)
-        {
-            if (!obj.IsOnScreen || obj.ObjectOffsets == null)
-                return;
-
-            obj.ObjectOffsets.y += GetSurfacePitchHeightCorrectionY(obj, pitchDegrees);
         }
 
         public static Vector3 GetShipWorldPosition(float shipOffsetY, float zoom)

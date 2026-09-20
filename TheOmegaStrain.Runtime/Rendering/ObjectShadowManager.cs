@@ -173,9 +173,12 @@ namespace TheOmegaStrain.Runtime.Rendering
             // the denominator is perspective + objectScreenZ - vertex.z.
             float objScreenZ = (localWorld != null ? localWorld.z : 0f)
                                + (inhabitant.ObjectOffsets?.z ?? 0f);
-            var casterRenderPosition = new RenderPosition(
-                objScreenX + ScreenSetup.screenSizeX / 2,
-                objScreenY + ScreenSetup.screenSizeY / 2, objScreenZ);
+            var casterRenderPosition = SurfaceSlopeRenderPositionHelpers.Apply(
+                inhabitant,
+                new RenderPosition(objScreenX, objScreenY, objScreenZ));
+            objScreenX = (float)casterRenderPosition.X;
+            objScreenY = (float)casterRenderPosition.Y;
+            objScreenZ = (float)casterRenderPosition.Z;
             float surfScreenX = surfaceObj.ObjectOffsets.x;
             float surfScreenY = surfaceObj.ObjectOffsets.y;
             float surfScreenZ = surfaceObj.ObjectOffsets.z;

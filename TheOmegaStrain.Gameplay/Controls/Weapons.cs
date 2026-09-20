@@ -79,6 +79,9 @@ namespace TheOmegaStrain.Gameplay.Controls
         {
             ParentShipObject = (OmegaObject3D)parentShip;
             var shipOffsets = ParentShipObject.ObjectOffsets ?? new Vector3(0, 0, 0);
+            float parentSurfaceCorrectionY = (float)SurfaceSlopeRenderPositionHelpers.GetCorrectionY(
+                ParentShipObject,
+                ParentShipObject.WorldPosition);
 
             if (weaponType == WeaponType.Lazer)
             {
@@ -111,7 +114,8 @@ namespace TheOmegaStrain.Gameplay.Controls
                 var lazerStart = new Vector3
                 {
                     x = startPosition.x + (trajectory.x - startPosition.x) * 0.25f + WeaponSetup.LazerExitOffsetX + shipOffsets.x,
-                    y = startPosition.y + (trajectory.y - startPosition.y) * 0.25f + WeaponSetup.LazerExitOffsetY + shipOffsets.y,
+                    y = startPosition.y + (trajectory.y - startPosition.y) * 0.25f
+                        + WeaponSetup.LazerExitOffsetY + shipOffsets.y + parentSurfaceCorrectionY,
                     z = startPosition.z + (trajectory.z - startPosition.z) * 0.25f + WeaponSetup.LazerExitOffsetZ + shipOffsets.z
                 };
                 SetObjectOffsets(instance, lazerStart);
@@ -191,7 +195,8 @@ namespace TheOmegaStrain.Gameplay.Controls
                 var bulletStart = new Vector3
                 {
                     x = (startPosition.x + trajectory.x) * 0.5f + WeaponSetup.BulletExitOffsetX + shipOffsets.x,
-                    y = (startPosition.y + trajectory.y) * 0.5f + WeaponSetup.BulletExitOffsetY + shipOffsets.y,
+                    y = (startPosition.y + trajectory.y) * 0.5f
+                        + WeaponSetup.BulletExitOffsetY + shipOffsets.y + parentSurfaceCorrectionY,
                     z = (startPosition.z + trajectory.z) * 0.5f + WeaponSetup.BulletExitOffsetZ + shipOffsets.z
                 };
                 SetObjectOffsets(instance, bulletStart);
@@ -699,7 +704,8 @@ namespace TheOmegaStrain.Gameplay.Controls
 
             var globalMapPosition = GameState.SurfaceState.GlobalMapPosition;
             x = halfW - (globalMapPosition.x - obj.WorldPosition.x) + objectOffsets.x;
-            y = halfH - (globalMapPosition.y - obj.WorldPosition.y) + objectOffsets.y;
+            y = halfH - (globalMapPosition.y - obj.WorldPosition.y) + objectOffsets.y
+                + (float)SurfaceSlopeRenderPositionHelpers.GetCorrectionY(obj, obj.WorldPosition);
             z = (globalMapPosition.z - obj.WorldPosition.z) + objectOffsets.z;
             return true;
         }

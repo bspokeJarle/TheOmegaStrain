@@ -107,7 +107,6 @@ namespace TheOmegaStrain.Gameplay.Controls
             }
 
             theObject.ObjectOffsets = SurfacePositionSyncHelpers.GetSurfaceSyncedObjectOffsets(theObject, _syncY, SyncFactorY);
-            SurfacePositionSyncHelpers.AddSurfacePitchHeightCorrectionY(theObject, WorldViewSetup.SurfacePitchDegrees);
         }
 
         private static void SyncToOriginal(I3dObject deepCopy)

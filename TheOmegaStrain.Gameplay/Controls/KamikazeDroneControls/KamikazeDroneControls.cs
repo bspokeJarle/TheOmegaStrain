@@ -329,7 +329,6 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
                 _storedWorldPosition = KamikazeDroneMovementHelpers.ToVector3(theObject.WorldPosition);
                 _storedWorldPositionInitialized = theObject.WorldPosition != null;
                 KamikazeDroneAi.SyncAuthoritativeDroneState(theObject);
-                SurfacePositionSyncHelpers.AddSurfacePitchHeightCorrectionY(theObject, WorldViewSetup.SurfacePitchDegrees);
                 FlyingObjectSurfaceClearanceHelpers.ApplyMinimumClearance(theObject, _surfaceClearance, (float)GameState.ClampedDeltaTime);
                 LastMovementDateTime = now;
                 return theObject;
@@ -490,9 +489,6 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
             _storedWorldPosition = KamikazeDroneMovementHelpers.ToVector3(theObject.WorldPosition);
             _storedWorldPositionInitialized = theObject.WorldPosition != null;
             KamikazeDroneAi.SyncAuthoritativeDroneState(theObject);
-            // Navigation and authoritative state use the uncorrected offsets.
-            // Add the visual surface correction only to this rendered main object.
-            SurfacePositionSyncHelpers.AddSurfacePitchHeightCorrectionY(theObject, WorldViewSetup.SurfacePitchDegrees);
             FlyingObjectSurfaceClearanceHelpers.ApplyMinimumClearance(theObject, _surfaceClearance, (float)GameState.ClampedDeltaTime);
             LastMovementDateTime = now;
 
@@ -502,7 +498,6 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
         private void ApplyWaitingSurfaceClearance(I3dObject obj)
         {
             SyncMovement(obj);
-            SurfacePositionSyncHelpers.AddSurfacePitchHeightCorrectionY(obj, WorldViewSetup.SurfacePitchDegrees);
             FlyingObjectSurfaceClearanceHelpers.ApplyMinimumClearance(
                 obj, _surfaceClearance, (float)GameState.ClampedDeltaTime);
         }

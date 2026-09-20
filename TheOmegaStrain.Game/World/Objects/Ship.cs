@@ -15,6 +15,9 @@ namespace TheOmegaStrain.Game.World.Objects
         private static readonly Vector3 ShipCrashBoxPadding = new() { x = 0f, y = 8f, z = 0.5f };
         private const float TopCannonCrashBoxSizeMultiplier = 0.35f;
         private static readonly Vector3 TopCannonCrashBoxPadding = new() { x = 0.5f, y = 2f, z = 1f };
+        private const float TopCannonMuzzleY = -45f;
+        private const float WeaponStartGuideY = -50f;
+        private const float WeaponDirectionGuideY = -100f;
 
         public static OmegaObject3D CreateShip(ISurface? parentSurface, IObjectMovement? movement = null)
         {
@@ -23,7 +26,9 @@ namespace TheOmegaStrain.Game.World.Objects
             var rearTriangles = RearTriangles();
             var rearEngineTriangles = RearEngineTriangles();
             var jetMotorTriangle = JetMotorTriangle();
+            var jetMotorStartGuide = JetMotorStartGuide();
             var jetMotorDirectionGuide = JetMotorDirectionGuide();
+            var rearEngineStartGuide = RearEngineStartGuide();
             var rearEngineDirectionGuide = RearEngineDirectionGuide();
             var cannon = TopCannonTriangles();
             var topCannonDirectionGuide = CannonDirectionGuide();
@@ -40,7 +45,9 @@ namespace TheOmegaStrain.Game.World.Objects
             ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "RearPart", Triangles = rearTriangles, IsVisible = true });
             ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "RearEngine", Triangles = rearEngineTriangles!, IsVisible = true });
             ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "JetMotor", Triangles = jetMotorTriangle!, IsVisible = true });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "JetMotorStartGuide", Triangles = jetMotorStartGuide!, IsVisible = false });
             ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "JetMotorDirectionGuide", Triangles = jetMotorDirectionGuide!, IsVisible = false });
+            ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "RearEngineStartGuide", Triangles = rearEngineStartGuide!, IsVisible = false });
             ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "RearEngineDirectionGuide", Triangles = rearEngineDirectionGuide!, IsVisible = false });
             ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "TopCannon", Triangles = cannon!, IsVisible = true });
             ship.ObjectParts.Add(new OmegaObjectPart3D { PartName = "WeaponDirectionGuide", Triangles = topCannonDirectionGuide!, IsVisible = false });
@@ -165,7 +172,7 @@ namespace TheOmegaStrain.Game.World.Objects
 
             var back = new Vector3 { x = 0f, y = 20f, z = 28f };   // thick end
             var mid = new Vector3 { x = 0f, y = -10f, z = 28f };   // mid ring
-            var front = new Vector3 { x = 0f, y = -45f, z = 28f }; // muzzle
+            var front = new Vector3 { x = 0f, y = TopCannonMuzzleY, z = 28f }; // muzzle
 
             float rxB = 10f, ryB = 5f;
             float rxM = 6f, ryM = 3.5f;
@@ -393,48 +400,52 @@ namespace TheOmegaStrain.Game.World.Objects
         {
             var jet = new List<ITriangleMeshWithColorAndTexture>
             {
-                new TriangleMeshWithColor { Color = "ffffff", vert1 = { x = 12, y = 0, z = -100 }, vert2 = { x = -12, y = 0, z = -100 }, vert3 = { x = 0, y = 50, z = -100 } },
+                new TriangleMeshWithColor { Color = "ffffff", vert1 = { x = 12, y = 0, z = -60 }, vert2 = { x = -12, y = 0, z = -60 }, vert3 = { x = 0, y = 50, z = -60 } },
             };
             return jet;
         }
 
+        public static List<ITriangleMeshWithColorAndTexture>? JetMotorStartGuide()
+        {
+            return new List<ITriangleMeshWithColorAndTexture>
+            {
+                new TriangleMeshWithColor { Color = "ffffff", vert1 = { x = 12, y = 0, z = -32 }, vert2 = { x = -12, y = 0, z = -32 }, vert3 = { x = 0, y = 50, z = -32 } },
+            };
+        }
+
         public static List<ITriangleMeshWithColorAndTexture>? CannonStartGuide()
         {
-            // 30 units *inside* the cannon tip: front (muzzle) is at y = -45 → -45 + 30 = -15
-            const float yInside = 40f;   // inside the barrel (toward +Y)
-            const float widthX = 8f;     // narrower than muzzle to stay well inside
-            const float zBase = 14f;    // cannon height
-            const float zTipUp = 50f;    // vertical tip for visibility
+            const float widthX = 8f;
+            const float zBase = 14f;
+            const float zTipUp = 50f;
 
             return new List<ITriangleMeshWithColorAndTexture>
             {
                 new TriangleMeshWithColor
                 {
                     Color = "ffffff",
-                    // Flat, far-style guide: all verts share same Y (yInside)
-                    vert1 = { x =  widthX, y = yInside, z =  zBase  },
-                    vert2 = { x = -widthX, y = yInside, z =  zBase  },
-                    vert3 = { x =       0, y = yInside, z =  zTipUp }
+                    // Keep the weapon anchor just outside the cannon muzzle.
+                    vert1 = { x =  widthX, y = WeaponStartGuideY, z =  zBase  },
+                    vert2 = { x = -widthX, y = WeaponStartGuideY, z =  zBase  },
+                    vert3 = { x =       0, y = WeaponStartGuideY, z =  zTipUp }
                 }
             };
         }
 
         public static List<ITriangleMeshWithColorAndTexture>? CannonDirectionGuide()
         {
-            const float yFar = -200f; // far ahead of the muzzle along -Y
-            const float widthX = 12f;   // half-width in X
-            const float zBase = 14f;   // cannon height
-            const float zTipUp = 58f;   // tip offset in Z to form a tall triangle
+            const float widthX = 12f;
+            const float zBase = 14f;
+            const float zTipUp = 58f;
 
             var guide = new List<ITriangleMeshWithColorAndTexture>
             {
                 new TriangleMeshWithColor
                 {
                     Color = "ffffff",
-                    // Base edge (left→right) and an upward tip in Z, all at the same far Y
-                    vert1 = { x =  widthX, y = yFar, z =  zBase     },
-                    vert2 = { x = -widthX, y = yFar, z =  zBase     },
-                    vert3 = { x =       0, y = yFar, z =  zTipUp    }
+                    vert1 = { x =  widthX, y = WeaponDirectionGuideY, z =  zBase  },
+                    vert2 = { x = -widthX, y = WeaponDirectionGuideY, z =  zBase  },
+                    vert3 = { x =       0, y = WeaponDirectionGuideY, z =  zTipUp }
                 }
             };
             return guide;
@@ -516,9 +527,17 @@ namespace TheOmegaStrain.Game.World.Objects
         {
             var guide = new List<ITriangleMeshWithColorAndTexture>
             {
-                new TriangleMeshWithColor { Color = "ffffff", vert1 = { x = 12, y = 200, z = 0 }, vert2 = { x = -12, y = 200, z = 0 }, vert3 = { x = 0, y = 200, z = 25 } },
+                new TriangleMeshWithColor { Color = "ffffff", vert1 = { x = 12, y = 105, z = 0 }, vert2 = { x = -12, y = 105, z = 0 }, vert3 = { x = 0, y = 105, z = 25 } },
             };
             return guide;
+        }
+
+        public static List<ITriangleMeshWithColorAndTexture>? RearEngineStartGuide()
+        {
+            return new List<ITriangleMeshWithColorAndTexture>
+            {
+                new TriangleMeshWithColor { Color = "ffffff", vert1 = { x = 12, y = 78, z = 0 }, vert2 = { x = -12, y = 78, z = 0 }, vert3 = { x = 0, y = 78, z = 25 } },
+            };
         }
 
         public static List<ITriangleMeshWithColorAndTexture>? WingletTriangles()

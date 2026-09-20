@@ -83,12 +83,19 @@ namespace TheOmegaStrain.Runtime.Rendering
                 float particleOffsetY = inhabitant.ObjectOffsets.y + particle.Position.y;
                 float particleOffsetZ = inhabitant.ObjectOffsets.z + particle.Position.z;
 
+                // The particle object receives this correction in the central
+                // projector. Use the same value only for its ground-shadow lookup;
+                // do not write it into particle offsets or simulation state.
+                float particleSurfaceCorrectionY = (float)SurfaceSlopeRenderPositionHelpers.GetCorrectionY(
+                    inhabitant,
+                    particle.WorldPosition);
+
                 // Particles inherit the emitter's world anchor. Keep a separate
                 // screen-space position for ground lookup; the rendered particle
                 // itself receives WorldPosition below and is transformed by the
                 // normal object pipeline.
                 float particleScreenX = particleOffsetX;
-                float particleScreenY = particleOffsetY;
+                float particleScreenY = particleOffsetY + particleSurfaceCorrectionY;
                 float particleScreenZ = particleOffsetZ;
                 if (!WorldPositionMath.IsOrigin(particle.WorldPosition))
                 {
@@ -97,7 +104,7 @@ namespace TheOmegaStrain.Runtime.Rendering
                     float localWorldY = globalMapPosition.y - particle.WorldPosition.y;
                     float localWorldZ = globalMapPosition.z - particle.WorldPosition.z;
                     particleScreenX = -localWorldX + particleOffsetX;
-                    particleScreenY = -localWorldY + particleOffsetY;
+                    particleScreenY = -localWorldY + particleOffsetY + particleSurfaceCorrectionY;
                     particleScreenZ = localWorldZ + particleOffsetZ;
                 }
 

@@ -270,7 +270,6 @@ namespace TheOmegaStrain.Gameplay.Controls.SpaceSwanControls
             }
 
             theObject.ObjectOffsets = SurfacePositionSyncHelpers.GetSurfaceSyncedObjectOffsets(theObject, _syncY, SyncFactorY);
-            SurfacePositionSyncHelpers.AddSurfacePitchHeightCorrectionY(theObject, WorldViewSetup.SurfacePitchDegrees);
         }
 
         private void AnimateWingFlap()

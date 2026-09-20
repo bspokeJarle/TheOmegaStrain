@@ -1191,7 +1191,7 @@ namespace TheOmegaStrain.Runtime.Loops
                 case "SeederParticlesGuide":
                     inhabitant.Movement.SetParticleGuideCoordinates(null, rotatedMesh.First() as TriangleMeshWithColor);
                     break;
-                case "JetMotor":
+                case "JetMotorStartGuide":
                     inhabitant.Movement.SetParticleGuideCoordinates(rotatedMesh.First() as TriangleMeshWithColor, null);
                     break;
                 case "WeaponDirectionGuide":
@@ -1210,7 +1210,7 @@ namespace TheOmegaStrain.Runtime.Loops
                     if (Logger.ShouldLog(enableLocalLogging)) Logger.Log($"MainLoop Set Guide after rotation: {rotatedMesh.First().vert1.x + ", " + rotatedMesh.First().vert1.y + ", " + rotatedMesh.First().vert1.z} Inhabitant:{inhabitant.ObjectName} ");
                     inhabitant.Movement.SetParticleGuideCoordinates(null, rotatedMesh.First() as TriangleMeshWithColor);
                     break;
-                case "RearEngine":
+                case "RearEngineStartGuide":
                     inhabitant.Movement.SetRearEngineGuideCoordinates(rotatedMesh.First() as TriangleMeshWithColor, null);
                     break;
                 case "RearEngineDirectionGuide":

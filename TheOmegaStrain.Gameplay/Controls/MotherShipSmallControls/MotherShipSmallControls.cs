@@ -373,10 +373,6 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipSmallControls
 
             theObject.ObjectOffsets = syncedOffsets;
 
-            // Correct only the main object after its normal/descent Y is known.
-            SurfacePositionSyncHelpers.AddSurfacePitchHeightCorrectionY(
-                theObject,
-                WorldViewSetup.SurfacePitchDegrees);
             FlyingObjectSurfaceClearanceHelpers.ApplyMinimumClearance(theObject, _surfaceClearance, (float)GameState.ClampedDeltaTime);
         }
 

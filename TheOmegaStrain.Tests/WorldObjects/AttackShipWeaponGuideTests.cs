@@ -36,13 +36,22 @@ public class AttackShipWeaponGuideTests
         Assert.AreEqual(noseTip.y, start.vert1.y, 0.001f);
         Assert.AreEqual(noseTip.z, start.vert1.z, 0.001f);
 
-        float shipGuideDistance = Ship.CannonStartGuide()![0].vert1.y
-            - Ship.CannonDirectionGuide()![0].vert1.y;
-        Assert.AreEqual(240f, shipGuideDistance, 0.001f);
+        const float attackShipGuideDistance = 240f;
         Assert.AreEqual(48f * 1.5f * scale, noseTip.x, 0.001f);
-        Assert.AreEqual(shipGuideDistance * 1.5f * scale, direction.vert1.x - start.vert1.x, 0.001f);
+        Assert.AreEqual(attackShipGuideDistance * 1.5f * scale, direction.vert1.x - start.vert1.x, 0.001f);
         Assert.AreEqual(start.vert1.y, direction.vert1.y, 0.001f);
         Assert.AreEqual(start.vert1.z, direction.vert1.z, 0.001f);
+    }
+
+    [TestMethod]
+    public void ShipWeaponGuides_StartOutsideMuzzleAndPointForward()
+    {
+        var start = Ship.CannonStartGuide()![0];
+        var direction = Ship.CannonDirectionGuide()![0];
+
+        Assert.AreEqual(-50f, start.vert1.y, 0.001f);
+        Assert.AreEqual(-100f, direction.vert1.y, 0.001f);
+        Assert.IsTrue(direction.vert1.y < start.vert1.y);
     }
 
     [TestMethod]

@@ -70,8 +70,17 @@ namespace TheOmegaStrain.Game.Projection
         {
             renderCenter = new Vector3();
             screenCenter = new Vector3();
-            if (!ObjectPlacementHelpers.TryGetRenderPosition(obj, 0, 0, out var x, out var y, out var z))
+            if (!ObjectPlacementHelpers.TryGetRenderPosition(
+                    obj, 0, 0, out double rawX, out double rawY, out double rawZ))
                 return false;
+
+            var position = SurfaceSlopeRenderPositionHelpers.Apply(
+                obj,
+                new RenderPosition(rawX, rawY, rawZ));
+
+            double x = position.X;
+            double y = position.Y;
+            double z = position.Z;
 
             // Frame and live weapon boxes are already rotated; AI template boxes are not.
             var localCenter = geometryAlreadyRotated
@@ -185,16 +194,33 @@ namespace TheOmegaStrain.Game.Projection
             IProjectionViewport viewport,
             out RenderPosition position)
         {
+            return TryResolveRenderPosition(
+                obj,
+                viewport.ScreenCenterX,
+                viewport.ScreenCenterY,
+                viewport.PerspectiveAdjustment,
+                out position);
+        }
+
+        internal static bool TryResolveRenderPosition(
+            OmegaObject3D obj,
+            int screenCenterX,
+            int screenCenterY,
+            double perspectiveAdjustment,
+            out RenderPosition position)
+        {
             if (ObjectPlacementHelpers.TryGetRenderPosition(
                     obj,
-                    viewport.ScreenCenterX,
-                    viewport.ScreenCenterY,
+                    screenCenterX,
+                    screenCenterY,
                     out double screenX,
                     out double screenY,
                     out double screenZ))
             {
-                screenZ = ClampRenderDepth(screenZ, viewport.PerspectiveAdjustment);
-                position = new RenderPosition(screenX, screenY, screenZ);
+                screenZ = ClampRenderDepth(screenZ, perspectiveAdjustment);
+                position = SurfaceSlopeRenderPositionHelpers.Apply(
+                    obj,
+                    new RenderPosition(screenX, screenY, screenZ));
                 return true;
             }
 

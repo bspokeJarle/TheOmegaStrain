@@ -2,6 +2,7 @@ using TheOmegaStrain.Game.World.Objects;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Runtime.Rendering;
 
@@ -425,6 +426,16 @@ public class ParticleShadowProjectionTests
         var renderedParticles = new List<OmegaObject3D>();
         new ParticleManager().HandleParticles(source, renderedParticles);
 
+        var renderedParticle = renderedParticles.Single(item => item.ObjectName == "Particle");
+        float expectedCorrection = (float)SurfaceSlopeRenderPositionHelpers.GetCorrectionY(
+            source,
+            source.Particles.Particles[0].WorldPosition);
+        Assert.AreEqual(-100f, renderedParticle.ObjectOffsets.y, 0.001f,
+            "Render-only correction must not be stored in particle offsets.");
+        Assert.AreEqual(expectedCorrection, SurfaceSlopeRenderPositionHelpers.GetCorrectionY(
+            renderedParticle,
+            renderedParticle.WorldPosition), 0.001f,
+            "Rendered particle must inherit the emitter's Surface-pitch translation.");
         var shadow = renderedParticles.Single(item => item.ObjectName == "ParticleShadow");
         var triangle = shadow.ObjectParts[0].Triangles[0];
         float shadowCenterX = (triangle.vert1.x + triangle.vert2.x + triangle.vert3.x) / 3f;

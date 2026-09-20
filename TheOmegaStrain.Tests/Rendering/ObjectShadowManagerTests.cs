@@ -491,7 +491,14 @@ public class ObjectShadowManagerTests
             {
                 // Position the caster at a known height in Surface vertex units,
                 // then project it to the screen-offset convention used by objects.
-                caster.ObjectOffsets.y = surfaceOffsets.y + (groundY - clearance) * factor;
+                // Remove the render-only slope correction from the authored offset;
+                // the projector adds it back without mutating the caster.
+                double slopeCorrection = SurfaceSlopeRenderPositionHelpers.CalculateCorrectionY(
+                    caster.WorldPosition.z - GameState.SurfaceState.GlobalMapPosition.z,
+                    pitch,
+                    OmegaWorldViewSetup.OriginalWorldPitchDegrees);
+                caster.ObjectOffsets.y = surfaceOffsets.y + (groundY - clearance) * factor
+                    - (float)slopeCorrection;
                 var shadows = new List<OmegaObject3D>();
                 new ObjectShadowManager().HandleObjectShadow(caster, shadows);
                 Assert.AreEqual(1, shadows.Count);

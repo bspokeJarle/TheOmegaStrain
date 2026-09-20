@@ -26,6 +26,17 @@ namespace TheOmegaStrain.Gameplay.Controls
 
             var shipOffsets = parentShip.ObjectOffsets ?? new Vector3();
             var rocketStart = Add(startPosition, shipOffsets);
+            if (parentShip is OmegaObject3D omegaParent)
+            {
+                rocketStart = Add(
+                    rocketStart,
+                    new Vector3(
+                        0f,
+                        (float)SurfaceSlopeRenderPositionHelpers.GetCorrectionY(
+                            omegaParent,
+                            omegaParent.WorldPosition),
+                        0f));
+            }
             // Initial aim. Enemy rockets may retarget until they enter the final approach.
             // Movement below changes ObjectOffsets, so convert only the world direction's Z.
             IVector3 direction;

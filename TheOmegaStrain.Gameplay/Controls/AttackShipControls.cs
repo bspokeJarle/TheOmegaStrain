@@ -80,9 +80,6 @@ namespace TheOmegaStrain.Gameplay.Controls
             RestoreMovementState(theObject);
             PursueShip(theObject, deltaSeconds);
 
-            // Apply the view correction after navigation and before emitting exhaust.
-            SurfacePositionSyncHelpers.AddSurfacePitchHeightCorrectionY(
-                theObject, WorldViewSetup.SurfacePitchDegrees);
             SyncAuthoritativeTransform(theObject);
             UpdateFire(theObject, DateTime.UtcNow);
 
@@ -174,13 +171,6 @@ namespace TheOmegaStrain.Gameplay.Controls
                 GameState.ShipState?.ShipWorldPosition == null
                 ? null
                 : SurfacePositionSyncHelpers.GetShipRamTargetWorldPosition(theObject);
-            if (ShipTargetWorldPosition != null && theObject.IsOnScreen)
-            {
-                // MoveObject adds this correction to ObjectOffsets.y after movement.
-                // Include it in the target without applying it twice to the object.
-                ShipTargetWorldPosition.y -= SurfacePositionSyncHelpers.GetSurfacePitchHeightCorrectionY(
-                    theObject, WorldViewSetup.SurfacePitchDegrees);
-            }
             DirectionToShip = ShipTargetWorldPosition == null
                 ? null
                 : MovementHelpers.GetVectorToTarget(
