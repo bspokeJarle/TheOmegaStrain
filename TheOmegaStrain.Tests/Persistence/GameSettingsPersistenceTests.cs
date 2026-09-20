@@ -48,6 +48,7 @@ public class GameSettingsPersistenceTests
             GlowEffectsEnabled = true,
             EnhancedWeatherEnabled = true,
             EnhancedShadowsEnabled = false,
+            SceneRasterBackgroundEnabled = false,
             FlightPreset = FlightHandlingPreset.Custom,
             FlightCoastingSetting = FlightCoasting.Long,
             FlightRotationInertiaSetting = FlightRotationInertia.High,
@@ -80,6 +81,7 @@ public class GameSettingsPersistenceTests
         Assert.IsTrue(loaded.GlowEffectsEnabled);
         Assert.IsTrue(loaded.EnhancedWeatherEnabled);
         Assert.IsFalse(loaded.EnhancedShadowsEnabled);
+        Assert.IsFalse(loaded.SceneRasterBackgroundEnabled);
         Assert.AreEqual(FlightHandlingPreset.Custom, loaded.FlightPreset);
         Assert.AreEqual(FlightCoasting.Long, loaded.FlightCoastingSetting);
         Assert.AreEqual(FlightRotationInertia.High, loaded.FlightRotationInertiaSetting);

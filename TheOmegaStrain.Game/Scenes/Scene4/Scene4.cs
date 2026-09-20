@@ -62,6 +62,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene4
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
 
+            MeteorPlacementHelpers.AddOccasionalMeteor(world, randomSeed: 6104);
+
             SpawnSeals(world);
 
             // ZeppelinBombers — 3 bombers

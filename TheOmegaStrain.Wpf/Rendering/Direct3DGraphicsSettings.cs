@@ -21,6 +21,9 @@ namespace TheOmegaStrain.Wpf.Rendering
             for (int i = 0; i < sourceCount; i++)
             {
                 var triangle = triangles[i];
+                if (SceneBackgroundRasterHelpers.IsBackgroundPart(triangle.PartName))
+                    continue;
+
                 triangle.Color = ApplyQualityColor(triangle.Color, settings.GraphicsQuality);
 
                 if (ProjectedTriangleRenderMath.IsCrashBoxPartName(triangle.PartName))

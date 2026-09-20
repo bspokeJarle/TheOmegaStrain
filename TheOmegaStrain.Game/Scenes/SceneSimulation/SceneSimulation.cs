@@ -143,6 +143,8 @@ namespace TheOmegaStrain.Game.Scenes.SceneSimulation
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
 
+            MeteorPlacementHelpers.AddOccasionalMeteor(world, randomSeed: 6200 + _simulationRound);
+
             if (_biome == SceneBiomeTypes.Winter)
                 SpawnSeals(world);
             else

@@ -178,6 +178,26 @@ namespace TheOmegaStrain.Wpf.Rendering
             {
                 dc.DrawRectangle(GetBackgroundBrush(), null, new Rect(0, 0, ScreenSetup.screenSizeX, ScreenSetup.screenSizeY));
 
+                // Screen-space sky triangles use an explicit background pass in WPF.
+                // Direct3D uses their reciprocal-W depth for the equivalent ordering.
+                foreach (var triangle in screenCoordinates)
+                {
+                    if (!SceneBackgroundRasterHelpers.IsBackgroundPart(triangle.PartName))
+                        continue;
+
+                    Color backgroundColor = HexToColor(NormalizeColorCached(triangle.Color));
+                    SolidColorBrush backgroundBrush = GetCachedBrush(backgroundColor);
+                    Pen backgroundPen = GetCachedPen(backgroundColor, backgroundBrush);
+                    StreamGeometry backgroundGeometry = GetNextGeometry();
+                    using (StreamGeometryContext backgroundContext = backgroundGeometry.Open())
+                    {
+                        AddTriangleFigure(backgroundContext, triangle);
+                    }
+
+                    dc.DrawGeometry(backgroundBrush, backgroundPen, backgroundGeometry);
+                    drawCalls++;
+                }
+
                 StreamGeometry? batchGeometry = null;
                 StreamGeometryContext? batchContext = null;
                 SolidColorBrush? batchBrush = null;
@@ -198,6 +218,9 @@ namespace TheOmegaStrain.Wpf.Rendering
 
                 foreach (var triangle in screenCoordinates)
                 {
+                    if (SceneBackgroundRasterHelpers.IsBackgroundPart(triangle.PartName))
+                        continue;
+
                     if (ShouldUseEffectRenderingPipeline(triangle))
                     {
                         FlushBatch();
@@ -437,17 +460,15 @@ namespace TheOmegaStrain.Wpf.Rendering
             var weather = GameState.WeatherVisualState;
             float lightning = weather?.LightningFlashIntensity ?? 0f;
             float impact = weather?.ImpactFlashIntensity ?? 0f;
-            float intensity = Math.Max(lightning, impact);
-            if (intensity <= 0.005f)
-                return Brushes.Black;
-
-            int key = Math.Clamp((int)MathF.Round(intensity * 16f), 0, 16);
-            int warmthKey = Math.Clamp((int)MathF.Round(CalculateImpactWarmth(lightning, impact) * 16f), 0, 16);
-            int cacheKey = key * 100 + warmthKey;
+            var (red, green, blue) = SceneBackgroundRasterHelpers.GetClearColor(
+                GameState.GamePlayState.CurrentSceneType,
+                GameState.GamePlayState.CurrentSceneBiome,
+                lightning,
+                impact,
+                GameState.SettingsState.SceneRasterBackgroundEnabled);
+            int cacheKey = (red << 16) | (green << 8) | blue;
             if (backgroundBrushCache.TryGetValue(cacheKey, out var brush))
                 return brush;
-
-            var (red, green, blue) = WeatherFlashColorHelpers.GetBackgroundColor(lightning, impact);
 
             brush = new SolidColorBrush(Color.FromRgb(red, green, blue));
             brush.Freeze();
@@ -754,17 +775,6 @@ namespace TheOmegaStrain.Wpf.Rendering
             b = ((b - 128f) * contrast) + 128f + brightness;
 
             return Color.FromRgb(ClampByte(r), ClampByte(g), ClampByte(b));
-        }
-
-        private static float CalculateImpactWarmth(float lightning, float impact)
-        {
-            float total = lightning + impact;
-            return total <= 0.001f ? 0f : Math.Clamp(impact / total, 0f, 1f);
-        }
-
-        private static byte Mix(byte a, byte b, float t)
-        {
-            return ClampByte(a + (b - a) * Math.Clamp(t, 0f, 1f));
         }
 
         private static byte ClampByte(float value)

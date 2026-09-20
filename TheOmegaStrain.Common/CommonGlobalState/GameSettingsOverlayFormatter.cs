@@ -56,6 +56,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState
             AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.GlowEffects, "GLOW", OnOff(settings.GlowEffectsEnabled));
             AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.EnhancedWeather, "WEATHER FX", OnOff(settings.EnhancedWeatherEnabled));
             AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.EnhancedShadows, "SHADOWS", OnOff(settings.EnhancedShadowsEnabled));
+            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.SceneRasterBackground, "SKY RASTER", OnOff(settings.SceneRasterBackgroundEnabled));
 
             return string.Join("\n", lines);
         }

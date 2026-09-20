@@ -1,7 +1,9 @@
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Domain;
 using System;
+using System.Collections.Generic;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {
@@ -29,16 +31,20 @@ namespace TheOmegaStrain.Gameplay.Controls
         private float _curX;
         private float _curY;
         private bool _hasPosition;
-        // Rotation spin
-        private float _rotY;
-        private float _spinSpeed;
-
+        // LiveGameLoop deep-copies the object every frame. Keep the heading on the
+        // shared controller and reapply it to each copy, like the Drone controllers.
+        private float _travelRotationZ = 90f;
+        private float _bodyRollDegrees;
+        private readonly float _bodyRollDegreesPerSecond;
         // Countdown until next visible pass.
         private float _waitSeconds;
         private bool _traveling;
 
         private readonly Random _rng;
         private readonly float _depth;
+        private float _minWaitSeconds = MinWaitSeconds;
+        private float _maxWaitSeconds = MaxWaitSeconds;
+        private bool _topDownCrossingsOnly;
 
         private const float MinSpeed = 4.5f;
         private const float MaxSpeed = 9.0f;
@@ -46,17 +52,30 @@ namespace TheOmegaStrain.Gameplay.Controls
         private const float MaxWaitSeconds = 500f / GameState.GameplayBaselineFps;
         private const float TrailEmissionIntervalSeconds = 2f / GameState.GameplayBaselineFps;
         private const int TrailThrust = 2;
-        private const float TrailStartDistance = 14f;
-        private const float TrailGuideDistance = 86f;
+        private const string ParticleStartGuidePartName = "AsteroidParticlesStartGuide";
+        private const string ParticleDirectionGuidePartName = "AsteroidParticlesDirectionGuide";
 
         // Optional forced direction (null = fully random)
         private bool? _forcedRight;
         private bool? _forcedDown;
         private ForcedScreenPath? _forcedScreenPath;
         private float _trailEmissionSeconds;
+        private readonly OmegaMeshRotation _meshRotation = new();
 
         public bool EmitTrailParticles { get; set; }
         public float SpeedMultiplier { get; set; } = 1f;
+
+        /// <summary>
+        /// Reuses the asteroid as an occasional meteor entering from above.
+        /// Each pass chooses a new side and downward angle.
+        /// </summary>
+        public void ConfigureTopDownCrossings(float minWaitSeconds, float maxWaitSeconds)
+        {
+            _minWaitSeconds = Math.Max(0f, minWaitSeconds);
+            _maxWaitSeconds = Math.Max(_minWaitSeconds, maxWaitSeconds);
+            _topDownCrossingsOnly = true;
+            _waitSeconds = RandomWaitSeconds();
+        }
 
         /// <summary>
         /// Lock the crossing direction for this asteroid so it always enters from a consistent edge.
@@ -82,8 +101,9 @@ namespace TheOmegaStrain.Gameplay.Controls
         {
             _rng = rng;
             _depth = depth;
-            _rotY = (float)(_rng.NextDouble() * 360.0);
-            _spinSpeed = 0.4f + (float)_rng.NextDouble() * 1.2f;
+            _bodyRollDegrees = (float)(_rng.NextDouble() * 360.0);
+            float rollDirection = _rng.Next(2) == 0 ? -1f : 1f;
+            _bodyRollDegreesPerSecond = rollDirection * (45f + (float)_rng.NextDouble() * 75f);
             _waitSeconds = startImmediately ? 0f : RandomWaitSeconds();
             _traveling = false;
         }
@@ -101,12 +121,9 @@ namespace TheOmegaStrain.Gameplay.Controls
                 return theObject;
             }
 
-            // Spin
             float frameScale = GameState.FrameScale90;
-            _rotY += _spinSpeed * frameScale;
-            if (_rotY > 360f) _rotY -= 360f;
-            if (theObject.Rotation != null)
-                theObject.Rotation.y = _rotY;
+            ApplyTravelRotation(theObject);
+            ApplyBodyRoll(theObject);
 
             // Move (use persistent position so movement is not lost
             // when LiveGameLoop deep-copies the asteroid each frame).
@@ -116,8 +133,11 @@ namespace TheOmegaStrain.Gameplay.Controls
                 _curY = theObject.ObjectOffsets.y;
                 _hasPosition = true;
             }
-            _curX += _vx * frameScale;
-            _curY += _vy * frameScale;
+            float frameMoveX = _vx * frameScale;
+            float frameMoveY = _vy * frameScale;
+            KeepExistingTrailIndependentOfEmitter(theObject, frameMoveX, frameMoveY);
+            _curX += frameMoveX;
+            _curY += frameMoveY;
             if (theObject.ObjectOffsets != null)
             {
                 theObject.ObjectOffsets.x = _curX;
@@ -133,7 +153,11 @@ namespace TheOmegaStrain.Gameplay.Controls
                 _traveling = false;
                 _hasPosition = false;
                 _waitSeconds = RandomWaitSeconds();
-                theObject.IsActive = false;
+                // Repeating background meteors must remain in the live update set while
+                // their next-pass timer counts down. One-shot cinematic asteroids retain
+                // the established inactive state after leaving the screen.
+                if (!_topDownCrossingsOnly)
+                    theObject.IsActive = false;
             }
 
             return theObject;
@@ -150,6 +174,12 @@ namespace TheOmegaStrain.Gameplay.Controls
             {
                 ox = _forcedScreenPath.StartXFactor * hw;
                 oy = _forcedScreenPath.StartYFactor * hh;
+            }
+            else if (_topDownCrossingsOnly)
+            {
+                float side = _rng.Next(2) == 0 ? -1f : 1f;
+                ox = side * hw * (0.45f + (float)_rng.NextDouble() * 0.35f);
+                oy = -hh;
             }
             else if (_forcedRight.HasValue && _forcedDown.HasValue)
             {
@@ -178,6 +208,15 @@ namespace TheOmegaStrain.Gameplay.Controls
                 targetX = _forcedScreenPath.TargetXFactor * hw;
                 targetY = _forcedScreenPath.TargetYFactor * hh;
             }
+            else if (_topDownCrossingsOnly)
+            {
+                float oppositeSide = -MathF.Sign(ox);
+                // Aim beyond the opposite side while staying in the upper half. The
+                // meteor therefore crosses the distant sky and never appears to strike
+                // the visible Surface.
+                targetX = oppositeSide * hw * (1.35f + (float)_rng.NextDouble() * 0.25f);
+                targetY = hh * (-0.10f + (float)_rng.NextDouble() * 0.35f);
+            }
             else if (_forcedRight.HasValue && _forcedDown.HasValue)
             {
                 float xSign = _forcedRight.Value ? 1f : -1f;
@@ -198,6 +237,11 @@ namespace TheOmegaStrain.Gameplay.Controls
             _vx = dx / len * speed;
             _vy = dy / len * speed;
 
+            // The pointed nose lies along local -Y. Store the heading on the controller
+            // because the object instance itself is replaced by a deep copy next frame.
+            _travelRotationZ = MathF.Atan2(_vx, -_vy) * 180f / MathF.PI;
+            ApplyTravelRotation(theObject);
+
             theObject.ObjectOffsets.x = ox;
             theObject.ObjectOffsets.y = oy;
             theObject.ObjectOffsets.z = _depth;
@@ -206,6 +250,51 @@ namespace TheOmegaStrain.Gameplay.Controls
             _hasPosition = true;
             theObject.IsActive = true;
             _traveling = true;
+        }
+
+        private void ApplyTravelRotation(I3dObject theObject)
+        {
+            if (theObject.Rotation == null)
+                return;
+
+            theObject.Rotation.y = 0f;
+            theObject.Rotation.z = _travelRotationZ;
+        }
+
+        private void ApplyBodyRoll(I3dObject theObject)
+        {
+            _bodyRollDegrees += _bodyRollDegreesPerSecond * GameState.ClampedDeltaTime;
+            if (_bodyRollDegrees >= 360f) _bodyRollDegrees -= 360f;
+            if (_bodyRollDegrees < 0f) _bodyRollDegrees += 360f;
+
+            var body = theObject.ObjectParts?.Find(part => part.PartName == "AsteroidBody");
+            if (body?.Triangles == null || body.Triangles.Count == 0)
+                return;
+
+            // Roll only the visible body around its local length axis. The hidden
+            // particle guides deliberately remain untouched and keep pointing aft.
+            body.Triangles = _meshRotation.RotateYMesh(body.Triangles, _bodyRollDegrees);
+        }
+
+        private static void KeepExistingTrailIndependentOfEmitter(
+            I3dObject theObject,
+            float emitterMoveX,
+            float emitterMoveY)
+        {
+            if (theObject.Particles?.Particles == null)
+                return;
+
+            // ParticleManager adds the emitter's current ObjectOffsets when rendering.
+            // Cancel this frame's emitter movement for particles that already exist so
+            // the exhaust is left behind instead of being carried forward by the meteor.
+            foreach (var particle in theObject.Particles.Particles)
+            {
+                if (particle.Position == null)
+                    continue;
+
+                particle.Position.x -= emitterMoveX;
+                particle.Position.y -= emitterMoveY;
+            }
         }
 
         private void EmitTrail(I3dObject theObject)
@@ -219,21 +308,15 @@ namespace TheOmegaStrain.Gameplay.Controls
             _trailEmissionSeconds += GameState.ClampedDeltaTime;
             if (_trailEmissionSeconds >= TrailEmissionIntervalSeconds)
             {
-                float length = MathF.Sqrt((_vx * _vx) + (_vy * _vy));
-                if (length > 0.001f && theObject.ObjectOffsets != null)
+                var start = GetCurrentFrameRotatedGuide(theObject, ParticleStartGuidePartName);
+                var guide = GetCurrentFrameRotatedGuide(theObject, ParticleDirectionGuidePartName);
+                if (start != null && guide != null)
                 {
-                    float dirX = _vx / length;
-                    float dirY = _vy / length;
-                    // Emit particles BEHIND the asteroid that drift further
-                    // backwards. ReleaseParticles computes velocity as
-                    // (startPos - guidePos) / life, so to make particles fly
-                    // opposite to the asteroid's travel direction we put
-                    // 'start' just behind the asteroid and 'guide' AHEAD of
-                    // it. That makes (start - guide) point opposite to
-                    // travel direction, producing a true rear-engine trail.
-                    var start = CreatePointTriangle(-dirX * TrailStartDistance, -dirY * TrailStartDistance, 0f);
-                    var guide = CreatePointTriangle( dirX * TrailGuideDistance,  dirY * TrailGuideDistance, -8f);
-                    theObject.Particles.ReleaseParticles(guide, start, theObject.ObjectOffsets, this, TrailThrust, false);
+                    // ParticleManager already adds the emitter's ObjectOffsets. Use the
+                    // world anchor here, as Drone and AttackShip do, to avoid applying
+                    // the meteor's large screen/depth offset twice.
+                    var worldPosition = theObject.WorldPosition ?? new Vector3();
+                    theObject.Particles.ReleaseParticles(guide, start, worldPosition, this, TrailThrust, false);
                 }
 
                 _trailEmissionSeconds = 0f;
@@ -242,19 +325,29 @@ namespace TheOmegaStrain.Gameplay.Controls
             theObject.Particles.MoveParticles();
         }
 
-        private static TriangleMeshWithColor CreatePointTriangle(float x, float y, float z)
+        private ITriangleMeshWithColorAndTexture? GetCurrentFrameRotatedGuide(I3dObject theObject, string partName)
         {
-            return new TriangleMeshWithColor
+            var part = theObject.ObjectParts?.Find(p => p.PartName == partName);
+            if (part?.Triangles == null || part.Triangles.Count == 0)
+                return null;
+
+            var rotation = theObject.Rotation ?? new Vector3();
+            var mesh = new List<ITriangleMeshWithColorAndTexture>
             {
-                Color = "FFFFFF",
-                vert1 = new Vector3 { x = x - 0.5f, y = y, z = z },
-                vert2 = new Vector3 { x = x + 0.5f, y = y, z = z },
-                vert3 = new Vector3 { x = x, y = y + 0.5f, z = z },
-                noHidden = true
+                OmegaObjectHelpers.CopyTriangle(part.Triangles[0])
             };
+
+            mesh = _meshRotation.RotateZMesh(mesh, rotation.z);
+            mesh = _meshRotation.RotateYMesh(mesh, rotation.y);
+            mesh = _meshRotation.RotateXMesh(mesh, rotation.x);
+            return mesh[0];
         }
 
-        public void SetParticleGuideCoordinates(ITriangleMeshWithColorAndTexture s, ITriangleMeshWithColorAndTexture g) { }
+        public void SetParticleGuideCoordinates(ITriangleMeshWithColorAndTexture s, ITriangleMeshWithColorAndTexture g)
+        {
+            if (s != null) StartCoordinates = s;
+            if (g != null) GuideCoordinates = g;
+        }
         public void SetRearEngineGuideCoordinates(ITriangleMeshWithColorAndTexture s, ITriangleMeshWithColorAndTexture g) { }
         public void SetWeaponGuideCoordinates(ITriangleMeshWithColorAndTexture s, ITriangleMeshWithColorAndTexture g) { }
         public void ConfigureAudio(IAudioPlayer? audioPlayer, ISoundRegistry? soundRegistry) { }
@@ -267,7 +360,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
         private float RandomWaitSeconds()
         {
-            return MinWaitSeconds + (float)_rng.NextDouble() * (MaxWaitSeconds - MinWaitSeconds);
+            return _minWaitSeconds + (float)_rng.NextDouble() * (_maxWaitSeconds - _minWaitSeconds);
         }
 
         private sealed class ForcedScreenPath

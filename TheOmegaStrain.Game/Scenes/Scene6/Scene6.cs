@@ -66,6 +66,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene6
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
 
+            MeteorPlacementHelpers.AddOccasionalMeteor(world, randomSeed: 6106);
+
             SpawnJumpingFish(world);
 
             for (int b = 0; b < 6; b++)

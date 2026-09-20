@@ -68,6 +68,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene3
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
 
+            MeteorPlacementHelpers.AddOccasionalMeteor(world, randomSeed: 6103);
+
             SpawnJumpingFish(world);
 
             // ZeppelinBombers — 2 bombers introduced this scene

@@ -40,7 +40,7 @@ namespace TheOmegaStrain.Runtime.Rendering
 
         // Keep the sky clear until the Surface has moved farther out of view. Scaling from the
         // design height preserves the same transition point at other window resolutions.
-        private static float StarFadeInAltitude => 400f * ScreenSetup.ScreenScaleY;
+        public static float StarFadeInAltitude => 400f * ScreenSetup.ScreenScaleY;
         private static float OffscreenMargin => BaseOffscreenMargin * ScreenSetup.ScreenScaleX;
         private static float VisibleDepthMin => BaseVisibleDepthMin * ScreenSetup.ScreenScaleX;
         private static float VisibleDepthMax => BaseVisibleDepthMax * ScreenSetup.ScreenScaleX;

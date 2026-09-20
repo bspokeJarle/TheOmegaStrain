@@ -28,7 +28,8 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
         ParticleDensity = 2,
         GlowEffects = 3,
         EnhancedWeather = 4,
-        EnhancedShadows = 5
+        EnhancedShadows = 5,
+        SceneRasterBackground = 6
     }
 
     public enum FlightSettingsField
@@ -97,6 +98,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
         public bool GlowEffectsEnabled { get; set; } = false;
         public bool EnhancedWeatherEnabled { get; set; } = true;
         public bool EnhancedShadowsEnabled { get; set; } = true;
+        public bool SceneRasterBackgroundEnabled { get; set; } = true;
 
         public FlightHandlingPreset FlightPreset { get; set; } = FlightHandlingPreset.Balanced;
         public FlightCoasting FlightCoastingSetting { get; set; } = FlightCoasting.Normal;
@@ -313,6 +315,9 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
                     break;
                 case GraphicsSettingsField.EnhancedShadows:
                     EnhancedShadowsEnabled = !EnhancedShadowsEnabled;
+                    break;
+                case GraphicsSettingsField.SceneRasterBackground:
+                    SceneRasterBackgroundEnabled = !SceneRasterBackgroundEnabled;
                     break;
             }
 

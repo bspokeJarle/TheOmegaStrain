@@ -61,6 +61,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene7
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
 
+            MeteorPlacementHelpers.AddOccasionalMeteor(world, randomSeed: 6107);
+
             SpawnSeals(world);
 
             for (int b = 0; b < 7; b++)

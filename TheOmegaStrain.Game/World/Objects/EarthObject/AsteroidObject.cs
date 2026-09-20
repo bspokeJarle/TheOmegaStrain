@@ -8,6 +8,9 @@ namespace TheOmegaStrain.Game.World.Objects.EarthObject
 {
     public static class AsteroidObject
     {
+        public const string ParticleStartGuidePartName = "AsteroidParticlesStartGuide";
+        public const string ParticleDirectionGuidePartName = "AsteroidParticlesDirectionGuide";
+
         public static OmegaObject3D CreateAsteroid(string[] colorPalette, float size, float startOffsetX, float startOffsetY, float depth, Random rng)
         {
             var tris = BuildAsteroidGeometry(colorPalette, size, rng);
@@ -30,8 +33,35 @@ namespace TheOmegaStrain.Game.World.Objects.EarthObject
                 IsVisible = true
             });
 
+            // The pointed nose is local -Y. Put the exhaust start beyond the opposite
+            // +Y tail (the body ends at +1.45 * size), with its direction guide farther
+            // behind so the particle stream travels away from the meteor.
+            AddHiddenGuide(obj, ParticleStartGuidePartName, size * 1.62f, "00ff00");
+            AddHiddenGuide(obj, ParticleDirectionGuidePartName, size * 2.35f, "ff0000");
+
             obj.ImpactStatus = new ImpactStatus();
             return obj;
+        }
+
+        private static void AddHiddenGuide(OmegaObject3D obj, string partName, float y, string color)
+        {
+            float halfWidth = Math.Max(0.5f, MathF.Abs(y) * 0.015f);
+            obj.ObjectParts.Add(new OmegaObjectPart3D
+            {
+                PartName = partName,
+                IsVisible = false,
+                Triangles = new List<ITriangleMeshWithColorAndTexture>
+                {
+                    new TriangleMeshWithColor
+                    {
+                        Color = color,
+                        vert1 = new Vector3 { x = -halfWidth, y = y, z = 0f },
+                        vert2 = new Vector3 { x = halfWidth, y = y, z = 0f },
+                        vert3 = new Vector3 { x = 0f, y = y, z = halfWidth },
+                        noHidden = true
+                    }
+                }
+            });
         }
 
         private static List<ITriangleMeshWithColorAndTexture> BuildAsteroidGeometry(string[] palette, float size, Random rng)

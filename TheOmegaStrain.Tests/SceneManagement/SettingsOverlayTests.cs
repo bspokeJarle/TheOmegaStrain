@@ -110,6 +110,8 @@ public class SettingsOverlayTests
             Assert.IsTrue(GameState.SettingsState.GlowEffectsEnabled);
             Assert.IsTrue(GameState.SettingsState.EnhancedWeatherEnabled);
             Assert.IsTrue(GameState.SettingsState.EnhancedShadowsEnabled);
+            Assert.IsTrue(GameState.SettingsState.SceneRasterBackgroundEnabled);
+            StringAssert.Contains(overlay.Body, "SKY RASTER     ON");
 
             HandleKeyPress(handler, world, GameInputKey.Down);
             HandleKeyPress(handler, world, GameInputKey.Right);
@@ -117,6 +119,13 @@ public class SettingsOverlayTests
             Assert.AreEqual(CameraAnglePreset.High, GameState.SettingsState.CameraAngle);
             Assert.AreEqual(70f, GameState.SettingsState.CameraPitchDegrees);
             StringAssert.Contains(overlay.Body, "CAMERA ANGLE   HIGH");
+
+            for (int index = 0; index < 5; index++)
+                HandleKeyPress(handler, world, GameInputKey.Down);
+            HandleKeyPress(handler, world, GameInputKey.Right);
+
+            Assert.IsFalse(GameState.SettingsState.SceneRasterBackgroundEnabled);
+            StringAssert.Contains(overlay.Body, "SKY RASTER     OFF");
         });
     }
 

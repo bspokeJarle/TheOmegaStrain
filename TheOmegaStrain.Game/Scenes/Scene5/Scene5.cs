@@ -55,6 +55,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene5
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
 
+            MeteorPlacementHelpers.AddOccasionalMeteor(world, randomSeed: 6105);
+
             SpawnJumpingFish(world);
 
             // ZeppelinBombers — 5 bombers (maximum)

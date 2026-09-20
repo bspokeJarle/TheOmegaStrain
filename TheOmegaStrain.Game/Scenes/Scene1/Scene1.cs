@@ -68,6 +68,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             guidanceArrow.CrashBoxDebugMode = false;
             world.WorldInhabitants.Add(guidanceArrow);
 
+            MeteorPlacementHelpers.AddOccasionalMeteor(world, randomSeed: 6101);
+
             SpawnJumpingFish(world);
 
             //Add drones that will be waiting until the player has a Decoy powerup

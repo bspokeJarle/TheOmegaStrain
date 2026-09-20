@@ -1280,6 +1280,12 @@ namespace TheOmegaStrain.Runtime.Loops
                 case "KamikazeParticlesGuide":
                     inhabitant.Movement.SetParticleGuideCoordinates(null, rotatedMesh.First() as TriangleMeshWithColor);
                     break;
+                case "AsteroidParticlesStartGuide":
+                    inhabitant.Movement.SetParticleGuideCoordinates(rotatedMesh.First() as TriangleMeshWithColor, null);
+                    break;
+                case "AsteroidParticlesDirectionGuide":
+                    inhabitant.Movement.SetParticleGuideCoordinates(null, rotatedMesh.First() as TriangleMeshWithColor);
+                    break;
             }
         }
 

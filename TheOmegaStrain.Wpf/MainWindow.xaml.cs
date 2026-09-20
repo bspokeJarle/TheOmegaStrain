@@ -5,6 +5,7 @@ using TheOmegaStrain.Wpf.MainWindowClasses.Overlays;
 using TheOmegaStrain.Wpf.Rendering;
 using RetroMesh.Rendering.Direct3D11;
 using TheOmegaStrain.Runtime.Loops;
+using TheOmegaStrain.Runtime.Rendering;
 using TheOmegaStrain.Game.World;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
@@ -89,6 +90,7 @@ namespace TheOmegaStrain.Wpf
         private readonly Stack<List<ProjectedTriangleMesh>> _triangleListPool = new();
         private readonly List<ProjectedTriangleMesh> _lastPresentedFrame = new();
         private long _lastDirect3DPresentTimestamp;
+        private float? _sceneBackgroundHorizonY;
 
         // Overlay handlers
         private OverlayManager _overlayManager;
@@ -453,9 +455,12 @@ namespace TheOmegaStrain.Wpf
             // render target instead, so the same colour must be pushed into ClearColor or the
             // lightning flash is invisible on this backend.
             var weather = GameState.WeatherVisualState;
-            var (red, green, blue) = WeatherFlashColorHelpers.GetBackgroundColor(
+            var (red, green, blue) = SceneBackgroundRasterHelpers.GetClearColor(
+                GameState.GamePlayState.CurrentSceneType,
+                GameState.GamePlayState.CurrentSceneBiome,
                 weather?.LightningFlashIntensity ?? 0f,
-                weather?.ImpactFlashIntensity ?? 0f);
+                weather?.ImpactFlashIntensity ?? 0f,
+                GameState.SettingsState.SceneRasterBackgroundEnabled);
 
             _direct3DRenderer.ClearColor = new Vortice.Mathematics.Color4(red / 255f, green / 255f, blue / 255f, 1f);
         }
@@ -1601,6 +1606,19 @@ namespace TheOmegaStrain.Wpf
                         {
                             try
                             {
+                                SceneBackgroundRasterHelpers.AppendForScene(
+                                    screenCoordinates,
+                                    GameState.GamePlayState.CurrentSceneType,
+                                    GameState.GamePlayState.CurrentSceneBiome,
+                                    ScreenSetup.screenSizeX,
+                                    ScreenSetup.screenSizeY,
+                                    GameState.WeatherVisualState?.LightningFlashIntensity ?? 0f,
+                                    GameState.WeatherVisualState?.ImpactFlashIntensity ?? 0f,
+                                    GameState.ClampedDeltaTime,
+                                    GameState.SurfaceState.GlobalMapPosition.y,
+                                    StarFieldHandler.StarFadeInAltitude,
+                                    GameState.SettingsState.SceneRasterBackgroundEnabled,
+                                    ref _sceneBackgroundHorizonY);
                                 UpdateDirect3DBackgroundFlash();
                                 if (_useDirect3D11)
                                     Direct3DGraphicsSettings.Apply(screenCoordinates, GameState.SettingsState);
