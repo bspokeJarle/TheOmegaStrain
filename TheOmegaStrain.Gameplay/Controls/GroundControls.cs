@@ -1,6 +1,7 @@
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Domain;
 using System;
 using System.Collections.Generic;
@@ -351,11 +352,14 @@ namespace TheOmegaStrain.Gameplay.Controls
 
                 _processedBombCraters.Add(obj.ObjectId);
 
-                var wp = obj.WorldPosition;
-                if (wp == null) continue;
+                if (obj.WorldPosition == null) continue;
 
-                int centerX = MapCoordinateHelpers.WorldXToTileIndex(wp.x, global2DMap);
-                int centerZ = MapCoordinateHelpers.WorldZToTileIndex(wp.z, global2DMap);
+                // Crater the tile under the bomb's visible collision centre.
+                // Raw WorldPosition is relative to the Surface viewport corner
+                // and can place the crater roughly half a screen away.
+                var impactWorldPosition = SurfacePositionSyncHelpers.GetSurfaceFootprintWorldPosition(obj);
+                int centerX = MapCoordinateHelpers.WorldXToTileIndex(impactWorldPosition.x, global2DMap);
+                int centerZ = MapCoordinateHelpers.WorldZToTileIndex(impactWorldPosition.z, global2DMap);
 
                 for (int dz = -BombCraterRadiusTiles; dz <= BombCraterRadiusTiles; dz++)
                 {

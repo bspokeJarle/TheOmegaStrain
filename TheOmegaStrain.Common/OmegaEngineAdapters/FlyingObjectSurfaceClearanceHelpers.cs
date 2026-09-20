@@ -59,10 +59,18 @@ public static class FlyingObjectSurfaceClearanceHelpers
 
         float objectScreenX = -localWorld.x + obj.ObjectOffsets.x;
         float objectScreenZ = localWorld.z + obj.ObjectOffsets.z;
-        float surfaceLocalX = objectScreenX - surfaceOffsets.x;
-        float surfaceLocalZ = objectScreenZ - surfaceOffsets.z;
-
-        float objectScreenY = -localWorld.y + obj.ObjectOffsets.y;
+        // Compare terrain with the same visible Y used by the projector. At the
+        // Normal camera angle the slope correction can otherwise move an airborne
+        // object down into the foreground terrain after clearance was approved.
+        float objectScreenY = -localWorld.y + obj.ObjectOffsets.y
+            + (float)SurfaceSlopeRenderPositionHelpers.GetCorrectionY(
+                omegaObject, omegaObject.WorldPosition);
+        if (!SurfaceRenderAnchorHelpers.TryGetSurfaceLocalAnchor(
+                new RenderPosition(objectScreenX, objectScreenY, objectScreenZ),
+                new RenderPosition(surfaceOffsets.x, surfaceOffsets.y, surfaceOffsets.z),
+                out float surfaceLocalX, out float objectSurfaceLocalY, out float surfaceLocalZ,
+                out float objectProjectionScale))
+            return null;
         float footprintRadius = GetVisibleFootprintRadius(obj);
         float projectedTileDepth = SurfaceSetup.tileSize *
             MathF.Sin(WorldViewSetup.SurfacePitchDegrees * MathF.PI / 180f);
@@ -92,9 +100,9 @@ public static class FlyingObjectSurfaceClearanceHelpers
                 continue;
 
             foundGround = true;
-            float groundScreenY = surfaceOffsets.y + groundY;
-            float requiredLift = minimumClearance - (groundScreenY - objectScreenY);
-            maximumRequiredLift = MathF.Max(maximumRequiredLift, requiredLift);
+            float requiredSurfaceLift = minimumClearance - (groundY - objectSurfaceLocalY);
+            maximumRequiredLift = MathF.Max(
+                maximumRequiredLift, requiredSurfaceLift * objectProjectionScale);
         }
 
         // Visible arrivals can lie beyond the finite Surface patch. The existing
@@ -106,7 +114,7 @@ public static class FlyingObjectSurfaceClearanceHelpers
                 rotatedTiles, surfaceLocalX, surfaceLocalZ, out _, out float edgeY, out _))
                 return null;
             maximumRequiredLift = MathF.Max(0f,
-                minimumClearance - (surfaceOffsets.y + edgeY - objectScreenY));
+                (minimumClearance - (edgeY - objectSurfaceLocalY)) * objectProjectionScale);
         }
 
         return maximumRequiredLift;

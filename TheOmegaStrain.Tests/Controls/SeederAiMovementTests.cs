@@ -2,6 +2,7 @@ using System.Reflection;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.GamePlayHelpers;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls.SeederControls;
 
@@ -126,6 +127,46 @@ public class SeederAiMovementTests
         Assert.IsTrue(GameState.SurfaceState.Global2DMap![1, 1].isInfected, "Seeder infection should use the tile containing the Seeder, not a nearest-center lookup shifted down/right.");
     }
 
+    [TestMethod]
+    public void MoveTowardTarget_InfectsTileUnderVisibleSeederInsteadOfRawWorldOrigin()
+    {
+        GameState.SurfaceState.Global2DMap = new SurfaceData[64, 64];
+        GameState.SurfaceState.SurfaceViewportObject = new OmegaObject3D
+        {
+            ObjectId = 900,
+            ObjectOffsets = new Vector3(75f, 0f, 75f)
+        };
+        var state = CreateState();
+        var current = new Vector3(
+            2.25f * SurfaceSetup.tileSize,
+            0f,
+            2.25f * SurfaceSetup.tileSize);
+        float footprintX = current.x + MapSetup.viewPortCenterOffsetX - 75f;
+        float footprintZ = current.z + MapSetup.viewPortCenterOffsetX - 150f + 75f;
+        int footprintTileX = MapCoordinateHelpers.WorldXToTileIndex(footprintX, GameState.SurfaceState.Global2DMap);
+        int footprintTileZ = MapCoordinateHelpers.WorldZToTileIndex(footprintZ, GameState.SurfaceState.Global2DMap);
+        int rawTileX = MapCoordinateHelpers.WorldXToTileIndex(current.x, GameState.SurfaceState.Global2DMap);
+        int rawTileZ = MapCoordinateHelpers.WorldZToTileIndex(current.z, GameState.SurfaceState.Global2DMap);
+        Assert.AreNotEqual((rawTileX, rawTileZ), (footprintTileX, footprintTileZ),
+            "Test setup must place the rendered Seeder footprint on another tile than its raw origin.");
+        SetMapTile(footprintTileX, footprintTileZ, mapDepth: 20, isInfected: false);
+        SetMapTile(rawTileX, rawTileZ, mapDepth: 20, isInfected: false);
+        PrepareTarget(state, current, current, targetIsLocalBio: true, stepsRemaining: 1);
+
+        _ = InvokeMove(
+            isOnScreen: true,
+            state,
+            current,
+            step: 5f,
+            offscreenStepFactor: 1,
+            objectOffsets: new Vector3(0f, 0f, 150f));
+
+        Assert.IsTrue(GameState.SurfaceState.Global2DMap![footprintTileX, footprintTileZ].isInfected,
+            "Infection must appear under the rendered Seeder centre.");
+        Assert.IsFalse(GameState.SurfaceState.Global2DMap![rawTileX, rawTileZ].isInfected,
+            "The raw WorldPosition tile must not be infected when offsets render the Seeder elsewhere.");
+    }
+
 
     [TestMethod]
     public void MoveTowardTarget_WhenLocalTargetIsNoLongerBio_RetargetsImmediately()
@@ -202,13 +243,21 @@ public class SeederAiMovementTests
         SetField(state, "StepsRemaining", stepsRemaining);
     }
 
-    private static Vector3 InvokeMove(bool isOnScreen, object state, Vector3 current, float step, int offscreenStepFactor, long? nowTicks = null)
+    private static Vector3 InvokeMove(
+        bool isOnScreen,
+        object state,
+        Vector3 current,
+        float step,
+        int offscreenStepFactor,
+        long? nowTicks = null,
+        Vector3? objectOffsets = null)
     {
         var seeder = new OmegaObject3D
         {
             ObjectId = 77,
             ObjectName = "Seeder",
-            WorldPosition = current
+            WorldPosition = current,
+            ObjectOffsets = objectOffsets ?? new Vector3()
         };
 
         return (Vector3)MoveMethod.Invoke(

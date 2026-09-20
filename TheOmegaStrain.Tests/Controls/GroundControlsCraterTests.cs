@@ -2,6 +2,7 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 
@@ -107,6 +108,54 @@ public class GroundControlsCraterTests
         new GroundControls().MoveObject(ground, null, null);
 
         AssertDryCratered(1, 1, GamePlayHelpers.TerrainType.Grassland);
+    }
+
+    [TestMethod]
+    public void MoveObject_WhenVisibleBombImpacts_CratersTileUnderRenderedBomb()
+    {
+        ResizeMap(128);
+        GameState.SurfaceState.SurfaceViewportObject = new OmegaObject3D
+        {
+            ObjectId = 8000,
+            ObjectOffsets = new Vector3(70f, 500f, 400f)
+        };
+        var bomb = new OmegaObject3D
+        {
+            ObjectId = 9003,
+            ObjectName = "BomberBomb",
+            WorldPosition = new Vector3(
+                10.25f * SurfaceSetup.tileSize,
+                0f,
+                10.25f * SurfaceSetup.tileSize),
+            ObjectOffsets = new Vector3(0f, 0f, 600f),
+            ImpactStatus = new ImpactStatus
+            {
+                HasCrashed = true,
+                ObjectName = "Surface"
+            }
+        };
+        var footprint = SurfacePositionSyncHelpers.GetSurfaceFootprintWorldPosition(bomb);
+        int expectedX = MapCoordinateHelpers.WorldXToTileIndex(footprint.x, GameState.SurfaceState.Global2DMap);
+        int expectedZ = MapCoordinateHelpers.WorldZToTileIndex(footprint.z, GameState.SurfaceState.Global2DMap);
+        int rawX = MapCoordinateHelpers.WorldXToTileIndex(bomb.WorldPosition.x, GameState.SurfaceState.Global2DMap);
+        int rawZ = MapCoordinateHelpers.WorldZToTileIndex(bomb.WorldPosition.z, GameState.SurfaceState.Global2DMap);
+        GameState.SurfaceState.AiObjects.Add(bomb);
+
+        var ground = new OmegaObject3D
+        {
+            ObjectId = 100,
+            ObjectName = "Surface",
+            ImpactStatus = new ImpactStatus(),
+            WorldPosition = new Vector3(),
+            ObjectOffsets = new Vector3()
+        };
+
+        new GroundControls().MoveObject(ground, null, null);
+
+        Assert.IsTrue(GameState.SurfaceState.Global2DMap![expectedZ, expectedX].isCratered,
+            "The crater must be centred under the bomb's rendered impact position.");
+        Assert.IsFalse(GameState.SurfaceState.Global2DMap[rawZ, rawX].isCratered,
+            "The bomb's raw viewport-corner origin must not receive the crater.");
     }
 
     [TestMethod]

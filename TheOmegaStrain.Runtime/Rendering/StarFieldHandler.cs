@@ -1,8 +1,10 @@
 using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Game.Helpers;
+using TheOmegaStrain.Game.Projection;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonSetup;
-using TheOmegaStrain.Gameplay.Controls.Weather;
 using TheOmegaStrain.Domain;
+using RetroMesh.Engine;
 using System;
 using System.Collections.Generic;
 
@@ -20,25 +22,34 @@ namespace TheOmegaStrain.Runtime.Rendering
         private const float FadeInStep = 0.035f;
         private const float FadeOutStep = 0.06f;
         private const float MinRenderOpacity = 0.02f;
-        private const float OffscreenMargin = 260f;
-        private const float VisibleDepthMin = -700f;
-        private const float VisibleDepthMax = 500f;
-        private const float DepthBehindSpread = 1800f;
-        private const float DepthAheadSpread = 3600f;
-        private const float DirectionalSpawnAheadMin = 900f;
-        private const float DirectionalSpawnAheadMax = 3300f;
+        private const float BaseOffscreenMargin = 260f;
+        private const float BaseVisibleDepthMin = -700f;
+        private const float BaseVisibleDepthMax = 500f;
+        private const float BaseDepthBehindSpread = 1800f;
+        private const float BaseDepthAheadSpread = 3600f;
+        private const float BaseDirectionalSpawnAheadMin = 900f;
+        private const float BaseDirectionalSpawnAheadMax = 3300f;
         private const float DirectionalLateralSpreadFactor = 0.88f;
-        private const float TravelBehindRecycleDistance = 2200f;
-        private const float TravelAheadRecycleDistance = 3900f;
+        private const float BaseTravelBehindRecycleDistance = 2200f;
+        private const float BaseTravelAheadRecycleDistance = 3900f;
         private const int DirectionalSpawnModulo = 5;
 
         // Star geometry is written pre-projection, so the renderer magnifies it by the projection
-        // scale. Flying towards a star would otherwise blow it up to an unnatural size, so the
-        // on-screen size is capped the same way weather particles are.
-        private const float MaxApparentSize = 6f;
+        // scale. Cap that natural perspective growth before a close star becomes overwhelming.
+        private const float MaxApparentSize = 18f;
 
-        // Do not show stars if the surface is close to the ground/camera.
-        private static float GroundDistanceY => 287.5f * ScreenSetup.ScreenScaleY;
+        // Keep the sky clear until the Surface has moved farther out of view. Scaling from the
+        // design height preserves the same transition point at other window resolutions.
+        private static float StarFadeInAltitude => 400f * ScreenSetup.ScreenScaleY;
+        private static float OffscreenMargin => BaseOffscreenMargin * ScreenSetup.ScreenScaleX;
+        private static float VisibleDepthMin => BaseVisibleDepthMin * ScreenSetup.ScreenScaleX;
+        private static float VisibleDepthMax => BaseVisibleDepthMax * ScreenSetup.ScreenScaleX;
+        private static float DepthBehindSpread => BaseDepthBehindSpread * ScreenSetup.ScreenScaleX;
+        private static float DepthAheadSpread => BaseDepthAheadSpread * ScreenSetup.ScreenScaleX;
+        private static float DirectionalSpawnAheadMin => BaseDirectionalSpawnAheadMin * ScreenSetup.ScreenScaleX;
+        private static float DirectionalSpawnAheadMax => BaseDirectionalSpawnAheadMax * ScreenSetup.ScreenScaleX;
+        private static float TravelBehindRecycleDistance => BaseTravelBehindRecycleDistance * ScreenSetup.ScreenScaleX;
+        private static float TravelAheadRecycleDistance => BaseTravelAheadRecycleDistance * ScreenSetup.ScreenScaleX;
 
         private readonly Random random = new();
         private readonly List<StarState> stars = new(TargetStarCount);
@@ -113,7 +124,7 @@ namespace TheOmegaStrain.Runtime.Rendering
             var currentWorldPos = GameState.SurfaceState.GlobalMapPosition;
             UpdateTravelDirection(currentWorldPos);
 
-            bool shouldShowStars = currentWorldPos.y > GroundDistanceY;
+            bool shouldShowStars = currentWorldPos.y > StarFadeInAltitude;
             if (!shouldShowStars)
             {
                 FadeOutPoolForAltitude();
@@ -218,14 +229,15 @@ namespace TheOmegaStrain.Runtime.Rendering
         }
 
         /// <summary>
-        /// Rewrites the star's vertices from its base mesh, shrunk so the star never exceeds
-        /// MaxApparentSize on screen. Distant stars are left at full size.
+        /// Rewrites the star from its immutable base mesh and limits its final projected size.
+        /// The local depth sign must match the renderer: map Z minus object Z.
         /// </summary>
-        private static void ApplyApparentSizeClamp(StarState state, IVector3 currentWorldPos)
+        private static void ApplyApparentSizeClamp(StarState state, float projectionScale)
         {
-            float relativeZ = state.Star.WorldPosition.z - currentWorldPos.z;
-            float scale = WorldWeatherField.GetProjectionScale(relativeZ, 0f);
-            float shrink = WorldWeatherField.GetApparentSizeShrink(state.BaseHalfExtent, scale, MaxApparentSize);
+            float apparentSize = state.BaseHalfExtent * projectionScale;
+            float shrink = apparentSize > MaxApparentSize
+                ? MaxApparentSize / apparentSize
+                : 1f;
 
             var triangles = state.Star.ObjectParts[0].Triangles;
             var baseVertices = state.BaseVertices;
@@ -248,10 +260,10 @@ namespace TheOmegaStrain.Runtime.Rendering
 
         private void UpdateStar(StarState state, IVector3 currentWorldPos)
         {
-            ApplyApparentSizeClamp(state, currentWorldPos);
-
             if (state.FadeMode == StarFadeMode.FadingOutForRecycle)
             {
+                // Keep the final approach size while fading. Recomputing after the star has
+                // passed would make it visibly shrink before recycling.
                 state.Opacity = Math.Max(0f, state.Opacity - FadeOutStep);
                 if (state.Opacity <= 0f)
                     ResetStarForFadeIn(state, currentWorldPos, ShouldSpawnAhead());
@@ -260,18 +272,35 @@ namespace TheOmegaStrain.Runtime.Rendering
                 return;
             }
 
-            if (ShouldRecycle(state, currentWorldPos))
+            if (!TryGetProjectionScale(state, out float projectionScale))
             {
-                if (state.Opacity <= MinRenderOpacity || !IsInsideSoftView(state, currentWorldPos))
-                {
+                state.Opacity = 0f;
+                ApplyOpacity(state);
+                if (ShouldRecycle(state, currentWorldPos))
                     ResetStarForFadeIn(state, currentWorldPos, ShouldSpawnAhead());
-                }
-                else
+                return;
+            }
+
+            ApplyApparentSizeClamp(state, projectionScale);
+            bool intersectsViewport = OmegaPerspectiveProjectorFactory.IntersectsViewport(state.Star);
+
+            if (!state.HasEnteredViewport)
+            {
+                if (!intersectsViewport)
                 {
-                    state.FadeMode = StarFadeMode.FadingOutForRecycle;
-                    state.Opacity = Math.Max(0f, state.Opacity - FadeOutStep);
+                    state.Opacity = 0f;
+                    ApplyOpacity(state);
+                    if (ShouldRecycle(state, currentWorldPos))
+                        ResetStarForFadeIn(state, currentWorldPos, ShouldSpawnAhead());
+                    return;
                 }
 
+                state.HasEnteredViewport = true;
+            }
+            else if (!intersectsViewport)
+            {
+                state.FadeMode = StarFadeMode.FadingOutForRecycle;
+                state.Opacity = Math.Max(0f, state.Opacity - FadeOutStep);
                 ApplyOpacity(state);
                 return;
             }
@@ -309,6 +338,7 @@ namespace TheOmegaStrain.Runtime.Rendering
             PlaceStar(state, currentWorldPos, offset);
             state.Opacity = 0f;
             state.FadeMode = StarFadeMode.FadingIn;
+            state.HasEnteredViewport = false;
         }
 
         private static void PlaceStar(StarState state, IVector3 currentWorldPos, NumericsVector3 offset)
@@ -351,13 +381,41 @@ namespace TheOmegaStrain.Runtime.Rendering
                 || lateral > halfWorldSpread + OffscreenMargin;
         }
 
-        private bool IsInsideSoftView(StarState state, IVector3 currentWorldPos)
+        private static bool TryGetProjectionScale(StarState state, out float projectionScale)
         {
-            var relative = GetRelativePosition(state, currentWorldPos);
-            return MathF.Abs(relative.X) <= GetHalfVisibleSpread() + OffscreenMargin
-                && MathF.Abs(relative.Y) <= GetHalfVisibleHeight() + OffscreenMargin
-                && relative.Z >= VisibleDepthMin - OffscreenMargin
-                && relative.Z <= VisibleDepthMax + OffscreenMargin;
+            projectionScale = 0f;
+            if (!ObjectPlacementHelpers.TryGetRenderPosition(
+                    state.Star,
+                    ScreenSetup.screenSizeX / 2,
+                    ScreenSetup.screenSizeY / 2,
+                    out double renderX,
+                    out double renderY,
+                    out double renderZ))
+                return false;
+
+            double depth = OmegaPerspectiveProjectorFactory.ClampRenderDepth(
+                renderZ,
+                ScreenSetup.perspectiveAdjustment);
+            if (!ProjectionMath.TryProjectVertex(
+                    new EngineVector3(),
+                    renderX,
+                    renderY,
+                    depth,
+                    ScreenSetup.perspectiveAdjustment,
+                    ScreenSetup.defaultObjectZoom,
+                    out var center) ||
+                !ProjectionMath.TryProjectVertex(
+                    new EngineVector3(1f, 0f, 0f),
+                    renderX,
+                    renderY,
+                    depth,
+                    ScreenSetup.perspectiveAdjustment,
+                    ScreenSetup.defaultObjectZoom,
+                    out var unit))
+                return false;
+
+            projectionScale = MathF.Abs((float)(unit.x - center.x));
+            return float.IsFinite(projectionScale) && projectionScale > 0f;
         }
 
         private static NumericsVector3 GetRelativePosition(StarState state, IVector3 currentWorldPos)
@@ -523,6 +581,7 @@ namespace TheOmegaStrain.Runtime.Rendering
             public required string BaseColor;
             public float Opacity;
             public StarFadeMode FadeMode;
+            public bool HasEnteredViewport;
 
             // Immutable snapshot of the baked star mesh, plus its largest radius. Used to rewrite
             // the vertices each frame so the apparent-size clamp never compounds.

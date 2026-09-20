@@ -168,12 +168,14 @@ namespace TheOmegaStrain.Game.SceneManagement
             scenes[currentSceneIndex] = newScene;
             GameState.ScreenOverlayState.HardHide();
             newScene.SetupGameOverlay();
+            gps.Phase = GamePhase.Playing;
             ApplySceneSettings(newScene);
             newScene.SetupScene((GameWorld)world);
             ApplySceneSettings(newScene);
 
             if (hadCheckpoint)
             {
+                snapshot = RepairLegacyScene1DroneCheckpoint(snapshot);
                 int restoredMotherShips = ResolveRestoredMotherShipCount(snapshot.MotherShipsRemaining);
 
                 TrimEnemies(world, "Seeder", snapshot.SeedersRemaining);
@@ -255,6 +257,7 @@ namespace TheOmegaStrain.Game.SceneManagement
             scenes[currentSceneIndex] = newScene;
             GameState.ScreenOverlayState.HardHide();
             newScene.SetupGameOverlay();
+            gps.Phase = GamePhase.Playing;
             ApplySceneSettings(newScene);
             newScene.SetupScene((GameWorld)world);
             ApplySceneSettings(newScene);
@@ -506,7 +509,10 @@ namespace TheOmegaStrain.Game.SceneManagement
                 if (shouldRestoreCheckpoint)
                 {
                     var snapshot = gps.CaptureCheckpointSnapshot();
+                    snapshot = RepairLegacyScene1DroneCheckpoint(snapshot);
                     ApplyCheckpointSnapshotToCurrentState(gps, snapshot);
+                    gps.CheckpointDronesRemaining = snapshot.DronesRemaining;
+                    gps.CheckpointInitialDrones = snapshot.InitialDrones;
                     int restoredMotherShips = ResolveRestoredMotherShipCount(snapshot.MotherShipsRemaining);
 
                     TrimEnemies(world, "Seeder", snapshot.SeedersRemaining);
@@ -540,6 +546,15 @@ namespace TheOmegaStrain.Game.SceneManagement
                         if (aiObjs[i].ObjectName == "KamikazeDrone" && !aiObjs[i].IsActive)
                             aiObjs[i].IsActive = true;
                     }
+                }
+
+                if (!shouldRestoreCheckpoint)
+                {
+                    // A fresh scene uses its own enemies, not counters from a previous
+                    // planet. Capture missing arrival state only after player progress
+                    // and decoy-driven activation have been restored.
+                    SyncGameplayEnemyCountsFromScene(resetInitialCounts: true);
+                    CapturePlanetStartSnapshotIfNeeded(GetActiveScene());
                 }
 
                 _pendingSavedState = null;
@@ -754,43 +769,77 @@ namespace TheOmegaStrain.Game.SceneManagement
             if (scene.SceneType == SceneTypes.Game || scene.SceneType == SceneTypes.Simulation)
             {
                 scene.SetupGameOverlay();
+                GameState.GamePlayState.Phase = GamePhase.Playing;
             }
         }
 
         private void HandleNameEntryKey(GameInputKey key, IScene scene, ScreenOverlayState overlay)
         {
+            bool selectingSavedPilot = overlay.ChoiceAction == ScreenOverlayChoiceAction.SavedPilotSelection;
             if (key == GameInputKey.Escape)
             {
+                if (selectingSavedPilot)
+                {
+                    overlay.SetCallsignMenuChoices();
+                    return;
+                }
                 overlay.HardHide();
                 scene.SetupSceneOverlay();
                 overlay.ShowOverlay = true;
                 return;
             }
 
-            if (key == GameInputKey.Right)
+            if (key == GameInputKey.Up || key == GameInputKey.Down)
+            {
+                overlay.MoveChoiceSelection(key == GameInputKey.Up ? -1 : 1);
+                return;
+            }
+
+            // Retain the existing quick suggestion shortcut, but every action is
+            // also reachable through the visible menu without knowing a shortcut.
+            if (key == GameInputKey.Right && !selectingSavedPilot)
             {
                 overlay.NameEntryBuffer = PlayerCallsignService.CreateSuggestedCallsign(overlay.NameEntryBuffer);
                 overlay.NameEntryValidationMessage = ">> NEW CALLSIGN SUGGESTED";
                 return;
             }
 
-            if (key == GameInputKey.Up || key == GameInputKey.Down)
+            if (key == GameInputKey.Return || key == GameInputKey.Enter)
             {
-                var direction = key == GameInputKey.Up ? -1 : 1;
-                var localProfile = PlayerCallsignService.SelectLocalProfileCallsign(overlay.NameEntryBuffer, direction);
-                if (!string.IsNullOrEmpty(localProfile))
+                if (selectingSavedPilot)
                 {
-                    overlay.NameEntryBuffer = localProfile;
-                    overlay.NameEntryValidationMessage = ">> LOCAL CALLSIGN SELECTED";
+                    if (overlay.SelectedChoiceIndex < overlay.ChoiceOptions.Count - 1)
+                    {
+                        overlay.NameEntryBuffer = overlay.SelectedChoice;
+                        overlay.NameEntryValidationMessage = ">> SAVED PILOT SELECTED";
+                    }
+                    overlay.SetCallsignMenuChoices();
                     return;
                 }
 
-                overlay.NameEntryValidationMessage = ">> NO LOCAL CALLSIGNS FOUND";
-                return;
-            }
+                switch (overlay.SelectedChoiceIndex)
+                {
+                    case 1:
+                        overlay.NameEntryBuffer = PlayerCallsignService.CreateSuggestedCallsign(overlay.NameEntryBuffer);
+                        overlay.NameEntryValidationMessage = ">> NEW CALLSIGN SUGGESTED";
+                        return;
+                    case 2:
+                        var profiles = PlayerCallsignService.LoadLocalProfileCallsigns();
+                        if (profiles.Count == 0)
+                        {
+                            overlay.NameEntryValidationMessage = ">> NO SAVED PILOTS YET - USE A SUGGESTED NAME";
+                            return;
+                        }
+                        var choices = profiles.ToList();
+                        choices.Add("BACK");
+                        overlay.SetChoiceOptions(ScreenOverlayChoiceAction.SavedPilotSelection,
+                            "SELECT A SAVED PILOT", choices.ToArray());
+                        return;
+                    case 3:
+                        HandleNameEntryKey(GameInputKey.Escape, scene, overlay);
+                        return;
+                }
 
-            if (key == GameInputKey.Return || key == GameInputKey.Enter)
-            {
                 var priorName = PersistenceSetup.LoadLastPlayerName();
                 var confirmation = PlayerCallsignService.TryConfirmCallsign(overlay.NameEntryBuffer, priorName);
                 if (!confirmation.IsAccepted)
@@ -1301,6 +1350,7 @@ namespace TheOmegaStrain.Game.SceneManagement
 
                 if (Logger.ShouldLog(enableLogging)) Logger.Log($"Scenehandler: Game keypress. Overlay Type={overlay.Type} Show={overlay.ShowOverlay}", "General");
                 scene.SetupGameOverlay();
+                GameState.GamePlayState.Phase = GamePhase.Playing;
             }
         }
 
@@ -1861,6 +1911,31 @@ namespace TheOmegaStrain.Game.SceneManagement
             // Keep scene mothership candidates even when old checkpoint saves have 0 remaining,
             // otherwise late-phase activation can never happen.
             return sceneMotherShips;
+        }
+
+        private static GamePlayState.CheckpointSnapshot RepairLegacyScene1DroneCheckpoint(
+            GamePlayState.CheckpointSnapshot snapshot)
+        {
+            // Older Scene 1 Decoy checkpoints were captured before the director activated
+            // the staged drone wave, so both drone counts were saved as zero. A real cleared
+            // wave has a non-zero initial count, while the broken first-powerup save does not.
+            if (snapshot.SceneIndex != 1 ||
+                snapshot.PowerUpsCollected != 1 ||
+                snapshot.SeedersRemaining <= 0 ||
+                snapshot.DronesRemaining != 0 ||
+                snapshot.InitialDrones != 0)
+            {
+                return snapshot;
+            }
+
+            int stagedDrones = CountSceneAi("KamikazeDrone");
+            return stagedDrones <= 0
+                ? snapshot
+                : snapshot with
+                {
+                    DronesRemaining = stagedDrones,
+                    InitialDrones = stagedDrones
+                };
         }
 
         private static int CountSceneMotherShips()

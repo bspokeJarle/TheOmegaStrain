@@ -204,7 +204,7 @@ public class TerrainAvoidanceTests
     }
 
     [TestMethod]
-    public void MotherShipSmall_MoveObject_DuringDescent_KeepsDescentYAndAddsSurfaceCorrection()
+    public void MotherShipSmall_MoveObject_DuringDescent_KeepsAuthoritativeDescentYUnchanged()
     {
         const float descentStartY = -500f;
         var motherShip = CreateAiObject(1007, "MotherShipSmall", string.Empty);
@@ -216,14 +216,11 @@ public class TerrainAvoidanceTests
 
         controls.MoveObject(motherShip, null, null);
 
-        float correction = SurfacePositionSyncHelpers.GetSurfacePitchHeightCorrectionY(
-            motherShip,
-            WorldViewSetup.SurfacePitchDegrees);
         Assert.AreEqual(
-            descentStartY + correction,
+            descentStartY,
             motherShip.ObjectOffsets.y,
             1f,
-            "Surface correction must be added to the scripted descent Y, not replace it with normal flight sync.");
+            "Render-only Surface correction must not alter the scripted descent state.");
     }
 
     [TestMethod]

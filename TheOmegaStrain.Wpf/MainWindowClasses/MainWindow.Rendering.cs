@@ -387,11 +387,13 @@ namespace TheOmegaStrain.Wpf.Rendering
 
             return partName.StartsWith("Lazer_", StringComparison.Ordinal) ||
                    string.Equals(partName, "PowerUpBody", StringComparison.Ordinal) ||
+                   string.Equals(partName, "ShieldPowerUpBody", StringComparison.Ordinal) ||
                    string.Equals(partName, "TravelSpeedPowerUpBody", StringComparison.Ordinal) ||
                    string.Equals(partName, "BulletBody", StringComparison.Ordinal) ||
                    string.Equals(partName, "MotherShipWeakSpot", StringComparison.Ordinal) ||
                    string.Equals(partName, "FrontCannonMuzzle", StringComparison.Ordinal) ||
                    string.Equals(partName, "MuzzleFlash", StringComparison.Ordinal) ||
+                   string.Equals(partName, "ShieldGlow", StringComparison.Ordinal) ||
                    string.Equals(partName, "DecoyFrontPulsePanel", StringComparison.Ordinal) ||
                    partName.StartsWith("CannonChargeRing", StringComparison.Ordinal) ||
                    string.Equals(partName, "Particle", StringComparison.Ordinal) ||
@@ -670,6 +672,9 @@ namespace TheOmegaStrain.Wpf.Rendering
             if (string.Equals(partName, "LightningBolts", StringComparison.Ordinal))
                 return outer ? (byte)78 : (byte)132;
 
+            if (string.Equals(partName, "ShieldGlow", StringComparison.Ordinal))
+                return outer ? (byte)70 : (byte)118;
+
             return outer ? (byte)76 : (byte)128;
         }
 
@@ -689,6 +694,9 @@ namespace TheOmegaStrain.Wpf.Rendering
 
             if (string.Equals(partName, "MuzzleFlash", StringComparison.Ordinal))
                 return outer ? 2.35f : 1.55f;
+
+            if (string.Equals(partName, "ShieldGlow", StringComparison.Ordinal))
+                return outer ? 1.55f : 1.24f;
 
             return outer ? 2.1f : 1.45f;
         }

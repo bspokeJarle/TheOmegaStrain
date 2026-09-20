@@ -122,7 +122,8 @@ public sealed class SteamGameplaySync : IDisposable
         SteamDiagnostics.Write(
             $"[Sync] powerUpCollected type={gameEvent.PowerUpType} speedLevel={gameEvent.SpeedPowerUpLevel} score={gameEvent.Score}");
 
-        if (gameEvent.PowerUpType != PowerUpType.Standard || gameEvent.SpeedPowerUpLevel > 0)
+        if (gameEvent.PowerUpType == PowerUpType.TravelSpeedLevel1 ||
+            gameEvent.PowerUpType == PowerUpType.TravelSpeedLevel2)
         {
             UnlockAchievementOnce(SteamGameConfig.Achievements.SpeedUpgradeCollected);
         }

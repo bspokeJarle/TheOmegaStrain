@@ -1,6 +1,7 @@
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Game.World.Objects;
@@ -121,6 +122,66 @@ public class WeaponsAimAssistTests
     }
 
     [TestMethod]
+    public void LazerAimAssist_UsesSameSurfaceSlopePositionAsRenderer()
+    {
+        GameState.SurfaceState.GlobalMapPosition = new Vector3 { z = 1000f };
+        var ship = CreateShip();
+        var weapons = CreateWeapons(ship);
+        var enemy = CreateEnemy("KamikazeDrone", x: 100f, y: -250f, z: 600f);
+        enemy.ParentSurface = new Surface();
+        GameState.SurfaceState.AiObjects.Add(enemy);
+
+        FireStraightLazer(weapons, ship);
+        weapons.MoveWeapon(null, null);
+
+        float correctionY = (float)SurfaceSlopeRenderPositionHelpers.GetCorrectionY(enemy, enemy.WorldPosition);
+        Assert.IsTrue(ProjectionMath.TryProjectVertex(
+            GetLocalCrashBoxCenter(enemy),
+            ScreenSetup.screenSizeX / 2f + enemy.WorldPosition.x,
+            ScreenSetup.screenSizeY / 2f + enemy.WorldPosition.y + correctionY,
+            GameState.SurfaceState.GlobalMapPosition.z - enemy.WorldPosition.z,
+            ScreenSetup.perspectiveAdjustment,
+            ScreenSetup.defaultObjectZoom,
+            out var expectedScreen));
+
+        Assert.IsTrue(GameState.GamePlayState.AimAssistTargetActive);
+        Assert.AreEqual(expectedScreen.x, GameState.GamePlayState.AimAssistTargetScreenX, 1f);
+        Assert.AreEqual(expectedScreen.y, GameState.GamePlayState.AimAssistTargetScreenY, 1f);
+    }
+
+    [TestMethod]
+    public void LazerFromAirborneEnemy_StartsAtCorrectedVisibleMuzzle()
+    {
+        GameState.SurfaceState.GlobalMapPosition = new Vector3 { z = 1000f };
+        var surface = new Surface();
+        var attackShip = AttackShip.CreateAttackShip(surface);
+        attackShip.WorldPosition = new Vector3 { x = 100f, y = 0f, z = 600f };
+        attackShip.ObjectOffsets = new Vector3 { x = 0f, y = 25f, z = 400f };
+        attackShip.Rotation = new Vector3 { x = WorldViewSetup.CameraPitchDegrees };
+        var weapons = CreateWeapons(attackShip);
+        var start = new Vector3 { x = 0f, y = 10f, z = 0f };
+        var trajectory = new Vector3 { x = 0f, y = -990f, z = 0f };
+
+        weapons.FireWeapon(
+            trajectory,
+            start,
+            attackShip.WorldPosition,
+            WeaponType.Lazer,
+            attackShip,
+            tilt: 0);
+
+        var lazer = weapons.ActiveWeapons.Single().WeaponObject;
+        float correctionY = (float)SurfaceSlopeRenderPositionHelpers.GetCorrectionY(
+            attackShip,
+            attackShip.WorldPosition);
+        float expectedY = start.y + (trajectory.y - start.y) * 0.25f
+            + WeaponSetup.LazerExitOffsetY + attackShip.ObjectOffsets.y + correctionY;
+        Assert.AreEqual(expectedY, lazer.ObjectOffsets.y, Epsilon);
+        Assert.AreEqual(25f, attackShip.ObjectOffsets.y, Epsilon,
+            "Weapon launch correction must not mutate the parent object.");
+    }
+
+    [TestMethod]
     public void AimGuide_ChoosesVisibleEnemyWhenAnotherEnemyIsOffscreen()
     {
         var ship = CreateShip();
@@ -232,6 +293,12 @@ public class WeaponsAimAssistTests
             y = points.Average(point => point.y),
             z = points.Average(point => point.z)
         };
+    }
+
+    private static Vector3 GetLocalCrashBoxCenter(OmegaObject3D obj)
+    {
+        var center = ObjectCollisionGeometry.GetLocalCrashCenter(obj);
+        return new Vector3(center.x, center.y, center.z);
     }
 
     private sealed class NoopMovement : IObjectMovement

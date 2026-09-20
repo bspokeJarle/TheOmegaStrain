@@ -206,6 +206,8 @@ public class SceneHandlerSavedStateIsolationTests
 
         handler.ResetActiveScene(world);
 
+        Assert.AreEqual(GamePhase.Playing, gps.Phase, "Respawn must not leave the game in Intro.");
+        Assert.IsFalse(GameState.ScreenOverlayState.ShowOverlay);
         int motherShipCount = GameState.SurfaceState.AiObjects.Count(o => o.ObjectName == "MotherShipSmall");
         Assert.IsTrue(motherShipCount > 0,
             "Checkpoint restore should keep at least one Scene3 mothership candidate even when checkpoint mother ship count is zero.");
@@ -322,6 +324,8 @@ public class SceneHandlerSavedStateIsolationTests
 
         handler.ResetActiveSceneToPlanetStart(world);
 
+        Assert.AreEqual(GamePhase.Playing, gps.Phase, "Planet restart must resume gameplay.");
+        Assert.IsFalse(GameState.ScreenOverlayState.ShowOverlay);
         Assert.AreEqual(0L, gps.Score);
         Assert.AreEqual(3, gps.Lives);
         Assert.AreEqual(100f, gps.Health);
@@ -381,6 +385,42 @@ public class SceneHandlerSavedStateIsolationTests
     }
 
     [TestMethod]
+    public void UpdateFrame_LegacyScene1DecoyCheckpoint_RestoresStagedDroneWave()
+    {
+        var handler = new SceneHandler();
+        var world = CreateWorld(handler);
+        var loaded = new SavedGameState
+        {
+            PlayerName = "Jarle",
+            SceneIndex = 1,
+            PowerUpsCollected = 1,
+            HasCheckpoint = true,
+            CheckpointPowerUpsCollected = 1,
+            CheckpointSceneIndex = 1,
+            CheckpointSeedersRemaining = 4,
+            CheckpointDronesRemaining = 0,
+            CheckpointMotherShipsRemaining = 0,
+            CheckpointInitialSeeders = 7,
+            CheckpointInitialDrones = 0,
+            CheckpointInitialMotherShips = 1
+        };
+
+        SetPrivateField(handler, "_pendingSavedState", loaded);
+        SetPrivateField(handler, "_targetSceneIndex", 1);
+        SetPrivateField(handler, "_pendingSceneAdvance", true);
+        SetPrivateField(handler, "_pendingSceneAdvanceFramesLeft", 0);
+
+        handler.UpdateFrame(world);
+
+        var gps = GameState.GamePlayState;
+        Assert.AreEqual(4, gps.DronesRemaining);
+        Assert.AreEqual(4, gps.CheckpointDronesRemaining);
+        Assert.AreEqual(4, gps.InitialDrones);
+        Assert.AreEqual(4, GameState.SurfaceState.AiObjects.Count(o =>
+            o.ObjectName == "KamikazeDrone" && o.IsActive));
+    }
+
+    [TestMethod]
     public void UpdateFrame_MismatchedCheckpoint_DoesNotOverwritePersistedSave()
     {
         var handler = new SceneHandler();
@@ -411,6 +451,71 @@ public class SceneHandlerSavedStateIsolationTests
         Assert.IsNotNull(savedAfterLoadAttempt);
         Assert.IsTrue(savedAfterLoadAttempt!.HasCheckpoint,
             "A checkpoint that cannot be applied should not be destructively rewritten as HasCheckpoint=false during load.");
+    }
+
+    [DataTestMethod]
+    [DataRow(1)]
+    [DataRow(6)]
+    [DataRow(7)]
+    public void UpdateFrame_MenuSceneSelection_UsesNewEnemyCountsAndCapturesArrivalAfterRestore(int sceneIndex)
+    {
+        var handler = new SceneHandler();
+        var world = CreateWorld(handler);
+        var gps = GameState.GamePlayState;
+        gps.PlayerName = "Pilot";
+        gps.SceneIndex = 6;
+        gps.Score = 9000;
+        gps.PowerUpsCollected = 4;
+        gps.SpeedPowerUpLevel = 2;
+        gps.TotalKills = 30;
+        gps.Lives = 2;
+        gps.Health = 75f;
+        gps.InitialSeeders = 21;
+        gps.InitialDrones = 14;
+        gps.InitialMotherShips = 1;
+        gps.InfectionLevel = 42f;
+        gps.SaveCheckpoint();
+        gps.SavePlanetStartSnapshot();
+        GameStatePersistence.SaveGameState();
+        gps.SceneIndex = 0;
+
+        Assert.IsTrue(GameStatePersistence.SetSavedSceneForActivePlayer(sceneIndex));
+        var loaded = GameStatePersistence.LoadGameState("Pilot")!;
+        byte[] savedBytes = File.ReadAllBytes(PersistenceSetup.GetPlayerGameStateFilePath("Pilot"));
+        SetPrivateField(handler, "_pendingSavedState", loaded);
+        SetPrivateField(handler, "_targetSceneIndex", sceneIndex);
+        SetPrivateField(handler, "_pendingSceneAdvance", true);
+        SetPrivateField(handler, "_pendingSceneAdvanceFramesLeft", 0);
+
+        handler.UpdateFrame(world);
+
+        var enemies = GameState.SurfaceState.AiObjects;
+        int seeders = enemies.Count(o => o.ObjectName == "Seeder");
+        int drones = enemies.Count(o => o.ObjectName == "KamikazeDrone" && o.IsActive);
+        int motherships = enemies.Count(o => o.ObjectName.StartsWith("MotherShip") && o.IsActive);
+        Assert.IsTrue(seeders > 0);
+        Assert.IsTrue(drones > 0, "Restored decoy unlock must activate the new scene's drones.");
+        Assert.AreEqual(sceneIndex, gps.SceneIndex);
+        Assert.AreEqual(seeders, gps.InitialSeeders);
+        Assert.AreEqual(drones, gps.InitialDrones);
+        Assert.AreEqual(motherships, gps.InitialMotherShips);
+        Assert.AreEqual(seeders, gps.SeedersRemaining);
+        Assert.AreEqual(drones, gps.DronesRemaining);
+        Assert.AreEqual(0f, gps.InfectionLevel);
+        Assert.IsFalse(gps.HasCheckpoint);
+        Assert.IsTrue(gps.HasPlanetStartSnapshot);
+        Assert.AreEqual(sceneIndex, gps.PlanetStartSceneIndex);
+        Assert.AreEqual(handler.GetActiveScene().SceneBiome, gps.PlanetStartSceneBiome);
+        Assert.AreEqual(9000L, gps.PlanetStartScore);
+        Assert.AreEqual(2, gps.PlanetStartLives);
+        Assert.AreEqual(75f, gps.PlanetStartHealth);
+        Assert.AreEqual(4, gps.PlanetStartPowerUpsCollected);
+        Assert.AreEqual(2, gps.PlanetStartSpeedPowerUpLevel);
+        Assert.AreEqual(30, gps.PlanetStartTotalKills);
+        Assert.AreEqual(seeders, gps.PlanetStartInitialSeeders);
+        Assert.AreEqual(drones, gps.PlanetStartInitialDrones);
+        CollectionAssert.AreEqual(savedBytes, File.ReadAllBytes(PersistenceSetup.GetPlayerGameStateFilePath("Pilot")),
+            "Loading a selection must not write a new save outside an explicit checkpoint.");
     }
 
     private static void SetPrivateField<T>(SceneHandler handler, string fieldName, T value)

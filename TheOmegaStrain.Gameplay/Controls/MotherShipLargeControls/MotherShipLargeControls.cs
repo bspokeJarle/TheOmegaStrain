@@ -273,9 +273,6 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls
                 float smoothT = 1f - (1f - t) * (1f - t);
                 float descentTarget = GameState.SurfaceState.GlobalMapPosition.y * SyncFactorY + SyncAnchorY;
                 theObject.ObjectOffsets.y = _descentStartY + (descentTarget - _descentStartY) * smoothT;
-                SurfacePositionSyncHelpers.AddSurfacePitchHeightCorrectionY(
-                    theObject,
-                    WorldViewSetup.SurfacePitchDegrees);
                 FlyingObjectSurfaceClearanceHelpers.ApplyMinimumClearance(theObject, _surfaceClearance, (float)GameState.ClampedDeltaTime);
 
                 // Face the player ship during descent — same pattern as other motherships
@@ -310,9 +307,6 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls
                 SyncMovement(theObject);
                 MotherShipLargeAi.UpdateAltitudeCycle(_cycleState, theObject, (float)deltaSeconds, _audio, _imminentSound);
                 theObject.ObjectOffsets.y += _cycleState.AltitudeDelta;
-                SurfacePositionSyncHelpers.AddSurfacePitchHeightCorrectionY(
-                    theObject,
-                    WorldViewSetup.SurfacePitchDegrees);
                 FlyingObjectSurfaceClearanceHelpers.ApplyMinimumClearance(theObject, _surfaceClearance, (float)GameState.ClampedDeltaTime);
 
                 UpdateFacingTowardsShip(theObject, (float)deltaSeconds);

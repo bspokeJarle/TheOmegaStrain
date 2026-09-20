@@ -11,6 +11,7 @@ namespace TheOmegaStrain.Runtime.Collision
         private static readonly CollisionPairScanner<OmegaObject3D, ObjectTypeFlags> PairScanner = new();
         private static readonly CollisionFrameCache<OmegaObject3D, Vector3> FrameCache = new();
         private static readonly Dictionary<OmegaObject3D, ObjectTypeFlags> TypeFlagCache = new();
+        private static readonly Dictionary<OmegaObject3D, bool> ViewportIntersectionCache = new();
         private static int _cacheFrame = -1;
 
         private static int CacheHits = 0;
@@ -54,6 +55,7 @@ namespace TheOmegaStrain.Runtime.Collision
             _cacheFrame = numFrame;
             FrameCache.ResetFrame();
             TypeFlagCache.Clear();
+            ViewportIntersectionCache.Clear();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -74,6 +76,17 @@ namespace TheOmegaStrain.Runtime.Collision
         private static ObjectTypeFlags CreateTypeFlags(OmegaObject3D obj)
         {
             return new ObjectTypeFlags(obj.ObjectName ?? string.Empty);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool IntersectsViewportCached(OmegaObject3D obj)
+        {
+            if (ViewportIntersectionCache.TryGetValue(obj, out bool intersectsViewport))
+                return intersectsViewport;
+
+            intersectsViewport = TheOmegaStrain.Game.Projection.OmegaPerspectiveProjectorFactory.IntersectsViewport(obj);
+            ViewportIntersectionCache[obj] = intersectsViewport;
+            return intersectsViewport;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

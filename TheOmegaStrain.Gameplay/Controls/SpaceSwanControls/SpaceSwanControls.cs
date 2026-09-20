@@ -58,6 +58,7 @@ namespace TheOmegaStrain.Gameplay.Controls.SpaceSwanControls
         private float _syncY = 0;
         private Vector3? _trackedWorldPosition;
         private DateTime _lastFrameTime = DateTime.MinValue;
+        private bool _movedIntoShieldSupportArea;
 
         private bool _isExploding = false;
         private DateTime _explosionDeltaTime;
@@ -70,6 +71,7 @@ namespace TheOmegaStrain.Gameplay.Controls.SpaceSwanControls
         private SoundDefinition? _wingFlapSound;
 
         private readonly SpaceSwanAi.SwanState _aiState = new();
+        private readonly FlyingObjectSurfaceClearanceState _surfaceClearance = new();
 
         public void ConfigureAudio(IAudioPlayer? audioPlayer, ISoundRegistry? soundRegistry)
         {
@@ -92,6 +94,20 @@ namespace TheOmegaStrain.Gameplay.Controls.SpaceSwanControls
 
             if (theObject.ImpactStatus?.HasExploded == true)
                 return theObject;
+
+            if (!_movedIntoShieldSupportArea &&
+                ShieldPowerUpAvailabilityHelpers.TryMoveShieldCarrierIntoArea(
+                    theObject,
+                    GameState.SurfaceState.AiObjects))
+            {
+                _trackedWorldPosition = new Vector3
+                {
+                    x = theObject.WorldPosition.x,
+                    y = theObject.WorldPosition.y,
+                    z = theObject.WorldPosition.z
+                };
+                _movedIntoShieldSupportArea = true;
+            }
 
             SpaceSwanAi.Initialize(_aiState, theObject);
 
@@ -270,7 +286,10 @@ namespace TheOmegaStrain.Gameplay.Controls.SpaceSwanControls
             }
 
             theObject.ObjectOffsets = SurfacePositionSyncHelpers.GetSurfaceSyncedObjectOffsets(theObject, _syncY, SyncFactorY);
-            SurfacePositionSyncHelpers.AddSurfacePitchHeightCorrectionY(theObject, WorldViewSetup.SurfacePitchDegrees);
+            FlyingObjectSurfaceClearanceHelpers.ApplyMinimumClearance(
+                theObject,
+                _surfaceClearance,
+                (float)GameState.ClampedDeltaTime);
         }
 
         private void AnimateWingFlap()
@@ -466,6 +485,7 @@ namespace TheOmegaStrain.Gameplay.Controls.SpaceSwanControls
             _syncInitialized = false;
             _syncY = 0;
             _trackedWorldPosition = null;
+            _movedIntoShieldSupportArea = false;
             _lastFrameTime = DateTime.MinValue;
             _audioConfigured = false;
             _explosionWorldPosition = null;

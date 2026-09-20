@@ -321,6 +321,60 @@ namespace TheOmegaStrain.Common.Persistence
             PersistenceSetup.HasPlayerSaveFile(PlayerNameFormatter.Normalize(playerName));
 
         /// <summary>
+        /// Selects the active player's next saved campaign scene (1-8, or 9 for Outro).
+        /// The running scene is untouched; existing score and unlocks are retained.
+        /// </summary>
+        public static bool SetSavedSceneForActivePlayer(int sceneIndex)
+        {
+            if (sceneIndex < 1 || sceneIndex > 9)
+                return false;
+
+            string playerName = PlayerNameFormatter.Normalize(GameState.GamePlayState.PlayerName);
+            if (string.IsNullOrWhiteSpace(playerName))
+                return false;
+
+            var saved = LoadGameStateCore(playerName, repairHighscore: false);
+            if (saved == null)
+            {
+                // Never replace an unreadable existing save with an empty one.
+                if (HasSavedGame(playerName)) return false;
+                SaveGameState();
+                saved = LoadGameStateCore(playerName, repairHighscore: false);
+                if (saved == null) return false;
+            }
+
+            // Carry only player progress into a fresh scene. Old enemy counts,
+            // infection, planet bonuses and snapshots belong to the previous planet.
+            // SceneHandler rebuilds scene-local state after loading the selected scene.
+            saved = new SavedGameState
+            {
+                PlayerName = saved.PlayerName,
+                SceneIndex = sceneIndex,
+                Score = saved.Score,
+                Lives = saved.Lives,
+                Health = saved.Health,
+                MaxHealth = saved.MaxHealth,
+                WaveNumber = 1,
+                PowerUpsCollected = saved.PowerUpsCollected,
+                SpeedPowerUpLevel = saved.SpeedPowerUpLevel,
+                TotalShotsFired = saved.TotalShotsFired,
+                TotalKills = saved.TotalKills,
+                TotalDeaths = saved.TotalDeaths,
+                PlanetStyleBonusSceneIndex = sceneIndex,
+                SavedAtUtc = DateTime.UtcNow.ToString("o")
+            };
+
+            Directory.CreateDirectory(PersistenceSetup.LocalFolder);
+            EncryptionHelper.EnsureKeyFile(PersistenceSetup.LocalKeyFilePath);
+            EncryptionHelper.EncryptToFileAtomic(
+                PersistenceSetup.GetPlayerGameStateFilePath(playerName),
+                PersistenceSetup.GetPlayerGameStateBackupFilePath(playerName),
+                JsonSerializer.Serialize(saved, JsonOptions),
+                PersistenceSetup.LocalKeyFilePath);
+            return true;
+        }
+
+        /// <summary>
         /// Deletes the saved game file for the given player.
         /// </summary>
         public static void DeleteSave(string playerName)

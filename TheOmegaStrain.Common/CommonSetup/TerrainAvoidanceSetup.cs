@@ -20,6 +20,7 @@ namespace TheOmegaStrain.Common.CommonSetup
         public const float SeederMinimumSurfaceClearance = 200f;
         public const float KamikazeDroneMinimumSurfaceClearance = 120f;
         public const float ZeppelinBomberMinimumSurfaceClearance = 130f;
+        public const float SpaceSwanMinimumSurfaceClearance = 120f;
         public const float MotherShipSmallMinimumSurfaceClearance = 25f;
         public const float MotherShipMediumMinimumSurfaceClearance = 105f;
         public const float MotherShipLargeMinimumSurfaceClearance = 75f;
@@ -79,6 +80,7 @@ namespace TheOmegaStrain.Common.CommonSetup
             "Seeder" => SeederMinimumSurfaceClearance,
             "KamikazeDrone" => KamikazeDroneMinimumSurfaceClearance,
             "ZeppelinBomber" => ZeppelinBomberMinimumSurfaceClearance,
+            "SpaceSwan" => SpaceSwanMinimumSurfaceClearance,
             "MotherShipSmall" => MotherShipSmallMinimumSurfaceClearance,
             "MotherShipMedium" => MotherShipMediumMinimumSurfaceClearance,
             "MotherShipLarge" => MotherShipLargeMinimumSurfaceClearance,

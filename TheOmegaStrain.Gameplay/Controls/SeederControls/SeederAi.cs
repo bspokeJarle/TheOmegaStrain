@@ -2,6 +2,7 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Helpers;
 using System;
@@ -210,12 +211,12 @@ namespace TheOmegaStrain.Gameplay.Controls.SeederControls
             // since the top-of-AI sync, so refresh the object before visual helpers.
             theObject.WorldPosition = s.AuthWorldPos;
 
-            // Tile indices use raw world coordinates to match the tile under the
-            // seeder on the planet map.
-            // Do NOT use GetSurfaceAlignedWorldPosition here — it adds visual
-            // offsets (surfOO − seederOO) that shift the lookup by several tiles.
-            int tileX = MapCoordinateHelpers.WorldXToTileIndex(s.AuthWorldPos.x, surfaceState.Global2DMap);
-            int tileZ = MapCoordinateHelpers.WorldZToTileIndex(s.AuthWorldPos.z, surfaceState.Global2DMap);
+            // Infection belongs under the visible Seeder, not its unadjusted world
+            // origin. Account for the Seeder/Surface offset difference and the
+            // rotated collision centre before selecting the planet-map tile.
+            var seedingWorldPosition = SurfacePositionSyncHelpers.GetSurfaceFootprintWorldPosition(theObject);
+            int tileX = MapCoordinateHelpers.WorldXToTileIndex(seedingWorldPosition.x, surfaceState.Global2DMap);
+            int tileZ = MapCoordinateHelpers.WorldZToTileIndex(seedingWorldPosition.z, surfaceState.Global2DMap);
             // Bounds
             if (tileZ < 0 || tileX < 0 ||
                 tileZ >= surfaceState.Global2DMap.GetLength(0) ||

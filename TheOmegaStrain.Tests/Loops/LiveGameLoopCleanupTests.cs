@@ -8,10 +8,15 @@ using TheOmegaStrain.Domain;
 using System.Diagnostics;
 using System.Reflection;
 using TheOmegaStrain.Runtime.Loops;
+using TheOmegaStrain.Runtime.Rendering;
+using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Game.Projection;
+using TheOmegaStrain.Game.World.Objects;
 
 namespace TheOmegaStrain.Tests.Loops;
 
 [TestClass]
+[DoNotParallelize]
 public class LiveGameLoopCleanupTests
 {
     private string _originalLocalFolder = string.Empty;
@@ -75,6 +80,25 @@ public class LiveGameLoopCleanupTests
     }
 
     [TestMethod]
+    public void RenderVisibility_HoldsWorldObjectForOneSecondAfterLeavingRange()
+    {
+        GameState.SurfaceState.GlobalMapPosition = new Vector3();
+        var obj = CreateRenderableObject(123, "KamikazeDrone", new CountingMovement());
+        obj.WorldPosition = new Vector3(100f, 0f, 100f);
+        var loop = new LiveGameLoop();
+
+        SetPrivate(loop, "FrameCounter", 1L);
+        Assert.IsTrue(InvokePrivateResult<bool>(loop, "ShouldIncludeInRenderSet", obj));
+
+        obj.WorldPosition = new Vector3(10000f, 0f, 10000f);
+        SetPrivate(loop, "FrameCounter", 2L);
+        Assert.IsTrue(InvokePrivateResult<bool>(loop, "ShouldIncludeInRenderSet", obj));
+
+        SetPrivate(loop, "FrameCounter", 2L + ScreenSetup.RuntimeTargetFps);
+        Assert.IsFalse(InvokePrivateResult<bool>(loop, "ShouldIncludeInRenderSet", obj));
+    }
+
+    [TestMethod]
     public void CleanupExplodedObjects_PowerUpDropPreservesSourceLocalRenderOffsets()
     {
         GameState.SurfaceState.GlobalMapPosition = new Vector3 { x = 500f, y = 80f, z = 900f };
@@ -109,6 +133,48 @@ public class LiveGameLoopCleanupTests
             0.001f,
             "PowerUp Y is stored as raw surface-sync input; PowerUpControls reapplies surface sync on the next frame.");
         Assert.IsTrue(GameState.SurfaceState.AiObjects.Any(x => x.ObjectId == powerup.ObjectId));
+    }
+
+    [TestMethod]
+    public void CleanupExplodedObjects_VisibleShieldSwanCreatesShieldDrop()
+    {
+        GameState.SurfaceState.GlobalMapPosition = new Vector3 { x = 50000f, z = 51000f };
+        GameState.ShipState = new ShipState
+        {
+            ShipObjectOffsets = new Vector3 { x = 20f, z = 40f },
+            ShipWorldPosition = new Vector3 { x = 50750f, z = 51512f },
+            ShipCrashCenterWorldPosition = new Vector3 { x = 50750f, z = 51512f }
+        };
+
+        // These render offsets place the Swan on Ship even though its raw
+        // WorldPosition is more than 500 units away.
+        var explodedSwan = CreateExplodedObject(21);
+        explodedSwan.ObjectName = "SpaceSwan";
+        explodedSwan.HasPowerUp = true;
+        explodedSwan.PowerUpType = PowerUpType.Shield;
+        explodedSwan.WorldPosition = new Vector3 { x = 50020f, z = 51060f };
+        explodedSwan.ObjectOffsets = new Vector3 { z = 100f };
+
+        var liveDrone = CreateExplodedObject(22);
+        liveDrone.ObjectName = "KamikazeDrone";
+        liveDrone.ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.KamikazeDroneHealth };
+        liveDrone.IsActive = true;
+        liveDrone.WorldPosition = new Vector3 { x = 50020f, z = 51060f };
+        liveDrone.ObjectOffsets = new Vector3 { z = 100f };
+
+        GameState.SurfaceState.AiObjects = new List<OmegaObject3D> { explodedSwan, liveDrone };
+        var world = new TestWorld
+        {
+            WorldInhabitants = new List<I3dObject> { explodedSwan, liveDrone }
+        };
+
+        InvokePrivate(new LiveGameLoop(), "CleanupExplodedObjects", world);
+
+        var shield = world.WorldInhabitants.OfType<OmegaObject3D>()
+            .SingleOrDefault(obj => obj.ObjectName == "PowerUp" && obj.PowerUpType == PowerUpType.Shield);
+        Assert.IsNotNull(shield,
+            "A Shield-carrying Swan destroyed beside Ship must create a Shield while a live Drone is nearby.");
+        Assert.IsTrue(GameState.SurfaceState.AiObjects.Any(obj => obj.ObjectId == shield.ObjectId));
     }
 
     [TestMethod]
@@ -442,6 +508,98 @@ public class LiveGameLoopCleanupTests
             "Loading a checkpoint save must restore the reward-adjusted score.");
     }
 
+    [DataTestMethod]
+    [DataRow(63f, true)]
+    [DataRow(70f, true)]
+    [DataRow(63f, false)]
+    [DataRow(70f, false)]
+    public void UpdateWorld_ShadowUsesCurrentTerrainRegardlessOfObjectOrder(float pitch, bool casterFirst)
+    {
+        float previousPitch = WorldViewSetup.SurfacePitchDegrees;
+        bool previousShadows = GameState.SettingsState.EnhancedShadowsEnabled;
+        int previousObjectId = GameState.ObjectIdCounter;
+        try
+        {
+            WorldViewSetup.ConfigurePitch(pitch);
+            GameState.SettingsState.EnhancedShadowsEnabled = true;
+            GameState.ObjectIdCounter = 1000;
+            var surface = new TestSurface();
+            float terrainHeight = 0f;
+            var surfaceMovement = new CountingMovement
+            {
+                OnMove = obj =>
+                {
+                    // Rebuild terrain as GroundControls does while scrolling. Its
+                    // height changes as a ridge passes beneath a stationary enemy.
+                    obj.ObjectParts[0].Triangles = new List<ITriangleMeshWithColorAndTexture>
+                    {
+                        new TriangleMeshWithColor
+                        {
+                            Color = "008800",
+                            vert1 = new Vector3(-600f, -600f, terrainHeight),
+                            vert2 = new Vector3(600f, -600f, terrainHeight),
+                            vert3 = new Vector3(0f, 600f, terrainHeight)
+                        }
+                    };
+                }
+            };
+            var ground = CreateRenderableObject(301, "Surface", surfaceMovement, parentSurface: surface);
+            ground.Rotation = new Vector3(pitch, 0f, 0f);
+            ground.ObjectOffsets = new Vector3(0f, 500f, 400f);
+            GameState.SurfaceState.SurfaceViewportObject = ground;
+            var caster = Seeder.CreateSeeder(surface);
+            caster.ObjectId = 302;
+            caster.Movement = new CountingMovement();
+            caster.WorldPosition = new Vector3(1000f, 0f, 1000f);
+            caster.ObjectOffsets = new Vector3(0f, 300f, 400f);
+            caster.Rotation = new Vector3(pitch, 0f, 0f);
+            caster.HasShadow = true;
+            var world = new TestWorld
+            {
+                WorldInhabitants = casterFirst ? new List<I3dObject> { caster, ground } : new List<I3dObject> { ground, caster }
+            };
+            var loop = new LiveGameLoop();
+            var projected = new List<ProjectedTriangleMesh>();
+            var crashBoxes = new List<ProjectedTriangleMesh>();
+
+            foreach (var frame in new[] { (X: 0f, Z: 0f, Height: 0f), (X: 40f, Z: 70f, Height: 45f), (X: -30f, Z: -50f, Height: 10f) })
+            {
+                terrainHeight = frame.Height;
+                GameState.SurfaceState.GlobalMapPosition = new Vector3(1000f + frame.X, 0f, 1000f + frame.Z);
+                loop.UpdateWorld(world, ref projected, ref crashBoxes);
+                var renderedField = typeof(LiveGameLoop).GetField("renderedObjectBuffer", BindingFlags.Instance | BindingFlags.NonPublic)!;
+                var rendered = (List<OmegaObject3D>)renderedField.GetValue(loop)!;
+                var renderedCaster = rendered.Single(o => o.ObjectId == caster.ObjectId);
+                Assert.IsTrue(OmegaPerspectiveProjectorFactory.IntersectsViewport(renderedCaster),
+                    "The shadow fixture's visible body must intersect the viewport.");
+                var field = typeof(LiveGameLoop).GetField("shadowObjectBuffer", BindingFlags.Instance | BindingFlags.NonPublic)!;
+                var shadows = (List<OmegaObject3D>)field.GetValue(loop)!;
+                Assert.AreEqual(1, shadows.Count, "A caster before Surface must also cast a shadow on the first frame.");
+                // The comparable footprint is centred on the collision anchor;
+                // its first authored vertex is no longer the reference point.
+                var vertex = GeometryMath.GetCenterOfBox(shadows[0].ObjectParts[0].Triangles
+                    .SelectMany(t => new[] { t.vert1, t.vert2, t.vert3 }).ToList());
+                float factor = ScreenSetup.perspectiveAdjustment / (ScreenSetup.perspectiveAdjustment + 400f + frame.Z)
+                    * ScreenSetup.defaultObjectZoom;
+                float targetX = -frame.X / factor + ObjectShadowManager.TerrainShadowSideOffset;
+                float targetZ = -frame.Z - ObjectShadowManager.TerrainShadowInwardOffset;
+                Assert.IsTrue(SurfaceGroundProjectionHelpers.TryGetSurfaceGroundPoint(
+                    surface.RotatedSurfaceTriangles, targetX, targetZ, out _, out float groundY, out _));
+                Assert.AreEqual(targetX, vertex.x, 0.001f);
+                Assert.AreEqual(targetZ, vertex.z, 0.001f);
+                Assert.AreEqual(groundY - ObjectShadowManager.TerrainShadowSurfaceLift, vertex.y, 0.001f,
+                    "Shadows must use this frame's terrain, not the old ground height from before scrolling.");
+            }
+            Assert.AreEqual(3, surfaceMovement.MoveCount, "Moving shadow generation must not update movement twice.");
+        }
+        finally
+        {
+            WorldViewSetup.ConfigurePitch(previousPitch);
+            GameState.SettingsState.EnhancedShadowsEnabled = previousShadows;
+            GameState.ObjectIdCounter = previousObjectId;
+        }
+    }
+
     private static Vector3 Copy(IVector3 source)
     {
         return new Vector3
@@ -518,6 +676,13 @@ public class LiveGameLoopCleanupTests
         method.Invoke(loop, args);
     }
 
+    private static T InvokePrivateResult<T>(LiveGameLoop loop, string methodName, params object?[] args)
+    {
+        var method = typeof(LiveGameLoop).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.IsNotNull(method, $"Expected private method '{methodName}' to exist.");
+        return (T)method.Invoke(loop, args)!;
+    }
+
     private static void SetPrivate(LiveGameLoop loop, string fieldName, object value)
     {
         var field = typeof(LiveGameLoop).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
@@ -548,6 +713,7 @@ public class LiveGameLoopCleanupTests
     private sealed class CountingMovement : IObjectMovement
     {
         public int MoveCount { get; private set; }
+        public Action<I3dObject>? OnMove { get; set; }
         public ITriangleMeshWithColorAndTexture? StartCoordinates { get; set; }
         public ITriangleMeshWithColorAndTexture? GuideCoordinates { get; set; }
         public IPhysics Physics { get; set; } = null!;
@@ -555,6 +721,7 @@ public class LiveGameLoopCleanupTests
         public I3dObject MoveObject(I3dObject theObject, IAudioPlayer? audioPlayer, ISoundRegistry? soundRegistry)
         {
             MoveCount++;
+            OnMove?.Invoke(theObject);
             return theObject;
         }
 

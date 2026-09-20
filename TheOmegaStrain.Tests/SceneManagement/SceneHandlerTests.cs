@@ -604,11 +604,13 @@ public class SceneHandlerTests
         int drones = world.WorldInhabitants.Count(o => o.ObjectName == "KamikazeDrone");
         int motherShips = world.WorldInhabitants.Count(o => o.ObjectName == "MotherShipSmall");
         int swans = world.WorldInhabitants.Count(o => o.ObjectName == "SpaceSwan");
+        int shieldSwans = world.WorldInhabitants.Count(o => o.ObjectName == "SpaceSwan" && o.HasPowerUp && o.PowerUpType == PowerUpType.Shield);
 
         Assert.AreEqual(7, seeders, "Scene1 should have 7 seeders (3 + 1 powerup + 3).");
         Assert.AreEqual(4, drones, "Scene1 should have 4 kamikaze drones.");
         Assert.AreEqual(1, motherShips, "Scene1 should have 1 mothership.");
         Assert.AreEqual(50, swans, "Scene1 should have 50 space swans.");
+        Assert.AreEqual(18, shieldSwans, "Thirty-five percent of Scene1's SpaceSwans should carry a Shield.");
     }
 
     [TestMethod]

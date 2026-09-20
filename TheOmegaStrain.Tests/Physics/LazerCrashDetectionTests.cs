@@ -85,6 +85,24 @@ public class LazerCrashDetectionTests
         Assert.AreEqual(settings.CameraPitchDegrees, ship.Rotation.x, 0.001f);
     }
 
+    [DataTestMethod]
+    [DataRow("EnemyRocket", "Ship", true)]
+    [DataRow("EnemyRocket", "AttackShip", false)]
+    [DataRow("EnemyRocket", "KamikazeDrone", false)]
+    [DataRow("Rocket", "Ship", false)]
+    [DataRow("EnemyRocket", "Particle", false)]
+    [DataRow("Rocket", "Particle", false)]
+    public void RocketCollision_RespectsWeaponOwnership(string rocketName, string targetName, bool shouldHit)
+    {
+        var rocket = CreateCrashObject(rocketName, 9501);
+        var target = CreateCrashObject(targetName, 9502);
+        CrashDetection.HandleCrashboxes(new List<OmegaObject3D> { rocket, target }, isPaused: false);
+        CrashDetection.HandleCrashboxes(new List<OmegaObject3D> { rocket, target }, isPaused: false);
+        Assert.AreEqual(shouldHit, rocket.ImpactStatus!.HasCrashed);
+        Assert.AreEqual(shouldHit, target.ImpactStatus!.HasCrashed);
+        if (shouldHit) Assert.AreEqual("EnemyRocket", target.ImpactStatus.ObjectName);
+    }
+
     [TestMethod]
     public void PlayerLazer_CollidesWithEnemy()
     {

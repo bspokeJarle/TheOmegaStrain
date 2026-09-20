@@ -37,7 +37,9 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
         None = 0,
         PlanetLostRecovery = 1,
         QuitGameConfirmation = 2,
-        IntroMainMenu = 3
+        IntroMainMenu = 3,
+        CallsignMenu = 4,
+        SavedPilotSelection = 5
     }
 
         /// <summary>
@@ -440,10 +442,17 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
                 lines.Add("");
             }
 
-            for (int i = 0; i < ChoiceOptions.Count; i++)
+            // Keep long saved-pilot lists inside the panel at small resolutions.
+            int first = ChoiceAction == ScreenOverlayChoiceAction.SavedPilotSelection
+                ? SelectedChoiceIndex / 6 * 6 : 0;
+            int end = ChoiceAction == ScreenOverlayChoiceAction.SavedPilotSelection
+                ? Math.Min(first + 6, ChoiceOptions.Count) : ChoiceOptions.Count;
+            for (int i = first; i < end; i++)
             {
                 lines.Add($"{(i == SelectedChoiceIndex ? ">" : " ")} {ChoiceOptions[i]}");
             }
+            if (end - first < ChoiceOptions.Count)
+                lines.Add($"\nPILOT LIST {first / 6 + 1}/{(ChoiceOptions.Count + 5) / 6}");
 
             Body = string.Join("\n", lines);
         }
@@ -525,12 +534,23 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
             if (Type == ScreenOverlayType.NameEntry && ShowOverlay)
             {
                 _cursorBlinkTimer += dtSeconds;
-                bool showCursor = ((int)(_cursorBlinkTimer / 0.5f)) % 2 == 0;
+                bool savedPilots = ChoiceAction == ScreenOverlayChoiceAction.SavedPilotSelection;
+                bool keyboardEntry = GameState.SettingsState.ActiveControlScheme == ControlInputMode.Keyboard && !savedPilots;
+                bool showCursor = keyboardEntry && ((int)(_cursorBlinkTimer / 0.5f)) % 2 == 0;
                 string cursor = showCursor ? "_" : " ";
                 string display = NameEntryBuffer + cursor;
                 string validation = string.IsNullOrEmpty(NameEntryValidationMessage)
                     ? "" : $"\n{NameEntryValidationMessage}";
-                Body = $"CALLSIGN: {display}\nNEW: RIGHT OR XBOX X | SAVES: UP/DOWN OR XBOX Y{validation}";
+                ChoiceBodyPrefix = savedPilots
+                    ? "SELECT A SAVED PILOT"
+                    : $"CALLSIGN: {display}\n\nSelect USE THIS CALLSIGN to continue, or choose another name below."
+                      + (keyboardEntry ? "\nYou can also type a name. BACKSPACE deletes." : "\nNo keyboard needed.")
+                      + validation;
+                Footer = GameState.InputDeviceState.AnyControllerConnected ||
+                         GameState.SettingsState.ActiveControlScheme == ControlInputMode.XboxController
+                    ? "D-PAD / STICK: UP/DOWN SELECT | [A] CONFIRM | [B] BACK"
+                    : "UP/DOWN SELECT | ENTER CONFIRM | ESC BACK";
+                ApplyChoiceBody();
             }
         }
 
@@ -617,17 +637,24 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
             IsNameConfirmed = false;
             _cursorBlinkTimer = 0f;
             Body = "";
-            Footer = "KEYBOARD: ENTER OK | ESC BACK\nXBOX: [A] OK | [B] BACK";
+            SetCallsignMenuChoices();
+            Footer = "UP/DOWN SELECT | ENTER / [A] CONFIRM | ESC / [B] BACK";
 
             DimStrength = 0.65f;
             PanelWidthRatio = 0.68f;
             PanelHeightRatio = 0.30f;
             PanelYOffsetRatio = 0.00f;
-            CenterText = true;
+            CenterText = false;
 
             AutoHide = false;
             AutoHideSeconds = 0f;
             ShowOverlay = true;
+        }
+
+        public void SetCallsignMenuChoices()
+        {
+            SetChoiceOptions(ScreenOverlayChoiceAction.CallsignMenu, $"CALLSIGN: {NameEntryBuffer}",
+                "USE THIS CALLSIGN", "NEW NAME SUGGESTION", "SAVED PILOTS", "BACK");
         }
 
         /// <summary>
@@ -636,6 +663,9 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
         public bool ProcessNameEntryKey(GameInputKey key)
         {
             if (Type != ScreenOverlayType.NameEntry || !ShowOverlay) return false;
+            if (GameState.SettingsState.ActiveControlScheme != ControlInputMode.Keyboard ||
+                ChoiceAction == ScreenOverlayChoiceAction.SavedPilotSelection)
+                return false;
 
             // Letters A-Z
             if (key >= GameInputKey.A && key <= GameInputKey.Z)

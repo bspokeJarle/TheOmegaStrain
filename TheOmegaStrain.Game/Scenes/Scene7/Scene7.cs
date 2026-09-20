@@ -96,6 +96,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene7
                 GameState.SurfaceState.AiObjects.Add(kamikaze);
             }
 
+            AttackShipPlacementHelpers.AddAttackShipGroup(world, Surface, count: 2, spawnSpread: 55000);
+
             SeederPlacementHelpers.AddSeederGroup(
                 world,
                 Surface,
@@ -145,6 +147,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene7
                 world.WorldInhabitants.Add(spaceSwan);
                 GameState.SurfaceState.AiObjects.Add(spaceSwan);
             }
+            ShieldPowerUpPlacementHelpers.AssignToSpaceSwans(GameState.SurfaceState.AiObjects, sceneNumber: 7);
 
             var surfaceObject = (OmegaObject3D)Surface.GetSurfaceViewPort();
             surfaceObject.ObjectName = "Surface";
@@ -234,6 +237,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene7
                 "Omega Strain adapts rapidly under sub-zero conditions.\n" +
                 "Twenty-three seeders embedded in glacial terrain.\n" +
                 "Kamikaze escort: SIXTEEN units. Bomber wing: SEVEN.\n" +
+                "Rocket-equipped AttackShips: TWO.\n" +
                 "Spread delay: 1.5 seconds. Bio-tolerance: 14.0%.\n" +
                 "Large-class war carrier incoming.\n\n" +
                 "DIRECTIVE:\n" +

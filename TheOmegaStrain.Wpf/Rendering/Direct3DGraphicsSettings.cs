@@ -133,6 +133,7 @@ namespace TheOmegaStrain.Wpf.Rendering
             if (string.Equals(partName, "Particle", StringComparison.Ordinal)) return outer ? (byte)58 : (byte)96;
             if (string.Equals(partName, "MuzzleFlash", StringComparison.Ordinal)) return outer ? (byte)92 : (byte)158;
             if (string.Equals(partName, "LightningBolts", StringComparison.Ordinal)) return outer ? (byte)78 : (byte)132;
+            if (string.Equals(partName, "ShieldGlow", StringComparison.Ordinal)) return outer ? (byte)70 : (byte)118;
             return outer ? (byte)76 : (byte)128;
         }
 
@@ -143,6 +144,7 @@ namespace TheOmegaStrain.Wpf.Rendering
             if (string.Equals(partName, "ExplodingPart", StringComparison.Ordinal)) return outer ? 1.45f : 1.22f;
             if (string.Equals(partName, "Particle", StringComparison.Ordinal)) return outer ? 2.0f : 1.42f;
             if (string.Equals(partName, "MuzzleFlash", StringComparison.Ordinal)) return outer ? 2.35f : 1.55f;
+            if (string.Equals(partName, "ShieldGlow", StringComparison.Ordinal)) return outer ? 1.55f : 1.24f;
             return outer ? 2.1f : 1.45f;
         }
     }

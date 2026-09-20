@@ -18,6 +18,9 @@ namespace TheOmegaStrain.Domain
         public double LifetimeSeconds { get; set; }
         public DateTime LastUpdateUtc { get; set; }
         public WeaponType WeaponType { get; set; }
+        // Per launch, shared through the owner's frame copies; never reacquire after the close pass.
+        public bool RocketGuidanceLocked { get; set; }
+        public RocketFlightState? RocketState { get; set; }
         IVector3 IActiveWeapon.Velocity { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         IVector3 IActiveWeapon.Acceleration { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }

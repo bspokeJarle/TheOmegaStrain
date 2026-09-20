@@ -73,6 +73,121 @@ public class GameStatePersistenceIsolationTests
         Assert.AreEqual(0, anna.PowerUpsCollected);
     }
 
+    [DataTestMethod]
+    [DataRow(1)]
+    [DataRow(2)]
+    [DataRow(3)]
+    [DataRow(4)]
+    [DataRow(5)]
+    [DataRow(6)]
+    [DataRow(7)]
+    [DataRow(8)]
+    [DataRow(9)]
+    public void SceneSelection_UpdatesActivePlayersSaveWithoutChangingLiveStateOrOtherPlayers(int sceneIndex)
+    {
+        var gps = GameState.GamePlayState;
+        gps.PlayerName = "OtherPilot";
+        gps.SceneIndex = 2;
+        gps.Score = 1234;
+        GameStatePersistence.SaveGameState();
+        byte[] otherSave = File.ReadAllBytes(PersistenceSetup.GetPlayerGameStateFilePath("OtherPilot"));
+
+        gps.PlayerName = "ActivePilot";
+        gps.SceneIndex = 6;
+        gps.Score = 9000;
+        gps.PowerUpsCollected = 4;
+        gps.SpeedPowerUpLevel = 2;
+        gps.TotalKills = 30;
+        gps.TotalShotsFired = 80;
+        gps.TotalDeaths = 2;
+        gps.Lives = 2;
+        gps.Health = 75f;
+        gps.MaxHealth = 120f;
+        gps.SimulationRound = 3;
+        gps.WaveNumber = 4;
+        gps.InfectionLevel = 42f;
+        gps.TotalBioTiles = 1000;
+        gps.SeedersRemaining = 10;
+        gps.DronesRemaining = 8;
+        gps.MotherShipsRemaining = 1;
+        gps.InitialSeeders = 21;
+        gps.InitialDrones = 14;
+        gps.InitialMotherShips = 1;
+        gps.PlanetStyleBonusScore = 200;
+        gps.PlanetStyleBonusSceneIndex = 6;
+        gps.SaveCheckpoint();
+        gps.SavePlanetStartSnapshot();
+        GameStatePersistence.SaveGameState();
+        gps.SceneIndex = 0; // Main menu, not a request to change the running scene.
+
+        Assert.IsTrue(GameStatePersistence.SetSavedSceneForActivePlayer(sceneIndex));
+        var saved = GameStatePersistence.LoadGameState("ActivePilot")!;
+        Assert.AreEqual(sceneIndex, saved.SceneIndex);
+        Assert.IsFalse(saved.HasCheckpoint, "Old checkpoints must not override the selected scene.");
+        Assert.IsFalse(saved.HasPlanetStartSnapshot);
+        Assert.AreEqual(0, saved.SimulationRound, "C+9 means Outro, not simulation.");
+        Assert.AreEqual(9000L, saved.Score);
+        Assert.AreEqual(4, saved.PowerUpsCollected);
+        Assert.AreEqual(2, saved.SpeedPowerUpLevel);
+        Assert.AreEqual(30, saved.TotalKills);
+        Assert.AreEqual(80, saved.TotalShotsFired);
+        Assert.AreEqual(2, saved.TotalDeaths);
+        Assert.AreEqual(2, saved.Lives);
+        Assert.AreEqual(75f, saved.Health);
+        Assert.AreEqual(120f, saved.MaxHealth);
+        Assert.AreEqual(1, saved.WaveNumber);
+        Assert.AreEqual(0f, saved.InfectionLevel);
+        Assert.AreEqual(0, saved.TotalBioTiles);
+        Assert.AreEqual(0, saved.SeedersRemaining);
+        Assert.AreEqual(0, saved.DronesRemaining);
+        Assert.AreEqual(0, saved.MotherShipsRemaining);
+        Assert.AreEqual(0, saved.InitialSeeders);
+        Assert.AreEqual(0, saved.InitialDrones);
+        Assert.AreEqual(0, saved.InitialMotherShips);
+        Assert.AreEqual(0, saved.CheckpointInitialSeeders, "Restore must not fall back to old checkpoint counts.");
+        Assert.AreEqual(0, saved.CheckpointInitialDrones);
+        Assert.AreEqual(0, saved.CheckpointInitialMotherShips);
+        Assert.AreEqual(0, saved.PlanetStyleBonusScore);
+        Assert.AreEqual(sceneIndex, saved.PlanetStyleBonusSceneIndex);
+        Assert.AreEqual(0, gps.SceneIndex);
+        Assert.IsTrue(gps.HasCheckpoint);
+        Assert.AreEqual(6, gps.CheckpointSceneIndex);
+        CollectionAssert.AreEqual(otherSave, File.ReadAllBytes(PersistenceSetup.GetPlayerGameStateFilePath("OtherPilot")));
+        // The existing atomic writer mirrors the newest save into its recovery copy.
+        CollectionAssert.AreEqual(
+            File.ReadAllBytes(PersistenceSetup.GetPlayerGameStateFilePath("ActivePilot")),
+            File.ReadAllBytes(PersistenceSetup.GetPlayerGameStateBackupFilePath("ActivePilot")));
+    }
+
+    [TestMethod]
+    public void SceneSelection_RejectsInvalidSceneOrMissingActivePlayer()
+    {
+        Assert.IsFalse(GameStatePersistence.SetSavedSceneForActivePlayer(6));
+        GameState.GamePlayState.PlayerName = "Pilot";
+        Assert.IsFalse(GameStatePersistence.SetSavedSceneForActivePlayer(0));
+        Assert.IsFalse(GameStatePersistence.SetSavedSceneForActivePlayer(10));
+        Assert.IsFalse(GameStatePersistence.HasSavedGame("Pilot"));
+    }
+
+    [TestMethod]
+    public void SceneSelection_CreatesFirstSaveThroughExistingPersistence()
+    {
+        GameState.GamePlayState.PlayerName = "NewPilot";
+        Assert.IsTrue(GameStatePersistence.SetSavedSceneForActivePlayer(9));
+        Assert.AreEqual(9, GameStatePersistence.LoadGameState("NewPilot")!.SceneIndex);
+    }
+
+    [TestMethod]
+    public void SceneSelection_DoesNotReplaceUnreadableSave()
+    {
+        GameState.GamePlayState.PlayerName = "Pilot";
+        string path = PersistenceSetup.GetPlayerGameStateFilePath("Pilot");
+        byte[] corruptData = [1, 2, 3];
+        File.WriteAllBytes(path, corruptData);
+        Assert.IsFalse(GameStatePersistence.SetSavedSceneForActivePlayer(6));
+        CollectionAssert.AreEqual(corruptData, File.ReadAllBytes(path));
+    }
+
     [TestMethod]
     public void LastPlayerName_IsStoredAndLoadedUppercase()
     {

@@ -73,11 +73,6 @@ public class FlyingObjectSurfaceClearanceHelpersTests
     {
         OmegaWorldViewSetup.ConfigurePitch(pitchDegrees);
         const float targetZ = 100f;
-        float radians = pitchDegrees * MathF.PI / 180f;
-        float projectedTileDepth = SurfaceSetup.tileSize * MathF.Sin(radians);
-        float centreGroundY = targetZ * MathF.Cos(radians) / MathF.Sin(radians);
-        float highestSampledGroundY = (targetZ - projectedTileDepth) *
-            MathF.Cos(radians) / MathF.Sin(radians);
         var surface = CreateSurfacePlane(pitchDegrees);
         var drone = new OmegaObject3D
         {
@@ -85,17 +80,15 @@ public class FlyingObjectSurfaceClearanceHelpersTests
             ObjectName = "KamikazeDrone",
             IsOnScreen = true,
             WorldPosition = new Vector3 { x = 1f },
-            ObjectOffsets = new Vector3 { z = targetZ, y = centreGroundY - 20f },
+            // Object depth runs opposite Surface-local Z.
+            ObjectOffsets = new Vector3 { z = -targetZ, y = 100f },
             ParentSurface = surface
         };
 
         bool applied = FlyingObjectSurfaceClearanceHelpers.ApplyMinimumClearance(drone);
 
         Assert.IsTrue(applied);
-        Assert.AreEqual(
-            highestSampledGroundY - TerrainAvoidanceSetup.KamikazeDroneMinimumSurfaceClearance,
-            drone.ObjectOffsets.y,
-            0.01f);
+        AssertMinimumClearance(drone, surface, TerrainAvoidanceSetup.KamikazeDroneMinimumSurfaceClearance);
     }
 
     [TestMethod]
@@ -117,6 +110,47 @@ public class FlyingObjectSurfaceClearanceHelpersTests
 
         Assert.IsFalse(applied);
         Assert.AreEqual(originalY, drone.ObjectOffsets.y);
+    }
+
+    [TestMethod]
+    public void ApplyMinimumClearance_UsesSurfaceSlopeAdjustedRenderHeight()
+    {
+        OmegaWorldViewSetup.ConfigurePitch(63f);
+        const float groundY = 200f;
+        const float worldZ = 1800f;
+        var surface = new Surface
+        {
+            RotatedSurfaceTriangles = new List<ITriangleMeshWithColorAndTexture>
+            {
+                new TriangleMeshWithColor
+                {
+                    vert1 = new Vector3(-500f, groundY, 0f),
+                    vert2 = new Vector3(500f, groundY, 0f),
+                    vert3 = new Vector3(500f, groundY, 500f)
+                },
+                new TriangleMeshWithColor
+                {
+                    vert1 = new Vector3(-500f, groundY, 0f),
+                    vert2 = new Vector3(500f, groundY, 500f),
+                    vert3 = new Vector3(-500f, groundY, 500f)
+                }
+            }
+        };
+        var drone = new OmegaObject3D
+        {
+            ObjectId = 31,
+            ObjectName = "KamikazeDrone",
+            IsOnScreen = true,
+            WorldPosition = new Vector3(1f, 0f, worldZ),
+            // Cancel world Z in render space so the sample stays on this tile.
+            ObjectOffsets = new Vector3(0f, 0f, worldZ),
+            ParentSurface = surface
+        };
+
+        bool applied = FlyingObjectSurfaceClearanceHelpers.ApplyMinimumClearance(drone);
+
+        Assert.IsTrue(applied);
+        AssertMinimumClearance(drone, surface, TerrainAvoidanceSetup.KamikazeDroneMinimumSurfaceClearance);
     }
 
     [TestMethod]
@@ -167,14 +201,14 @@ public class FlyingObjectSurfaceClearanceHelpersTests
             ObjectName = "KamikazeDrone",
             IsOnScreen = true,
             WorldPosition = new Vector3 { x = 1f },
-            ObjectOffsets = new Vector3 { z = tileDepth * 1.5f, y = 50f },
+            ObjectOffsets = new Vector3 { z = -tileDepth * 1.5f, y = 200f },
             ParentSurface = surface
         };
 
         bool applied = FlyingObjectSurfaceClearanceHelpers.ApplyMinimumClearance(drone);
 
         Assert.IsTrue(applied, "The raised adjacent tile must be detected before the drone centre reaches it.");
-        Assert.AreEqual(-70f, drone.ObjectOffsets.y, 0.01f);
+        AssertMinimumClearance(drone, surface, TerrainAvoidanceSetup.KamikazeDroneMinimumSurfaceClearance);
     }
 
     [TestMethod]
@@ -183,10 +217,10 @@ public class FlyingObjectSurfaceClearanceHelpersTests
         Assert.AreEqual(200f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("Seeder"));
         Assert.AreEqual(120f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("KamikazeDrone"));
         Assert.AreEqual(130f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("ZeppelinBomber"));
+        Assert.AreEqual(120f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("SpaceSwan"));
         Assert.AreEqual(25f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("MotherShipSmall"));
         Assert.AreEqual(105f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("MotherShipMedium"));
         Assert.AreEqual(75f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("MotherShipLarge"));
-        Assert.AreEqual(0f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("SpaceSwan"));
     }
 
     private static Surface CreateSurfacePlane(float pitchDegrees)
@@ -215,6 +249,26 @@ public class FlyingObjectSurfaceClearanceHelpersTests
                 }
             }
         };
+    }
+
+    private static void AssertMinimumClearance(OmegaObject3D drone, Surface surface, float expectedClearance)
+    {
+        var localWorld = drone.GetLocalWorldPosition()!;
+        var surfaceOffsets = GameState.SurfaceState.SurfaceViewportObject!.ObjectOffsets;
+        float objectScreenY = -localWorld.y + drone.ObjectOffsets.y
+            + (float)SurfaceSlopeRenderPositionHelpers.GetCorrectionY(drone, drone.WorldPosition);
+        Assert.IsTrue(SurfaceRenderAnchorHelpers.TryGetSurfaceLocalAnchor(
+            new RenderPosition(
+                -localWorld.x + drone.ObjectOffsets.x,
+                objectScreenY,
+                localWorld.z + drone.ObjectOffsets.z),
+            new RenderPosition(surfaceOffsets.x, surfaceOffsets.y, surfaceOffsets.z),
+            out float localX, out float localY, out float localZ));
+        Assert.IsTrue(SurfaceGroundProjectionHelpers.TryGetSurfaceGroundPoint(
+            surface.RotatedSurfaceTriangles, localX, localZ,
+            out _, out float groundY, out _));
+        Assert.IsTrue(groundY - localY >= expectedClearance - 0.01f,
+            $"Expected at least {expectedClearance:F2} units above Surface, actual {groundY - localY:F2}.");
     }
 
     private static Surface CreateThreeTileSurface(float tileDepth)

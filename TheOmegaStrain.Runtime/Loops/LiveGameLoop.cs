@@ -12,6 +12,7 @@ using TheOmegaStrain.Common.GamePlayHelpers;
 using TheOmegaStrain.Common.Persistence;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Audio.Services;
+using TheOmegaStrain.Common.Diagnostics;
 using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Gameplay.Controls.SeederControls;
 using System;
@@ -30,6 +31,7 @@ namespace TheOmegaStrain.Runtime.Loops
         private static int AdaptiveGcMinFrameInterval => ScreenSetup.RuntimeTargetFps;
 
         private long FrameCounter = 0;
+        private DateTime _nextWarningLog;
         private readonly FramePerformanceTracker framePerformanceTracker = new();
         private readonly FramePhaseTimer phaseTimer = new();
         private int AiUpdateCounter = 0;
@@ -38,6 +40,7 @@ namespace TheOmegaStrain.Runtime.Loops
         private readonly ObjectFrameTransformer objectFrameTransformer = new();
         private readonly ParticleManager particleManager = new();
         private readonly WeaponsManager weaponsManager = new();
+        private readonly IncomingThreatWarningManager incomingThreatWarnings = new();
         private readonly ObjectShadowManager objectShadowManager = new();
         private readonly List<OmegaObject3D> activeWorldBuffer = new();
         private readonly List<OmegaObject3D> deepCopiedWorldBuffer = new();
@@ -46,12 +49,14 @@ namespace TheOmegaStrain.Runtime.Loops
         private readonly List<OmegaObject3D> shadowObjectBuffer = new();
         private readonly List<OmegaObject3D> renderedObjectBuffer = new();
         private readonly ObjectScreenStateTracker<OmegaObject3D> aiScreenTracker = new();
+        private readonly Dictionary<int, long> lastVisibleFrameByObjectId = new();
         private readonly HashSet<int> pendingExplosionCleanupIds = new();
         private readonly HashSet<int> publishedExplosionIds = new();
         private IGameEventBus? explosionCleanupEventBus;
         private StarFieldHandler StarFieldHandler { get; set; }
 
         private const float DefaultMusicVolume = 0.15f;
+        private const float VisibilityHoldSeconds = 1f;
         private readonly IAudioPlayer audioPlayer = new NAudioAudioPlayer(AudioSetup.AudioBasePath, AudioSetup.CreateRuntimeSettings());
         private readonly ISoundRegistry soundRegistry = new JsonSoundRegistry(AudioSetup.SoundRegistryPath);
         private SoundDefinition MusicDef { get; set; } = null;
@@ -66,6 +71,7 @@ namespace TheOmegaStrain.Runtime.Loops
         public string DebugMessage { get; set; }
         private bool enableLocalLogging = false;
         private const bool enableProgressionLogging = false;
+        private const bool enableShieldDropLogging = false;
         public bool FadeOutWorld
         {
             get => GameState.WorldFade.IsFadeOutPendingOrActive;
@@ -114,6 +120,12 @@ namespace TheOmegaStrain.Runtime.Loops
         {
             framePerformanceTracker.RestartFrame();
             FrameCounter++;
+            long visibilityPruneInterval = Math.Max(1L, ScreenSetup.RuntimeTargetFps * 5L);
+            if (FrameCounter % visibilityPruneInterval == 0)
+                PruneVisibilityHoldState();
+            bool logWarnings = ThreatWarningDiagnostics.ShouldSample(ref _nextWarningLog);
+            if (logWarnings)
+                ThreatWarningDiagnostics.Write($"LOOP frame={FrameCounter} phase={GameState.GamePlayState.Phase} scene={GameState.GamePlayState.SceneIndex} paused={world.IsPaused} ai={GameState.SurfaceState.AiObjects.Count} inhabitants={world.WorldInhabitants.Count}");
             GameState.WeatherVisualState.DecayImpactFlash(3.2f * GameState.ClampedDeltaTime);
             EnsureExplosionCleanupSubscription(world.EventBus);
             bool logPhaseTiming = Logger.ShouldLog(EnableCpuHeadroomLogging) && (FrameCounter % PerfLogInterval == 0);
@@ -150,7 +162,7 @@ namespace TheOmegaStrain.Runtime.Loops
                     if (inhabitant.ObjectParts.Count == 0) continue;
                     if (!inhabitant.IsActive) continue;
 
-                    if (inhabitant is OmegaObject3D concreteInhabitant && concreteInhabitant.CheckInhabitantVisibility())
+                    if (inhabitant is OmegaObject3D concreteInhabitant && ShouldIncludeInRenderSet(concreteInhabitant))
                     {
                         activeWorld.Add(concreteInhabitant);
                     }
@@ -202,10 +214,10 @@ namespace TheOmegaStrain.Runtime.Loops
             prepMs = phaseTimer.Mark();
 
             bool gameplayPausedForVictoryReward = GameState.GamePlayState.IsVictoryRewardPauseActive;
+            OmegaObject3D? warningShip = null;
 
             foreach (var inhabitant in deepCopiedWorld)
             {
-                if (inhabitant.ObjectName != "Star" && !inhabitant.CheckInhabitantVisibility()) continue;
                 inhabitant.IsOnScreen = true;
                 if (doAiMark)
                 {
@@ -222,6 +234,7 @@ namespace TheOmegaStrain.Runtime.Loops
                 if (inhabitant.ObjectName == "Ship")
                 {
                     ShipCopy = inhabitant;
+                    warningShip = inhabitant;
                 }
                 if (inhabitant.ObjectName == "Surface")
                 {
@@ -247,13 +260,19 @@ namespace TheOmegaStrain.Runtime.Loops
                 if (!gameplayPausedForVictoryReward)
                 {
                     particleManager.HandleParticles(inhabitant, particleObjectList);
-                    weaponsManager.HandleWeapons(inhabitant, weaponObjectList);
+                    weaponsManager.HandleWeapons(inhabitant, weaponObjectList, particleObjectList);
                 }
 
-                if (GameState.SettingsState.EnhancedShadowsEnabled)
-                    objectShadowManager.HandleObjectShadow(inhabitant, shadowObjectList);
                 renderedList.Add(inhabitant);
 
+            }
+            // Flying enemies can precede Surface in the scene list. Wait until
+            // its rotated cache is current; last frame's terrain hides shadows
+            // under the ground while scrolling or changing altitude.
+            if (GameState.SettingsState.EnhancedShadowsEnabled)
+            {
+                foreach (var inhabitant in renderedList)
+                    objectShadowManager.HandleObjectShadow(inhabitant, shadowObjectList);
             }
             moveRotateMs = phaseTimer.Mark();
 
@@ -274,6 +293,8 @@ namespace TheOmegaStrain.Runtime.Loops
             mergeMs = phaseTimer.Mark();
 
             var activeScene = world.SceneHandler.GetActiveScene();
+            if (logWarnings)
+                ThreatWarningDiagnostics.Write($"GATES sceneType={activeScene?.SceneType} paused={world.IsPaused} death={_deathSequenceStarted} victory={_victorySequenceStarted} victoryPause={gameplayPausedForVictoryReward} phase={GameState.GamePlayState.Phase} overlay={GameState.ScreenOverlayState.Type} showOverlay={GameState.ScreenOverlayState.ShowOverlay} fade={GameState.WorldFade.Phase} shipFrame={warningShip?.ObjectId} renderCount={renderedList.Count}");
 
             if (!gameplayPausedForVictoryReward)
                 HandleBiomassWarnings();
@@ -357,6 +378,15 @@ namespace TheOmegaStrain.Runtime.Loops
             infectionMs = phaseTimer.Mark();
 
             projectedCoordinates = worldProjector.ProjectToTriangles(renderedList, FrameCounter, projectedCoordinates);
+            incomingThreatWarnings.UpdateFromWorld(warningShip,
+                GameState.SurfaceState.AiObjects, GameState.GamePlayState,
+                !world.IsPaused && !_deathSequenceStarted && !_victorySequenceStarted &&
+                (activeScene?.SceneType is SceneTypes.Game or SceneTypes.Simulation) &&
+                GameState.ScreenOverlayState.Type == ScreenOverlayType.Game &&
+                !GameState.ScreenOverlayState.ShowOverlay &&
+                !GameState.WorldFade.IsFadeOutPendingOrActive && !GameState.WorldFade.IsFadeInPendingOrActive &&
+                !GameState.WorldFade.IsBlack,
+                audioPlayer, soundRegistry);
             projectMs = phaseTimer.Mark();
 
             if (!gameplayPausedForVictoryReward)
@@ -554,6 +584,20 @@ namespace TheOmegaStrain.Runtime.Loops
 
                 foreach (var obj in explodedObjects)
                 {
+                    if (obj.ObjectName == "SpaceSwan" && Logger.ShouldLog(enableShieldDropLogging))
+                    {
+                        var pos = obj.WorldPosition;
+                        var offsets = obj.ObjectOffsets;
+                        Logger.Log(
+                            $"SWAN_EXPLODED id={obj.ObjectId}; hasPowerUp={obj.HasPowerUp}; " +
+                            $"powerUpType={obj.PowerUpType}; onScreen={obj.IsOnScreen}; active={obj.IsActive}; " +
+                            $"health={obj.ImpactStatus?.ObjectHealth}; " +
+                            $"world=({pos?.x:0.##},{pos?.y:0.##},{pos?.z:0.##}); " +
+                            $"offsets=({offsets?.x:0.##},{offsets?.y:0.##},{offsets?.z:0.##})",
+                            "ShieldDrop");
+                        Logger.Flush();
+                    }
+
                     if (EnemySetup.IsEnemyTypeValid(obj.ObjectName))
                     {
                         if (!isTutorialScene)
@@ -605,6 +649,18 @@ namespace TheOmegaStrain.Runtime.Loops
 
                     if (obj.HasPowerUp && obj.WorldPosition != null)
                     {
+                        if (obj.PowerUpType == PowerUpType.Shield &&
+                            !ShieldPowerUpDropHelpers.CanDropShield(
+                                obj,
+                                aiObjects,
+                                GameState.ShipState.ShipWorldPosition ??
+                                SurfacePositionSyncHelpers.GetShipWorldPosition(
+                                    GameState.ShipState.ShipObjectOffsets?.y ?? 0f,
+                                    GameState.ShipState.ShipObjectOffsets?.z ?? 0f)))
+                        {
+                            continue;
+                        }
+
                         // Standard drops stay limited to one at a time. A scene-authored
                         // speed pickup must not disappear while a standard drop is waiting.
                         if (powerUpAlreadyExists && obj.PowerUpType == PowerUpType.Standard)
@@ -1003,6 +1059,7 @@ namespace TheOmegaStrain.Runtime.Loops
 
         private void CompleteWorldFadeReset(I3dWorld world)
         {
+            incomingThreatWarnings.Reset(GameState.GamePlayState);
             StopNonMusicAudio();
             CleanupWorldObjects(world.WorldInhabitants.OfType<OmegaObject3D>().ToList());
             world.WorldInhabitants.Clear();
@@ -1153,7 +1210,7 @@ namespace TheOmegaStrain.Runtime.Loops
                 case "SeederParticlesGuide":
                     inhabitant.Movement.SetParticleGuideCoordinates(null, rotatedMesh.First() as TriangleMeshWithColor);
                     break;
-                case "JetMotor":
+                case "JetMotorStartGuide":
                     inhabitant.Movement.SetParticleGuideCoordinates(rotatedMesh.First() as TriangleMeshWithColor, null);
                     break;
                 case "WeaponDirectionGuide":
@@ -1172,7 +1229,7 @@ namespace TheOmegaStrain.Runtime.Loops
                     if (Logger.ShouldLog(enableLocalLogging)) Logger.Log($"MainLoop Set Guide after rotation: {rotatedMesh.First().vert1.x + ", " + rotatedMesh.First().vert1.y + ", " + rotatedMesh.First().vert1.z} Inhabitant:{inhabitant.ObjectName} ");
                     inhabitant.Movement.SetParticleGuideCoordinates(null, rotatedMesh.First() as TriangleMeshWithColor);
                     break;
-                case "RearEngine":
+                case "RearEngineStartGuide":
                     inhabitant.Movement.SetRearEngineGuideCoordinates(rotatedMesh.First() as TriangleMeshWithColor, null);
                     break;
                 case "RearEngineDirectionGuide":
@@ -1224,6 +1281,42 @@ namespace TheOmegaStrain.Runtime.Loops
                     inhabitant.Movement.SetParticleGuideCoordinates(null, rotatedMesh.First() as TriangleMeshWithColor);
                     break;
             }
+        }
+
+        private bool ShouldIncludeInRenderSet(OmegaObject3D inhabitant)
+        {
+            bool isWithinVisibilityRange = inhabitant.CheckInhabitantVisibility();
+            if (isWithinVisibilityRange)
+            {
+                lastVisibleFrameByObjectId[inhabitant.ObjectId] = FrameCounter;
+                return true;
+            }
+
+            // Surface-bound objects must disappear with their tile. The hold is
+            // only for moving/world objects that can oscillate around the range edge.
+            if (inhabitant.SurfaceBasedId > 0)
+                return false;
+
+            long holdFrames = Math.Max(1L,
+                (long)MathF.Round(ScreenSetup.RuntimeTargetFps * VisibilityHoldSeconds));
+            if (lastVisibleFrameByObjectId.TryGetValue(inhabitant.ObjectId, out long lastVisibleFrame)
+                && FrameCounter - lastVisibleFrame <= holdFrames)
+                return true;
+
+            lastVisibleFrameByObjectId.Remove(inhabitant.ObjectId);
+            return false;
+        }
+
+        private void PruneVisibilityHoldState()
+        {
+            long holdFrames = Math.Max(1L,
+                (long)MathF.Round(ScreenSetup.RuntimeTargetFps * VisibilityHoldSeconds));
+            var expiredIds = lastVisibleFrameByObjectId
+                .Where(entry => FrameCounter - entry.Value > holdFrames)
+                .Select(entry => entry.Key)
+                .ToArray();
+            foreach (int objectId in expiredIds)
+                lastVisibleFrameByObjectId.Remove(objectId);
         }
 
         private void TrackFrameTiming(int frameIndex)

@@ -42,10 +42,27 @@ public class ParticleGuideGeometryTests
     public void RocketExhaustGuide_StartsClearOfNozzleAndPointsAwayFromHull()
     {
         var rocket = Rocket.CreateRocket(parentSurface: null!);
+        Assert.IsTrue(rocket.ObjectParts.Where(p => p.PartName.Contains("Guide")).All(p => !p.IsVisible));
         var start = rocket.ObjectParts.Single(p => p.PartName == "RocketParticlesStartGuide").Triangles[0];
         var guide = rocket.ObjectParts.Single(p => p.PartName == "RocketParticlesDirectionGuide").Triangles[0];
 
-        AssertExhaustGuide(start, guide, rearMostX: -10f, minimumClearance: 2.5f, "Rocket");
+        AssertExhaustGuide(start, guide, rearMostX: -10f * 3.5f, minimumClearance: 2.5f * 3.5f, "Rocket");
+        Assert.AreEqual(-13f * 3.5f, Centroid(start).x, 0.001f);
+        Assert.AreEqual(-15.5f * 3.5f, Centroid(guide).x, 0.001f);
+    }
+
+    [TestMethod]
+    public void Rocket_ScalesHullAndCrashBoxByThreePointFive()
+    {
+        var rocket = Rocket.CreateRocket(null!);
+        var hull = rocket.ObjectParts.Where(part => part.IsVisible).SelectMany(part => part.Triangles)
+            .SelectMany(triangle => new[] { triangle.vert1, triangle.vert2, triangle.vert3 }).ToList();
+        var bounds = AabbBounds.FromPoints(hull);
+        Assert.AreEqual(-35f, bounds.MinX, 0.001f);
+        Assert.AreEqual(38.5f, bounds.MaxX, 0.001f);
+        Assert.AreEqual(73.5f, bounds.MaxX - bounds.MinX, 0.001f);
+        Assert.AreEqual(new AabbBounds(-9.5f * 3.5f, 11f * 3.5f, -1.4f * 3.5f, 1.4f * 3.5f, -1.4f * 3.5f, 1.4f * 3.5f),
+            AabbBounds.FromPoints(rocket.CrashBoxes.Single()));
     }
 
     private static void AssertExhaustGuide(
