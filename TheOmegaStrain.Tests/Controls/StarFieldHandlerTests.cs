@@ -1,7 +1,9 @@
 using TheOmegaStrain.Game.World.Objects;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
+using TheOmegaStrain.Game.Projection;
 using TheOmegaStrain.Runtime.Rendering;
 
 namespace TheOmegaStrain.Tests.Controls;
@@ -9,14 +11,25 @@ namespace TheOmegaStrain.Tests.Controls;
 [TestClass]
 public class StarFieldHandlerTests
 {
+    private int originalScreenWidth;
+    private int originalScreenHeight;
+
     [TestInitialize]
     public void Setup()
     {
+        originalScreenWidth = ScreenSetup.screenSizeX;
+        originalScreenHeight = ScreenSetup.screenSizeY;
         GameState.SurfaceState = new SurfaceState
         {
             GlobalMapPosition = new Vector3 { x = 0f, y = 500f, z = 0f }
         };
         GameState.ObjectIdCounter = 0;
+    }
+
+    [TestCleanup]
+    public void Cleanup()
+    {
+        ScreenSetup.Initialize(originalScreenWidth, originalScreenHeight);
     }
 
     [TestMethod]
@@ -28,10 +41,14 @@ public class StarFieldHandlerTests
 
         var stars = handler.GetStars();
         Assert.AreEqual(StarFieldHandler.TargetStarCount, handler.PooledStarCount);
-        Assert.AreEqual(StarFieldHandler.TargetStarCount, handler.RenderableStarCount);
-        Assert.AreEqual(StarFieldHandler.TargetStarCount, stars.Count);
+        Assert.IsTrue(handler.RenderableStarCount > 0);
+        Assert.IsTrue(handler.RenderableStarCount < handler.PooledStarCount,
+            "Off-screen reserve stars should stay pooled without entering the render list.");
+        Assert.AreEqual(handler.RenderableStarCount, stars.Count);
 
         Assert.IsTrue(stars.All(s => s.ObjectName == "Star"));
+        Assert.IsTrue(stars.All(OmegaPerspectiveProjectorFactory.IntersectsViewport),
+            "A star should begin rendering only when its projected geometry intersects the viewport.");
         Assert.IsTrue(stars.All(s => s.Movement == null), "Stars should not run the old per-object sync movement.");
         Assert.IsTrue(stars.All(s => s.CrashBoxes.Count == 0));
         Assert.IsTrue(stars.All(s => s.ObjectOffsets.x == 0f && s.ObjectOffsets.y == 0f && s.ObjectOffsets.z == 0f));
@@ -103,6 +120,24 @@ public class StarFieldHandlerTests
         Assert.IsTrue(afterFirstFrame > 0f, "Star must not collapse to a point.");
     }
 
+    [DataTestMethod]
+    [DataRow(1280, 720)]
+    [DataRow(1500, 1024)]
+    [DataRow(2560, 1440)]
+    public void GenerateStarfield_UsesProjectedViewportAtDifferentResolutions(int width, int height)
+    {
+        ScreenSetup.Initialize(width, height);
+        GameState.SurfaceState.GlobalMapPosition.y = 500f * ScreenSetup.ScreenScaleY;
+        var handler = new StarFieldHandler(CreateSurface());
+        handler.GenerateStarfield();
+
+        var stars = handler.GetStars();
+        Assert.IsNotNull(stars);
+        Assert.IsTrue(stars.Count > 0);
+        Assert.IsTrue(stars.All(OmegaPerspectiveProjectorFactory.IntersectsViewport),
+            $"Star visibility should follow the {width}x{height} viewport rather than fixed world bounds.");
+    }
+
     private static float MaxVertexRadius(OmegaObject3D star)
     {
         float max = 0f;
@@ -137,7 +172,7 @@ public class StarFieldHandlerTests
     }
 
     [TestMethod]
-    public void GenerateStarfield_RecyclesMostStarsAheadOfTravelDirection()
+    public void GenerateStarfield_RecyclesExitedStarsAfterLargeMovement()
     {
         var handler = new StarFieldHandler(CreateSurface());
         handler.GenerateStarfield();
@@ -146,15 +181,14 @@ public class StarFieldHandlerTests
         handler.GenerateStarfield();
 
         GameState.SurfaceState.GlobalMapPosition = new Vector3 { x = 0f, y = 500f, z = 5000f };
-        handler.GenerateStarfield();
-        handler.GenerateStarfield();
+        for (int frame = 0; frame < 30; frame++)
+            handler.GenerateStarfield();
 
         var stars = handler.GetStars();
-        int ahead = stars.Count(s => s.WorldPosition.z - GameState.SurfaceState.GlobalMapPosition.z > 700f);
-
-        Assert.IsTrue(
-            ahead >= StarFieldHandler.TargetStarCount * 3 / 5,
-            $"Recycled stars should be biased ahead of travel. Ahead={ahead}");
+        Assert.IsNotNull(stars);
+        Assert.IsTrue(stars.Count > 0);
+        Assert.IsTrue(stars.All(OmegaPerspectiveProjectorFactory.IntersectsViewport),
+            "Stars that have fully exited should be recycled instead of lingering beyond the viewport.");
     }
 
     private static Surface CreateSurface()
