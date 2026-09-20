@@ -71,6 +71,7 @@ namespace TheOmegaStrain.Runtime.Loops
         public string DebugMessage { get; set; }
         private bool enableLocalLogging = false;
         private const bool enableProgressionLogging = false;
+        private const bool enableShieldDropLogging = false;
         public bool FadeOutWorld
         {
             get => GameState.WorldFade.IsFadeOutPendingOrActive;
@@ -583,6 +584,20 @@ namespace TheOmegaStrain.Runtime.Loops
 
                 foreach (var obj in explodedObjects)
                 {
+                    if (obj.ObjectName == "SpaceSwan" && Logger.ShouldLog(enableShieldDropLogging))
+                    {
+                        var pos = obj.WorldPosition;
+                        var offsets = obj.ObjectOffsets;
+                        Logger.Log(
+                            $"SWAN_EXPLODED id={obj.ObjectId}; hasPowerUp={obj.HasPowerUp}; " +
+                            $"powerUpType={obj.PowerUpType}; onScreen={obj.IsOnScreen}; active={obj.IsActive}; " +
+                            $"health={obj.ImpactStatus?.ObjectHealth}; " +
+                            $"world=({pos?.x:0.##},{pos?.y:0.##},{pos?.z:0.##}); " +
+                            $"offsets=({offsets?.x:0.##},{offsets?.y:0.##},{offsets?.z:0.##})",
+                            "ShieldDrop");
+                        Logger.Flush();
+                    }
+
                     if (EnemySetup.IsEnemyTypeValid(obj.ObjectName))
                     {
                         if (!isTutorialScene)

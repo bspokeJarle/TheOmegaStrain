@@ -136,6 +136,48 @@ public class LiveGameLoopCleanupTests
     }
 
     [TestMethod]
+    public void CleanupExplodedObjects_VisibleShieldSwanCreatesShieldDrop()
+    {
+        GameState.SurfaceState.GlobalMapPosition = new Vector3 { x = 50000f, z = 51000f };
+        GameState.ShipState = new ShipState
+        {
+            ShipObjectOffsets = new Vector3 { x = 20f, z = 40f },
+            ShipWorldPosition = new Vector3 { x = 50750f, z = 51512f },
+            ShipCrashCenterWorldPosition = new Vector3 { x = 50750f, z = 51512f }
+        };
+
+        // These render offsets place the Swan on Ship even though its raw
+        // WorldPosition is more than 500 units away.
+        var explodedSwan = CreateExplodedObject(21);
+        explodedSwan.ObjectName = "SpaceSwan";
+        explodedSwan.HasPowerUp = true;
+        explodedSwan.PowerUpType = PowerUpType.Shield;
+        explodedSwan.WorldPosition = new Vector3 { x = 50020f, z = 51060f };
+        explodedSwan.ObjectOffsets = new Vector3 { z = 100f };
+
+        var liveDrone = CreateExplodedObject(22);
+        liveDrone.ObjectName = "KamikazeDrone";
+        liveDrone.ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.KamikazeDroneHealth };
+        liveDrone.IsActive = true;
+        liveDrone.WorldPosition = new Vector3 { x = 50020f, z = 51060f };
+        liveDrone.ObjectOffsets = new Vector3 { z = 100f };
+
+        GameState.SurfaceState.AiObjects = new List<OmegaObject3D> { explodedSwan, liveDrone };
+        var world = new TestWorld
+        {
+            WorldInhabitants = new List<I3dObject> { explodedSwan, liveDrone }
+        };
+
+        InvokePrivate(new LiveGameLoop(), "CleanupExplodedObjects", world);
+
+        var shield = world.WorldInhabitants.OfType<OmegaObject3D>()
+            .SingleOrDefault(obj => obj.ObjectName == "PowerUp" && obj.PowerUpType == PowerUpType.Shield);
+        Assert.IsNotNull(shield,
+            "A Shield-carrying Swan destroyed beside Ship must create a Shield while a live Drone is nearby.");
+        Assert.IsTrue(GameState.SurfaceState.AiObjects.Any(obj => obj.ObjectId == shield.ObjectId));
+    }
+
+    [TestMethod]
     public void CleanupExplodedObjects_KillTimePolicyPromotesSeederToPowerUpDrop()
     {
         // Configure a wave where the very first seeder kill should drop a powerup.

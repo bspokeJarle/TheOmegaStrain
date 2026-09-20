@@ -217,10 +217,10 @@ public class FlyingObjectSurfaceClearanceHelpersTests
         Assert.AreEqual(200f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("Seeder"));
         Assert.AreEqual(120f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("KamikazeDrone"));
         Assert.AreEqual(130f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("ZeppelinBomber"));
+        Assert.AreEqual(120f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("SpaceSwan"));
         Assert.AreEqual(25f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("MotherShipSmall"));
         Assert.AreEqual(105f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("MotherShipMedium"));
         Assert.AreEqual(75f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("MotherShipLarge"));
-        Assert.AreEqual(0f, TerrainAvoidanceSetup.GetMinimumSurfaceClearance("SpaceSwan"));
     }
 
     private static Surface CreateSurfacePlane(float pitchDegrees)

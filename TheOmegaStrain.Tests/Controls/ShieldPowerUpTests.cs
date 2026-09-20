@@ -1,9 +1,12 @@
 using RetroMesh.Engine;
+using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Common.OmegaEngineAdapters;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Game.World.Objects;
+using TheOmegaStrain.Gameplay.Helpers;
 
 namespace TheOmegaStrain.Tests.Controls;
 
@@ -52,7 +55,66 @@ public class ShieldPowerUpTests
     }
 
     [TestMethod]
-    public void ShieldDrop_RequiresSwanWithinFiveHundredUnitsOfShip()
+    public void ShieldSupport_WithThreeLiveDrones_MovesOneOffscreenCarrierNearShip()
+    {
+        var originalSurface = GameState.SurfaceState;
+        var originalShip = GameState.ShipState;
+        var originalGameplay = GameState.GamePlayState;
+        try
+        {
+            GameState.SurfaceState = new SurfaceState
+            {
+                GlobalMapPosition = new Vector3 { x = 50000f, z = 51000f }
+            };
+            GameState.ShipState = new ShipState
+            {
+                ShipObjectOffsets = new Vector3 { x = 20f, z = 40f },
+                ShipWorldPosition = new Vector3 { x = 50750f, z = 51512f },
+                ShipCrashCenterWorldPosition = new Vector3 { x = 50750f, z = 51512f }
+            };
+            GameState.GamePlayState = new GamePlayState();
+
+            var carriers = new[]
+            {
+                CreateShieldCarrier(10, 10000f),
+                CreateShieldCarrier(11, 12000f),
+                CreateShieldCarrier(12, 14000f)
+            };
+            var objects = new List<OmegaObject3D>(carriers);
+            for (int i = 0; i < ShieldPowerUpAvailabilityHelpers.ShieldSupportDroneThreshold; i++)
+            {
+                objects.Add(new OmegaObject3D
+                {
+                    ObjectId = 20 + i,
+                    ObjectName = "KamikazeDrone",
+                    IsActive = true,
+                    WorldPosition = new Vector3 { x = 50000f + i, z = 51000f },
+                    ObjectOffsets = new Vector3(),
+                    ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.KamikazeDroneHealth }
+                });
+            }
+
+            bool firstMoved = ShieldPowerUpAvailabilityHelpers.TryMoveShieldCarrierIntoArea(carriers[0], objects);
+            bool secondMoved = ShieldPowerUpAvailabilityHelpers.TryMoveShieldCarrierIntoArea(carriers[1], objects);
+            bool thirdMoved = ShieldPowerUpAvailabilityHelpers.TryMoveShieldCarrierIntoArea(carriers[2], objects);
+
+            Assert.IsTrue(firstMoved);
+            Assert.IsFalse(secondMoved);
+            Assert.IsFalse(thirdMoved, "Only one Shield carrier should be brought into the combat area.");
+            Assert.IsTrue(IsWithinVisibleArea(carriers[0]));
+            Assert.AreEqual(12000f, carriers[1].WorldPosition!.x, 0.001f);
+            Assert.AreEqual(14000f, carriers[2].WorldPosition!.x, 0.001f);
+        }
+        finally
+        {
+            GameState.SurfaceState = originalSurface;
+            GameState.ShipState = originalShip;
+            GameState.GamePlayState = originalGameplay;
+        }
+    }
+
+    [TestMethod]
+    public void ShieldDrop_RequiresSwanToBeVisibleOrWithinFiveHundredUnitsOfShip()
     {
         var shipPosition = new Vector3(1000f, 0f, 1000f);
         var swan = new OmegaObject3D
@@ -74,8 +136,13 @@ public class ShieldPowerUpTests
         Assert.IsTrue(ShieldPowerUpDropHelpers.CanDropShield(swan, aiObjects, shipPosition));
 
         swan.WorldPosition = new Vector3(1501f, 0f, 1000f);
+        swan.IsOnScreen = true;
+        Assert.IsTrue(ShieldPowerUpDropHelpers.CanDropShield(swan, aiObjects, shipPosition),
+            "A visible Swan may leave its Shield even when it is just outside the close-distance fallback.");
+
+        swan.IsOnScreen = false;
         Assert.IsFalse(ShieldPowerUpDropHelpers.CanDropShield(swan, aiObjects, shipPosition),
-            "An off-screen Swan must not leave a distant Shield behind.");
+            "An off-screen Swan farther than 500 units must not leave a distant Shield behind.");
     }
 
     [TestMethod]
@@ -173,4 +240,26 @@ public class ShieldPowerUpTests
 
     private static bool IsFinite(IVector3 vertex) =>
         float.IsFinite(vertex.x) && float.IsFinite(vertex.y) && float.IsFinite(vertex.z);
+
+    private static OmegaObject3D CreateShieldCarrier(int objectId, float worldX) => new()
+    {
+        ObjectId = objectId,
+        ObjectName = "SpaceSwan",
+        HasPowerUp = true,
+        PowerUpType = PowerUpType.Shield,
+        IsActive = true,
+        IsOnScreen = false,
+        WorldPosition = new Vector3 { x = worldX, z = worldX },
+        ObjectOffsets = new Vector3 { z = 600f },
+        ImpactStatus = new ImpactStatus { ObjectHealth = EnemySetup.SpaceSwanHealth }
+    };
+
+    private static bool IsWithinVisibleArea(I3dObject carrier)
+    {
+        var marker = SurfacePositionSyncHelpers.GetMinimapMarkerWorldPosition(carrier);
+        var ship = GameState.ShipState.ShipWorldPosition!;
+        return marker != null &&
+            OmegaObjectHelpers.GetDistanceSquared(marker, ship) <=
+            ScreenSetup.ObjectVisibilityDistance * ScreenSetup.ObjectVisibilityDistance;
+    }
 }

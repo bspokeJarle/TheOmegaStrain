@@ -9,20 +9,35 @@ namespace TheOmegaStrain.Game.Helpers
     {
         public const float MaximumDropDistance = 500f;
         public const int DroneSearchDistanceInScreens = 5;
+        private const bool EnableDiagnostics = false;
 
         public static bool CanDropShield(
             I3dObject source,
             IReadOnlyList<OmegaObject3D> aiObjects,
             IVector3 shipWorldPosition)
         {
-            if (source.WorldPosition == null ||
-                !IsWithinDistance(source.WorldPosition, shipWorldPosition, MaximumDropDistance))
+            var sourcePosition = GetRenderedWorldPosition(source);
+            if (sourcePosition == null)
             {
+                LogDecision(source, null, shipWorldPosition, 0f, 0, 0, null,
+                    allowed: false, reason: "MissingSourcePosition");
+                return false;
+            }
+
+            float sourceDistance = GetDistance(sourcePosition, shipWorldPosition);
+            bool isWithinDropDistance = sourceDistance <= MaximumDropDistance;
+            if (!source.IsOnScreen && !isWithinDropDistance)
+            {
+                LogDecision(source, sourcePosition, shipWorldPosition, sourceDistance, 0, 0, null,
+                    allowed: false, reason: "OffScreenAndBeyondMaximumDropDistance");
                 return false;
             }
 
             float screenWorldSize = SurfaceSetup.DefaultViewPortSize * SurfaceSetup.tileSize;
             float droneSearchDistance = screenWorldSize * DroneSearchDistanceInScreens;
+            int liveDrones = 0;
+            int nearbyLiveDrones = 0;
+            float? nearestDroneDistance = null;
 
             for (int i = 0; i < aiObjects.Count; i++)
             {
@@ -36,14 +51,66 @@ namespace TheOmegaStrain.Game.Helpers
                     continue;
                 }
 
-                if (IsWithinDistance(candidate.WorldPosition, shipWorldPosition, droneSearchDistance))
-                    return true;
+                liveDrones++;
+                var candidatePosition = GetRenderedWorldPosition(candidate);
+                if (candidatePosition == null)
+                    continue;
+
+                float droneDistance = GetDistance(candidatePosition, shipWorldPosition);
+                if (!nearestDroneDistance.HasValue || droneDistance < nearestDroneDistance.Value)
+                    nearestDroneDistance = droneDistance;
+
+                if (droneDistance <= droneSearchDistance)
+                    nearbyLiveDrones++;
             }
 
-            return false;
+            bool allowed = nearbyLiveDrones > 0;
+            LogDecision(
+                source,
+                sourcePosition,
+                shipWorldPosition,
+                sourceDistance,
+                liveDrones,
+                nearbyLiveDrones,
+                nearestDroneDistance,
+                allowed,
+                allowed ? "Allowed" : "NoLiveDroneWithinFiveScreens");
+            return allowed;
         }
 
-        private static bool IsWithinDistance(IVector3 first, IVector3 second, float maxDistance) =>
-            OmegaObjectHelpers.GetDistanceSquared(first, second) <= maxDistance * maxDistance;
+        private static float GetDistance(IVector3 first, IVector3 second) =>
+            System.MathF.Sqrt(OmegaObjectHelpers.GetDistanceSquared(first, second));
+
+        private static IVector3? GetRenderedWorldPosition(I3dObject obj) =>
+            SurfacePositionSyncHelpers.GetMinimapMarkerWorldPosition(obj) ?? obj.WorldPosition;
+
+        private static void LogDecision(
+            I3dObject source,
+            IVector3? sourcePosition,
+            IVector3 shipPosition,
+            float sourceDistance,
+            int liveDrones,
+            int nearbyLiveDrones,
+            float? nearestDroneDistance,
+            bool allowed,
+            string reason)
+        {
+            if (!Logger.ShouldLog(EnableDiagnostics))
+                return;
+
+            var raw = source.WorldPosition;
+            Logger.Log(
+                $"DROP_DECISION id={source.ObjectId}; allowed={allowed}; reason={reason}; " +
+                $"hasPowerUp={source.HasPowerUp}; powerUpType={source.PowerUpType}; " +
+                $"onScreen={source.IsOnScreen}; sourceDistance={sourceDistance:0.##}; " +
+                $"maximumDropDistance={MaximumDropDistance:0.##}; liveDrones={liveDrones}; " +
+                $"nearbyLiveDrones={nearbyLiveDrones}; nearestDroneDistance={(nearestDroneDistance?.ToString("0.##") ?? "none")}; " +
+                $"droneSearchDistance={(SurfaceSetup.DefaultViewPortSize * SurfaceSetup.tileSize * DroneSearchDistanceInScreens):0.##}; " +
+                $"raw=({raw?.x:0.##},{raw?.y:0.##},{raw?.z:0.##}); " +
+                $"rendered=({sourcePosition?.x:0.##},{sourcePosition?.y:0.##},{sourcePosition?.z:0.##}); " +
+                $"ship=({shipPosition.x:0.##},{shipPosition.y:0.##},{shipPosition.z:0.##})",
+                "ShieldDrop");
+            Logger.Flush();
+        }
     }
 }

@@ -35,7 +35,7 @@ namespace TheOmegaStrain.Runtime.Rendering
         // Star geometry is written pre-projection, so the renderer magnifies it by the projection
         // scale. Flying towards a star would otherwise blow it up to an unnatural size, so the
         // on-screen size is capped the same way weather particles are.
-        private const float MaxApparentSize = 6f;
+        private const float MaxApparentSize = 9f;
 
         // Do not show stars if the surface is close to the ground/camera.
         private static float GroundDistanceY => 287.5f * ScreenSetup.ScreenScaleY;
