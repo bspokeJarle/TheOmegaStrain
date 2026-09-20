@@ -630,6 +630,18 @@ namespace TheOmegaStrain.Runtime.Loops
 
                     if (obj.HasPowerUp && obj.WorldPosition != null)
                     {
+                        if (obj.PowerUpType == PowerUpType.Shield &&
+                            !ShieldPowerUpDropHelpers.CanDropShield(
+                                obj,
+                                aiObjects,
+                                GameState.ShipState.ShipWorldPosition ??
+                                SurfacePositionSyncHelpers.GetShipWorldPosition(
+                                    GameState.ShipState.ShipObjectOffsets?.y ?? 0f,
+                                    GameState.ShipState.ShipObjectOffsets?.z ?? 0f)))
+                        {
+                            continue;
+                        }
+
                         // Standard drops stay limited to one at a time. A scene-authored
                         // speed pickup must not disappear while a standard drop is waiting.
                         if (powerUpAlreadyExists && obj.PowerUpType == PowerUpType.Standard)

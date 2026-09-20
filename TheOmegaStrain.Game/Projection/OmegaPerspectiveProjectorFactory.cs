@@ -89,6 +89,70 @@ namespace TheOmegaStrain.Game.Projection
                 && float.IsFinite(screenCenter.x) && float.IsFinite(screenCenter.y);
         }
 
+        /// <summary>
+        /// Uses the renderer's own projection to verify that visible object geometry
+        /// intersects the viewport. The broader world-distance visibility check keeps
+        /// objects ready to enter the frame; it must not by itself make invisible
+        /// geometry eligible for collisions.
+        /// </summary>
+        public static bool IntersectsViewport(OmegaObject3D obj)
+        {
+            var viewport = new ScreenSetupProjectionViewport();
+            if (!TryResolveRenderPosition(obj, viewport, out var position))
+                return false;
+
+            return IntersectsViewport(obj, position, viewport);
+        }
+
+        public static bool IntersectsViewport(
+            OmegaObject3D obj,
+            RenderPosition position,
+            IProjectionViewport viewport)
+        {
+            double minX = double.PositiveInfinity;
+            double minY = double.PositiveInfinity;
+            double maxX = double.NegativeInfinity;
+            double maxY = double.NegativeInfinity;
+            double depth = ClampRenderDepth(position.Z, viewport.PerspectiveAdjustment);
+
+            foreach (var part in obj.ObjectParts)
+            {
+                if (!part.IsVisible)
+                    continue;
+
+                foreach (var triangle in part.Triangles)
+                {
+                    Include(triangle.vert1);
+                    Include(triangle.vert2);
+                    Include(triangle.vert3);
+                }
+            }
+
+            return minX <= viewport.ScreenWidth && maxX >= 0 &&
+                   minY <= viewport.ScreenHeight && maxY >= 0;
+
+            void Include(IVector3 point)
+            {
+                if (!ProjectionMath.TryProjectVertex(
+                        point,
+                        position.X,
+                        position.Y,
+                        depth,
+                        viewport,
+                        out var screen) ||
+                    !double.IsFinite(screen.x) ||
+                    !double.IsFinite(screen.y))
+                {
+                    return;
+                }
+
+                minX = Math.Min(minX, screen.x);
+                maxX = Math.Max(maxX, screen.x);
+                minY = Math.Min(minY, screen.y);
+                maxY = Math.Max(maxY, screen.y);
+            }
+        }
+
         public static IWorldProjector<OmegaObject3D, ProjectedTriangleMesh> Create()
         {
             return Create(new ScreenSetupProjectionViewport());

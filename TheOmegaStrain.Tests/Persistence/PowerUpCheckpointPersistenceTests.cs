@@ -267,6 +267,43 @@ public class PowerUpCheckpointPersistenceTests
     }
 
     [TestMethod]
+    public void CollectingFirstPowerUp_CheckpointKeepsStagedScene1Drones()
+    {
+        var gps = GameState.GamePlayState;
+        gps.PowerUpsCollected = 0;
+
+        var controls = new ShipControls();
+        try
+        {
+            var ship = CreatePowerUpHitShip(61, controls);
+            var powerUp = CreateCrashedPowerUp(62);
+            var stagedDrone = new OmegaObject3D
+            {
+                ObjectId = 63,
+                ObjectName = "KamikazeDrone",
+                IsActive = false,
+                ImpactStatus = new ImpactStatus { HasExploded = false },
+                WorldPosition = new Vector3(),
+                ObjectOffsets = new Vector3(),
+                Rotation = new Vector3(),
+                ObjectParts = new List<I3dObjectPart>()
+            };
+            GameState.SurfaceState.AiObjects.Add(stagedDrone);
+            GameState.SurfaceState.AiObjects.Add(powerUp);
+
+            controls.MoveObject(ship, null, null);
+
+            Assert.IsTrue(gps.IsDecoyUnlocked);
+            Assert.AreEqual(1, gps.CheckpointDronesRemaining,
+                "The Decoy checkpoint must preserve staged Scene 1 drones for restart.");
+        }
+        finally
+        {
+            controls.Dispose();
+        }
+    }
+
+    [TestMethod]
     public void CollectingSpeedPowerUp_PersistsSpeedWithoutAdvancingWeaponTier()
     {
         var gps = GameState.GamePlayState;

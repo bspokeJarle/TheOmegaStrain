@@ -175,7 +175,7 @@ namespace TheOmegaStrain.Game.Scenes.Intro
                 "DEFENSIVE SYSTEMS:\n" +
                 "  - SpaceSwans can drop Shield pickups when destroyed\n" +
                 "  - Fly into a Shield pickup to activate it immediately\n" +
-                "  - Shield lasts 45 seconds and reduces normal damage to 20%\n" +
+                "  - Shield lasts 30 seconds and reduces normal damage to 20%\n" +
                 "  - The Shield icon shrinks in the HUD as protection runs out\n" +
                 "  - Your ship glows while Shield protection is active\n" +
                 "  - DECOY remains the best way to defeat Kamikaze Drones",

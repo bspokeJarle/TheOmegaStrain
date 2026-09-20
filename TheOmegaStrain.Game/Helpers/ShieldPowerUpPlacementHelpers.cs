@@ -6,8 +6,8 @@ namespace TheOmegaStrain.Game.Helpers
 {
     public static class ShieldPowerUpPlacementHelpers
     {
-        private const float FirstSceneCarrierRatio = 0.50f;
-        private const float LastSceneCarrierRatio = 0.25f;
+        private const float FirstSceneCarrierRatio = 0.30f;
+        private const float LastSceneCarrierRatio = 0.15f;
         private const int LastCampaignSceneNumber = 8;
 
         public static float GetShieldCarrierRatio(int sceneNumber)

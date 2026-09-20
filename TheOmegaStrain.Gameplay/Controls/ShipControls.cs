@@ -1572,7 +1572,7 @@ namespace TheOmegaStrain.Gameplay.Controls
                         BeginSurfaceBounceRecovery(reenableGravityAtTop: true);
 
                         int landingDamage = CalculateSurfaceLandingDamage(landingSpeed);
-                        ApplyIncomingDamage(theObject, landingDamage);
+                        ApplyUnshieldedDamage(theObject, landingDamage);
                     }
 
                     if (theObject.ImpactStatus.ObjectHealth > 0)
@@ -1999,6 +1999,15 @@ namespace TheOmegaStrain.Gameplay.Controls
             int appliedDamage = GameState.GamePlayState.CalculateIncomingDamage(normalDamage);
             ship.ImpactStatus.ObjectHealth = (ship.ImpactStatus.ObjectHealth ?? 0) - appliedDamage;
             return appliedDamage;
+        }
+
+        private static int ApplyUnshieldedDamage(I3dObject ship, int damage)
+        {
+            if (ship.ImpactStatus == null || damage <= 0)
+                return 0;
+
+            ship.ImpactStatus.ObjectHealth = (ship.ImpactStatus.ObjectHealth ?? 0) - damage;
+            return damage;
         }
 
         public void ApplyLocalTiltToMesh(int tilt, I3dObject inhabitant)
@@ -2469,7 +2478,8 @@ namespace TheOmegaStrain.Gameplay.Controls
 
                             if (enemy.ObjectName == "Seeder")
                                 seedersLeft++;
-                            else if (enemy.ObjectName == "KamikazeDrone" && enemy.IsActive)
+                            else if (enemy.ObjectName == "KamikazeDrone" &&
+                                     (enemy.IsActive || gameplay.IsDecoyUnlocked))
                                 dronesLeft++;
                             else if ((enemy.ObjectName == "MotherShipSmall" || enemy.ObjectName == "MotherShipMedium" || enemy.ObjectName == "MotherShipLarge") && enemy.IsActive)
                                 motherShipsLeft++;

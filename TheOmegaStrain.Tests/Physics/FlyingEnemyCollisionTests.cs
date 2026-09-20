@@ -221,6 +221,20 @@ public class FlyingEnemyCollisionTests
         Assert.IsFalse(ship.ImpactStatus!.HasCrashed);
     }
 
+    [TestMethod]
+    public void InvisibleGeometry_DoesNotLeaveCollisionOnlyExplosionBehind()
+    {
+        var attack = PrepareFrame(CreateAttackShip(70f));
+        var ship = PrepareFrame(CreateShip(70f));
+        foreach (var part in attack.ObjectParts)
+            part.IsVisible = false;
+
+        CrashDetection.HandleCrashboxes(new() { attack, ship }, isPaused: false);
+
+        Assert.IsFalse(attack.ImpactStatus!.HasCrashed);
+        Assert.IsFalse(ship.ImpactStatus!.HasCrashed);
+    }
+
     [DataTestMethod]
     [DataRow(63f, 175f, true)]
     [DataRow(70f, 175f, true)]

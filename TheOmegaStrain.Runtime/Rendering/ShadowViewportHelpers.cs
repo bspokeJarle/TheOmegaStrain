@@ -54,7 +54,8 @@ internal static class ShadowViewportHelpers
 
         if (anchorZ <= frontLimit && Fits(anchorZ))
             return;
-        if (frontLimit <= backLimit || !CasterIntersectsViewport(caster, casterPosition, viewport))
+        if (frontLimit <= backLimit ||
+            !OmegaPerspectiveProjectorFactory.IntersectsViewport(caster, casterPosition, viewport))
             return;
 
         float candidate = MathF.Min(anchorZ, frontLimit);
@@ -107,33 +108,4 @@ internal static class ShadowViewportHelpers
         }
     }
 
-    private static bool CasterIntersectsViewport(OmegaObject3D caster, RenderPosition position, IProjectionViewport viewport)
-    {
-        double minX = double.PositiveInfinity, minY = double.PositiveInfinity;
-        double maxX = double.NegativeInfinity, maxY = double.NegativeInfinity;
-        double depth = OmegaPerspectiveProjectorFactory.ClampRenderDepth(position.Z, viewport.PerspectiveAdjustment);
-        foreach (var part in caster.ObjectParts)
-        {
-            if (!part.IsVisible)
-                continue;
-            foreach (var triangle in part.Triangles)
-            {
-                Include(triangle.vert1);
-                Include(triangle.vert2);
-                Include(triangle.vert3);
-            }
-        }
-        return minX <= viewport.ScreenWidth && maxX >= 0 && minY <= viewport.ScreenHeight && maxY >= 0;
-
-        void Include(IVector3 point)
-        {
-            if (!ProjectionMath.TryProjectVertex(point, position.X, position.Y, depth, viewport, out var screen)
-                || !double.IsFinite(screen.x) || !double.IsFinite(screen.y))
-                return;
-            minX = Math.Min(minX, screen.x);
-            maxX = Math.Max(maxX, screen.x);
-            minY = Math.Min(minY, screen.y);
-            maxY = Math.Max(maxY, screen.y);
-        }
-    }
 }

@@ -385,6 +385,42 @@ public class SceneHandlerSavedStateIsolationTests
     }
 
     [TestMethod]
+    public void UpdateFrame_LegacyScene1DecoyCheckpoint_RestoresStagedDroneWave()
+    {
+        var handler = new SceneHandler();
+        var world = CreateWorld(handler);
+        var loaded = new SavedGameState
+        {
+            PlayerName = "Jarle",
+            SceneIndex = 1,
+            PowerUpsCollected = 1,
+            HasCheckpoint = true,
+            CheckpointPowerUpsCollected = 1,
+            CheckpointSceneIndex = 1,
+            CheckpointSeedersRemaining = 4,
+            CheckpointDronesRemaining = 0,
+            CheckpointMotherShipsRemaining = 0,
+            CheckpointInitialSeeders = 7,
+            CheckpointInitialDrones = 0,
+            CheckpointInitialMotherShips = 1
+        };
+
+        SetPrivateField(handler, "_pendingSavedState", loaded);
+        SetPrivateField(handler, "_targetSceneIndex", 1);
+        SetPrivateField(handler, "_pendingSceneAdvance", true);
+        SetPrivateField(handler, "_pendingSceneAdvanceFramesLeft", 0);
+
+        handler.UpdateFrame(world);
+
+        var gps = GameState.GamePlayState;
+        Assert.AreEqual(4, gps.DronesRemaining);
+        Assert.AreEqual(4, gps.CheckpointDronesRemaining);
+        Assert.AreEqual(4, gps.InitialDrones);
+        Assert.AreEqual(4, GameState.SurfaceState.AiObjects.Count(o =>
+            o.ObjectName == "KamikazeDrone" && o.IsActive));
+    }
+
+    [TestMethod]
     public void UpdateFrame_MismatchedCheckpoint_DoesNotOverwritePersistedSave()
     {
         var handler = new SceneHandler();

@@ -122,6 +122,12 @@ namespace TheOmegaStrain.Runtime.Collision
             bool isBothEnemies = flagsA.IsEnemy && flagsB.IsEnemy;
 
             if (string.IsNullOrEmpty(flagsA.Name) || string.IsNullOrEmpty(flagsB.Name)) return true;
+            // The broad world-distance list intentionally prepares objects before they
+            // enter the image. It must not create audible/visible crashes for geometry
+            // that is still outside the viewport. Terrain avoidance remains active so
+            // AI objects can turn away from obstacles before they become visible.
+            if (!isTerrainAvoidanceAiObstaclePair &&
+                (!IntersectsViewportCached(a) || !IntersectsViewportCached(b))) return true;
             if (flagsA.Name == flagsB.Name) return true;
             if (isInhabitantStatic && isOtherStatic) return true;
             if ((isInhabitantStatic || isOtherStatic) &&

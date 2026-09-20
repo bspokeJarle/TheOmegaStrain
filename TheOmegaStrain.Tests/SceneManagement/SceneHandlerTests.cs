@@ -610,7 +610,7 @@ public class SceneHandlerTests
         Assert.AreEqual(4, drones, "Scene1 should have 4 kamikaze drones.");
         Assert.AreEqual(1, motherShips, "Scene1 should have 1 mothership.");
         Assert.AreEqual(50, swans, "Scene1 should have 50 space swans.");
-        Assert.AreEqual(25, shieldSwans, "Half of Scene1's SpaceSwans should carry a Shield.");
+        Assert.AreEqual(15, shieldSwans, "Thirty percent of Scene1's SpaceSwans should carry a Shield.");
     }
 
     [TestMethod]

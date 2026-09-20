@@ -33,7 +33,7 @@ namespace TheOmegaStrain.Common.CommonSetup
         public static int ZeppelinBomberKillScore { get; set; } = 75;
         public static int DefaultKillScore { get; set; } = 25;
         public static int PowerUpCollectScore { get; set; } = 150;
-        public const float ShieldDurationSeconds = 45f;
+        public const float ShieldDurationSeconds = 30f;
         public const float ShieldDamageMultiplier = 0.20f;
         public static int PlanetStyleBonusScoreCap { get; set; } = 2000;
         public static int CleanLoopStyleBonusScore { get; set; } = 250;

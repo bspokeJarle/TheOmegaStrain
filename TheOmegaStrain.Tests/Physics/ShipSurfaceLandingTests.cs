@@ -486,6 +486,27 @@ public class ShipSurfaceLandingTests
     }
 
     [TestMethod]
+    public void ShipControls_WhenShieldedSurfaceCrash_DoesNotReduceGroundDamage()
+    {
+        GameState.GamePlayState.ActivateShield();
+        var ship = Ship.CreateShip(parentSurface: null);
+        ship.ObjectName = "Ship";
+        ship.WorldPosition = new Vector3();
+        ship.ImpactStatus = new ImpactStatus
+        {
+            ObjectHealth = ShipSetup.DefaultShipHealth,
+            HasCrashed = true,
+            ObjectName = "Surface",
+            ImpactDirection = ImpactDirection.Bottom
+        };
+
+        ship.Movement!.MoveObject(ship, null, null);
+
+        Assert.AreEqual(ShipSetup.DefaultShipHealth - 2, ship.ImpactStatus.ObjectHealth,
+            "Shield must protect against enemies and weapons, not the ground.");
+    }
+
+    [TestMethod]
     public void ShipControls_WhenSurfaceCrashOnLandingPlatform_RecoversWithoutDamage()
     {
         var map = CreateSurfaceMap(40, 40);

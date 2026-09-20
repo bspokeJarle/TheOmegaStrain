@@ -175,6 +175,7 @@ namespace TheOmegaStrain.Game.SceneManagement
 
             if (hadCheckpoint)
             {
+                snapshot = RepairLegacyScene1DroneCheckpoint(snapshot);
                 int restoredMotherShips = ResolveRestoredMotherShipCount(snapshot.MotherShipsRemaining);
 
                 TrimEnemies(world, "Seeder", snapshot.SeedersRemaining);
@@ -508,7 +509,10 @@ namespace TheOmegaStrain.Game.SceneManagement
                 if (shouldRestoreCheckpoint)
                 {
                     var snapshot = gps.CaptureCheckpointSnapshot();
+                    snapshot = RepairLegacyScene1DroneCheckpoint(snapshot);
                     ApplyCheckpointSnapshotToCurrentState(gps, snapshot);
+                    gps.CheckpointDronesRemaining = snapshot.DronesRemaining;
+                    gps.CheckpointInitialDrones = snapshot.InitialDrones;
                     int restoredMotherShips = ResolveRestoredMotherShipCount(snapshot.MotherShipsRemaining);
 
                     TrimEnemies(world, "Seeder", snapshot.SeedersRemaining);
@@ -1907,6 +1911,31 @@ namespace TheOmegaStrain.Game.SceneManagement
             // Keep scene mothership candidates even when old checkpoint saves have 0 remaining,
             // otherwise late-phase activation can never happen.
             return sceneMotherShips;
+        }
+
+        private static GamePlayState.CheckpointSnapshot RepairLegacyScene1DroneCheckpoint(
+            GamePlayState.CheckpointSnapshot snapshot)
+        {
+            // Older Scene 1 Decoy checkpoints were captured before the director activated
+            // the staged drone wave, so both drone counts were saved as zero. A real cleared
+            // wave has a non-zero initial count, while the broken first-powerup save does not.
+            if (snapshot.SceneIndex != 1 ||
+                snapshot.PowerUpsCollected != 1 ||
+                snapshot.SeedersRemaining <= 0 ||
+                snapshot.DronesRemaining != 0 ||
+                snapshot.InitialDrones != 0)
+            {
+                return snapshot;
+            }
+
+            int stagedDrones = CountSceneAi("KamikazeDrone");
+            return stagedDrones <= 0
+                ? snapshot
+                : snapshot with
+                {
+                    DronesRemaining = stagedDrones,
+                    InitialDrones = stagedDrones
+                };
         }
 
         private static int CountSceneMotherShips()
