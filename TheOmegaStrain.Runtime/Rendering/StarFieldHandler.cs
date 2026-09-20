@@ -28,13 +28,14 @@ namespace TheOmegaStrain.Runtime.Rendering
         private const float DirectionalSpawnAheadMin = 900f;
         private const float DirectionalSpawnAheadMax = 3300f;
         private const float DirectionalLateralSpreadFactor = 0.88f;
-        private const float TravelBehindRecycleDistance = 2200f;
+        private const float TravelBehindRecycleDistance = 0f;
         private const float TravelAheadRecycleDistance = 3900f;
         private const int DirectionalSpawnModulo = 5;
 
-        // Star geometry is written pre-projection, so the renderer magnifies it by the projection
-        // scale. Flying towards a star would otherwise blow it up to an unnatural size, so the
-        // on-screen size is capped the same way weather particles are.
+        // Stars grow modestly as their true world-space distance closes. Geometry is written
+        // pre-projection, so the scale also compensates for the renderer's Z perspective.
+        private const float ApproachGrowthDistance = 2200f;
+        private const float MaximumApproachGrowth = 1.55f;
         private const float MaxApparentSize = 9f;
 
         // Do not show stars if the surface is close to the ground/camera.
@@ -218,14 +219,26 @@ namespace TheOmegaStrain.Runtime.Rendering
         }
 
         /// <summary>
-        /// Rewrites the star's vertices from its base mesh, shrunk so the star never exceeds
-        /// MaxApparentSize on screen. Distant stars are left at full size.
+        /// Rewrites the star from its immutable base mesh so its apparent size follows actual
+        /// distance in any travel direction. This avoids the old grow-then-shrink behaviour
+        /// caused by using renderer Z as the approach distance.
         /// </summary>
-        private static void ApplyApparentSizeClamp(StarState state, IVector3 currentWorldPos)
+        private static void ApplyApproachSize(StarState state, IVector3 currentWorldPos)
         {
-            float relativeZ = state.Star.WorldPosition.z - currentWorldPos.z;
-            float scale = WorldWeatherField.GetProjectionScale(relativeZ, 0f);
-            float shrink = WorldWeatherField.GetApparentSizeShrink(state.BaseHalfExtent, scale, MaxApparentSize);
+            float dx = state.Star.WorldPosition.x - currentWorldPos.x;
+            float dy = state.Star.WorldPosition.y - currentWorldPos.y;
+            float dz = state.Star.WorldPosition.z - currentWorldPos.z;
+            float distance = MathF.Sqrt(dx * dx + dy * dy + dz * dz);
+            float approach = 1f - Math.Clamp(distance / ApproachGrowthDistance, 0f, 1f);
+            float growth = 1f + approach * (MaximumApproachGrowth - 1f);
+            float desiredApparentSize = MathF.Min(MaxApparentSize, state.BaseHalfExtent * growth);
+
+            // The renderer uses mapZ - objectZ as local depth. Compensate for that projection
+            // so world-space distance, not travel direction, controls the visible growth.
+            float localRenderZ = currentWorldPos.z - state.Star.WorldPosition.z;
+            float projectionScale = WorldWeatherField.GetProjectionScale(localRenderZ, 0f);
+            float geometryScale = desiredApparentSize /
+                MathF.Max(0.001f, state.BaseHalfExtent * projectionScale);
 
             var triangles = state.Star.ObjectParts[0].Triangles;
             var baseVertices = state.BaseVertices;
@@ -233,9 +246,9 @@ namespace TheOmegaStrain.Runtime.Rendering
             for (int i = 0; i < triangles.Count; i++)
             {
                 var tri = triangles[i];
-                WriteVertex(tri.vert1, baseVertices[i * 3], shrink);
-                WriteVertex(tri.vert2, baseVertices[i * 3 + 1], shrink);
-                WriteVertex(tri.vert3, baseVertices[i * 3 + 2], shrink);
+                WriteVertex(tri.vert1, baseVertices[i * 3], geometryScale);
+                WriteVertex(tri.vert2, baseVertices[i * 3 + 1], geometryScale);
+                WriteVertex(tri.vert3, baseVertices[i * 3 + 2], geometryScale);
             }
         }
 
@@ -248,10 +261,10 @@ namespace TheOmegaStrain.Runtime.Rendering
 
         private void UpdateStar(StarState state, IVector3 currentWorldPos)
         {
-            ApplyApparentSizeClamp(state, currentWorldPos);
-
             if (state.FadeMode == StarFadeMode.FadingOutForRecycle)
             {
+                // Keep the final approach size while fading. Recomputing after the star has
+                // passed would make it visibly shrink before recycling.
                 state.Opacity = Math.Max(0f, state.Opacity - FadeOutStep);
                 if (state.Opacity <= 0f)
                     ResetStarForFadeIn(state, currentWorldPos, ShouldSpawnAhead());
@@ -259,6 +272,8 @@ namespace TheOmegaStrain.Runtime.Rendering
                 ApplyOpacity(state);
                 return;
             }
+
+            ApplyApproachSize(state, currentWorldPos);
 
             if (ShouldRecycle(state, currentWorldPos))
             {
