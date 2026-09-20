@@ -10,6 +10,8 @@ using System.Reflection;
 using TheOmegaStrain.Runtime.Loops;
 using TheOmegaStrain.Runtime.Rendering;
 using TheOmegaStrain.Common.CommonSetup;
+using TheOmegaStrain.Game.Projection;
+using TheOmegaStrain.Game.World.Objects;
 
 namespace TheOmegaStrain.Tests.Loops;
 
@@ -75,6 +77,25 @@ public class LiveGameLoopCleanupTests
 
         Assert.IsFalse(world.WorldInhabitants.Any(x => x.ObjectId == 10));
         Assert.IsTrue(world.WorldInhabitants.Any(x => x.ObjectId == 11));
+    }
+
+    [TestMethod]
+    public void RenderVisibility_HoldsWorldObjectForOneSecondAfterLeavingRange()
+    {
+        GameState.SurfaceState.GlobalMapPosition = new Vector3();
+        var obj = CreateRenderableObject(123, "KamikazeDrone", new CountingMovement());
+        obj.WorldPosition = new Vector3(100f, 0f, 100f);
+        var loop = new LiveGameLoop();
+
+        SetPrivate(loop, "FrameCounter", 1L);
+        Assert.IsTrue(InvokePrivateResult<bool>(loop, "ShouldIncludeInRenderSet", obj));
+
+        obj.WorldPosition = new Vector3(10000f, 0f, 10000f);
+        SetPrivate(loop, "FrameCounter", 2L);
+        Assert.IsTrue(InvokePrivateResult<bool>(loop, "ShouldIncludeInRenderSet", obj));
+
+        SetPrivate(loop, "FrameCounter", 2L + ScreenSetup.RuntimeTargetFps);
+        Assert.IsFalse(InvokePrivateResult<bool>(loop, "ShouldIncludeInRenderSet", obj));
     }
 
     [TestMethod]
@@ -484,13 +505,13 @@ public class LiveGameLoopCleanupTests
             ground.Rotation = new Vector3(pitch, 0f, 0f);
             ground.ObjectOffsets = new Vector3(0f, 500f, 400f);
             GameState.SurfaceState.SurfaceViewportObject = ground;
-            var caster = CreateRenderableObject(302, "Seeder", new CountingMovement(), parentSurface: surface);
+            var caster = Seeder.CreateSeeder(surface);
+            caster.ObjectId = 302;
+            caster.Movement = new CountingMovement();
             caster.WorldPosition = new Vector3(1000f, 0f, 1000f);
             caster.ObjectOffsets = new Vector3(0f, 300f, 400f);
             caster.Rotation = new Vector3(pitch, 0f, 0f);
             caster.HasShadow = true;
-            caster.ObjectParts[0].PartName = "Shadow";
-            caster.ObjectParts[0].IsVisible = false;
             var world = new TestWorld
             {
                 WorldInhabitants = casterFirst ? new List<I3dObject> { caster, ground } : new List<I3dObject> { ground, caster }
@@ -504,6 +525,11 @@ public class LiveGameLoopCleanupTests
                 terrainHeight = frame.Height;
                 GameState.SurfaceState.GlobalMapPosition = new Vector3(1000f + frame.X, 0f, 1000f + frame.Z);
                 loop.UpdateWorld(world, ref projected, ref crashBoxes);
+                var renderedField = typeof(LiveGameLoop).GetField("renderedObjectBuffer", BindingFlags.Instance | BindingFlags.NonPublic)!;
+                var rendered = (List<OmegaObject3D>)renderedField.GetValue(loop)!;
+                var renderedCaster = rendered.Single(o => o.ObjectId == caster.ObjectId);
+                Assert.IsTrue(OmegaPerspectiveProjectorFactory.IntersectsViewport(renderedCaster),
+                    "The shadow fixture's visible body must intersect the viewport.");
                 var field = typeof(LiveGameLoop).GetField("shadowObjectBuffer", BindingFlags.Instance | BindingFlags.NonPublic)!;
                 var shadows = (List<OmegaObject3D>)field.GetValue(loop)!;
                 Assert.AreEqual(1, shadows.Count, "A caster before Surface must also cast a shadow on the first frame.");
@@ -606,6 +632,13 @@ public class LiveGameLoopCleanupTests
         var method = typeof(LiveGameLoop).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
         Assert.IsNotNull(method, $"Expected private method '{methodName}' to exist.");
         method.Invoke(loop, args);
+    }
+
+    private static T InvokePrivateResult<T>(LiveGameLoop loop, string methodName, params object?[] args)
+    {
+        var method = typeof(LiveGameLoop).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.IsNotNull(method, $"Expected private method '{methodName}' to exist.");
+        return (T)method.Invoke(loop, args)!;
     }
 
     private static void SetPrivate(LiveGameLoop loop, string fieldName, object value)

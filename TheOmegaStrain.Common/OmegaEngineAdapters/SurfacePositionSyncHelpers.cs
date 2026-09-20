@@ -67,6 +67,31 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters
                     + shipOffsets.z + shipLocalZ);
         }
 
+        /// <summary>
+        /// Returns the world X/Z directly below an object's rendered collision
+        /// centre. Object and Surface offsets use opposite signs along render Z.
+        /// Use this for terrain interaction performed at a flying object's visible
+        /// location, such as Seeder infection.
+        /// </summary>
+        public static Vector3 GetSurfaceFootprintWorldPosition(I3dObject obj)
+        {
+            var world = obj.WorldPosition ?? new Vector3();
+            var offsets = obj.ObjectOffsets;
+            var surfaceOffsets = GameState.SurfaceState.SurfaceViewportObject?.ObjectOffsets;
+            if (surfaceOffsets == null)
+                return new Vector3(world.x, world.y, world.z);
+
+            var centre = ObjectCollisionGeometry.GetRotatedLocalCrashCenter(obj);
+            float viewportCenterOffset = MapSetup.viewPortCenterOffsetX;
+
+            return new Vector3(
+                world.x + viewportCenterOffset
+                    + (offsets?.x ?? 0f) + centre.x - (surfaceOffsets?.x ?? 0f),
+                world.y,
+                world.z + viewportCenterOffset
+                    - (offsets?.z ?? 0f) - centre.z + (surfaceOffsets?.z ?? 0f));
+        }
+
         public static Vector3? GetGuidanceTargetWorldPosition(I3dObject obj)
         {
             return WorldPositionMath.GetWorldPositionWithXOffset(obj, ScreenSetup.screenSizeX / 2f, CreateVector);

@@ -152,6 +152,26 @@ public class SurfacePositionSyncHelpersTests
         Assert.AreEqual(2000f, guidanceWorld.z, 0.1f);
     }
 
+    [TestMethod]
+    public void GetSurfaceFootprintWorldPosition_UsesRenderedOffsetSigns()
+    {
+        GameState.SurfaceState = new SurfaceState
+        {
+            SurfaceViewportObject = new OmegaObject3D
+            {
+                ObjectId = 900,
+                ObjectOffsets = new Vector3(75f, 0f, 400f)
+            }
+        };
+        var obj = CreateObject(worldX: 1000f, worldZ: 2000f, offsetX: 25f);
+        obj.ObjectOffsets.z = 600f;
+
+        var footprint = SurfacePositionSyncHelpers.GetSurfaceFootprintWorldPosition(obj);
+
+        Assert.AreEqual(1000f + MapSetup.viewPortCenterOffsetX + 25f - 75f, footprint.x, 0.01f);
+        Assert.AreEqual(2000f + MapSetup.viewPortCenterOffsetX - 600f + 400f, footprint.z, 0.01f);
+    }
+
     private static OmegaObject3D CreateObject(float worldX, float worldZ, float offsetX)
     {
         return new OmegaObject3D

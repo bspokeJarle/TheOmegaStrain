@@ -11,7 +11,7 @@ namespace TheOmegaStrain.Game.Projection
         // Keep close objects readable without changing their world position, physics,
         // collision or weapon origins. At the cap an object is 2.5 times its normal
         // perspective size (before the normal ObjectZoom is applied).
-        internal const double MaximumPerspectiveScale = 2.5;
+        internal const double MaximumPerspectiveScale = SurfaceRenderAnchorHelpers.MaximumPerspectiveScale;
 
         /// <summary>
         /// Converts a caster's render anchor to Surface-local shadow coordinates.
@@ -39,25 +39,8 @@ namespace TheOmegaStrain.Game.Projection
             out float localY,
             out float localZ)
         {
-            localX = localY = localZ = 0f;
-            double perspective = ScreenSetup.perspectiveAdjustment;
-            double casterDepth = ClampRenderDepth(casterPosition.Z, perspective);
-            double surfaceDepth = ClampRenderDepth(surfacePosition.Z, perspective);
-
-            // Use the renderer's projection, including zoom and its near-depth cap.
-            if (!ProjectionMath.TryProjectVertex(new Vector3(1f, 0f, 0f),
-                    0, 0, casterDepth, perspective, ScreenSetup.defaultObjectZoom, out var unit)
-                || !double.IsFinite(unit.x) || unit.x <= 0)
-                return false;
-
-            // Projection is vertex.xy * scale + objectPosition.xy. An object's
-            // translation therefore cannot be copied straight into shadow vertices.
-            localX = (float)((casterPosition.X - surfacePosition.X) / unit.x);
-            localY = (float)((casterPosition.Y - surfacePosition.Y) / unit.x);
-            // The denominator is perspective + objectDepth - vertex.z. Match the
-            // caster's depth by SUBTRACTING it from Surface's depth, not vice versa.
-            localZ = (float)(surfaceDepth - casterDepth);
-            return float.IsFinite(localX) && float.IsFinite(localY) && float.IsFinite(localZ);
+            return SurfaceRenderAnchorHelpers.TryGetSurfaceLocalAnchor(
+                casterPosition, surfacePosition, out localX, out localY, out localZ);
         }
 
         /// <summary>
@@ -186,7 +169,9 @@ namespace TheOmegaStrain.Game.Projection
                 (obj.ObjectName == "Particle" && obj.ImpactStatus?.ObjectName is "Rocket" or "EnemyRocket"))
                 return true;
 
-            return obj.ObjectName == "Star" || obj.CheckInhabitantVisibility();
+            // LiveGameLoop owns the frame's culling decision, including its short
+            // exit hold. Do not immediately undo that decision with another range test.
+            return obj.ObjectName == "Star" || obj.IsOnScreen || obj.CheckInhabitantVisibility();
         }
 
         private static bool TryResolveRenderPosition(
@@ -232,15 +217,7 @@ namespace TheOmegaStrain.Game.Projection
         // exact depth cap, rather than a second approximation of perspective.
         public static double ClampRenderDepth(double screenZ, double perspectiveAdjustment)
         {
-            if (perspectiveAdjustment <= 0)
-                return screenZ;
-
-            // Projection scale = perspectiveAdjustment /
-            //                    (screenZ + perspectiveAdjustment).
-            // Raising only the render depth prevents the denominator approaching zero.
-            double nearestRenderDepth =
-                (perspectiveAdjustment / MaximumPerspectiveScale) - perspectiveAdjustment;
-            return Math.Max(screenZ, nearestRenderDepth);
+            return SurfaceRenderAnchorHelpers.ClampRenderDepth(screenZ, perspectiveAdjustment);
         }
 
         private sealed class ScreenSetupProjectionViewport : IProjectionViewport

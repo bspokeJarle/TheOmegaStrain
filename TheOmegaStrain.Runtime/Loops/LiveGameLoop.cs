@@ -49,12 +49,14 @@ namespace TheOmegaStrain.Runtime.Loops
         private readonly List<OmegaObject3D> shadowObjectBuffer = new();
         private readonly List<OmegaObject3D> renderedObjectBuffer = new();
         private readonly ObjectScreenStateTracker<OmegaObject3D> aiScreenTracker = new();
+        private readonly Dictionary<int, long> lastVisibleFrameByObjectId = new();
         private readonly HashSet<int> pendingExplosionCleanupIds = new();
         private readonly HashSet<int> publishedExplosionIds = new();
         private IGameEventBus? explosionCleanupEventBus;
         private StarFieldHandler StarFieldHandler { get; set; }
 
         private const float DefaultMusicVolume = 0.15f;
+        private const float VisibilityHoldSeconds = 1f;
         private readonly IAudioPlayer audioPlayer = new NAudioAudioPlayer(AudioSetup.AudioBasePath, AudioSetup.CreateRuntimeSettings());
         private readonly ISoundRegistry soundRegistry = new JsonSoundRegistry(AudioSetup.SoundRegistryPath);
         private SoundDefinition MusicDef { get; set; } = null;
@@ -117,6 +119,9 @@ namespace TheOmegaStrain.Runtime.Loops
         {
             framePerformanceTracker.RestartFrame();
             FrameCounter++;
+            long visibilityPruneInterval = Math.Max(1L, ScreenSetup.RuntimeTargetFps * 5L);
+            if (FrameCounter % visibilityPruneInterval == 0)
+                PruneVisibilityHoldState();
             bool logWarnings = ThreatWarningDiagnostics.ShouldSample(ref _nextWarningLog);
             if (logWarnings)
                 ThreatWarningDiagnostics.Write($"LOOP frame={FrameCounter} phase={GameState.GamePlayState.Phase} scene={GameState.GamePlayState.SceneIndex} paused={world.IsPaused} ai={GameState.SurfaceState.AiObjects.Count} inhabitants={world.WorldInhabitants.Count}");
@@ -156,7 +161,7 @@ namespace TheOmegaStrain.Runtime.Loops
                     if (inhabitant.ObjectParts.Count == 0) continue;
                     if (!inhabitant.IsActive) continue;
 
-                    if (inhabitant is OmegaObject3D concreteInhabitant && concreteInhabitant.CheckInhabitantVisibility())
+                    if (inhabitant is OmegaObject3D concreteInhabitant && ShouldIncludeInRenderSet(concreteInhabitant))
                     {
                         activeWorld.Add(concreteInhabitant);
                     }
@@ -212,7 +217,6 @@ namespace TheOmegaStrain.Runtime.Loops
 
             foreach (var inhabitant in deepCopiedWorld)
             {
-                if (inhabitant.ObjectName != "Star" && !inhabitant.CheckInhabitantVisibility()) continue;
                 inhabitant.IsOnScreen = true;
                 if (doAiMark)
                 {
@@ -1262,6 +1266,42 @@ namespace TheOmegaStrain.Runtime.Loops
                     inhabitant.Movement.SetParticleGuideCoordinates(null, rotatedMesh.First() as TriangleMeshWithColor);
                     break;
             }
+        }
+
+        private bool ShouldIncludeInRenderSet(OmegaObject3D inhabitant)
+        {
+            bool isWithinVisibilityRange = inhabitant.CheckInhabitantVisibility();
+            if (isWithinVisibilityRange)
+            {
+                lastVisibleFrameByObjectId[inhabitant.ObjectId] = FrameCounter;
+                return true;
+            }
+
+            // Surface-bound objects must disappear with their tile. The hold is
+            // only for moving/world objects that can oscillate around the range edge.
+            if (inhabitant.SurfaceBasedId > 0)
+                return false;
+
+            long holdFrames = Math.Max(1L,
+                (long)MathF.Round(ScreenSetup.RuntimeTargetFps * VisibilityHoldSeconds));
+            if (lastVisibleFrameByObjectId.TryGetValue(inhabitant.ObjectId, out long lastVisibleFrame)
+                && FrameCounter - lastVisibleFrame <= holdFrames)
+                return true;
+
+            lastVisibleFrameByObjectId.Remove(inhabitant.ObjectId);
+            return false;
+        }
+
+        private void PruneVisibilityHoldState()
+        {
+            long holdFrames = Math.Max(1L,
+                (long)MathF.Round(ScreenSetup.RuntimeTargetFps * VisibilityHoldSeconds));
+            var expiredIds = lastVisibleFrameByObjectId
+                .Where(entry => FrameCounter - entry.Value > holdFrames)
+                .Select(entry => entry.Key)
+                .ToArray();
+            foreach (int objectId in expiredIds)
+                lastVisibleFrameByObjectId.Remove(objectId);
         }
 
         private void TrackFrameTiming(int frameIndex)

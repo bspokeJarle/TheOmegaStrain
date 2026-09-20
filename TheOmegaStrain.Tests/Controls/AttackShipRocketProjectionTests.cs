@@ -77,6 +77,23 @@ public partial class AttackShipWeaponTests
         Assert.AreEqual(visible, triangles.Count > 0);
     }
 
+    [TestMethod]
+    public void ProjectileProjection_RespectsFrameVisibilityHoldForOrdinaryObject()
+    {
+        var owner = CreateAttackShip();
+        Fire(owner, Now);
+        var obj = (OmegaObject3D)owner.WeaponSystems!.ActiveWeapons.Single().WeaponObject;
+        obj.ObjectName = "AttackShip";
+        obj.WorldPosition = new Vector3(45000, 0, 50000);
+        obj.ObjectOffsets = new Vector3(5000, 0, 400);
+        obj.IsOnScreen = true;
+
+        Assert.IsFalse(obj.CheckInhabitantVisibility());
+        Assert.IsTrue(OmegaPerspectiveProjectorFactory.Create()
+            .ProjectToTriangles(new() { obj }, 0)
+            .Count > 0);
+    }
+
     [DataTestMethod]
     [DataRow("Rocket", true)]
     [DataRow("EnemyRocket", true)]

@@ -59,6 +59,8 @@ namespace TheOmegaStrain.Runtime.Rendering
         public static float TerrainShadowInwardOffset = 250f;
         public static float TerrainShadowSideOffset = -12f;
         public static float TerrainShadowSurfaceLift = 10f;
+        public static float TerrainShadowNudgeStartAltitude = 75f;
+        public static float TerrainShadowNudgeFullAltitude = 250f;
         private static readonly OmegaMeshRotation ShadowRotation = new();
         // Gentle height response: 300 units now shrinks the base scale by 6%,
         // instead of 60%. Perspective still handles apparent camera distance.
@@ -300,13 +302,22 @@ namespace TheOmegaStrain.Runtime.Rendering
                 // Ship and flying casters use the same nudge before scaling and
                 // projection. Size uses the original clearance, not the nudged
                 // terrain. Do not add a separate map-corner correction here.
-                shadowBaseX += TerrainShadowSideOffset;
-                shadowBaseZ -= TerrainShadowInwardOffset;
+                // Ship is screen-fixed, so its terrain clearance is stable and
+                // can safely fade the cosmetic inward nudge near contact. World
+                // objects keep the fixed nudge so camera travel cannot move their
+                // shadows relative to them.
+                float placementNudgeFactor = isShip
+                    ? CalculateTerrainShadowNudgeFactor(flyingAltitude)
+                    : 1f;
+                float appliedSideOffset = TerrainShadowSideOffset * placementNudgeFactor;
+                float appliedInwardOffset = TerrainShadowInwardOffset * placementNudgeFactor;
+                shadowBaseX += appliedSideOffset;
+                shadowBaseZ -= appliedInwardOffset;
                 // Visible foreground casters get a bottom-edge adjustment before
                 // strict terrain draping below. Others retain the early rejection.
                 if (!inhabitant.IsOnScreen && !IsWithinSurfaceBounds(rotatedTiles, shadowBaseX, shadowBaseZ))
                     return;
-                if ((TerrainShadowSideOffset != 0f || TerrainShadowInwardOffset != 0f)
+                if ((appliedSideOffset != 0f || appliedInwardOffset != 0f)
                     && !TryGetSurfaceGroundPoint(rotatedTiles, shadowBaseX, shadowBaseZ, out _, out shadowBaseY, out _))
                     return;
             }
@@ -461,8 +472,24 @@ namespace TheOmegaStrain.Runtime.Rendering
                 ParentSurface = inhabitant.ParentSurface,
                 ObjectParts = shadowParts,
                 ObjectOffsets = shadowObjectOffsets,
+                // The caster has already passed LiveGameLoop's visibility decision,
+                // including its short culling hold. Keep the generated shadow on the
+                // same decision instead of letting projection cull it independently.
+                IsOnScreen = inhabitant.IsOnScreen,
                 Rotation = new Vector3 { x = 0, y = 0, z = 0 }
             });
+        }
+
+        public static float CalculateTerrainShadowNudgeFactor(float altitude)
+        {
+            if (!float.IsFinite(altitude) || altitude <= TerrainShadowNudgeStartAltitude)
+                return 0f;
+
+            float range = TerrainShadowNudgeFullAltitude - TerrainShadowNudgeStartAltitude;
+            if (range <= 0f)
+                return 1f;
+
+            return Math.Clamp((altitude - TerrainShadowNudgeStartAltitude) / range, 0f, 1f);
         }
 
         private static List<ITriangleMeshWithColorAndTexture> ProjectShadowFootprint(

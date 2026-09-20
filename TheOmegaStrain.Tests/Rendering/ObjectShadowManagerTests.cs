@@ -92,11 +92,14 @@ public class ObjectShadowManagerTests
 
             GameState.SurfaceState.SurfaceViewportObject.ObjectOffsets.z = 25f;
             var flyingObject = CreateFreeFlyingShadowCaster(surface, x: 25f * ScreenSetup.defaultObjectZoom, y: 400f, z: 0f);
+            flyingObject.IsOnScreen = true;
             var shadows = new List<OmegaObject3D>();
 
             new ObjectShadowManager().HandleObjectShadow(flyingObject, shadows);
 
             Assert.AreEqual(1, shadows.Count);
+            Assert.IsTrue(shadows[0].IsOnScreen,
+                "A generated shadow must inherit the caster's visibility hold.");
             var shadowVertex = shadows[0].ObjectParts[0].Triangles[0].vert1;
 
             Assert.AreEqual(
@@ -217,8 +220,11 @@ public class ObjectShadowManagerTests
                 var shadows = new List<OmegaObject3D>();
                 new ObjectShadowManager().HandleObjectShadow(caster, shadows);
                 Assert.AreEqual(1, shadows.Count);
-                float inwardZ = -ObjectShadowManager.TerrainShadowInwardOffset;
-                var anchor = new Vector3(ObjectShadowManager.TerrainShadowSideOffset,
+                float nudgeFactor = isShip
+                    ? ObjectShadowManager.CalculateTerrainShadowNudgeFactor(clearance)
+                    : 1f;
+                float inwardZ = -ObjectShadowManager.TerrainShadowInwardOffset * nudgeFactor;
+                var anchor = new Vector3(ObjectShadowManager.TerrainShadowSideOffset * nudgeFactor,
                     inwardZ / MathF.Tan(pitch * MathF.PI / 180f) - ObjectShadowManager.TerrainShadowSurfaceLift, inwardZ);
                 float radius = shadows[0].ObjectParts[0].Triangles
                     .SelectMany(t => new[] { t.vert1, t.vert2, t.vert3 })
@@ -262,7 +268,9 @@ public class ObjectShadowManagerTests
         foreach (float depth in new[] { name == "Ship" || name == "Seeder" ? -1100f : -400f, 400f, 900f })
         {
             GameState.SurfaceState.GlobalMapPosition = camera;
-            ship.ObjectOffsets = new Vector3(0f, 150f, depth);
+            // Keep this collision-centre equivalence test airborne. Ground-contact
+            // Ship shadows intentionally fade out their cosmetic placement nudge.
+            ship.ObjectOffsets = new Vector3(0f, -500f, depth);
             // Place the two real, differently shaped/rotated collision centres
             // together. Raw WorldPosition equality is NOT sufficient in Omega.
             var shipCentre = VectorMath.Add(ship.ObjectOffsets, shipLocalCentre);
