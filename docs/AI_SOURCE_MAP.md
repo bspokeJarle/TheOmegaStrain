@@ -421,7 +421,6 @@ Guardrails:
 Read these first:
 
 - `installer/`
-- `TheOmegaStrain.Wpf/GameGraphics/SteamStoreAssets/README.md`
 - `TheOmegaStrain.Wpf/GameGraphics/SteamLibraryAssets/README.md`
 - `TheOmegaStrain.Wpf/GameGraphics/SteamAchievementIcons/README.md`
 
