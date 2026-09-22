@@ -24,7 +24,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene2
 
         public string SceneMusic { get; } = "music_battle";
         public SceneTypes SceneType { get; } = SceneTypes.Game;
-        public SceneBiomeTypes SceneBiome { get; } = SceneBiomeTypes.HillsWoods;
+        public SceneBiomeTypes SceneBiome { get; } = SceneBiomeTypes.Rainforrest;
         public ISceneDirector Director { get; } = new Scene2Director();
         public GameModes GameMode { get; } = GameModes.Playback;
         public float InfectionThresholdPercent { get; } = 13.5f;
@@ -146,7 +146,12 @@ namespace TheOmegaStrain.Game.Scenes.Scene2
             surfaceObject.CrashBoxesFollowRotation = false;
             world.WorldInhabitants.Add(surfaceObject);
             GameState.SurfaceState.SurfaceViewportObject = surfaceObject;
-            world.WorldInhabitants.Add(LeafEmitter.CreateLeafEmitter(Surface));
+
+            // Scene 2 enters the rainforest at its settled perimeter. Keep the existing
+            // colony/tree layout as a transition, but use the established rainforest
+            // weather; Scene 3 then moves deeper into palms, alien plants and bamboo huts.
+            world.WorldInhabitants.Add(RainEmitter.CreateRainEmitter(Surface));
+            world.WorldInhabitants.Add(LightningEmitter.CreateLightningEmitter(Surface));
 
             var towerPlacements = SurfaceGeneration.FindTowerPlacements(GameState.SurfaceState.Global2DMap, Surface.GlobalMapSize(), Surface.TileSize(), Surface.MaxHeight());
 
@@ -251,10 +256,10 @@ namespace TheOmegaStrain.Game.Scenes.Scene2
             o.Title = "PLANET TRITON-7 - PHASE II";
 
             o.Body =
-                "TRITON-7 outer colony has gone dark.\n\n" +
+                "TRITON-7 rainforest colony has gone dark.\n\n" +
                 "Long-range telemetry: Omega Strain has breached the perimeter.\n" +
-                "Ten seeders confirmed across the highlands. Escort drones: SIX.\n" +
-                "Infection spreading through woodland networks - tolerance: 13.5%.\n" +
+                "Ten seeders confirmed across the jungle perimeter. Escort drones: SIX.\n" +
+                "Infection spreading through rainforest root networks - tolerance: 13.5%.\n" +
                 "Spread delay: 6 seconds. Window is closing.\n\n" +
                 "REVISED DIRECTIVE:\n" +
                 "Sterilize TRITON-7. Leave nothing behind.";

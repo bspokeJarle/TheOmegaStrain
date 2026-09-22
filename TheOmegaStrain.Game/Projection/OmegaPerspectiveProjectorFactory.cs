@@ -105,7 +105,7 @@ namespace TheOmegaStrain.Game.Projection
             double minY = double.PositiveInfinity;
             double maxX = double.NegativeInfinity;
             double maxY = double.NegativeInfinity;
-            double depth = ClampRenderDepth(position.Z, viewport.PerspectiveAdjustment);
+            double depth = ResolveProjectionDepth(obj, position.Z, viewport.PerspectiveAdjustment);
 
             foreach (var part in obj.ObjectParts)
             {
@@ -202,7 +202,7 @@ namespace TheOmegaStrain.Game.Projection
                     out double screenY,
                     out double screenZ))
             {
-                screenZ = ClampRenderDepth(screenZ, perspectiveAdjustment);
+                screenZ = ResolveProjectionDepth(obj, screenZ, perspectiveAdjustment);
                 position = SurfaceSlopeRenderPositionHelpers.Apply(
                     obj,
                     new RenderPosition(screenX, screenY, screenZ));
@@ -218,6 +218,19 @@ namespace TheOmegaStrain.Game.Projection
         public static double ClampRenderDepth(double screenZ, double perspectiveAdjustment)
         {
             return SurfaceRenderAnchorHelpers.ClampRenderDepth(screenZ, perspectiveAdjustment);
+        }
+
+        private static double ResolveProjectionDepth(
+            OmegaObject3D obj,
+            double screenZ,
+            double perspectiveAdjustment)
+        {
+            // StarFieldHandler limits the apparent size by rewriting the star mesh from
+            // its immutable base geometry. Keep the star centre on its real perspective
+            // path so it continues flying past the camera after reaching that size cap.
+            return obj.ObjectName == "Star"
+                ? screenZ
+                : ClampRenderDepth(screenZ, perspectiveAdjustment);
         }
 
         private sealed class ScreenSetupProjectionViewport : IProjectionViewport

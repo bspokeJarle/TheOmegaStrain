@@ -51,8 +51,44 @@ public class StarFieldHandlerTests
             "A star should begin rendering only when its projected geometry intersects the viewport.");
         Assert.IsTrue(stars.All(s => s.Movement == null), "Stars should not run the old per-object sync movement.");
         Assert.IsTrue(stars.All(s => s.CrashBoxes.Count == 0));
-        Assert.IsTrue(stars.All(s => s.ObjectOffsets.x == 0f && s.ObjectOffsets.y == 0f && s.ObjectOffsets.z == 0f));
+        Assert.IsTrue(stars.All(s => s.ObjectOffsets.z == 0f));
+        Assert.IsTrue(stars.Any(s => s.ObjectOffsets.x != 0f || s.ObjectOffsets.y != 0f),
+            "Stars should use a render-only perspective offset while retaining world-space placement.");
         Assert.IsTrue(stars.Any(s => s.WorldPosition.x != 0f || s.WorldPosition.z != 0f));
+    }
+
+    [TestMethod]
+    public void GenerateStarfield_KeepsFlyingAfterApparentSizeIsClamped()
+    {
+        var handler = new StarFieldHandler(CreateSurface());
+        handler.GenerateStarfield();
+
+        var star = handler.GetStars()
+            .First(candidate => candidate.WorldPosition.y > StarFieldHandler.StarFadeInAltitude + 20f);
+        float starWorldX = star.WorldPosition.x;
+        float starWorldY = star.WorldPosition.y;
+        float starWorldZ = star.WorldPosition.z;
+
+        GameState.SurfaceState.GlobalMapPosition = new Vector3
+        {
+            x = starWorldX - 20f,
+            y = starWorldY,
+            z = starWorldZ + 900f
+        };
+        handler.GenerateStarfield();
+        float offsetAtSizeCap = MathF.Abs(star.ObjectOffsets.x);
+
+        GameState.SurfaceState.GlobalMapPosition = new Vector3
+        {
+            x = starWorldX - 20f,
+            y = starWorldY,
+            z = starWorldZ + 1200f
+        };
+        handler.GenerateStarfield();
+        float offsetWhenCloser = MathF.Abs(star.ObjectOffsets.x);
+
+        Assert.IsTrue(offsetWhenCloser > offsetAtSizeCap,
+            "The star centre must keep moving outward after its apparent mesh size reaches the cap.");
     }
 
     [TestMethod]

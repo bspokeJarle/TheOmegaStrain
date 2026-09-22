@@ -6,6 +6,7 @@ namespace TheOmegaStrain.Game.Helpers
 {
     public static class ShieldPowerUpPlacementHelpers
     {
+        public const int MaximumShieldCarriersPerScene = 3;
         private const float FirstSceneCarrierRatio = 0.35f;
         private const float LastSceneCarrierRatio = 0.20f;
         private const int LastCampaignSceneNumber = 8;
@@ -30,7 +31,9 @@ namespace TheOmegaStrain.Game.Helpers
             }
 
             float carrierRatio = GetShieldCarrierRatio(sceneNumber);
-            int shieldsRemaining = (int)Math.Round(swanCount * carrierRatio, MidpointRounding.AwayFromZero);
+            int shieldsRemaining = Math.Min(
+                MaximumShieldCarriersPerScene,
+                (int)Math.Round(swanCount * carrierRatio, MidpointRounding.AwayFromZero));
             int shieldsAssigned = 0;
             for (int i = 0; i < aiObjects.Count; i++)
             {

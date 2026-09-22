@@ -282,6 +282,7 @@ namespace TheOmegaStrain.Runtime.Rendering
             }
 
             ApplyApparentSizeClamp(state, projectionScale);
+            ApplyPerspectivePosition(state, currentWorldPos, projectionScale);
             bool intersectsViewport = OmegaPerspectiveProjectorFactory.IntersectsViewport(state.Star);
 
             if (!state.HasEnteredViewport)
@@ -353,6 +354,26 @@ namespace TheOmegaStrain.Runtime.Rendering
             worldPosition.x = currentWorldPos.x + offset.X;
             worldPosition.y = currentWorldPos.y + offset.Y;
             worldPosition.z = currentWorldPos.z + offset.Z;
+
+            state.Star.ObjectOffsets ??= new EngineVector3();
+            state.Star.ObjectOffsets.x = 0f;
+            state.Star.ObjectOffsets.y = 0f;
+            state.Star.ObjectOffsets.z = 0f;
+        }
+
+        private static void ApplyPerspectivePosition(
+            StarState state,
+            IVector3 currentWorldPos,
+            float projectionScale)
+        {
+            var relative = GetRelativePosition(state, currentWorldPos);
+            float baseScale = Math.Max(1f, ScreenSetup.defaultObjectZoom);
+            float perspectiveFactor = Math.Clamp(projectionScale / baseScale, 0.1f, 64f);
+
+            state.Star.ObjectOffsets ??= new EngineVector3();
+            state.Star.ObjectOffsets.x = relative.X * (perspectiveFactor - 1f);
+            state.Star.ObjectOffsets.y = relative.Y * (perspectiveFactor - 1f);
+            state.Star.ObjectOffsets.z = 0f;
         }
 
         private bool ShouldRecycle(StarState state, IVector3 currentWorldPos)
@@ -393,9 +414,10 @@ namespace TheOmegaStrain.Runtime.Rendering
                     out double renderZ))
                 return false;
 
-            double depth = OmegaPerspectiveProjectorFactory.ClampRenderDepth(
-                renderZ,
-                ScreenSetup.perspectiveAdjustment);
+            // Stars have their own mesh-size clamp. Use their real depth here so the
+            // shrink factor follows the same perspective path as the star centre;
+            // clamping depth itself would make an approaching star appear frozen.
+            double depth = renderZ;
             if (!ProjectionMath.TryProjectVertex(
                     new EngineVector3(),
                     renderX,

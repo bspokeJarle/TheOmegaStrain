@@ -1,4 +1,5 @@
 using TheOmegaStrain.Game.Scenes.Scene3;
+using TheOmegaStrain.Game.Scenes.Scene2;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.Events;
@@ -18,6 +19,20 @@ public class Scene3RainforestWeatherTests
         GameState.ScreenOverlayState = new ScreenOverlayState();
         GameState.WeatherVisualState = new WeatherVisualState();
         GameState.ObjectIdCounter = 0;
+    }
+
+    [TestMethod]
+    public void Scene2_SetupScene_IntroducesRainforestWeatherWithoutLeafEmitter()
+    {
+        var scene = new Scene2();
+        var world = new TestWorld();
+
+        scene.SetupScene(world);
+
+        Assert.AreEqual(SceneBiomeTypes.Rainforrest, scene.SceneBiome);
+        Assert.AreEqual(1, world.WorldInhabitants.Count(o => o.ObjectName == "RainEmitter"));
+        Assert.AreEqual(1, world.WorldInhabitants.Count(o => o.ObjectName == "LightningEmitter"));
+        Assert.AreEqual(0, world.WorldInhabitants.Count(o => o.ObjectName == "LeafEmitter"));
     }
 
     [TestMethod]

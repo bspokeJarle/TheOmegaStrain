@@ -37,7 +37,7 @@ public class ShieldPowerUpTests
     }
 
     [TestMethod]
-    public void SpaceSwans_ShieldCarrierRatioFallsFromThirtyFiveToTwentyPercentAcrossCampaign()
+    public void SpaceSwans_ShieldCarriersAreCappedAtThreePerScene()
     {
         var objects = new List<I3dObject>();
         for (int i = 0; i < 100; i++)
@@ -46,9 +46,11 @@ public class ShieldPowerUpTests
         int firstSceneAssigned = ShieldPowerUpPlacementHelpers.AssignToSpaceSwans(objects, sceneNumber: 1);
         int lastSceneAssigned = ShieldPowerUpPlacementHelpers.AssignToSpaceSwans(objects, sceneNumber: 8);
 
-        Assert.AreEqual(35, firstSceneAssigned);
-        Assert.AreEqual(20, lastSceneAssigned);
-        Assert.AreEqual(20, objects.Count(o => o.ObjectName == "SpaceSwan" && o.HasPowerUp));
+        Assert.AreEqual(ShieldPowerUpPlacementHelpers.MaximumShieldCarriersPerScene, firstSceneAssigned);
+        Assert.AreEqual(ShieldPowerUpPlacementHelpers.MaximumShieldCarriersPerScene, lastSceneAssigned);
+        Assert.AreEqual(
+            ShieldPowerUpPlacementHelpers.MaximumShieldCarriersPerScene,
+            objects.Count(o => o.ObjectName == "SpaceSwan" && o.HasPowerUp));
         Assert.IsTrue(objects
             .Where(o => o.ObjectName == "SpaceSwan" && o.HasPowerUp)
             .All(o => o.PowerUpType == PowerUpType.Shield));
