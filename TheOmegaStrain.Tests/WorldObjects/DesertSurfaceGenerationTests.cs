@@ -108,6 +108,98 @@ public class DesertSurfaceGenerationTests
             $"Smaller placement spacing should increase available placements. Sparse={sparsePlacements.Count}, Dense={densePlacements.Count}.");
     }
 
+    [DataTestMethod]
+    [DataRow(17)]
+    [DataRow(65)]
+    public void FindHousePlacementAreas_AcceptsFlatGrasslandAndHighlandsOutsidePlatform(int depth)
+    {
+        var map = CreateFlatMap(120, depth);
+        var placements = SurfaceGeneration.FindHousePlacementAreas(
+            map, 120, 100, new List<(int x, int y, int height)>(),
+            overrideMaxHouses: 1000, placementSpacing: 40);
+
+        Assert.IsTrue(placements.Count > 0, $"Expected houses on suitable terrain at depth {depth}.");
+        Assert.IsTrue(placements.All(p => !LandingPlatformHelpers.IsLandingPlatformTile(
+            map, p.x, p.y, SurfaceSetup.ScaleTileCount(2))));
+    }
+
+    [TestMethod]
+    public void FindHousePlacementAreas_AllowsModerateLocalHeightVariation()
+    {
+        var map = CreateFlatMap(120, depth: 50);
+        map[20, 19].mapDepth = 56;
+        map[20, 21].mapDepth = 56;
+        map[19, 20].mapDepth = 56;
+        map[21, 20].mapDepth = 56;
+
+        var placements = SurfaceGeneration.FindHousePlacementAreas(
+            map, 120, 100, new List<(int x, int y, int height)>(),
+            overrideMaxHouses: 1000, placementSpacing: 40);
+
+        Assert.IsTrue(placements.Any(p => p.x == 20 && p.y == 20),
+            "A six-unit slope should be flattened during placement instead of rejecting the house.");
+    }
+
+    [TestMethod]
+    public void FindTreePlacementAreas_LeavesTheLandingPlatformClear()
+    {
+        var map = CreateFlatMap(120, depth: 50);
+        map[0, 0].mapDepth = 100;
+
+        var placements = SurfaceGeneration.FindTreePlacementAreas(map, 120, 1, 100, 100);
+
+        Assert.IsTrue(placements.Count > 0);
+        Assert.IsTrue(placements.All(p => !LandingPlatformHelpers.IsLandingPlatformTile(
+            map, p.x, p.y, SurfaceSetup.ScaleTileCount(2))));
+    }
+
+    [TestMethod]
+    public void FindTreePlacementAreas_OneTileWaterBufferUsesSmallDryGrasslandPatch()
+    {
+        var map = CreateFlatMap(120, depth: 0);
+        FillArea(map, startX: 9, startY: 9, width: 3, height: 3, depth: 50);
+        map[0, 0].mapDepth = 100;
+
+        var strict = SurfaceGeneration.FindTreePlacementAreas(map, 120, 1, 100, 100,
+            waterBufferRadiusTiles: 2);
+        var relaxed = SurfaceGeneration.FindTreePlacementAreas(map, 120, 1, 100, 100,
+            waterBufferRadiusTiles: 1);
+
+        Assert.AreEqual(0, strict.Count);
+        Assert.IsTrue(relaxed.Any(p => p.x == 10 && p.y == 10));
+    }
+
+    [TestMethod]
+    public void FindHousePlacementAreas_CanSearchForNearbyFlatGround()
+    {
+        var map = CreateFlatMap(120, depth: 0);
+        FillArea(map, startX: 23, startY: 19, width: 3, height: 3, depth: 50);
+        var trees = new List<(int x, int y, int height)>();
+
+        var centerOnly = SurfaceGeneration.FindHousePlacementAreas(map, 120, 100, trees,
+            overrideMaxHouses: 100, placementSpacing: 40);
+        var nearby = SurfaceGeneration.FindHousePlacementAreas(map, 120, 100, trees,
+            overrideMaxHouses: 100, placementSpacing: 40, searchRadiusTiles: 8);
+
+        Assert.AreEqual(0, centerOnly.Count);
+        Assert.IsTrue(nearby.Any(p => p.x == 24 && p.y == 20));
+    }
+
+    [TestMethod]
+    public void FlattenTerrainAroundPlacements_PreservesGrasslandUnlessHighlandsRequested()
+    {
+        var map = CreateFlatMap(20, depth: 20);
+        var placements = new List<(int x, int y, int height)> { (5, 5, 20) };
+
+        SurfaceGeneration.FlattenTerrainAroundPlacements(map, 100, placements,
+            radius: 1, raiseToHighlands: false);
+        Assert.AreEqual(20, map[5, 5].mapDepth);
+
+        SurfaceGeneration.FlattenTerrainAroundTowers_ToHighlands(map, 100, placements,
+            writeDebugLogs: false);
+        Assert.AreEqual(40, map[5, 5].mapDepth);
+    }
+
     [TestMethod]
     public void GenerateCrashBoxes_SplitsLargeFormationsIntoBoundedBoxes()
     {

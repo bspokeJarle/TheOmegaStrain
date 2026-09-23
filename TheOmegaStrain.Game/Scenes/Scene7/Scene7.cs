@@ -190,10 +190,10 @@ namespace TheOmegaStrain.Game.Scenes.Scene7
                 world.WorldInhabitants.Add(tower);
             }
 
-            var treePlacements = SurfaceGeneration.FindTreePlacementAreas(GameState.SurfaceState.Global2DMap, Surface.GlobalMapSize(), Surface.TileSize(), Surface.MaxHeight(), 30000);
-            var housePlacements = SurfaceGeneration.FindHousePlacementAreas(GameState.SurfaceState.Global2DMap, Surface.GlobalMapSize(), Surface.MaxHeight(), treePlacements, 30000);
-            SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), treePlacements, radius: 1);
-            SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), housePlacements, radius: 1);
+            var treePlacements = SurfaceGeneration.FindTreePlacementAreas(GameState.SurfaceState.Global2DMap, Surface.GlobalMapSize(), Surface.TileSize(), Surface.MaxHeight(), 12000, waterBufferRadiusTiles: 1);
+            var housePlacements = SurfaceGeneration.FindHousePlacementAreas(GameState.SurfaceState.Global2DMap, Surface.GlobalMapSize(), Surface.MaxHeight(), treePlacements, 30000, placementSpacing: SurfaceSetup.ScaleTileCount(35), searchRadiusTiles: SurfaceSetup.ScaleTileCount(10));
+            SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), treePlacements, radius: 1, raiseToHighlands: false);
+            SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), housePlacements, radius: 1, raiseToHighlands: false);
             var iglooPlacementAreas = new List<(int x, int y)>();
             for (int i = 0; i < treePlacements.Count; i++)
                 iglooPlacementAreas.Add((treePlacements[i].x, treePlacements[i].y));

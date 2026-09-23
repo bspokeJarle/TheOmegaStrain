@@ -7,12 +7,60 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Game.World.Objects;
 using TheOmegaStrain.Gameplay.Helpers;
+using TheOmegaStrain.Gameplay.Controls;
 
 namespace TheOmegaStrain.Tests.Controls;
 
 [TestClass]
+[DoNotParallelize]
 public class ShieldPowerUpTests
 {
+    [DataTestMethod]
+    [DataRow("Seeder", 50)]
+    [DataRow("KamikazeDrone", 50)]
+    [DataRow("SpaceSwan", 50)]
+    [DataRow("ZeppelinBomber", 50)]
+    [DataRow("AttackShip", 50)]
+    [DataRow("BomberBomb", 75)]
+    public void Shield_ReducesActualFlyingObjectCollisionDamage(string objectName, int normalDamage)
+    {
+        var originalGameplay = GameState.GamePlayState;
+        var originalSurface = GameState.SurfaceState;
+        var originalShip = GameState.ShipState;
+        var originalOverlay = GameState.ScreenOverlayState;
+        try
+        {
+            GameState.GamePlayState = new GamePlayState();
+            GameState.SurfaceState = new SurfaceState();
+            GameState.ShipState = new ShipState();
+            GameState.ScreenOverlayState = new ScreenOverlayState();
+            GameState.GamePlayState.ActivateShield();
+            var ship = Ship.CreateShip(null!);
+            ship.ObjectName = "Ship";
+            ship.WorldPosition = new Vector3();
+            ship.ImpactStatus = new ImpactStatus
+            {
+                ObjectHealth = ShipSetup.DefaultShipHealth,
+                HasCrashed = true,
+                ObjectName = objectName,
+                ImpactDirection = ImpactDirection.Center
+            };
+
+            ship.Movement!.MoveObject(ship, null, null);
+
+            Assert.AreEqual(ShipSetup.DefaultShipHealth - (int)MathF.Ceiling(normalDamage * GameSetup.ShieldDamageMultiplier),
+                ship.ImpactStatus.ObjectHealth, $"Shield damage for {objectName}");
+        }
+        finally
+        {
+            GameState.GamePlayState = originalGameplay;
+            GameState.SurfaceState = originalSurface;
+            GameState.ShipState = originalShip;
+            GameState.ScreenOverlayState = originalOverlay;
+        }
+    }
+
+
     [TestMethod]
     public void Shield_ReducesDamageToTwentyPercentForThirtySeconds()
     {

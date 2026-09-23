@@ -196,8 +196,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene3
                 world.WorldInhabitants.Add(tower);
             }
 
-            var palmPlacements = SurfaceGeneration.FindTreePlacementAreas(GameState.SurfaceState.Global2DMap, Surface.GlobalMapSize(), Surface.TileSize(), Surface.MaxHeight(), 30000);
-            SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), palmPlacements, radius: 1);
+            var palmPlacements = SurfaceGeneration.FindTreePlacementAreas(GameState.SurfaceState.Global2DMap, Surface.GlobalMapSize(), Surface.TileSize(), Surface.MaxHeight(), 12000, waterBufferRadiusTiles: 1);
+            SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), palmPlacements, radius: 1, raiseToHighlands: false);
             var palmIndex = 0;
             foreach (var palmPlacement in palmPlacements)
             {
@@ -251,8 +251,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene3
                 if (plant.SurfaceBasedId > 0) world.WorldInhabitants.Add(plant);
             }
 
-            var housePlacements = SurfaceGeneration.FindHousePlacementAreas(GameState.SurfaceState.Global2DMap, Surface.GlobalMapSize(), Surface.MaxHeight(), palmPlacements, 15000);
-            SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), housePlacements, radius: 1);
+            var housePlacements = SurfaceGeneration.FindHousePlacementAreas(GameState.SurfaceState.Global2DMap, Surface.GlobalMapSize(), Surface.MaxHeight(), palmPlacements, 15000, placementSpacing: SurfaceSetup.ScaleTileCount(35), searchRadiusTiles: SurfaceSetup.ScaleTileCount(10));
+            SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), housePlacements, radius: 1, raiseToHighlands: false);
             EnsureVisibleBambooHutPlacements(housePlacements);
             var bambooHutIndex = 0;
             foreach (var housePlacement in housePlacements)

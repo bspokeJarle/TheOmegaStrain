@@ -26,6 +26,7 @@ namespace TheOmegaStrain.Game.Helpers
             int nearPlatformSearchRadius,
             float treeOffsetX,
             float treeOffsetY,
+            bool preserveTerrain,
             params List<(int x, int y, int height)>[] reservedPlacementGroups)
         {
             if (map == null)
@@ -61,7 +62,8 @@ namespace TheOmegaStrain.Game.Helpers
                     minSpacingTiles: 0);
             }
 
-            SurfaceGeneration.FlattenTerrainAroundPlacements(map, maxHeight, placements, radius: 1);
+            SurfaceGeneration.FlattenTerrainAroundPlacements(map, maxHeight, placements,
+                radius: 1, raiseToHighlands: !preserveTerrain);
 
             foreach (var placement in placements)
             {

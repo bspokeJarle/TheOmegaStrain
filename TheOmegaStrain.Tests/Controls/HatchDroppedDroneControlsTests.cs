@@ -38,6 +38,24 @@ public class HatchDroppedDroneControlsTests
     }
 
     [TestMethod]
+    public void MothershipShield_ShipCollisionExplodesDroneAndRemovesCrashBoxes()
+    {
+        DateTime now = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var controls = new HatchDroppedDroneControls(now: () => now);
+        var drone = CreateDrone();
+
+        controls.MoveObject(drone, null, null);
+        now = now.AddSeconds(1);
+        drone.ImpactStatus!.HasCrashed = true;
+        drone.ImpactStatus.ObjectName = "Ship";
+        controls.MoveObject(drone, null, null);
+
+        Assert.AreEqual(0, drone.ImpactStatus.ObjectHealth);
+        Assert.AreEqual(0, drone.CrashBoxes.Count,
+            "The hatch shield must not leave a collidable drone touching Ship for multiple frames.");
+    }
+
+    [TestMethod]
     public void MothershipShield_AfterThreeSeconds_AppliesNormalWeaponDamage()
     {
         DateTime now = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);

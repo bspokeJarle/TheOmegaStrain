@@ -18,8 +18,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
     public class Scene1 : IScene
     {
         Surface Surface = new();
-        private const int LeafTreePlacementMax = 12000;
-        private const int NearPlatformLeafTreeTarget = 14;
+        private const int LeafTreePlacementMax = 15000;
+        private const int NearPlatformLeafTreeTarget = 20;
         private const int NearPlatformLeafTreeSearchRadius = 26;
 
         public string SceneMusic { get; } = "music_flight";
@@ -187,8 +187,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             }
 
 
-            var treePlacements = SurfaceGeneration.FindTreePlacementAreas(GameState.SurfaceState.Global2DMap,Surface.GlobalMapSize(),Surface.TileSize(),Surface.MaxHeight(), 30000);
-            SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), treePlacements, radius: 1);
+            var treePlacements = SurfaceGeneration.FindTreePlacementAreas(GameState.SurfaceState.Global2DMap,Surface.GlobalMapSize(),Surface.TileSize(),Surface.MaxHeight(), 12000, waterBufferRadiusTiles: 1);
+            SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), treePlacements, radius: 1, raiseToHighlands: false);
             var treeIndex = 0;
             foreach (var treePlacement in treePlacements)
             {
@@ -210,8 +210,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
                 if (tree.SurfaceBasedId>0) world.WorldInhabitants.Add(tree);
             }
 
-            var housePlacements = SurfaceGeneration.FindHousePlacementAreas(GameState.SurfaceState.Global2DMap, Surface.GlobalMapSize(), Surface.MaxHeight(), treePlacements, 15000);
-            SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), housePlacements, radius: 1);
+            var housePlacements = SurfaceGeneration.FindHousePlacementAreas(GameState.SurfaceState.Global2DMap, Surface.GlobalMapSize(), Surface.MaxHeight(), treePlacements, 15000, placementSpacing: SurfaceSetup.ScaleTileCount(35), searchRadiusTiles: SurfaceSetup.ScaleTileCount(10));
+            SurfaceGeneration.FlattenTerrainAroundPlacements(GameState.SurfaceState.Global2DMap, Surface.MaxHeight(), housePlacements, radius: 1, raiseToHighlands: false);
             foreach (var housePlacement in housePlacements)
             {
                 //Debug.WriteLine($"House placement: {housePlacement.x} {housePlacement.y}");
@@ -244,6 +244,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
                 NearPlatformLeafTreeSearchRadius,
                 treeOffsetX: 40 * ScreenSetup.ScreenScaleX,
                 treeOffsetY: LandBasedObjectSetup.SurfaceFootprintOffsetYScaled,
+                preserveTerrain: true,
                 towerPlacements,
                 treePlacements,
                 housePlacements);

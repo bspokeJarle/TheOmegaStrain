@@ -413,6 +413,7 @@ namespace TheOmegaStrain.Game.Scenes.SceneSimulation
                 NearPlatformLeafTreeSearchRadius,
                 treeOffsetX: 75 * ScreenSetup.ScreenScaleX,
                 treeOffsetY: LandBasedObjectSetup.SurfaceFootprintOffsetYScaled,
+                preserveTerrain: false,
                 towerPlacements,
                 treePlacements,
                 housePlacements);

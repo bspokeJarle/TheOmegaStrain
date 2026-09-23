@@ -71,6 +71,14 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
             _lastMoveTime = now;
             _shieldTimer += deltaSeconds;
 
+            // The hatch shield reduces weapon damage, but a ram must consume the
+            // drone like a normal KamikazeDrone so it cannot hit Ship every frame.
+            if (theObject.ImpactStatus?.HasCrashed == true && theObject.ImpactStatus.ObjectName == "Ship")
+            {
+                _inner.ConfigureAudio(audioPlayer, soundRegistry);
+                return _inner.MoveObject(theObject, audioPlayer, soundRegistry);
+            }
+
             if (_shieldTimer < ShieldDurationSeconds)
             {
                 bool destroyed = ApplyShieldedDamage(theObject);

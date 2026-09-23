@@ -35,8 +35,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene6
         public float MotherShipMediumAggression { get; } = 1.35f;
         public float KamikazeDroneSpeedMultiplier { get; } = 1.00f;
         private const int GuaranteedStartTentCount = 12;
-        private const int DesertRockPlacementMax = 12000;
-        private const int DesertCactusPlacementMax = 16000;
+        private const int DesertRockPlacementMax = 14000;
+        private const int DesertCactusPlacementMax = 19000;
         private const int DesertTentPlacementMax = 30000;
         private static int DesertTentPlacementSpacingTiles => SurfaceSetup.ScaleTileCount(20);
         private static readonly float[] BedouinTentRotationVariants = { -32f, -19f, -7f, 6f, 18f, 31f };

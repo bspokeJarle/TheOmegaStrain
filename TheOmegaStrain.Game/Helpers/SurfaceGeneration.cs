@@ -795,7 +795,8 @@ namespace TheOmegaStrain.Game.Helpers
         }
 
         public static List<(int x, int y, int height)> FindTreePlacementAreas(
-            SurfaceData[,] map, int mapSize, int tileSize, int maxHeight, int? overrideMaxTrees)
+            SurfaceData[,] map, int mapSize, int tileSize, int maxHeight, int? overrideMaxTrees,
+            int? waterBufferRadiusTiles = null)
         {
             // real sizes (wrapped map is square, but keep explicit X/Y to avoid XY/YX bugs)
             int sizeY = map.GetLength(0);
@@ -807,8 +808,9 @@ namespace TheOmegaStrain.Game.Helpers
 
             // === Tunables ===
             int screenSize = SurfaceSetup.ScaleTileCount(18);
-            int waterBufferRadius = SurfaceSetup.ScaleTileCount(1);
+            int waterBufferRadius = waterBufferRadiusTiles ?? SurfaceSetup.ScaleTileCount(1);
             int minTreeSpacing = SurfaceSetup.ScaleTileCount(3);
+            var protectedPlatform = LandingPlatformHelpers.GetLandingPlatformRect(map, SurfaceSetup.ScaleTileCount(2));
 
             if (overrideMaxTrees.HasValue)
             {
@@ -914,6 +916,7 @@ namespace TheOmegaStrain.Game.Helpers
                         for (int x = x0; x < x1; x++)
                         {
                             if (x < 2 || y < 2 || x >= mapSize - 2 || y >= mapSize - 2) continue;
+                            if (protectedPlatform.Contains(x, y)) continue;
 
                             int d = H(x, y);
 
@@ -1000,6 +1003,7 @@ namespace TheOmegaStrain.Game.Helpers
                 fillAttempts++;
                 int x = random.Next(2, mapSize - 2);
                 int y = random.Next(2, mapSize - 2);
+                if (protectedPlatform.Contains(x, y)) continue;
                 if (used.Contains((x, y))) continue;
 
                 int d = H(x, y);
@@ -1021,11 +1025,13 @@ namespace TheOmegaStrain.Game.Helpers
             int maxHeight,
             List<(int x, int y, int height)> existingTrees,
             int? overrideMaxHouses = null,
-            int? placementSpacing = null)
+            int? placementSpacing = null,
+            int searchRadiusTiles = 0)
         {
             int sizeY = map.GetLength(0);
             int sizeX = map.GetLength(1);
             mapSize = Math.Min(sizeX, sizeY);
+            var protectedPlatform = LandingPlatformHelpers.GetLandingPlatformRect(map, SurfaceSetup.ScaleTileCount(2));
             if (overrideMaxHouses.HasValue)
             {
                 maxHouses = overrideMaxHouses.Value;
@@ -1066,29 +1072,50 @@ namespace TheOmegaStrain.Game.Helpers
             int start = spacing / 2;
             int endX = mapSize - spacing / 2 - 1;
             int endY = mapSize - spacing / 2 - 1;
+            int searchRadius = Math.Min(spacing / 4, Math.Max(0, searchRadiusTiles));
+            int searchStep = SurfaceSetup.ScaleTileCount(2);
+
+            bool TryPlaceHouse(int x, int y)
+            {
+                if (x < 1 || y < 1 || x >= mapSize - 1 || y >= mapSize - 1) return false;
+                if (protectedPlatform.Contains(x, y)) return false;
+                if (HasOccupiedWithinRadius(reserved, x, y, 1, sizeX, sizeY)) return false;
+
+                int h = H(x, y);
+                if (!IsDryByEnumLocal(h, maxHeight) || !QuadTopLeftIsDry(x, y)) return false;
+                if (Math.Abs(h - H(x - 1, y)) > 6 ||
+                    Math.Abs(h - H(x + 1, y)) > 6 ||
+                    Math.Abs(h - H(x, y - 1)) > 6 ||
+                    Math.Abs(h - H(x, y + 1)) > 6) return false;
+
+                houseLocations.Add((x, y, h));
+                reserved.Add((x, y));
+                return true;
+            }
 
             for (int x = start; x <= endX && houseLocations.Count < numberOfHouses; x += spacing)
             {
                 for (int y = start; y <= endY && houseLocations.Count < numberOfHouses; y += spacing)
                 {
-                    if (reserved.Contains((x, y))) continue;
+                    if (TryPlaceHouse(x, y)) continue;
 
-                    int h = H(x, y);
-                    if (!IsDryByEnumLocal(h, maxHeight)) continue;
-                    if (!QuadTopLeftIsDry(x, y)) continue;
-
-                    bool isFlat =
-                        Math.Abs(h - H(x - 1, y)) < 5 &&
-                        Math.Abs(h - H(x + 1, y)) < 5 &&
-                        Math.Abs(h - H(x, y - 1)) < 5 &&
-                        Math.Abs(h - H(x, y + 1)) < 5;
-
-                    bool inBand = h >= (int)(maxHeight * 0.20) && h < (int)(maxHeight * 0.70);
-
-                    if (isFlat && inBand)
+                    // Keep the sparse grid, but find suitable ground near its center
+                    // instead of discarding the entire cell after one bad sample.
+                    bool placed = false;
+                    for (int radius = searchStep; radius <= searchRadius && !placed; radius += searchStep)
                     {
-                        houseLocations.Add((x, y, h));
-                        reserved.Add((x, y));
+                        for (int dy = -radius; dy <= radius && !placed; dy += searchStep)
+                        {
+                            for (int dx = -radius; dx <= radius; dx += searchStep)
+                            {
+                                if (Math.Abs(dx) != radius && Math.Abs(dy) != radius) continue;
+                                if (TryPlaceHouse(x + dx, y + dy))
+                                {
+                                    placed = true;
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1100,6 +1127,7 @@ namespace TheOmegaStrain.Game.Helpers
                 {
                     int px = Math.Clamp(fixedX + random.Next(-2, 3), 0, mapSize - 1);
                     int py = Math.Clamp(fixedY + random.Next(-2, 3), 0, mapSize - 1);
+                    if (protectedPlatform.Contains(px, py)) continue;
                     if (reserved.Contains((px, py))) continue;
 
                     int h = H(px, py);
@@ -1214,7 +1242,8 @@ namespace TheOmegaStrain.Game.Helpers
         /// <summary>
         /// Flattens the terrain around a set of placement points.
         /// All tiles within <paramref name="radius"/> of each point are set to the same depth
-        /// (at least Highlands minimum) so land-based objects sit on a stable, flat base.
+        /// so land-based objects sit on a stable, flat base. Callers may preserve the
+        /// original terrain height instead of raising the footprint to Highlands.
         /// Radius 1 = 3x3 block and is the standard base for static land-based objects.
         /// </summary>
         public static void FlattenTerrainAroundPlacements(
@@ -1222,7 +1251,8 @@ namespace TheOmegaStrain.Game.Helpers
             int maxHeight,
             List<(int x, int y, int height)> placements,
             int radius = 1,
-            bool writeDebugLogs = false)
+            bool writeDebugLogs = false,
+            bool raiseToHighlands = true)
         {
             if (map == null || map.Length == 0) return;
             if (placements == null || placements.Count == 0) return;
@@ -1238,7 +1268,7 @@ namespace TheOmegaStrain.Game.Helpers
                     continue;
 
                 int centerDepth = map[py, px].mapDepth;
-                int target = Math.Max(centerDepth, highlandsMin);
+                int target = raiseToHighlands ? Math.Max(centerDepth, highlandsMin) : centerDepth;
 
                 for (int dy = -radius; dy <= radius; dy++)
                 {
@@ -1263,7 +1293,8 @@ namespace TheOmegaStrain.Game.Helpers
             List<(int x, int y, int height)> towerLocations,
             bool writeDebugLogs = true)
         {
-            FlattenTerrainAroundPlacements(map, maxHeight, towerLocations, radius: 1, writeDebugLogs);
+            FlattenTerrainAroundPlacements(map, maxHeight, towerLocations, radius: 1,
+                writeDebugLogs: writeDebugLogs, raiseToHighlands: true);
         }
 
         public static List<(int x, int y, int height)> FindTowerPlacements(
