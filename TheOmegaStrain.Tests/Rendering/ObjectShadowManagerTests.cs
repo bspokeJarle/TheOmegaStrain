@@ -68,6 +68,48 @@ public class ObjectShadowManagerTests
     }
 
     [TestMethod]
+    public void SurfaceBoundShadowEligibility_DoesNotMoveCasterGeometry()
+    {
+        var surface = new Surface();
+        surface.RotatedSurfaceTriangleByLandId[1] = new TriangleMeshWithColor
+        {
+            vert1 = new Vector3(200f, 300f, 400f),
+            vert2 = new Vector3(250f, 300f, 400f),
+            vert3 = new Vector3(200f, 300f, 450f)
+        };
+        var caster = new OmegaObject3D
+        {
+            ObjectId = 2,
+            ObjectName = "Tree",
+            HasShadow = true,
+            SurfaceBasedId = 1,
+            ParentSurface = surface,
+            WorldPosition = new Vector3(),
+            ObjectOffsets = new Vector3(),
+            ObjectParts = new List<I3dObjectPart>
+            {
+                new OmegaObjectPart3D
+                {
+                    IsVisible = true,
+                    Triangles = new List<ITriangleMeshWithColorAndTexture>
+                    {
+                        new TriangleMeshWithColor
+                        {
+                            vert1 = new Vector3(0f, 0f, 0f),
+                            vert2 = new Vector3(10f, 0f, 0f),
+                            vert3 = new Vector3(0f, 10f, 0f)
+                        }
+                    }
+                }
+            }
+        };
+        var before = SnapshotVertices(caster);
+
+        Assert.IsTrue(ObjectShadowManager.ShouldRenderShadowForCaster(caster));
+        CollectionAssert.AreEqual(before, SnapshotVertices(caster));
+    }
+
+    [TestMethod]
     public void FreeFlyingShadow_InterpolatesGroundYInsideSurfaceTriangle()
     {
         ObjectShadowManager.TerrainShadowInwardOffset = 0f;

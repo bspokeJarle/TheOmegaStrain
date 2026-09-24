@@ -11,6 +11,18 @@ namespace TheOmegaStrain.Runtime.Rendering
 {
     public class ObjectShadowManager
     {
+        public static bool ShouldRenderShadowForCaster(OmegaObject3D caster)
+        {
+            if (!caster.HasShadow || caster.ImpactStatus?.HasExploded == true)
+                return false;
+
+            // Surface-bound casters are already selected by their visible tile.
+            // Re-projecting every tree/house here is unnecessary and can make
+            // terrain scenery stutter. Flying casters need a viewport check:
+            // their distance-based render list is wider than the actual image.
+            return caster.SurfaceBasedId > 0 || OmegaPerspectiveProjectorFactory.IntersectsViewport(caster);
+        }
+
         // =====================================================================
         // TUNING KNOBS — all live values grouped here so they are easy to tweak
         // from the debugger / Immediate window without rebuilding. Change any

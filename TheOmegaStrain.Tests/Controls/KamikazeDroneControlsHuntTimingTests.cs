@@ -11,6 +11,7 @@ public class KamikazeDroneControlsHuntTimingTests
     [TestInitialize]
     public void Setup()
     {
+        GameState.ScreenOverlayState = new ScreenOverlayState();
         GameState.GamePlayState = new GamePlayState
         {
             PowerUpsCollected = 1
@@ -23,6 +24,30 @@ public class KamikazeDroneControlsHuntTimingTests
         {
             ShipCrashCenterWorldPosition = new Vector3 { x = 1000, y = 0, z = 1000 }
         };
+    }
+
+    [TestMethod]
+    public void VisibleBriefingHoldsDroneInPlaceUntilClosed()
+    {
+        var control = new KamikazeDroneControls { StartHuntDateTime = DateTime.Now.AddMinutes(-1) };
+        var drone = CreateDrone(900, 0, 0);
+        GameState.SurfaceState.AiObjects.Add(drone);
+        GameState.ScreenOverlayState.ShowOverlay = true;
+
+        control.MoveObject(drone, null, null);
+        var before = (Vector3)drone.WorldPosition;
+        Thread.Sleep(20);
+        control.MoveObject(drone, null, null);
+        var during = (Vector3)drone.WorldPosition;
+
+        Assert.AreEqual(before.x, during.x, 0.001f);
+        Assert.AreEqual(before.z, during.z, 0.001f);
+
+        GameState.ScreenOverlayState.ShowOverlay = false;
+        Thread.Sleep(20);
+        control.MoveObject(drone, null, null);
+        var after = (Vector3)drone.WorldPosition;
+        Assert.IsTrue(after.x != during.x || after.z != during.z);
     }
 
     [TestMethod]

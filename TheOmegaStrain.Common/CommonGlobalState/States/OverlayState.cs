@@ -91,6 +91,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
         // -----------------------------
         public string Header { get; set; } = "";   // ingress/label (small)
         public string Title { get; set; } = "";    // main heading (big)
+        public float TitleScale { get; set; } = 1f; // optional visual pulse for short countdowns
         public string Body { get; set; } = "";     // multi-line
         public string Footer { get; set; } = "";   // CTA (press any key)
 
@@ -337,6 +338,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
 
             Header = "";
             Title = "";
+            TitleScale = 1f;
             Body = "";
             Footer = "";
             SettingsPanel = ScreenOverlaySettingsPanel.None;

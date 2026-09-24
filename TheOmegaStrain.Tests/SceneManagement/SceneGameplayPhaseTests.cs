@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Diagnostics;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Domain;
@@ -70,6 +71,43 @@ public class SceneGameplayPhaseTests
         handler.HandleOverlayActivation(new OverlayTestWorld(handler));
         Assert.AreEqual(GamePhase.Intro, GameState.GamePlayState.Phase);
         Assert.IsTrue(GameState.ScreenOverlayState.ShowOverlay);
+    }
+
+    [TestMethod]
+    public void StartupWarmup_CountsDownAndRestoresPlanetBriefingOnce()
+    {
+        var handler = PrepareScene(SceneTypes.Game);
+        var world = new OverlayTestWorld(handler);
+        var scene = handler.GetActiveScene();
+        string planetTitle = GameState.ScreenOverlayState.Title;
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        typeof(SceneHandler).GetMethod("StartStartupWarmup", flags)!.Invoke(handler, [scene]);
+
+        var overlay = GameState.ScreenOverlayState;
+        Assert.AreEqual("5", overlay.Title);
+        Assert.AreEqual("WARMING UP YOUR ENGINES", overlay.Body);
+        Assert.IsTrue(overlay.BlocksGameplayInput);
+        Assert.IsFalse(overlay.CanDismissWithInput);
+
+        handler.HandleKeyPress(GameInputKey.Return, world);
+        handler.HandleOverlayActivation(world);
+        Assert.AreEqual(GamePhase.Intro, GameState.GamePlayState.Phase);
+        Assert.AreEqual("5", overlay.Title);
+
+        var startField = typeof(SceneHandler).GetField("_startupWarmupStartedTicks", flags)!;
+        startField.SetValue(handler, Stopwatch.GetTimestamp() - (long)(2.25 * Stopwatch.Frequency));
+        handler.UpdateFrame(world);
+        Assert.AreEqual("3", overlay.Title);
+        Assert.IsTrue(overlay.TitleScale < 2.4f && overlay.TitleScale > 2.0f);
+
+        startField.SetValue(handler, Stopwatch.GetTimestamp() - (long)(5.1 * Stopwatch.Frequency));
+        handler.UpdateFrame(world);
+        Assert.AreEqual(planetTitle, overlay.Title);
+        Assert.AreEqual(1f, overlay.TitleScale);
+        Assert.IsTrue(overlay.CanDismissWithInput);
+
+        typeof(SceneHandler).GetMethod("StartStartupWarmup", flags)!.Invoke(handler, [scene]);
+        Assert.AreEqual(planetTitle, overlay.Title, "The countdown is only for the first gameplay scene.");
     }
 
     private static SceneHandler PrepareScene(SceneTypes type)

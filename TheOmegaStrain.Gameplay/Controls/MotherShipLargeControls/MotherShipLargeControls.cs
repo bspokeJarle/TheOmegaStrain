@@ -1105,6 +1105,9 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipMediumControls
         // -------------------------------------------------------
         private void UpdateFire(I3dObject theObject, IAudioPlayer? audioPlayer, ISoundRegistry? soundRegistry)
         {
+            if (!EnemyPursuitHelpers.CanPursueShip)
+                return;
+
             float fireIntervalSeconds = GetFireIntervalSeconds();
             _fireTimer += GameState.DeltaTime;
 

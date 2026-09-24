@@ -29,6 +29,7 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
         private readonly StackPanel _stack;
         private readonly TextBlock _header;
         private readonly TextBlock _title;
+        private readonly ScaleTransform _titleScale = new ScaleTransform(1, 1);
         private readonly TextBlock _body;
         private readonly TextBlock _footer;
         private readonly TextBlock _pageIndicator;
@@ -88,6 +89,8 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
                 Margin = new Thickness(0, 6, 0, 10),
                 TextWrapping = TextWrapping.Wrap
             };
+            _title.RenderTransformOrigin = new Point(0.5, 0.5);
+            _title.RenderTransform = _titleScale;
 
             _body = new TextBlock
             {
@@ -164,6 +167,8 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
             // Content
             _header.Text = state.Header ?? "";
             _title.Text = state.Title ?? "";
+            _titleScale.ScaleX = state.TitleScale;
+            _titleScale.ScaleY = state.TitleScale;
             _body.Text = state.Body ?? "";
             _footer.Text = state.Footer ?? "";
 

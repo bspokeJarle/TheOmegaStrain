@@ -251,6 +251,31 @@ public class TerrainAvoidanceTests
         Assert.IsTrue(motherShip.ObjectOffsets!.y < 75f, "Recovery should still lift the MotherShip away from terrain.");
     }
 
+    [TestMethod]
+    public void MotherShipSmall_DoesNotChargeDuringOverlay()
+    {
+        var motherShip = CreateAiObject(1008, "MotherShipSmall", string.Empty);
+        motherShip.WorldPosition = new Vector3 { x = 1000f, y = 0f, z = 0f };
+        GameState.SurfaceState.AiObjects.Add(motherShip);
+        var controls = new MotherShipSmallControls();
+        var ramState = GetPrivateField(controls, "_ramState");
+        SetRamStateField(ramState, "RamCycleStart", DateTime.Now.AddSeconds(-7));
+        SetRamStateField(ramState, "RamTargetLocked", true);
+        SetRamStateField(ramState, "RamTargetWorldPosition", new Vector3());
+        SetRamStateField(ramState, "IsCharging", true);
+        bool previous = GameState.ScreenOverlayState.ShowOverlay;
+        try
+        {
+            GameState.ScreenOverlayState.ShowOverlay = true;
+            controls.MoveObject(motherShip, null, null);
+            Assert.AreEqual(1000f, motherShip.WorldPosition.x, 0.001f);
+        }
+        finally
+        {
+            GameState.ScreenOverlayState.ShowOverlay = previous;
+        }
+    }
+
     private static OmegaObject3D CreateAiObject(int objectId, string objectName, string contactName)
     {
         return new OmegaObject3D

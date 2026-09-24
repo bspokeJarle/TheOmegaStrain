@@ -111,9 +111,14 @@ namespace TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls
             TerrainAvoidanceHelpers.TryStartTerrainRecovery(theObject);
 
             // AI movement
-            if (!_isExploding && theObject.ImpactStatus?.HasCrashed != true)
+            if (EnemyPursuitHelpers.CanPursueShip && !_isExploding && theObject.ImpactStatus?.HasCrashed != true)
             {
                 ZeppelinBomberAi.UpdateMovement(_aiState, _trackedWorldPosition, deltaSeconds);
+            }
+            else if (!EnemyPursuitHelpers.CanPursueShip)
+            {
+                _aiState.IsBombing = false;
+                ZeppelinBomberAi.ReleaseTracker(_aiState);
             }
 
             // Apply tracked position
@@ -133,6 +138,7 @@ namespace TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls
             // Explosion
             if (_isExploding)
             {
+                theObject.CrashBoxes = new List<List<IVector3>>();
                 if (_explosionWorldPosition != null)
                     theObject.WorldPosition = new Vector3 { x = _explosionWorldPosition.x, y = _explosionWorldPosition.y, z = _explosionWorldPosition.z };
                 if (_explosionObjectOffsets != null)

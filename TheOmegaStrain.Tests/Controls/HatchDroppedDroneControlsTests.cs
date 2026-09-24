@@ -15,6 +15,7 @@ public class HatchDroppedDroneControlsTests
     {
         GameState.SurfaceState = new SurfaceState { AiObjects = new List<OmegaObject3D>() };
         GameState.GamePlayState = new GamePlayState();
+        GameState.ScreenOverlayState = new ScreenOverlayState();
     }
 
     [TestMethod]
@@ -70,6 +71,27 @@ public class HatchDroppedDroneControlsTests
         controls.MoveObject(drone, null, null);
 
         Assert.AreEqual(EnemySetup.KamikazeDroneHealth - fullDamage, drone.ImpactStatus!.ObjectHealth);
+    }
+
+    [TestMethod]
+    public void MothershipShield_OverlayDoesNotConsumeShieldDuration()
+    {
+        DateTime now = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var controls = new HatchDroppedDroneControls(now: () => now);
+        var drone = CreateDrone();
+        int fullDamage = WeaponSetup.GetWeaponDamage("Lazer");
+
+        GameState.ScreenOverlayState.ShowOverlay = true;
+        controls.MoveObject(drone, null, null);
+        now = now.AddSeconds(5);
+        controls.MoveObject(drone, null, null);
+
+        GameState.ScreenOverlayState.ShowOverlay = false;
+        MarkLazerHit(drone);
+        controls.MoveObject(drone, null, null);
+
+        int shieldedDamage = Math.Max(1, (int)MathF.Round(fullDamage * 0.2f));
+        Assert.AreEqual(EnemySetup.KamikazeDroneHealth - shieldedDamage, drone.ImpactStatus!.ObjectHealth);
     }
 
     [TestMethod]

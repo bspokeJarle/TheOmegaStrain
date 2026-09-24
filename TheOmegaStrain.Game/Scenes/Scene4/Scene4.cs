@@ -140,10 +140,10 @@ namespace TheOmegaStrain.Game.Scenes.Scene4
             // SpaceSwans — passive wildlife
             for (int s = 0; s < 50; s++)
             {
-                var rmdSwan = new Random();
                 var spaceSwan = SpaceSwan.CreateSpaceSwan(Surface);
                 spaceSwan.Rotation = new Vector3 { };
-                spaceSwan.WorldPosition = new Vector3 { x = (95700 + rmdSwan.Next(-40000, 40000)) * ws, y = 0, z = (92000 + rmdSwan.Next(-40000, 40000)) * ws };
+                spaceSwan.WorldPosition = SpaceSwanPlacementHelpers.GetNextPosition(
+                    Random.Shared, GameState.SurfaceState.AiObjects, ws);
                 spaceSwan.ObjectOffsets = new Vector3 { x = 0, y = -200, z = 600 };
                 spaceSwan.ObjectName = "SpaceSwan";
                 spaceSwan.Movement = new SpaceSwanControls();

@@ -63,6 +63,7 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
         private IAudioInstance? _droneFlyingInstance;
         private float _overshootSecondsRemaining = 0f;
         private Vector3 _overshootDirection = new Vector3();
+        private DateTime? _pursuitPausedAt;
 
         public KamikazeDroneControls(float speedMultiplier = 1f)
         {
@@ -174,6 +175,21 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
         public I3dObject MoveObject(I3dObject theObject, IAudioPlayer? audioPlayer, ISoundRegistry? soundRegistry)
         {
             var now = DateTime.Now;
+
+            if (!EnemyPursuitHelpers.CanPursueShip && !_isExploding && theObject.ImpactStatus?.HasCrashed != true)
+            {
+                _pursuitPausedAt ??= now;
+                ApplyWaitingSurfaceClearance(theObject);
+                LastMovementDateTime = now;
+                return theObject;
+            }
+
+            if (_pursuitPausedAt is DateTime pausedAt)
+            {
+                if (StartHuntDateTime > pausedAt)
+                    StartHuntDateTime = StartHuntDateTime.Value.Add(now - pausedAt);
+                _pursuitPausedAt = null;
+            }
 
             // Skip hunt until the delay expires, unless the ship is already close
             if (StartHuntDateTime != null &&

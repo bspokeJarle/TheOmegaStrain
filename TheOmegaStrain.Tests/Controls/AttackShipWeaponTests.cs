@@ -53,6 +53,26 @@ public partial class AttackShipWeaponTests
         Assert.AreEqual(0, ship.WeaponSystems.ActiveWeapons.Count);
     }
 
+    [TestMethod]
+    public void VisibleBriefingPreventsAttackShipPursuitAndLaunch()
+    {
+        var ship = CreateAttackShip();
+        var before = new Vector3(ship.WorldPosition.x, ship.WorldPosition.y, ship.WorldPosition.z);
+        bool previous = GameState.ScreenOverlayState.ShowOverlay;
+        try
+        {
+            GameState.ScreenOverlayState.ShowOverlay = true;
+            ship.Movement!.MoveObject(ship, null, null);
+            Assert.AreEqual(before.x, ship.WorldPosition.x, 0.001f);
+            Assert.AreEqual(before.z, ship.WorldPosition.z, 0.001f);
+            Assert.AreEqual(0, ship.WeaponSystems!.ActiveWeapons.Count);
+        }
+        finally
+        {
+            GameState.ScreenOverlayState.ShowOverlay = previous;
+        }
+    }
+
     [DataTestMethod]
     [DataRow(30)]
     [DataRow(60)]

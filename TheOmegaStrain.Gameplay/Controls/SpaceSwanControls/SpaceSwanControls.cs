@@ -155,6 +155,7 @@ namespace TheOmegaStrain.Gameplay.Controls.SpaceSwanControls
             // Explosion
             if (_isExploding)
             {
+                theObject.CrashBoxes = new List<List<IVector3>>();
                 if (_explosionWorldPosition != null)
                 {
                     theObject.WorldPosition = new Vector3

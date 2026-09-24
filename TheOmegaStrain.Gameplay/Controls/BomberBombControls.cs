@@ -78,6 +78,7 @@ namespace TheOmegaStrain.Gameplay.Controls
 
             if (_isExploding)
             {
+                theObject.CrashBoxes = new List<List<IVector3>>();
                 if (_explosionWorldPosition != null)
                     theObject.WorldPosition = _explosionWorldPosition;
                 if (_explosionObjectOffsets != null)

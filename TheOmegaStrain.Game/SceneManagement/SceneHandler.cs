@@ -42,6 +42,9 @@ namespace TheOmegaStrain.Game.SceneManagement
         private SavedGameState? _tutorialResumeSavedState = null;
         private SceneCloudPool? _cloudPool;
         private int _settingsReturnIntroPage = 0;
+        private const double StartupWarmupSeconds = 5.0;
+        private long _startupWarmupStartedTicks;
+        private bool _startupWarmupCompleted;
 
         // ===== DEV / TEST SCENE SELECTION =====
         // The ONLY value you edit. Scene index to jump to after the Intro.
@@ -119,6 +122,7 @@ namespace TheOmegaStrain.Game.SceneManagement
             InitializeDirector(scene, world);
             ValidateGameSceneSetup(scene, world);
             CapturePlanetStartSnapshotIfNeeded(scene);
+            StartStartupWarmup(scene);
         }
 
         private void CaptureTutorialEntrySnapshotIfNeeded(IScene scene)
@@ -443,6 +447,7 @@ namespace TheOmegaStrain.Game.SceneManagement
         public void UpdateFrame(I3dWorld world)
         {
             _cloudPool?.Update(GameState.SurfaceState.GlobalMapPosition);
+            UpdateStartupWarmup();
             // Controllers can be connected after the intro overlay was created.
             if (GetActiveScene().SceneType == SceneTypes.Intro)
                 Intro.RefreshControlFooter();
@@ -562,6 +567,65 @@ namespace TheOmegaStrain.Game.SceneManagement
 
                 _pendingSavedState = null;
             }
+        }
+
+        private void StartStartupWarmup(IScene scene)
+        {
+            if (_startupWarmupCompleted ||
+                scene.SceneType is not (SceneTypes.Game or SceneTypes.Simulation))
+                return;
+
+            // Keep the first scene rendering behind this existing overlay so startup
+            // work happens before the player takes control. Later scenes are unaffected.
+            var overlay = GameState.ScreenOverlayState;
+            overlay.ResetToDefaults();
+            overlay.Type = ScreenOverlayType.Intro;
+            overlay.Anchor = ScreenOverlayAnchor.Center;
+            overlay.IsModal = true;
+            overlay.CanDismissWithInput = false;
+            overlay.CenterText = true;
+            overlay.Header = "RETROMESH // STARTUP";
+            overlay.Title = "5";
+            overlay.TitleScale = 2.4f;
+            overlay.Body = "WARMING UP YOUR ENGINES";
+            overlay.Footer = "PREPARING MISSION";
+            overlay.PanelWidthRatio = 0.45f;
+            overlay.PanelHeightRatio = 0.25f;
+            overlay.PanelYOffsetRatio = 0f;
+            overlay.DimStrength = 0.65f;
+            overlay.FadeInSpeed = 5f;
+            overlay.ShowOverlay = true;
+            GameState.GamePlayState.Phase = GamePhase.Intro;
+            _startupWarmupStartedTicks = Stopwatch.GetTimestamp();
+        }
+
+        private void UpdateStartupWarmup()
+        {
+            if (_startupWarmupStartedTicks == 0)
+                return;
+
+            var scene = GetActiveScene();
+            var overlay = GameState.ScreenOverlayState;
+            if (scene.SceneType is not (SceneTypes.Game or SceneTypes.Simulation) ||
+                !overlay.ShowOverlay || overlay.Header != "RETROMESH // STARTUP")
+            {
+                _startupWarmupStartedTicks = 0;
+                return;
+            }
+
+            double elapsedSeconds = Math.Max(0,
+                (Stopwatch.GetTimestamp() - _startupWarmupStartedTicks) / (double)Stopwatch.Frequency);
+            if (elapsedSeconds >= StartupWarmupSeconds)
+            {
+                _startupWarmupStartedTicks = 0;
+                _startupWarmupCompleted = true;
+                scene.SetupSceneOverlay();
+                return;
+            }
+
+            overlay.Title = Math.Ceiling(StartupWarmupSeconds - elapsedSeconds).ToString("0");
+            float secondProgress = (float)(elapsedSeconds - Math.Floor(elapsedSeconds));
+            overlay.TitleScale = 2.4f - 0.4f * secondProgress;
         }
 
         // -----------------------------------------------------------------
@@ -1334,6 +1398,9 @@ namespace TheOmegaStrain.Game.SceneManagement
         {
             if (overlay.Type == ScreenOverlayType.Intro && overlay.ShowOverlay)
             {
+                if (!overlay.CanDismissWithInput)
+                    return;
+
                 // Page navigation with arrow keys
                 if (overlay.HasMultiplePages)
                 {

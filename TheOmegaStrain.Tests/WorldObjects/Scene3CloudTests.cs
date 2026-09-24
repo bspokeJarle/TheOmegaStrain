@@ -10,6 +10,7 @@ using TheOmegaStrain.Game.Scenes.Scene3;
 using TheOmegaStrain.Game.World.Objects;
 using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Runtime.Loops;
+using TheOmegaStrain.Runtime.Rendering;
 using TheOmegaStrain.Wpf.Rendering;
 
 namespace TheOmegaStrain.Tests.WorldObjects;
@@ -64,6 +65,8 @@ public class Scene3CloudTests
     {
         var cloud = Cloud.CreateCloud(new Surface(), CloudVariant.Wide);
         cloud.ObjectOffsets = new Vector3(0f, -200f, 400f);
+        Assert.IsTrue(ObjectShadowManager.ShouldRenderShadowForCaster(cloud),
+            "A visible cloud should keep its shadow.");
         Assert.IsTrue(ObjectPlacementHelpers.TryGetRenderPosition(cloud, 0, 0,
             out _, out _, out var initialDepth));
 
@@ -75,6 +78,19 @@ public class Scene3CloudTests
             out _, out _, out var nearDepth));
         Assert.IsTrue(nearDepth < capDepth);
         Assert.IsFalse(OmegaPerspectiveProjectorFactory.IntersectsViewport(cloud));
+        Assert.IsFalse(ObjectShadowManager.ShouldRenderShadowForCaster(cloud),
+            "Once the renderer culls the cloud at its size cap, it must not leave a shadow.");
+    }
+
+    [TestMethod]
+    public void OffscreenCaster_DoesNotLeaveShadowInsideViewport()
+    {
+        var cloud = Cloud.CreateCloud(new Surface(), CloudVariant.Wide);
+        cloud.ObjectOffsets = new Vector3(0f, -200f, 400f);
+        Assert.IsTrue(ObjectShadowManager.ShouldRenderShadowForCaster(cloud));
+
+        cloud.ObjectOffsets.y = ScreenSetup.screenSizeY * 3f;
+        Assert.IsFalse(ObjectShadowManager.ShouldRenderShadowForCaster(cloud));
     }
 
     [TestMethod]

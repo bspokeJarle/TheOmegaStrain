@@ -232,6 +232,9 @@ namespace TheOmegaStrain.Gameplay.Controls.SeederControls
 
             if (isExploding)
             {
+                // Each render frame is copied from the original, which still has crash boxes.
+                // An exploding Seeder must not hit Ship again on that fresh copy.
+                theObject.CrashBoxes = new List<List<IVector3>>();
                 RestoreExplosionTransform(theObject);
 
                 //Update explosion

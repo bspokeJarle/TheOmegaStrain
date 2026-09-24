@@ -273,7 +273,12 @@ namespace TheOmegaStrain.Runtime.Loops
             if (GameState.SettingsState.EnhancedShadowsEnabled)
             {
                 foreach (var inhabitant in renderedList)
-                    objectShadowManager.HandleObjectShadow(inhabitant, shadowObjectList);
+                {
+                    // The distance/hold list is broader than the actual viewport.
+                    // In particular, a cloud can stop rendering at its size cap.
+                    if (ObjectShadowManager.ShouldRenderShadowForCaster(inhabitant))
+                        objectShadowManager.HandleObjectShadow(inhabitant, shadowObjectList);
+                }
             }
             moveRotateMs = phaseTimer.Mark();
 

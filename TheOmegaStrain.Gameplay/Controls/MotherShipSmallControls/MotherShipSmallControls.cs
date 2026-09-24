@@ -149,6 +149,17 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipSmallControls
             if (_lastMovementTime == DateTime.MinValue)
                 _lastMovementTime = now;
 
+            if (!EnemyPursuitHelpers.CanPursueShip)
+            {
+                if (_isDescending && _descentStartTime != DateTime.MinValue)
+                    _descentStartTime = _descentStartTime.Add(now - _lastMovementTime);
+                MotherShipSmallAi.UpdateRamCycle(_ramState, theObject, now, 0f);
+                _lastMovementTime = now;
+                SyncMovement(theObject);
+                SyncToOriginal(theObject);
+                return theObject;
+            }
+
             double deltaSeconds = (now - _lastMovementTime).TotalSeconds;
 
             // Engine sound: loop while alive, position-track each frame

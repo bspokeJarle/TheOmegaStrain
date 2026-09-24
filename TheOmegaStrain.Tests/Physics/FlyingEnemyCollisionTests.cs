@@ -5,6 +5,9 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Game.World.Objects;
 using TheOmegaStrain.Gameplay.Controls;
+using TheOmegaStrain.Gameplay.Controls.SeederControls;
+using TheOmegaStrain.Gameplay.Controls.SpaceSwanControls;
+using TheOmegaStrain.Gameplay.Controls.ZeppelinBomberControls;
 using TheOmegaStrain.Runtime.Collision;
 
 namespace TheOmegaStrain.Tests.Physics;
@@ -105,6 +108,42 @@ public class FlyingEnemyCollisionTests
         followingFrame.Movement!.MoveObject(followingFrame, null, null);
         Assert.AreEqual(0, followingFrame.CrashBoxes.Count);
         AssertExplosionParts(followingFrame);
+    }
+
+    [DataTestMethod]
+    [DataRow("Seeder")]
+    [DataRow("SpaceSwan")]
+    [DataRow("ZeppelinBomber")]
+    [DataRow("BomberBomb")]
+    public void ExplodingFlyingEnemy_DoesNotRestoreCrashBoxesOnFreshFrameCopy(string name)
+    {
+        var enemy = name switch
+        {
+            "Seeder" => Seeder.CreateSeeder(null!),
+            "SpaceSwan" => SpaceSwan.CreateSpaceSwan(null!),
+            "ZeppelinBomber" => ZeppelinBomber.CreateZeppelinBomber(null!),
+            _ => BomberBomb.CreateBomberBomb(null!)
+        };
+        enemy.WorldPosition = new Vector3(50000f, 0f, 50000f);
+        enemy.ObjectOffsets = new Vector3(0f, -200f, 400f);
+        enemy.ImpactStatus = new ImpactStatus { ObjectHealth = 100, HasCrashed = true, ObjectName = "Ship" };
+        enemy.Movement = name switch
+        {
+            "Seeder" => new SeederControls(),
+            "SpaceSwan" => new SpaceSwanControls(),
+            "ZeppelinBomber" => new ZeppelinBomberControls(),
+            _ => new BomberBombControls()
+        };
+
+        var firstFrame = CopyFrame(enemy);
+        firstFrame.Movement!.MoveObject(firstFrame, null, null);
+        Assert.AreEqual(0, firstFrame.CrashBoxes.Count, $"{name} on impact frame");
+
+        // The next frame is copied from the original object, which still has its original boxes.
+        var nextFrame = CopyFrame(enemy);
+        Assert.IsTrue(nextFrame.CrashBoxes.Count > 0, $"{name} must reproduce the stale-box case");
+        nextFrame.Movement!.MoveObject(nextFrame, null, null);
+        Assert.AreEqual(0, nextFrame.CrashBoxes.Count, $"{name} must not register a second Ship hit");
     }
 
     [DataTestMethod]

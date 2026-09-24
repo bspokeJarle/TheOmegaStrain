@@ -81,11 +81,13 @@ namespace TheOmegaStrain.Gameplay.Controls
             var now = DateTime.Now;
             float deltaSeconds = GetMovementDeltaSeconds(now);
             RestoreMovementState(theObject);
-            PursueShip(theObject, deltaSeconds);
+            if (EnemyPursuitHelpers.CanPursueShip)
+                PursueShip(theObject, deltaSeconds);
             UpdateRocketLoop(theObject);
 
             SyncAuthoritativeTransform(theObject);
-            UpdateFire(theObject, DateTime.UtcNow);
+            if (EnemyPursuitHelpers.CanPursueShip)
+                UpdateFire(theObject, DateTime.UtcNow);
 
             ReleaseParticles(theObject);
             if (theObject.Particles?.Particles.Count > 0)

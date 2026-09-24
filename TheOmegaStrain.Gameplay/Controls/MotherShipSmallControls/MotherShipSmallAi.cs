@@ -1,6 +1,7 @@
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Helpers;
 using System;
 
 namespace TheOmegaStrain.Gameplay.Controls.MotherShipSmallControls
@@ -36,6 +37,16 @@ namespace TheOmegaStrain.Gameplay.Controls.MotherShipSmallControls
 
         internal static void UpdateRamCycle(RamState state, I3dObject theObject, DateTime now, float deltaSeconds)
         {
+            if (!EnemyPursuitHelpers.CanPursueShip)
+            {
+                // Restart the warning/charge cycle when the player can act again.
+                state.RamCycleStart = now;
+                state.RamTargetLocked = false;
+                state.IsCharging = false;
+                GameState.GamePlayState.MotherShipRamWarningActive = false;
+                return;
+            }
+
             if (state.RamCycleStart == DateTime.MinValue)
                 state.RamCycleStart = now;
 

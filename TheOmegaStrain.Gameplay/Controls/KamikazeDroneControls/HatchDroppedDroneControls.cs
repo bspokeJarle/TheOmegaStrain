@@ -1,6 +1,7 @@
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
+using TheOmegaStrain.Gameplay.Helpers;
 using System;
 
 namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
@@ -69,7 +70,6 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
 
             float deltaSeconds = Math.Max(0f, (float)(now - _lastMoveTime).TotalSeconds);
             _lastMoveTime = now;
-            _shieldTimer += deltaSeconds;
 
             // The hatch shield reduces weapon damage, but a ram must consume the
             // drone like a normal KamikazeDrone so it cannot hit Ship every frame.
@@ -78,6 +78,11 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
                 _inner.ConfigureAudio(audioPlayer, soundRegistry);
                 return _inner.MoveObject(theObject, audioPlayer, soundRegistry);
             }
+
+            if (!EnemyPursuitHelpers.CanPursueShip && theObject.ImpactStatus?.HasCrashed != true)
+                return theObject;
+
+            _shieldTimer += deltaSeconds;
 
             if (_shieldTimer < ShieldDurationSeconds)
             {
