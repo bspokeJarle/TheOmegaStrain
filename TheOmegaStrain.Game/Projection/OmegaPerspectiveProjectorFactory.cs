@@ -202,6 +202,15 @@ namespace TheOmegaStrain.Game.Projection
                     out double screenY,
                     out double screenZ))
             {
+                // Clouds should leave the frame when they reach the normal
+                // perspective-size cap, not hover at a frozen apparent size.
+                if (obj.ObjectName == "Cloud" && perspectiveAdjustment > 0d &&
+                    screenZ <= perspectiveAdjustment / MaximumPerspectiveScale - perspectiveAdjustment)
+                {
+                    position = default;
+                    return false;
+                }
+
                 screenZ = ResolveProjectionDepth(obj, screenZ, perspectiveAdjustment);
                 position = SurfaceSlopeRenderPositionHelpers.Apply(
                     obj,

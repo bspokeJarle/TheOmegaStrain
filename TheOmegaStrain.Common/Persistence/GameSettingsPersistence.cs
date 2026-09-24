@@ -88,6 +88,11 @@ namespace TheOmegaStrain.Common.Persistence
             {
                 state.ControlsEditorScheme = state.ActiveControlScheme;
             }
+
+            if (settingsSchemaVersion < 8)
+            {
+                state.CloudsEnabled = state.GraphicsQuality == GraphicsQualityPreset.High;
+            }
         }
 
         private static int GetSettingsSchemaVersion(string json)

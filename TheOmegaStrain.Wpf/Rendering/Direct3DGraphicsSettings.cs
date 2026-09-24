@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
 
 namespace TheOmegaStrain.Wpf.Rendering
 {
@@ -25,6 +26,9 @@ namespace TheOmegaStrain.Wpf.Rendering
                     continue;
 
                 triangle.Color = ApplyQualityColor(triangle.Color, settings.GraphicsQuality);
+
+                if (CloudVisualSetup.IsCloudPart(triangle.PartName))
+                    triangle.Opacity = CloudVisualSetup.GetOpacity(triangle.PartName);
 
                 if (ProjectedTriangleRenderMath.IsCrashBoxPartName(triangle.PartName))
                     triangle.Opacity = 0.25f;

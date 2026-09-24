@@ -111,7 +111,9 @@ public class SettingsOverlayTests
             Assert.IsTrue(GameState.SettingsState.EnhancedWeatherEnabled);
             Assert.IsTrue(GameState.SettingsState.EnhancedShadowsEnabled);
             Assert.IsTrue(GameState.SettingsState.SceneRasterBackgroundEnabled);
+            Assert.IsTrue(GameState.SettingsState.CloudsEnabled);
             StringAssert.Contains(overlay.Body, "SKY RASTER     ON");
+            StringAssert.Contains(overlay.Body, "CLOUDS         ON");
 
             HandleKeyPress(handler, world, GameInputKey.Down);
             HandleKeyPress(handler, world, GameInputKey.Right);
@@ -126,6 +128,11 @@ public class SettingsOverlayTests
 
             Assert.IsFalse(GameState.SettingsState.SceneRasterBackgroundEnabled);
             StringAssert.Contains(overlay.Body, "SKY RASTER     OFF");
+
+            HandleKeyPress(handler, world, GameInputKey.Down);
+            HandleKeyPress(handler, world, GameInputKey.Right);
+            Assert.IsFalse(GameState.SettingsState.CloudsEnabled);
+            StringAssert.Contains(overlay.Body, "CLOUDS         OFF");
         });
     }
 

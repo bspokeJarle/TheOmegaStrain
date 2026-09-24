@@ -1,5 +1,6 @@
 using RetroMesh.Engine;
 using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Wpf.Rendering;
 
 namespace TheOmegaStrain.Tests.Rendering;
@@ -62,6 +63,21 @@ public class Direct3DGraphicsSettingsTests
         Direct3DGraphicsSettings.Apply(triangles, new GameSettingsState());
 
         Assert.AreEqual(0.25f, triangles[0].Opacity);
+    }
+
+    [TestMethod]
+    public void Apply_CloudBodyIsOpaqueWithoutChangingOtherObjects()
+    {
+        var triangles = new List<ProjectedTriangleMesh>
+        {
+            CreateTriangle(CloudVisualSetup.BodyPartName, "D3E5EA"),
+            CreateTriangle("SeederBody", "D3E5EA")
+        };
+
+        Direct3DGraphicsSettings.Apply(triangles, new GameSettingsState());
+
+        Assert.AreEqual(1f, triangles[0].Opacity);
+        Assert.AreEqual(0f, triangles[1].Opacity);
     }
 
     private static ProjectedTriangleMesh CreateTriangle(string partName, string color) => new()

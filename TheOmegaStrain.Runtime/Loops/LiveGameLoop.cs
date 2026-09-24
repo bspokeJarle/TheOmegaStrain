@@ -161,6 +161,7 @@ namespace TheOmegaStrain.Runtime.Loops
                 {
                     if (inhabitant.ObjectParts.Count == 0) continue;
                     if (!inhabitant.IsActive) continue;
+                    if (inhabitant.ObjectName == "Cloud" && !GameState.SettingsState.CloudsEnabled) continue;
 
                     if (inhabitant is OmegaObject3D concreteInhabitant && ShouldIncludeInRenderSet(concreteInhabitant))
                     {

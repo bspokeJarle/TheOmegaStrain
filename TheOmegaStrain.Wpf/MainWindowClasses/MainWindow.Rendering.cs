@@ -221,6 +221,17 @@ namespace TheOmegaStrain.Wpf.Rendering
                     if (SceneBackgroundRasterHelpers.IsBackgroundPart(triangle.PartName))
                         continue;
 
+                    if (CloudVisualSetup.IsCloudPart(triangle.PartName))
+                    {
+                        FlushBatch();
+                        drawCalls += DrawCloudTriangle(dc, triangle);
+                        batchGeometry = null;
+                        batchContext = null;
+                        batchBrush = null;
+                        batchPen = null;
+                        continue;
+                    }
+
                     if (ShouldUseEffectRenderingPipeline(triangle))
                     {
                         FlushBatch();
@@ -517,6 +528,20 @@ namespace TheOmegaStrain.Wpf.Rendering
 
             dc.DrawGeometry(brush, pen, geometry);
             return drawCalls + 1;
+        }
+
+        private int DrawCloudTriangle(DrawingContext dc, ProjectedTriangleMesh triangle)
+        {
+            byte alpha = (byte)Math.Round(CloudVisualSetup.GetOpacity(triangle.PartName) * 255f);
+            SolidColorBrush brush = GetCachedAlphaBrush(GetCachedTriangleColor(triangle), alpha);
+            StreamGeometry geometry = GetNextGeometry();
+            using (var ctx = geometry.Open())
+            {
+                AddTriangleFigure(ctx, triangle);
+            }
+
+            dc.DrawGeometry(brush, null, geometry);
+            return 1;
         }
 
         private int DrawSoftShadow(DrawingContext dc, ProjectedTriangleMesh triangle)

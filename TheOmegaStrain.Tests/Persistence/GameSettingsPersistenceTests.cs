@@ -49,6 +49,7 @@ public class GameSettingsPersistenceTests
             EnhancedWeatherEnabled = true,
             EnhancedShadowsEnabled = false,
             SceneRasterBackgroundEnabled = false,
+            CloudsEnabled = true,
             FlightPreset = FlightHandlingPreset.Custom,
             FlightCoastingSetting = FlightCoasting.Long,
             FlightRotationInertiaSetting = FlightRotationInertia.High,
@@ -82,6 +83,7 @@ public class GameSettingsPersistenceTests
         Assert.IsTrue(loaded.EnhancedWeatherEnabled);
         Assert.IsFalse(loaded.EnhancedShadowsEnabled);
         Assert.IsFalse(loaded.SceneRasterBackgroundEnabled);
+        Assert.IsTrue(loaded.CloudsEnabled);
         Assert.AreEqual(FlightHandlingPreset.Custom, loaded.FlightPreset);
         Assert.AreEqual(FlightCoasting.Long, loaded.FlightCoastingSetting);
         Assert.AreEqual(FlightRotationInertia.High, loaded.FlightRotationInertiaSetting);
@@ -111,6 +113,7 @@ public class GameSettingsPersistenceTests
 
         Assert.AreEqual(100, GameState.SettingsState.MasterVolumePercent);
         Assert.AreEqual(GraphicsQualityPreset.Balanced, GameState.SettingsState.GraphicsQuality);
+        Assert.IsFalse(GameState.SettingsState.CloudsEnabled);
         Assert.AreEqual(CameraAnglePreset.Normal, GameState.SettingsState.CameraAngle);
         Assert.AreEqual(63f, GameState.SettingsState.CameraPitchDegrees);
         Assert.AreEqual(FlightHandlingPreset.Balanced, GameState.SettingsState.FlightPreset);

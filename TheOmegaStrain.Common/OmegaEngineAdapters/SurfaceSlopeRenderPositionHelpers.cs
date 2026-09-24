@@ -35,6 +35,7 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters
         {
             return objectName is
                 "AttackShip" or
+                "Cloud" or
                 "KamikazeDrone" or
                 "MotherShipSmall" or
                 "MotherShipMedium" or

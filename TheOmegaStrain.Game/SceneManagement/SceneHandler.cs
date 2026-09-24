@@ -11,6 +11,7 @@ using TheOmegaStrain.Game.Scenes.Outro;
 using TheOmegaStrain.Game.Scenes.SceneSimulation;
 using TheOmegaStrain.Game.Scenes.Tutorial;
 using TheOmegaStrain.Game.World;
+using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
@@ -39,6 +40,7 @@ namespace TheOmegaStrain.Game.SceneManagement
         private bool _pendingTutorialStart = false;
         private SavedGameState? _pendingSavedState = null;
         private SavedGameState? _tutorialResumeSavedState = null;
+        private SceneCloudPool? _cloudPool;
         private int _settingsReturnIntroPage = 0;
 
         // ===== DEV / TEST SCENE SELECTION =====
@@ -440,6 +442,7 @@ namespace TheOmegaStrain.Game.SceneManagement
 
         public void UpdateFrame(I3dWorld world)
         {
+            _cloudPool?.Update(GameState.SurfaceState.GlobalMapPosition);
             // Controllers can be connected after the intro overlay was created.
             if (GetActiveScene().SceneType == SceneTypes.Intro)
                 Intro.RefreshControlFooter();
@@ -1671,11 +1674,16 @@ namespace TheOmegaStrain.Game.SceneManagement
 
         private void InitializeDirector(IScene scene, I3dWorld world)
         {
+            _cloudPool = scene.SceneType is SceneTypes.Game or SceneTypes.Simulation
+                ? SceneCloudPool.AddClouds(world,
+                    GameState.SurfaceState.SurfaceViewportObject?.ParentSurface, scene.SceneBiome)
+                : null;
             scene.Director?.Initialize(world.EventBus!, world);
         }
 
         private void DisposeDirector()
         {
+            _cloudPool = null;
             GetActiveScene().Director?.Dispose();
         }
 

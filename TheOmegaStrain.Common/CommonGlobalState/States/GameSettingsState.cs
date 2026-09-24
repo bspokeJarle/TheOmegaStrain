@@ -29,7 +29,8 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
         GlowEffects = 3,
         EnhancedWeather = 4,
         EnhancedShadows = 5,
-        SceneRasterBackground = 6
+        SceneRasterBackground = 6,
+        Clouds = 7
     }
 
     public enum FlightSettingsField
@@ -50,7 +51,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
 
     public sealed class GameSettingsState : IAudioVolumeProfile
     {
-        public const int CurrentSettingsSchemaVersion = 7;
+        public const int CurrentSettingsSchemaVersion = 8;
         public const int VolumeStepPercent = 5;
         public const int ParticleDensityStepPercent = 10;
         private const int ControlFlowOptionCount = 2;
@@ -99,6 +100,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
         public bool EnhancedWeatherEnabled { get; set; } = true;
         public bool EnhancedShadowsEnabled { get; set; } = true;
         public bool SceneRasterBackgroundEnabled { get; set; } = true;
+        public bool CloudsEnabled { get; set; } = false;
 
         public FlightHandlingPreset FlightPreset { get; set; } = FlightHandlingPreset.Balanced;
         public FlightCoasting FlightCoastingSetting { get; set; } = FlightCoasting.Normal;
@@ -319,6 +321,9 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
                 case GraphicsSettingsField.SceneRasterBackground:
                     SceneRasterBackgroundEnabled = !SceneRasterBackgroundEnabled;
                     break;
+                case GraphicsSettingsField.Clouds:
+                    CloudsEnabled = !CloudsEnabled;
+                    break;
             }
 
             Version++;
@@ -469,18 +474,21 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
                     GlowEffectsEnabled = false;
                     EnhancedWeatherEnabled = false;
                     EnhancedShadowsEnabled = false;
+                    CloudsEnabled = false;
                     break;
                 case GraphicsQualityPreset.High:
                     ParticleDensityPercent = 180;
                     GlowEffectsEnabled = true;
                     EnhancedWeatherEnabled = true;
                     EnhancedShadowsEnabled = true;
+                    CloudsEnabled = true;
                     break;
                 default:
                     ParticleDensityPercent = 100;
                     GlowEffectsEnabled = false;
                     EnhancedWeatherEnabled = true;
                     EnhancedShadowsEnabled = true;
+                    CloudsEnabled = false;
                     break;
             }
         }
