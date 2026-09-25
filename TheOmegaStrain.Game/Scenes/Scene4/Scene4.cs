@@ -19,6 +19,9 @@ namespace TheOmegaStrain.Game.Scenes.Scene4
     public class Scene4 : IScene
     {
         Surface Surface = new();
+        private const int SeederCount = 15;
+        private const int DroneCount = 10;
+        private const int BomberCount = 3;
         public const int TargetPatrolPolarBearCount = 30;
         private const bool enableLogging = false;
         private readonly List<PolarBearPlacementInfo> _polarBearPlacements = new();
@@ -67,7 +70,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene4
             SpawnSeals(world);
 
             // ZeppelinBombers — 3 bombers
-            for (int b = 0; b < 3; b++)
+            for (int b = 0; b < BomberCount; b++)
             {
                 var rmdBomber = new Random();
                 var bomber = ZeppelinBomber.CreateZeppelinBomber(Surface);
@@ -84,7 +87,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene4
             }
 
             // Drones — waiting until the player has a Decoy powerup
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < DroneCount; i++)
             {
                 var rmd = new Random();
 
@@ -106,7 +109,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene4
                 world,
                 Surface,
                 GameState.SurfaceState.GlobalMapPosition,
-                totalSeederCount: 15,
+                totalSeederCount: SeederCount,
                 regularSeed: 4041,
                 nearSeederCount: 7,
                 firstKillPowerUpType: PowerUpType.TravelSpeedLevel1);
@@ -656,18 +659,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene4
             o.Type = ScreenOverlayType.Intro;
             o.Anchor = ScreenOverlayAnchor.Top;
 
-            o.Header = "RETROMESH // SECTOR BRIEFING";
-            o.Title = "PLANET KEPLER-22b - PHASE IV";
-
-            o.Body =
-                "Frozen world KEPLER-22b: Omega Strain has adapted to sub-zero conditions.\n\n" +
-                "Fifteen seeders confirmed. Escort drones: TEN. Bombers: THREE.\n" +
-                "Infection spreading beneath the ice layer - tolerance: 12.5%.\n" +
-                "Spread delay: 3 seconds. Cascade will not stop until seeders are dead.\n\n" +
-                "DIRECTIVE:\n" +
-                "Purge the frozen world. Accept no losses.";
-
-            o.Footer = "PRESS ANY KEY TO BEGIN DESCENT";
+            SceneBriefingText.Apply(o, 4, GameState.SettingsState.LanguageCode,
+                SeederCount, DroneCount, BomberCount, 0, InfectionThresholdPercent, LocalInfectionSpreadDelaySec);
 
             o.ShowOverlay = true;
             o.AutoHide = false;

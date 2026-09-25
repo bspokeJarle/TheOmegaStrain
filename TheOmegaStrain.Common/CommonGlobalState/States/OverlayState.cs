@@ -2,6 +2,7 @@ using RetroMesh.Engine;
 using System;
 using TheOmegaStrain.Common.Persistence;
 using System.Collections.Generic;
+using TheOmegaStrain.Common.Localization;
 
 namespace TheOmegaStrain.Common.CommonGlobalState.States
 {
@@ -543,15 +544,16 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
                 string display = NameEntryBuffer + cursor;
                 string validation = string.IsNullOrEmpty(NameEntryValidationMessage)
                     ? "" : $"\n{NameEntryValidationMessage}";
+                string language = GameState.SettingsState.LanguageCode;
                 ChoiceBodyPrefix = savedPilots
-                    ? "SELECT A SAVED PILOT"
-                    : $"CALLSIGN: {display}\n\nSelect USE THIS CALLSIGN to continue, or choose another name below."
-                      + (keyboardEntry ? "\nYou can also type a name. BACKSPACE deletes." : "\nNo keyboard needed.")
+                    ? GameText.Get("callsign.savedTitle", language)
+                    : GameText.Format("callsign.entryBody", language, ("callsign", display))
+                      + (keyboardEntry ? GameText.Get("callsign.keyboardHint", language) : GameText.Get("callsign.controllerHint", language))
                       + validation;
                 Footer = GameState.InputDeviceState.AnyControllerConnected ||
                          GameState.SettingsState.ActiveControlScheme == ControlInputMode.XboxController
-                    ? "D-PAD / STICK: UP/DOWN SELECT | [A] CONFIRM | [B] BACK"
-                    : "UP/DOWN SELECT | ENTER CONFIRM | ESC BACK";
+                    ? GameText.Get("callsign.footerController", language)
+                    : GameText.Get("callsign.footerKeyboard", language);
                 ApplyChoiceBody();
             }
         }
@@ -632,15 +634,15 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
             Pages.Clear();
             CurrentPage = 0;
 
-            Header = "RETROMESH // PILOT REGISTRY";
-            Title = "IDENTIFY YOURSELF";
+            Header = GameText.Get("callsign.header", GameState.SettingsState.LanguageCode);
+            Title = GameText.Get("callsign.title", GameState.SettingsState.LanguageCode);
             NameEntryBuffer = PlayerNameFormatter.Normalize(defaultName);
             NameEntryValidationMessage = "";
             IsNameConfirmed = false;
             _cursorBlinkTimer = 0f;
             Body = "";
             SetCallsignMenuChoices();
-            Footer = "UP/DOWN SELECT | ENTER / [A] CONFIRM | ESC / [B] BACK";
+            Footer = GameText.Get("callsign.footer", GameState.SettingsState.LanguageCode);
 
             DimStrength = 0.65f;
             PanelWidthRatio = 0.68f;
@@ -655,8 +657,11 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
 
         public void SetCallsignMenuChoices()
         {
-            SetChoiceOptions(ScreenOverlayChoiceAction.CallsignMenu, $"CALLSIGN: {NameEntryBuffer}",
-                "USE THIS CALLSIGN", "NEW NAME SUGGESTION", "SAVED PILOTS", "BACK");
+            string language = GameState.SettingsState.LanguageCode;
+            SetChoiceOptions(ScreenOverlayChoiceAction.CallsignMenu,
+                GameText.Format("callsign.label", language, ("callsign", NameEntryBuffer)),
+                GameText.Get("callsign.use", language), GameText.Get("callsign.suggest", language),
+                GameText.Get("callsign.saved", language), GameText.Get("callsign.back", language));
         }
 
         /// <summary>
@@ -743,7 +748,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
             CurrentPage = 0;
             ClearChoiceOptions();
 
-            Header = "RETROMESH // SETTINGS";
+            Header = GameText.Get("settings.header", GameState.SettingsState.LanguageCode);
             Title = title ?? "";
             Body = body ?? "";
             Footer = footer ?? "";

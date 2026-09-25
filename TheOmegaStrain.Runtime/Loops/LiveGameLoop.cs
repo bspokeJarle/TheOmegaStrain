@@ -9,6 +9,7 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.Events;
 using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Common.Localization;
 using TheOmegaStrain.Common.Persistence;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Audio.Services;
@@ -983,9 +984,10 @@ namespace TheOmegaStrain.Runtime.Loops
             overlay.ResetToDefaults();
             overlay.Type = ScreenOverlayType.Game;
             overlay.Anchor = ScreenOverlayAnchor.Center;
-            overlay.Header = "PLANET SECURED";
-            overlay.Title = "MISSION REWARD";
-            overlay.Footer = "CALCULATING PLANET BONUS";
+            string language = GameState.SettingsState.LanguageCode;
+            overlay.Header = GameText.Get("reward.header", language);
+            overlay.Title = GameText.Get("reward.title", language);
+            overlay.Footer = GameText.Get("reward.calculating", language);
             overlay.DimStrength = 0.55f;
             overlay.PanelWidthRatio = 0.66f;
             overlay.PanelHeightRatio = 0.38f;
@@ -1000,8 +1002,8 @@ namespace TheOmegaStrain.Runtime.Loops
             {
                 _victoryRewardBreakdown = null;
                 _lastAppliedVictoryReward = 0;
-                overlay.Title = "ALL THREATS ELIMINATED";
-                overlay.Body = "Proceeding to next sector...";
+                overlay.Title = GameText.Get("reward.allClear", language);
+                overlay.Body = GameText.Get("reward.nextSector", language);
                 overlay.Footer = "";
                 overlay.PanelHeightRatio = 0.22f;
                 return;
@@ -1051,9 +1053,9 @@ namespace TheOmegaStrain.Runtime.Loops
 
             var overlay = GameState.ScreenOverlayState;
             overlay.Body = _victoryRewardBreakdown.BuildOverlayBody(progress);
-            overlay.Footer = progress >= 1f
-                ? $"BONUS APPLIED  //  SCORE {GameState.GamePlayState.Score:N0}"
-                : $"COUNTING BONUS  //  SCORE {GameState.GamePlayState.Score:N0}";
+            overlay.Footer = GameText.Format(progress >= 1f ? "reward.applied" : "reward.counting",
+                GameState.SettingsState.LanguageCode,
+                ("score", GameState.GamePlayState.Score.ToString("N0")));
         }
 
         private void ClearVictoryRewardState()
@@ -1185,14 +1187,15 @@ namespace TheOmegaStrain.Runtime.Loops
             overlay.Type = ScreenOverlayType.Game;
             overlay.Anchor = ScreenOverlayAnchor.Center;
             overlay.IsModal = true;
-            overlay.Header = "BIOMASS CRITICAL";
-            overlay.Title = "PLANET LOST";
+            string language = GameState.SettingsState.LanguageCode;
+            overlay.Header = GameText.Get("loss.header", language);
+            overlay.Title = GameText.Get("loss.title", language);
             overlay.SetChoiceOptions(
                 ScreenOverlayChoiceAction.PlanetLostRecovery,
-                "The infection has overrun the planet.\nChoose how to continue:",
-                "CONTINUE FROM CHECKPOINT",
-                "RESET PLANET TO ARRIVAL");
-            overlay.Footer = "UP/DOWN TO SELECT  //  ENTER TO CONFIRM";
+                GameText.Get("loss.body", language),
+                GameText.Get("loss.continue", language),
+                GameText.Get("loss.reset", language));
+            overlay.Footer = GameText.Get("loss.footer", language);
             overlay.DimStrength = 0.65f;
             overlay.PanelWidthRatio = 0.68f;
             overlay.PanelHeightRatio = 0.32f;

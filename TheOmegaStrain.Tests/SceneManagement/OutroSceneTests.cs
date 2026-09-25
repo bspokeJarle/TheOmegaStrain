@@ -11,6 +11,7 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.Events;
 using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Common.Localization;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System.IO;
@@ -1387,12 +1388,12 @@ public class OutroSceneTests
             var overlay = GameState.ScreenOverlayState;
             Assert.IsTrue(overlay.ShowOverlay, "Outro should show the final congratulations overlay after the astronaut reveal.");
             Assert.AreEqual(3, overlay.Pages.Count, "Outro overlay should end with a leaderboard/highscore page.");
-            Assert.AreEqual("LEADERBOARD", overlay.Pages[2][1]);
+            Assert.AreEqual(GameText.Get("highscore.outroTitle", GameState.SettingsState.LanguageCode), overlay.Pages[2][1]);
             Assert.AreEqual(HighscoreOverlayFormatter.BuildBody(), overlay.Pages[2][2],
                 "Outro leaderboard page should reuse the same highscore body formatter as the existing highscore page.");
             Assert.IsTrue(overlay.Pages[2][2].Contains(PlayerNameFormatter.Normalize("Jarle")),
                 "Final outro overlay should include the saved highscore list.");
-            Assert.IsTrue(overlay.Pages[2][3].Contains("PAGE 3 / 3"));
+            Assert.AreEqual(GameText.Get("highscore.outroFooter", GameState.SettingsState.LanguageCode), overlay.Pages[2][3]);
         }
         finally
         {

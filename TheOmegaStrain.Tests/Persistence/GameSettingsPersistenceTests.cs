@@ -42,6 +42,7 @@ public class GameSettingsPersistenceTests
             MusicVolumePercent = 70,
             EffectsVolumePercent = 60,
             VoiceVolumePercent = 50,
+            LanguageCode = "de",
             GraphicsQuality = GraphicsQualityPreset.High,
             CameraAngle = CameraAnglePreset.High,
             ParticleDensityPercent = 130,
@@ -76,6 +77,7 @@ public class GameSettingsPersistenceTests
         Assert.AreEqual(70, loaded.MusicVolumePercent);
         Assert.AreEqual(60, loaded.EffectsVolumePercent);
         Assert.AreEqual(50, loaded.VoiceVolumePercent);
+        Assert.AreEqual("de", loaded.LanguageCode);
         Assert.AreEqual(GraphicsQualityPreset.High, loaded.GraphicsQuality);
         Assert.AreEqual(CameraAnglePreset.High, loaded.CameraAngle);
         Assert.AreEqual(130, loaded.ParticleDensityPercent);
@@ -112,6 +114,7 @@ public class GameSettingsPersistenceTests
         GameSettingsPersistence.LoadIntoGameState();
 
         Assert.AreEqual(100, GameState.SettingsState.MasterVolumePercent);
+        Assert.AreEqual("en", GameState.SettingsState.LanguageCode);
         Assert.AreEqual(GraphicsQualityPreset.Balanced, GameState.SettingsState.GraphicsQuality);
         Assert.IsFalse(GameState.SettingsState.CloudsEnabled);
         Assert.AreEqual(CameraAnglePreset.Normal, GameState.SettingsState.CameraAngle);

@@ -20,6 +20,10 @@ namespace TheOmegaStrain.Game.Scenes.Scene6
     public class Scene6 : IScene
     {
         Surface Surface = new();
+        private const int SeederCount = 21;
+        private const int DroneCount = 14;
+        private const int BomberCount = 6;
+        private const int AttackShipCount = 1;
 
         public string SceneMusic { get; } = "music_kanpai";
         public SceneTypes SceneType { get; } = SceneTypes.Game;
@@ -70,7 +74,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene6
 
             SpawnJumpingFish(world);
 
-            for (int b = 0; b < 6; b++)
+            for (int b = 0; b < BomberCount; b++)
             {
                 var rmdBomber = new Random();
                 var bomber = ZeppelinBomber.CreateZeppelinBomber(Surface);
@@ -86,7 +90,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene6
                 GameState.SurfaceState.AiObjects.Add(bomber);
             }
 
-            for (int i = 0; i < 14; i++)
+            for (int i = 0; i < DroneCount; i++)
             {
                 var rmd = new Random();
                 var kamikaze = KamikazeDrone.CreateKamikazeDrone(Surface, speedMultiplier: KamikazeDroneSpeedMultiplier);
@@ -103,13 +107,13 @@ namespace TheOmegaStrain.Game.Scenes.Scene6
                 GameState.SurfaceState.AiObjects.Add(kamikaze);
             }
 
-            AttackShipPlacementHelpers.AddAttackShipGroup(world, Surface, count: 1, spawnSpread: 55000);
+            AttackShipPlacementHelpers.AddAttackShipGroup(world, Surface, count: AttackShipCount, spawnSpread: 55000);
 
             SeederPlacementHelpers.AddSeederGroup(
                 world,
                 Surface,
                 GameState.SurfaceState.GlobalMapPosition,
-                totalSeederCount: 21,
+                totalSeederCount: SeederCount,
                 regularSeed: 6061,
                 nearSeederCount: 5,
                 firstRingRadius: 6500f,
@@ -847,18 +851,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene6
 
             o.Type = ScreenOverlayType.Intro;
             o.Anchor = ScreenOverlayAnchor.Top;
-            o.Header = "RETROMESH // SECTOR BRIEFING";
-            o.Title = "PLANET ARIDUS - PHASE VI";
-            o.Body =
-                "Descending on ARIDUS - arid desert world, surface temperature extreme.\n\n" +
-                "Sand contamination identified as Omega Strain vector.\n" +
-                "Twenty-one seeders detected across dune fields.\n" +
-                "Kamikaze escort: FOURTEEN units. Bomber wing: SIX.\n" +
-                "Rocket-equipped AttackShips: ONE.\n" +
-                "Spread delay: 1.8 seconds. Bio-tolerance: 15.0%.\n\n" +
-                "DIRECTIVE:\n" +
-                "Destroy all seeders before the desert biome collapses entirely.";
-            o.Footer = "PRESS ANY KEY TO BEGIN DESCENT";
+            SceneBriefingText.Apply(o, 6, GameState.SettingsState.LanguageCode,
+                SeederCount, DroneCount, BomberCount, AttackShipCount, InfectionThresholdPercent, LocalInfectionSpreadDelaySec);
             o.ShowOverlay = true;
             o.AutoHide = false;
             o.AutoHideSeconds = 0f;

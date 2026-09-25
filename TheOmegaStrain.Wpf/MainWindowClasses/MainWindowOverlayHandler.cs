@@ -1,6 +1,9 @@
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.Localization;
+using TheOmegaStrain.Game.Scenes.Intro;
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -31,6 +34,8 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
         private readonly TextBlock _title;
         private readonly ScaleTransform _titleScale = new ScaleTransform(1, 1);
         private readonly TextBlock _body;
+        private readonly StackPanel _languageFlags;
+        private readonly List<Border> _flagBorders = new();
         private readonly TextBlock _footer;
         private readonly TextBlock _pageIndicator;
 
@@ -102,6 +107,37 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
                 Margin = new Thickness(0, 0, 0, 14)
             };
 
+            _languageFlags = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 12),
+                Visibility = Visibility.Collapsed
+            };
+            for (int i = 0; i < GameText.LanguageCodes.Length; i++)
+            {
+                var cell = new StackPanel { Orientation = Orientation.Vertical };
+                cell.Children.Add(CreateFlag(i));
+                cell.Children.Add(new TextBlock
+                {
+                    Text = GameText.LanguageCodes[i].ToUpperInvariant(),
+                    FontFamily = new FontFamily("Consolas"),
+                    FontSize = 14,
+                    Foreground = Brushes.White,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+                var border = new Border
+                {
+                    BorderThickness = new Thickness(2),
+                    BorderBrush = Brushes.Transparent,
+                    Padding = new Thickness(4),
+                    Margin = new Thickness(8, 0, 8, 0),
+                    Child = cell
+                };
+                _flagBorders.Add(border);
+                _languageFlags.Children.Add(border);
+            }
+
             _footer = new TextBlock
             {
                 FontFamily = new FontFamily("Consolas"),
@@ -128,6 +164,7 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
             _stack.Children.Add(_header);
             _stack.Children.Add(_title);
             _stack.Children.Add(_body);
+            _stack.Children.Add(_languageFlags);
             _stack.Children.Add(_footer);
             _stack.Children.Add(_pageIndicator);
 
@@ -137,6 +174,66 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
             _overlayRoot.Children.Add(_panel);
 
             _root.Children.Add(_overlayRoot);
+        }
+
+        private static Canvas CreateFlag(int index)
+        {
+            const double width = 36;
+            const double height = 24;
+            var flag = new Canvas { Width = width, Height = height, ClipToBounds = true };
+            var navy = new SolidColorBrush(Color.FromRgb(2, 37, 105));
+            var red = new SolidColorBrush(Color.FromRgb(186, 12, 47));
+
+            switch (index)
+            {
+                case 0: // United Kingdom: English language marker.
+                    AddFlagRect(flag, navy, 0, 0, width, height);
+                    AddFlagPolygon(flag, Brushes.White, new Point(0, 0), new Point(4, 0),
+                        new Point(36, 20), new Point(36, 24), new Point(32, 24), new Point(0, 4));
+                    AddFlagPolygon(flag, Brushes.White, new Point(36, 0), new Point(32, 0),
+                        new Point(0, 20), new Point(0, 24), new Point(4, 24), new Point(36, 4));
+                    AddFlagRect(flag, Brushes.White, 0, 9, width, 6);
+                    AddFlagRect(flag, Brushes.White, 15, 0, 6, height);
+                    AddFlagRect(flag, red, 0, 11, width, 2);
+                    AddFlagRect(flag, red, 17, 0, 2, height);
+                    break;
+                case 1: // Norway.
+                    AddFlagRect(flag, red, 0, 0, width, height);
+                    AddFlagRect(flag, Brushes.White, 0, 9, width, 6);
+                    AddFlagRect(flag, Brushes.White, 10, 0, 6, height);
+                    AddFlagRect(flag, navy, 0, 11, width, 2);
+                    AddFlagRect(flag, navy, 12, 0, 2, height);
+                    break;
+                case 2: // Germany.
+                    AddFlagRect(flag, Brushes.Black, 0, 0, width, 8);
+                    AddFlagRect(flag, Brushes.Red, 0, 8, width, 8);
+                    AddFlagRect(flag, Brushes.Gold, 0, 16, width, 8);
+                    break;
+                case 3: // France.
+                    AddFlagRect(flag, navy, 0, 0, 12, height);
+                    AddFlagRect(flag, Brushes.White, 12, 0, 12, height);
+                    AddFlagRect(flag, Brushes.Red, 24, 0, 12, height);
+                    break;
+                case 4: // Poland.
+                    AddFlagRect(flag, Brushes.White, 0, 0, width, 12);
+                    AddFlagRect(flag, red, 0, 12, width, 12);
+                    break;
+            }
+
+            return flag;
+        }
+
+        private static void AddFlagRect(Canvas canvas, Brush color, double x, double y, double width, double height)
+        {
+            var rectangle = new Rectangle { Width = width, Height = height, Fill = color };
+            Canvas.SetLeft(rectangle, x);
+            Canvas.SetTop(rectangle, y);
+            canvas.Children.Add(rectangle);
+        }
+
+        private static void AddFlagPolygon(Canvas canvas, Brush color, params Point[] points)
+        {
+            canvas.Children.Add(new Polygon { Points = new PointCollection(points), Fill = color });
         }
 
         public void Update(ScreenOverlayState state, double screenWidth, double screenHeight)
@@ -171,6 +268,18 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
             _titleScale.ScaleY = state.TitleScale;
             _body.Text = state.Body ?? "";
             _footer.Text = state.Footer ?? "";
+            _languageFlags.Visibility = state.ChoiceAction == ScreenOverlayChoiceAction.IntroMainMenu &&
+                                        state.CurrentPage == 0
+                ? Visibility.Visible : Visibility.Collapsed;
+            for (int i = 0; i < _flagBorders.Count; i++)
+            {
+                bool activeLanguage = GameText.LanguageCodes[i] == GameState.SettingsState.LanguageCode;
+                bool focused = state.SelectedChoiceIndex == Intro.LanguageChoiceIndex &&
+                               state.ChoiceAction == ScreenOverlayChoiceAction.IntroMainMenu;
+                _flagBorders[i].BorderBrush = activeLanguage
+                    ? (focused ? Brushes.Gold : Brushes.Lime)
+                    : (focused ? Brushes.DimGray : Brushes.Transparent);
+            }
 
             // Hide empty blocks -> tighter layout
             _header.Visibility = string.IsNullOrWhiteSpace(_header.Text) ? Visibility.Collapsed : Visibility.Visible;
@@ -279,7 +388,8 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
                 dots.Append(i == currentPage ? " [*] " : " [ ] ");
 
             dots.Append("   ");
-            dots.Append(controllerActive ? "D-PAD LEFT/RIGHT TO NAVIGATE" : "LEFT/RIGHT TO NAVIGATE");
+            dots.Append(GameText.Get(controllerActive ? "overlay.navigateController" : "overlay.navigateKeyboard",
+                GameState.SettingsState.LanguageCode));
             return dots.ToString();
         }
 
@@ -290,12 +400,9 @@ namespace TheOmegaStrain.Wpf.MainWindowClasses
             int pageCount = Enum.GetValues<ScreenOverlaySettingsPanel>().Length - 1;
             int currentPage = Math.Clamp((int)panel - 1, 0, pageCount - 1);
             string indicator = BuildPageIndicatorText(pageCount, currentPage, controllerActive);
-            string defaultHint = controllerActive
-                ? "D-PAD LEFT/RIGHT TO NAVIGATE"
-                : "LEFT/RIGHT TO NAVIGATE";
-            string settingsHint = controllerActive
-                ? "LB/RB TO CHANGE SETTINGS PAGE"
-                : "PAGE UP/DOWN TO CHANGE SETTINGS PAGE";
+            string language = GameState.SettingsState.LanguageCode;
+            string defaultHint = GameText.Get(controllerActive ? "overlay.navigateController" : "overlay.navigateKeyboard", language);
+            string settingsHint = GameText.Get(controllerActive ? "overlay.settingsController" : "overlay.settingsKeyboard", language);
             return indicator.Replace(defaultHint, settingsHint, StringComparison.Ordinal);
         }
 

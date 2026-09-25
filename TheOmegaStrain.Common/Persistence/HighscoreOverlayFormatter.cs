@@ -3,19 +3,20 @@ using System;
 using System.Linq;
 using System.Text;
 using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.Localization;
 
 namespace TheOmegaStrain.Common.Persistence
 {
     public static class HighscoreOverlayFormatter
     {
-        private const string IntroHighscoreTitle = "TOP PILOTS";
-        private const string OutroHighscoreTitle = "LEADERBOARD";
         private const int HeaderLineCount = 2;
         private const int MaxDisplayedHighscoreLines = 20;
         private const int MaxDisplayedHighscoreEntries = MaxDisplayedHighscoreLines - HeaderLineCount;
 
         public static string BuildBody(int count = MaxDisplayedHighscoreEntries)
         {
+            string language = GameState.SettingsState.LanguageCode;
             int displayCount = Math.Clamp(count, 0, MaxDisplayedHighscoreEntries);
             var entries = HighscoreService.GetTopScores(displayCount)
                 .OrderByDescending(e => e.Score)
@@ -23,10 +24,10 @@ namespace TheOmegaStrain.Common.Persistence
                 .ToList();
 
             if (entries.Count == 0)
-                return "No highscores recorded yet.\n\nBe the first pilot to make history!";
+                return GameText.Get("highscore.empty", language);
 
             var sb = new StringBuilder();
-            sb.AppendLine("RANK  PILOT             SCORE      KILLS");
+            sb.AppendLine(GameText.Get("highscore.columns", language));
             sb.AppendLine("----  -----             -----      -----");
 
             for (int i = 0; i < entries.Count; i++)
@@ -58,8 +59,9 @@ namespace TheOmegaStrain.Common.Persistence
 
         private static bool IsHighscorePageTitle(string title)
         {
-            return string.Equals(title, IntroHighscoreTitle, System.StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(title, OutroHighscoreTitle, System.StringComparison.OrdinalIgnoreCase);
+            return GameText.LanguageCodes.Any(language =>
+                string.Equals(title, GameText.Get("highscore.introTitle", language), StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(title, GameText.Get("highscore.outroTitle", language), StringComparison.OrdinalIgnoreCase));
         }
     }
 }

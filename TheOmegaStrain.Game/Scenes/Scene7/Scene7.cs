@@ -19,6 +19,10 @@ namespace TheOmegaStrain.Game.Scenes.Scene7
     public class Scene7 : IScene
     {
         Surface Surface = new();
+        private const int SeederCount = 23;
+        private const int DroneCount = 16;
+        private const int BomberCount = 7;
+        private const int AttackShipCount = 2;
         public const int TargetPatrolPolarBearCount = 30;
         private readonly List<PolarBearPlacementInfo> _polarBearPlacements = new();
         public IReadOnlyList<PolarBearPlacementInfo> PolarBearPlacements => _polarBearPlacements;
@@ -65,7 +69,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene7
 
             SpawnSeals(world);
 
-            for (int b = 0; b < 7; b++)
+            for (int b = 0; b < BomberCount; b++)
             {
                 var rmdBomber = new Random();
                 var bomber = ZeppelinBomber.CreateZeppelinBomber(Surface);
@@ -81,7 +85,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene7
                 GameState.SurfaceState.AiObjects.Add(bomber);
             }
 
-            for (int i = 0; i < 16; i++)
+            for (int i = 0; i < DroneCount; i++)
             {
                 var rmd = new Random();
                 var kamikaze = KamikazeDrone.CreateKamikazeDrone(Surface, speedMultiplier: KamikazeDroneSpeedMultiplier);
@@ -98,13 +102,13 @@ namespace TheOmegaStrain.Game.Scenes.Scene7
                 GameState.SurfaceState.AiObjects.Add(kamikaze);
             }
 
-            AttackShipPlacementHelpers.AddAttackShipGroup(world, Surface, count: 2, spawnSpread: 55000);
+            AttackShipPlacementHelpers.AddAttackShipGroup(world, Surface, count: AttackShipCount, spawnSpread: 55000);
 
             SeederPlacementHelpers.AddSeederGroup(
                 world,
                 Surface,
                 GameState.SurfaceState.GlobalMapPosition,
-                totalSeederCount: 23,
+                totalSeederCount: SeederCount,
                 regularSeed: 7071,
                 nearSeederCount: 10,
                 firstKillPowerUpType: PowerUpType.TravelSpeedLevel2);
@@ -232,19 +236,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene7
 
             o.Type = ScreenOverlayType.Intro;
             o.Anchor = ScreenOverlayAnchor.Top;
-            o.Header = "RETROMESH // SECTOR BRIEFING";
-            o.Title = "PLANET GLACIUS - PHASE VII";
-            o.Body =
-                "Entering orbit of GLACIUS - frozen world, permanent ice storm coverage.\n\n" +
-                "Omega Strain adapts rapidly under sub-zero conditions.\n" +
-                "Twenty-three seeders embedded in glacial terrain.\n" +
-                "Kamikaze escort: SIXTEEN units. Bomber wing: SEVEN.\n" +
-                "Rocket-equipped AttackShips: TWO.\n" +
-                "Spread delay: 1.5 seconds. Bio-tolerance: 14.0%.\n" +
-                "Large-class war carrier incoming.\n\n" +
-                "DIRECTIVE:\n" +
-                "Clear all hostiles - the ice planet will not survive another hour.";
-            o.Footer = "PRESS ANY KEY TO BEGIN DESCENT";
+            SceneBriefingText.Apply(o, 7, GameState.SettingsState.LanguageCode,
+                SeederCount, DroneCount, BomberCount, AttackShipCount, InfectionThresholdPercent, LocalInfectionSpreadDelaySec);
             o.ShowOverlay = true;
             o.AutoHide = false;
             o.AutoHideSeconds = 0f;

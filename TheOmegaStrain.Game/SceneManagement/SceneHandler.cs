@@ -17,6 +17,7 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.Events;
 using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Common.Localization;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Audio.Services;
 using TheOmegaStrain.Gameplay.Controls;
@@ -584,11 +585,11 @@ namespace TheOmegaStrain.Game.SceneManagement
             overlay.IsModal = true;
             overlay.CanDismissWithInput = false;
             overlay.CenterText = true;
-            overlay.Header = "RETROMESH // STARTUP";
+            overlay.Header = GameText.Get("startup.header", GameState.SettingsState.LanguageCode);
             overlay.Title = "5";
             overlay.TitleScale = 2.4f;
-            overlay.Body = "WARMING UP YOUR ENGINES";
-            overlay.Footer = "PREPARING MISSION";
+            overlay.Body = GameText.Get("startup.body", GameState.SettingsState.LanguageCode);
+            overlay.Footer = GameText.Get("startup.footer", GameState.SettingsState.LanguageCode);
             overlay.PanelWidthRatio = 0.45f;
             overlay.PanelHeightRatio = 0.25f;
             overlay.PanelYOffsetRatio = 0f;
@@ -607,7 +608,7 @@ namespace TheOmegaStrain.Game.SceneManagement
             var scene = GetActiveScene();
             var overlay = GameState.ScreenOverlayState;
             if (scene.SceneType is not (SceneTypes.Game or SceneTypes.Simulation) ||
-                !overlay.ShowOverlay || overlay.Header != "RETROMESH // STARTUP")
+                !overlay.ShowOverlay || overlay.Header != GameText.Get("startup.header", GameState.SettingsState.LanguageCode))
             {
                 _startupWarmupStartedTicks = 0;
                 return;
@@ -867,7 +868,7 @@ namespace TheOmegaStrain.Game.SceneManagement
             if (key == GameInputKey.Right && !selectingSavedPilot)
             {
                 overlay.NameEntryBuffer = PlayerCallsignService.CreateSuggestedCallsign(overlay.NameEntryBuffer);
-                overlay.NameEntryValidationMessage = ">> NEW CALLSIGN SUGGESTED";
+                overlay.NameEntryValidationMessage = GameText.Get("callsign.suggested", GameState.SettingsState.LanguageCode);
                 return;
             }
 
@@ -878,7 +879,7 @@ namespace TheOmegaStrain.Game.SceneManagement
                     if (overlay.SelectedChoiceIndex < overlay.ChoiceOptions.Count - 1)
                     {
                         overlay.NameEntryBuffer = overlay.SelectedChoice;
-                        overlay.NameEntryValidationMessage = ">> SAVED PILOT SELECTED";
+                        overlay.NameEntryValidationMessage = GameText.Get("callsign.selected", GameState.SettingsState.LanguageCode);
                     }
                     overlay.SetCallsignMenuChoices();
                     return;
@@ -888,19 +889,19 @@ namespace TheOmegaStrain.Game.SceneManagement
                 {
                     case 1:
                         overlay.NameEntryBuffer = PlayerCallsignService.CreateSuggestedCallsign(overlay.NameEntryBuffer);
-                        overlay.NameEntryValidationMessage = ">> NEW CALLSIGN SUGGESTED";
+                        overlay.NameEntryValidationMessage = GameText.Get("callsign.suggested", GameState.SettingsState.LanguageCode);
                         return;
                     case 2:
                         var profiles = PlayerCallsignService.LoadLocalProfileCallsigns();
                         if (profiles.Count == 0)
                         {
-                            overlay.NameEntryValidationMessage = ">> NO SAVED PILOTS YET - USE A SUGGESTED NAME";
+                            overlay.NameEntryValidationMessage = GameText.Get("callsign.noneSaved", GameState.SettingsState.LanguageCode);
                             return;
                         }
                         var choices = profiles.ToList();
-                        choices.Add("BACK");
+                        choices.Add(GameText.Get("callsign.back", GameState.SettingsState.LanguageCode));
                         overlay.SetChoiceOptions(ScreenOverlayChoiceAction.SavedPilotSelection,
-                            "SELECT A SAVED PILOT", choices.ToArray());
+                            GameText.Get("callsign.savedTitle", GameState.SettingsState.LanguageCode), choices.ToArray());
                         return;
                     case 3:
                         HandleNameEntryKey(GameInputKey.Escape, scene, overlay);
@@ -916,11 +917,20 @@ namespace TheOmegaStrain.Game.SceneManagement
                     if (callsignTaken)
                     {
                         overlay.NameEntryBuffer = PlayerCallsignService.CreateNumberedSuggestedCallsign(overlay.NameEntryBuffer);
-                        overlay.NameEntryValidationMessage = PlayerCallsignService.NumberedCallsignSuggestedMessage;
+                        overlay.NameEntryValidationMessage = GameText.Get("callsign.numbered", GameState.SettingsState.LanguageCode);
                     }
                     else
                     {
-                        overlay.NameEntryValidationMessage = confirmation.ValidationMessage;
+                        string validationKey = confirmation.ValidationMessage switch
+                        {
+                            PlayerCallsignService.EmptyCallsignMessage => "callsign.empty",
+                            PlayerCallsignService.LocalCallsignTakenMessage => "callsign.localTaken",
+                            PlayerCallsignService.RemoteCallsignTakenMessage => "callsign.remoteTaken",
+                            _ => ""
+                        };
+                        overlay.NameEntryValidationMessage = validationKey.Length > 0
+                            ? GameText.Get(validationKey, GameState.SettingsState.LanguageCode)
+                            : confirmation.ValidationMessage;
                     }
                     return;
                 }
@@ -1226,8 +1236,16 @@ namespace TheOmegaStrain.Game.SceneManagement
             int selectedIndex,
             bool pageNavigationSelected)
         {
-            string pageName = GetSettingsTitle(panel).Replace(" SETTINGS", "", StringComparison.Ordinal);
-            string pageSelector = $"{(pageNavigationSelected ? ">" : " ")} SETTINGS PAGE     < {pageName} >";
+            string language = GameState.SettingsState.LanguageCode;
+            string pageName = GameText.Get(panel switch
+            {
+                ScreenOverlaySettingsPanel.Audio => "settings.audioPage",
+                ScreenOverlaySettingsPanel.Controls => "settings.controlsPage",
+                ScreenOverlaySettingsPanel.Flight => "settings.flightPage",
+                _ => "settings.graphicsPage"
+            }, language);
+            string pageSelector = (pageNavigationSelected ? "> " : "  ") +
+                GameText.Format("settings.pageSelector", language, ("page", pageName));
             int visibleSelectedIndex = pageNavigationSelected ? -1 : selectedIndex;
             string settingsBody = panel switch
             {
@@ -1253,10 +1271,10 @@ namespace TheOmegaStrain.Game.SceneManagement
         private static string GetSettingsTitle(ScreenOverlaySettingsPanel panel) =>
             panel switch
             {
-                ScreenOverlaySettingsPanel.Audio => "SOUND SETTINGS",
-                ScreenOverlaySettingsPanel.Controls => "CONTROL SETTINGS",
-                ScreenOverlaySettingsPanel.Flight => "FLIGHT SETTINGS",
-                _ => "GRAPHICS SETTINGS"
+                ScreenOverlaySettingsPanel.Audio => GameText.Get("settings.audioTitle", GameState.SettingsState.LanguageCode),
+                ScreenOverlaySettingsPanel.Controls => GameText.Get("settings.controlsTitle", GameState.SettingsState.LanguageCode),
+                ScreenOverlaySettingsPanel.Flight => GameText.Get("settings.flightTitle", GameState.SettingsState.LanguageCode),
+                _ => GameText.Get("settings.graphicsTitle", GameState.SettingsState.LanguageCode)
             };
 
         private static void StartPlanetLostRecoveryFade(I3dWorld world, bool resetToPlanetStart)
@@ -1313,13 +1331,21 @@ namespace TheOmegaStrain.Game.SceneManagement
 
                 if (key == GameInputKey.Left || key == GameInputKey.Right)
                 {
-                    overlay.ClearChoiceOptions();
-                    if (key == GameInputKey.Right)
-                        overlay.NextPage();
-                    else
-                        overlay.PreviousPage();
-                    RefreshCurrentHighscorePage(overlay);
-                    Intro.ConfigurePageMode(overlay);
+                    if (overlay.SelectedChoiceIndex == Intro.LanguageChoiceIndex)
+                    {
+                        ChangeIntroLanguage(overlay, key == GameInputKey.Right ? 1 : -1);
+                    }
+                    else if (overlay.SelectedChoiceIndex == Intro.InfoChoiceIndex)
+                    {
+                        if (key == GameInputKey.Right)
+                        {
+                            overlay.ClearChoiceOptions();
+                            overlay.NextPage();
+                            RefreshCurrentHighscorePage(overlay);
+                            Intro.ConfigurePageMode(overlay);
+                        }
+                        // The menu is already the first page; left has nowhere to go.
+                    }
                     return;
                 }
 
@@ -1391,7 +1417,26 @@ namespace TheOmegaStrain.Game.SceneManagement
                 case 3:
                     ShowQuitGameConfirmationOverlay(overlay);
                     break;
+                case Intro.LanguageChoiceIndex:
+                    ChangeIntroLanguage(overlay, 1);
+                    break;
+                case Intro.InfoChoiceIndex:
+                    overlay.ClearChoiceOptions();
+                    overlay.NextPage();
+                    RefreshCurrentHighscorePage(overlay);
+                    Intro.ConfigurePageMode(overlay);
+                    break;
             }
+        }
+
+        private static void ChangeIntroLanguage(ScreenOverlayState overlay, int direction)
+        {
+            int current = Array.IndexOf(GameText.LanguageCodes, GameState.SettingsState.LanguageCode);
+            int count = GameText.LanguageCodes.Length;
+            GameState.SettingsState.LanguageCode = GameText.LanguageCodes[(current + direction + count) % count];
+            GameSettingsPersistence.SaveSettings(GameState.SettingsState);
+            Intro.RefreshLocalizedPages(overlay);
+            overlay.MoveChoiceSelection(Intro.LanguageChoiceIndex);
         }
 
         private static void HandleGameKey(GameInputKey key, IScene scene, ScreenOverlayState overlay)
@@ -1464,9 +1509,10 @@ namespace TheOmegaStrain.Game.SceneManagement
             overlay.Anchor = ScreenOverlayAnchor.Center;
             overlay.IsModal = true;
             overlay.CanDismissWithInput = false;
-            overlay.Header = "ASTERION SYSTEMS";
-            overlay.Title = "QUIT GAME?";
-            overlay.Footer = "LEFT/RIGHT SELECT | ENTER CONFIRM\nXBOX: D-PAD SELECT | [A] CONFIRM | [B] BACK";
+            string language = GameState.SettingsState.LanguageCode;
+            overlay.Header = GameText.Get("quit.header", language);
+            overlay.Title = GameText.Get("quit.title", language);
+            overlay.Footer = GameText.Get("quit.footer", language);
             overlay.DimStrength = 0.72f;
             overlay.PanelWidthRatio = 0.48f;
             overlay.PanelHeightRatio = 0.30f;
@@ -1474,9 +1520,9 @@ namespace TheOmegaStrain.Game.SceneManagement
             overlay.CenterText = true;
             overlay.SetChoiceOptions(
                 ScreenOverlayChoiceAction.QuitGameConfirmation,
-                "Return to desktop?",
-                "NO",
-                "YES");
+                GameText.Get("quit.question", language),
+                GameText.Get("quit.no", language),
+                GameText.Get("quit.yes", language));
             overlay.ShowOverlay = true;
         }
 

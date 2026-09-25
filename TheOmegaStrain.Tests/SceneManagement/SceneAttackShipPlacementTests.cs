@@ -54,11 +54,11 @@ public class SceneAttackShipPlacementTests
     }
 
     [DataTestMethod]
-    [DataRow(1, 0, 0, "")]
-    [DataRow(6, 1, 55000, "ONE")]
-    [DataRow(7, 2, 55000, "TWO")]
-    [DataRow(8, 3, 58000, "THREE")]
-    public void SetupScene_PlacesRequestedArmedAttackShips(int sceneNumber, int count, int spread, string briefingCount)
+    [DataRow(1, 0, 0)]
+    [DataRow(6, 1, 55000)]
+    [DataRow(7, 2, 55000)]
+    [DataRow(8, 3, 58000)]
+    public void SetupScene_PlacesRequestedArmedAttackShips(int sceneNumber, int count, int spread)
     {
         IScene scene = sceneNumber switch
         {
@@ -113,7 +113,7 @@ public class SceneAttackShipPlacementTests
         }
         scene.SetupSceneOverlay();
         if (count > 0)
-            StringAssert.Contains(GameState.ScreenOverlayState.Body, $"Rocket-equipped AttackShips: {briefingCount}.");
+            StringAssert.Contains(GameState.ScreenOverlayState.Body, $"{count} AttackShips");
     }
 
     [TestMethod]

@@ -4,6 +4,7 @@ using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Audio.Services;
 using System;
 using System.Linq;
+using TheOmegaStrain.Common.Localization;
 
 namespace TheOmegaStrain.Gameplay.Controls
 {
@@ -203,10 +204,10 @@ namespace TheOmegaStrain.Gameplay.Controls
             overlay.Type = ScreenOverlayType.Tutorial;
             overlay.Anchor = ScreenOverlayAnchor.Center;
             overlay.IsModal = true;
-            overlay.Header = "ASTERION // HAL-E TRAINING";
+            overlay.Header = GameText.Get("training.prompt.header", GameState.SettingsState.LanguageCode);
             overlay.Title = title;
             overlay.Body = body;
-            overlay.Footer = "HAL-E SPEAKING - ESC TO SKIP";
+            overlay.Footer = GameText.Get("training.prompt.footer", GameState.SettingsState.LanguageCode);
             overlay.DimStrength = 0.62f;
             overlay.PanelFillStrength = 0.78f;
             overlay.BorderStrength = 0.92f;
@@ -227,59 +228,27 @@ namespace TheOmegaStrain.Gameplay.Controls
 
         private static bool TryGetInstructionOverlay(ShipAiVoiceCue cue, out string title, out string body)
         {
-            switch (cue)
+            string? key = cue switch
             {
-                case ShipAiVoiceCue.TutorialIntro:
-                    title = "HAL-E ONLINE";
-                    body =
-                        "Training mode is paused while HAL-E explains the next step.\n\n" +
-                        "Clear the infected seeders, collect the powerup, then use the decoy system against the drone.";
-                    return true;
-
-                case ShipAiVoiceCue.TutorialThrust:
-                    title = "THRUST AND CONTROL";
-                    body =
-                        "Use SPACE or right mouse for thrust.\n\n" +
-                        "LEFT and RIGHT turn the ship. UP and DOWN control pitch. Mouse movement can steer too.\n\n" +
-                        "The guidance arrow below the HUD points toward the closest seeder or objective. Keep it roughly ahead of you when you navigate.";
-                    return true;
-
-                case ShipAiVoiceCue.TutorialWeapons:
-                    title = "WEAPONS";
-                    body =
-                        "Use RIGHT SHIFT or left mouse to fire.\n\n" +
-                        "Approach seeders from the front and line up as straight as you can before firing. The aiming helper works best when your attack angle is clean.\n\n" +
-                        "Keep distance after a kill. Exploding objects can throw debris that damages your ship.\n\n" +
-                        "Use 1, 2, 3 and 4 to switch systems after you have collected the corresponding PowerUps.";
-                    return true;
-
-                case ShipAiVoiceCue.TutorialDecoySelect:
-                    title = "SELECT DECOY";
-                    body =
-                        "Press 2 now to select the decoy system.\n\n" +
-                        "Use RIGHT SHIFT or left mouse to deploy the decoy before the drone engages.\n\n" +
-                        "A decoy can pull the drone away long enough for you to regain control and counterattack.";
-                    return true;
-
-                case ShipAiVoiceCue.TutorialPowerup:
-                    title = "POWERUP DETECTED";
-                    body =
-                        "A PowerUp has dropped from the seeder.\n\n" +
-                        "Fly through it to collect it. In training, this temporarily unlocks the decoy system without changing your real mission progress.";
-                    return true;
-
-                case ShipAiVoiceCue.TutorialComplete:
-                    title = "TRAINING COMPLETE";
-                    body =
-                        "You have cleared the training sequence.\n\n" +
-                        "The main mission uses the same systems, but planets become more aggressive as infection pressure rises.";
-                    return true;
-
-                default:
-                    title = "";
-                    body = "";
-                    return false;
+                ShipAiVoiceCue.TutorialIntro => "intro",
+                ShipAiVoiceCue.TutorialThrust => "thrust",
+                ShipAiVoiceCue.TutorialWeapons => "weapons",
+                ShipAiVoiceCue.TutorialDecoySelect => "decoy",
+                ShipAiVoiceCue.TutorialPowerup => "powerup",
+                ShipAiVoiceCue.TutorialComplete => "complete",
+                _ => null
+            };
+            if (key == null)
+            {
+                title = "";
+                body = "";
+                return false;
             }
+
+            string language = GameState.SettingsState.LanguageCode;
+            title = GameText.Get($"training.prompt.{key}.title", language);
+            body = GameText.Get($"training.prompt.{key}.body", language);
+            return true;
         }
 
         private void EnsureInitialState()

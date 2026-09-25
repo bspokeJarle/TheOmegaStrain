@@ -1,6 +1,7 @@
 using RetroMesh.Engine;
 using System;
 using TheOmegaStrain.Domain;
+using TheOmegaStrain.Common.Localization;
 
 namespace TheOmegaStrain.Common.CommonGlobalState.States
 {
@@ -92,6 +93,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
         public int MusicVolumePercent { get; set; } = 100;
         public int EffectsVolumePercent { get; set; } = 100;
         public int VoiceVolumePercent { get; set; } = 100;
+        public string LanguageCode { get; set; } = "en";
 
         public GraphicsQualityPreset GraphicsQuality { get; set; } = GraphicsQualityPreset.Balanced;
         public CameraAnglePreset CameraAngle { get; set; } = CameraAnglePreset.Normal;
@@ -197,6 +199,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
 
         public void Normalize()
         {
+            LanguageCode = GameText.NormalizeLanguageCode(LanguageCode);
             MasterVolumePercent = ClampPercent(MasterVolumePercent);
             MusicVolumePercent = ClampPercent(MusicVolumePercent);
             EffectsVolumePercent = ClampPercent(EffectsVolumePercent);

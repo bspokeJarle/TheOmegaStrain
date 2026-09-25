@@ -19,4 +19,8 @@
     <ProjectReference Include="..\TheOmegaStrain.Domain\TheOmegaStrain.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Localization\language-*.json" />
+  </ItemGroup>
+
 </Project>
