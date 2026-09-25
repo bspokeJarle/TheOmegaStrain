@@ -1,5 +1,6 @@
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.Localization;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.Persistence;
 using TheOmegaStrain.Domain;
@@ -133,34 +134,22 @@ namespace TheOmegaStrain.Game.Scenes.Outro
             overlay.PanelYOffsetRatio = 0.04f;
 
             overlay.Pages.Clear();
+            string language = GameState.SettingsState.LanguageCode;
             overlay.AddPage(
-                header: "RETROMESH // TRANSMISSION COMPLETE",
-                title: "OMEGA STRAIN CONTAINED",
-                body:
-                    "Pilot, the Seeders are silent.\n" +
-                    "Containment probability climbed from 12% to 100%.\n\n" +
-                    "The MotherShip is space dust,\n" +
-                    "the Kamikaze Drones forgot what they were doing,\n" +
-                    "and even the asteroids missed (barely).\n\n" +
-                    "Now wave at the locals - they deserve it.",
-                footer: "PAGE 1 / 3 - PRESS ANY KEY TO CONTINUE");
+                header: GameText.Get("outro.victory.header", language),
+                title: GameText.Get("outro.victory.title", language),
+                body: GameText.Get("outro.victory.body", language),
+                footer: GameText.Get("outro.victory.footer", language));
             overlay.AddPage(
-                header: "RETROMESH // FIELD ADVISORY",
-                title: "THE STRAIN MAY RETURN",
-                body:
-                    "Earth is clean - for now. But the galaxy is big,\n" +
-                    "and somewhere out there a new strain is already\n" +
-                    "rehearsing its entrance.\n\n" +
-                    "Command has spun up a combat simulator so you can\n" +
-                    "keep your reflexes sharp and your name on the\n" +
-                    "leaderboard. Round after round, forever.\n\n" +
-                    "Press any key to enter the simulation.",
-                footer: "PAGE 2 / 3 - PRESS ANY KEY TO CONTINUE");
+                header: GameText.Get("outro.simulation.header", language),
+                title: GameText.Get("outro.simulation.title", language),
+                body: GameText.Get("outro.simulation.body", language),
+                footer: GameText.Get("outro.simulation.footer", language));
             overlay.AddPage(
-                header: "RETROMESH // HALL OF FAME",
-                title: "LEADERBOARD",
+                header: GameText.Get("highscore.header", language),
+                title: GameText.Get("highscore.outroTitle", language),
                 body: HighscoreOverlayFormatter.BuildBody(),
-                footer: "PAGE 3 / 3 - PRESS ANY KEY TO DEPLOY");
+                footer: GameText.Get("highscore.outroFooter", language));
 
             overlay.CurrentPage = 0;
             overlay.ApplyPageContent();

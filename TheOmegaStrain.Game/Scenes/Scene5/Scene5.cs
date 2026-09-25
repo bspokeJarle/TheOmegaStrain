@@ -18,6 +18,9 @@ namespace TheOmegaStrain.Game.Scenes.Scene5
     public class Scene5 : IScene
     {
         Surface Surface = new();
+        private const int SeederCount = 18;
+        private const int DroneCount = 12;
+        private const int BomberCount = 5;
         public string SceneMusic { get; } = "music_kanpai";
         public SceneTypes SceneType { get; } = SceneTypes.Game;
         public SceneBiomeTypes SceneBiome { get; } = SceneBiomeTypes.Rainforrest;
@@ -60,7 +63,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene5
             SpawnJumpingFish(world);
 
             // ZeppelinBombers — 5 bombers (maximum)
-            for (int b = 0; b < 5; b++)
+            for (int b = 0; b < BomberCount; b++)
             {
                 var rmdBomber = new Random();
                 var bomber = ZeppelinBomber.CreateZeppelinBomber(Surface);
@@ -77,7 +80,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene5
             }
 
             // Drones — waiting until the player has a Decoy powerup
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < DroneCount; i++)
             {
                 var rmd = new Random();
 
@@ -99,7 +102,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene5
                 world,
                 Surface,
                 GameState.SurfaceState.GlobalMapPosition,
-                totalSeederCount: 18,
+                totalSeederCount: SeederCount,
                 regularSeed: 5051,
                 nearSeederCount: 8);
 
@@ -281,19 +284,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene5
             o.Type = ScreenOverlayType.Intro;
             o.Anchor = ScreenOverlayAnchor.Top;
 
-            o.Header = "RETROMESH // SECTOR BRIEFING";
-            o.Title = "PLANET VERIDIAN - PHASE V";
-
-            o.Body =
-                "Approach confirmed: dense rainforest world, designation VERIDIAN.\n\n" +
-                "Canopy systems compromised. Omega Strain spreading through root networks.\n" +
-                "Eighteen seeders detected. Kamikaze escort: TWELVE units.\n" +
-                "Bomber wing: FIVE units. Infection cascade: CRITICAL.\n" +
-                "Spread delay: 2 seconds. Tolerance: 12.0%.\n\n" +
-                "DIRECTIVE:\n" +
-                "Hunt seeders before the jungle is lost. Eradicate on sight.";
-
-            o.Footer = "PRESS ANY KEY TO BEGIN DESCENT";
+            SceneBriefingText.Apply(o, 5, GameState.SettingsState.LanguageCode,
+                SeederCount, DroneCount, BomberCount, 0, InfectionThresholdPercent, LocalInfectionSpreadDelaySec);
 
             o.ShowOverlay = true;
             o.AutoHide = false;

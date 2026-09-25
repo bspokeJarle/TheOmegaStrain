@@ -27,6 +27,7 @@ public class OverlayTextSafetyTests
     [TestInitialize]
     public void Setup()
     {
+        GameState.SettingsState = new GameSettingsState();
         GameState.GamePlayState = new GamePlayState();
         GameState.SurfaceState = new SurfaceState();
         GameState.ScreenOverlayState = new ScreenOverlayState();

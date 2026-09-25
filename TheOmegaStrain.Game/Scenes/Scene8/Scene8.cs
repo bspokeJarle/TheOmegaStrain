@@ -17,6 +17,10 @@ namespace TheOmegaStrain.Game.Scenes.Scene8
     public class Scene8 : IScene
     {
         Surface Surface = new();
+        private const int SeederCount = 25;
+        private const int DroneCount = 18;
+        private const int BomberCount = 8;
+        private const int AttackShipCount = 3;
 
         public string SceneMusic { get; } = "music_dontstop";
         public SceneTypes SceneType { get; } = SceneTypes.Game;
@@ -60,7 +64,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene8
 
             SpawnJumpingFish(world);
 
-            for (int b = 0; b < 8; b++)
+            for (int b = 0; b < BomberCount; b++)
             {
                 var rmdBomber = new Random();
                 var bomber = ZeppelinBomber.CreateZeppelinBomber(Surface);
@@ -76,7 +80,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene8
                 GameState.SurfaceState.AiObjects.Add(bomber);
             }
 
-            for (int i = 0; i < 18; i++)
+            for (int i = 0; i < DroneCount; i++)
             {
                 var rmd = new Random();
                 var kamikaze = KamikazeDrone.CreateKamikazeDrone(Surface, speedMultiplier: KamikazeDroneSpeedMultiplier);
@@ -93,13 +97,13 @@ namespace TheOmegaStrain.Game.Scenes.Scene8
                 GameState.SurfaceState.AiObjects.Add(kamikaze);
             }
 
-            AttackShipPlacementHelpers.AddAttackShipGroup(world, Surface, count: 3, spawnSpread: 58000);
+            AttackShipPlacementHelpers.AddAttackShipGroup(world, Surface, count: AttackShipCount, spawnSpread: 58000);
 
             SeederPlacementHelpers.AddSeederGroup(
                 world,
                 Surface,
                 GameState.SurfaceState.GlobalMapPosition,
-                totalSeederCount: 25,
+                totalSeederCount: SeederCount,
                 regularSeed: 8081,
                 nearSeederCount: 11);
 
@@ -272,19 +276,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene8
 
             o.Type = ScreenOverlayType.Intro;
             o.Anchor = ScreenOverlayAnchor.Top;
-            o.Header = "RETROMESH // FINAL BRIEFING";
-            o.Title = "PLANET TERRA-IX - PHASE VIII";
-            o.Body =
-                "Last stand on TERRA-IX - origin rainforest colony of the outer systems.\n\n" +
-                "All previous planets compromised. This is the final canopy perimeter.\n" +
-                "Twenty-five seeders confirmed. Kamikaze escort: EIGHTEEN units.\n" +
-                "Bomber wing: EIGHT. Large-class war carrier: MAXIMUM aggression.\n" +
-                "Rocket-equipped AttackShips: THREE.\n" +
-                "Spread delay: 1.2 seconds. Bio-tolerance: 13.0%.\n" +
-                "Kill Seeders first; every Seeder destroyed slows the infection cascade.\n\n" +
-                "DIRECTIVE:\n" +
-                "Win here. There is nowhere left to fall back to.";
-            o.Footer = "PRESS ANY KEY TO BEGIN DESCENT";
+            SceneBriefingText.Apply(o, 8, GameState.SettingsState.LanguageCode,
+                SeederCount, DroneCount, BomberCount, AttackShipCount, InfectionThresholdPercent, LocalInfectionSpreadDelaySec);
             o.ShowOverlay = true;
             o.AutoHide = false;
             o.AutoHideSeconds = 0f;

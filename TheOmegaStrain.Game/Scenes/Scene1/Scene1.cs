@@ -21,6 +21,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
         private const int LeafTreePlacementMax = 15000;
         private const int NearPlatformLeafTreeTarget = 20;
         private const int NearPlatformLeafTreeSearchRadius = 26;
+        private const int SeederCount = 7;
+        private const int DroneCount = 4;
 
         public string SceneMusic { get; } = "music_flight";
         public SceneTypes SceneType { get; } = SceneTypes.Game;
@@ -73,7 +75,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             SpawnJumpingFish(world);
 
             //Add drones that will be waiting until the player has a Decoy powerup
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < DroneCount; i++)
             {
                 var rmd = new Random();
 
@@ -96,7 +98,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
                 world,
                 Surface,
                 GameState.SurfaceState.GlobalMapPosition,
-                totalSeederCount: 7,
+                totalSeederCount: SeederCount,
                 regularSeed: 1011,
                 nearSeederCount: 4,
                 firstRingRadius: 6500f,
@@ -267,20 +269,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene1
             o.Type = ScreenOverlayType.Intro;
             o.Anchor = ScreenOverlayAnchor.Top;
 
-            o.Header = "RETROMESH // BOOT SEQUENCE";
-            o.Title = "PLANET NEREID - PHASE I";
-
-            o.Body =
-                "Year 2147.\n\n" +
-                "Signal received from the NEREID perimeter colonies.\n" +
-                "Biological anomaly confirmed. Designation: OMEGA STRAIN.\n\n" +
-                "Seeder activity detected. Seven units across grassland sectors.\n" +
-                "Infection is advancing fast - tolerance threshold: 14.0%.\n" +
-                "Spread delay: 8 seconds. Act before the bio-layer is lost.\n\n" +
-                "PRIMARY DIRECTIVE:\n" +
-                "Eliminate Seeders before Critical Mass. Good luck, pilot.";
-
-            o.Footer = "PRESS ANY KEY TO INITIATE PROTOCOL";
+            SceneBriefingText.Apply(o, 1, GameState.SettingsState.LanguageCode,
+                SeederCount, DroneCount, 0, 0, InfectionThresholdPercent, LocalInfectionSpreadDelaySec);
 
             // Scene intro overlay should be visible until player input
             o.ShowOverlay = true;

@@ -77,14 +77,14 @@ public class SceneInfectionTuningTests
     {
         (IScene Scene, string EnemyText, string ToleranceText, string DelayText)[] scenes =
         [
-            (new Scene1(), "Seven units", "14.0%", "8 seconds"),
-            (new Scene2(), "Ten seeders", "13.5%", "6 seconds"),
-            (new Scene3(), "Twelve seeders", "13.0%", "4.5 seconds"),
-            (new Scene4(), "Fifteen seeders", "12.5%", "3 seconds"),
-            (new Scene5(), "Eighteen seeders", "12.0%", "2 seconds"),
-            (new Scene6(), "Twenty-one seeders", "15.0%", "1.8 seconds"),
-            (new Scene7(), "Twenty-three seeders", "14.0%", "1.5 seconds"),
-            (new Scene8(), "Twenty-five seeders", "13.0%", "1.2 seconds")
+            (new Scene1(), "7 Seeders", "14.0%", "8 seconds"),
+            (new Scene2(), "10 Seeders", "13.5%", "6 seconds"),
+            (new Scene3(), "12 Seeders", "13.0%", "4.5 seconds"),
+            (new Scene4(), "15 Seeders", "12.5%", "3 seconds"),
+            (new Scene5(), "18 Seeders", "12.0%", "2 seconds"),
+            (new Scene6(), "21 Seeders", "15.0%", "1.8 seconds"),
+            (new Scene7(), "23 Seeders", "14.0%", "1.5 seconds"),
+            (new Scene8(), "25 Seeders", "13.0%", "1.2 seconds")
         ];
 
         foreach (var (scene, enemyText, toleranceText, delayText) in scenes)

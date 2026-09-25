@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.Localization;
 
 namespace TheOmegaStrain.Common.GamePlayHelpers
 {
@@ -44,7 +46,7 @@ namespace TheOmegaStrain.Common.GamePlayHelpers
             if (Lines.Count > 0)
                 body.AppendLine();
 
-            body.Append("TOTAL BONUS".PadRight(24));
+            body.Append(GameText.Get("reward.total", GameState.SettingsState.LanguageCode).PadRight(24));
             body.Append("+");
             body.Append(GetDisplayedTotal(progress).ToString().PadLeft(5));
             return body.ToString();
@@ -67,13 +69,14 @@ namespace TheOmegaStrain.Common.GamePlayHelpers
         {
             var lines = new List<PlanetRewardLine>();
 
-            Add(lines, "BIOMASS CONTAINED", CalculateBiomassContainedBonus(gameplay));
-            Add(lines, "HULL INTEGRITY", CalculateHullIntegrityBonus(gameplay));
-            Add(lines, "LIVES PRESERVED", Math.Max(0, gameplay.Lives) * GameSetup.PlanetLifePreservedBonus);
-            Add(lines, "PRECISION BONUS", CalculatePrecisionBonus(gameplay.Accuracy));
-            Add(lines, "STYLE FLYING", Math.Max(0, gameplay.PlanetStyleBonusScore));
-            Add(lines, "CLEAN OPERATION", CalculateDeathlessBonus(gameplay));
-            Add(lines, "MOTHERSHIP TAKEDOWN", CalculateMothershipTakedownBonus(gameplay));
+            string language = GameState.SettingsState.LanguageCode;
+            Add(lines, GameText.Get("reward.biomass", language), CalculateBiomassContainedBonus(gameplay));
+            Add(lines, GameText.Get("reward.hull", language), CalculateHullIntegrityBonus(gameplay));
+            Add(lines, GameText.Get("reward.lives", language), Math.Max(0, gameplay.Lives) * GameSetup.PlanetLifePreservedBonus);
+            Add(lines, GameText.Get("reward.precision", language), CalculatePrecisionBonus(gameplay.Accuracy));
+            Add(lines, GameText.Get("reward.style", language), Math.Max(0, gameplay.PlanetStyleBonusScore));
+            Add(lines, GameText.Get("reward.clean", language), CalculateDeathlessBonus(gameplay));
+            Add(lines, GameText.Get("reward.mothership", language), CalculateMothershipTakedownBonus(gameplay));
 
             return new PlanetRewardBreakdown(gameplay.SceneIndex, lines);
         }

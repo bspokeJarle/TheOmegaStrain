@@ -1,29 +1,34 @@
 using TheOmegaStrain.Game.World.Objects.LogoCube;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.Persistence;
+using TheOmegaStrain.Common.Localization;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace TheOmegaStrain.Game.Scenes.Intro
 {
     public class Intro : IScene
     {
+        public const int LanguageChoiceIndex = 4;
+        public const int InfoChoiceIndex = 5;
+
         private static string BuildMainMenuFooter()
         {
             var activeScheme = GameState.SettingsState.EffectiveControlScheme;
-            if (activeScheme == ControlInputMode.XboxController)
-                return "D-PAD UP/DOWN SELECT | [A] CONFIRM\n" +
-                       "D-PAD LEFT/RIGHT VIEW INFO\n\n" +
-                       "HOLD [VIEW] FOR 2 SECONDS TO QUIT";
-
-            return "UP/DOWN SELECT | ENTER CONFIRM\n" +
-                   "LEFT/RIGHT VIEW INFO";
+            return Text(activeScheme == ControlInputMode.XboxController
+                ? "menu.footerController" : "menu.footerKeyboard");
         }
+
+        private static string Text(string key) => GameText.Get(key, GameState.SettingsState.LanguageCode);
+
+        private static string BuildMainMenuPrefix() =>
+            GameText.Format("menu.activeControlLine", GameState.SettingsState.LanguageCode,
+                ("control", GetControlModeLabel())) + "\n" +
+            Text("menu.languageHint");
 
         private const string MainMenuPageTitle = "THE OMEGA STRAIN";
 
@@ -40,8 +45,7 @@ namespace TheOmegaStrain.Game.Scenes.Intro
             if (overlay.CurrentPage == 0 &&
                 overlay.ChoiceAction == ScreenOverlayChoiceAction.IntroMainMenu)
             {
-                string expectedControlMode = GetControlModeLabel();
-                string expectedPrefix = $"ACTIVE CONTROL: {expectedControlMode}";
+                string expectedPrefix = BuildMainMenuPrefix();
                 string expectedFooter = BuildMainMenuFooter();
                 if (overlay.ChoiceBodyPrefix == expectedPrefix &&
                     overlay.Footer == expectedFooter)
@@ -61,29 +65,41 @@ namespace TheOmegaStrain.Game.Scenes.Intro
                 overlay.ClearChoiceOptions();
         }
 
+        public static void RefreshLocalizedPages(ScreenOverlayState overlay)
+        {
+            int currentPage = overlay.CurrentPage;
+            overlay.Pages.Clear();
+            PopulatePages(overlay);
+            overlay.CurrentPage = currentPage;
+            overlay.ApplyPageContent();
+            overlay.AutoPageSeconds = 0f;
+            ConfigurePageMode(overlay);
+        }
+
         private static void ConfigureMainMenu(ScreenOverlayState overlay)
         {
-            string controlMode = GetControlModeLabel();
-
             overlay.SetChoiceOptions(
                 ScreenOverlayChoiceAction.IntroMainMenu,
-                $"ACTIVE CONTROL: {controlMode}",
-                "START GAME",
-                "TRAINING",
-                "SETTINGS",
-                "QUIT");
+                BuildMainMenuPrefix(),
+                Text("menu.start"),
+                Text("menu.training"),
+                Text("menu.settings"),
+                Text("menu.quit"),
+                GameText.Format("menu.languageChoice", GameState.SettingsState.LanguageCode,
+                    ("language", GameState.SettingsState.LanguageCode.ToUpperInvariant())),
+                Text("menu.info"));
             overlay.Footer = BuildMainMenuFooter();
         }
 
         private static string GetControlModeLabel() =>
             GameState.SettingsState.EffectiveControlScheme switch
             {
-                ControlInputMode.XboxController => "XBOX CONTROLLER",
-                ControlInputMode.Mouse => "MOUSE + KEYBOARD",
-                _ => "KEYBOARD"
+                ControlInputMode.XboxController => Text("menu.controller"),
+                ControlInputMode.Mouse => Text("menu.mouse"),
+                _ => Text("menu.keyboard")
             };
 
-        private const string InfoFooter = "LEFT/RIGHT CHANGE PAGE | ESC/B BACK TO MENU";
+        private static string InfoFooter => Text("intro.infoFooter");
 
         public bool SkipLogoCube { get; set; } = false;
 
@@ -126,93 +142,7 @@ namespace TheOmegaStrain.Game.Scenes.Intro
             o.Type = ScreenOverlayType.Intro;
             o.Anchor = ScreenOverlayAnchor.Center;
 
-            // Page 1: Main menu
-            o.AddPage(
-                "RETROMESH COMMAND CONSOLE",
-                MainMenuPageTitle,
-                "",
-                BuildMainMenuFooter());
-
-            // Page 2: Story
-            o.AddPage(
-                "RETROMESH SYSTEM INITIALIZING",
-                "THE OMEGA STRAIN // BRIEFING",
-                "Year 2147.\n\n" +
-                "A foreign organism has spread across the outer colonies.\n" +
-                "Designated: OMEGA STRAIN.\n\n" +
-                "Autonomous Seeder units detected.\n" +
-                "Containment probability: 12%.",
-                InfoFooter);
-
-            // Pages 3-5: Gameplay tips. Keep each page short enough to remain
-            // readable on the centered menu panel at every supported resolution.
-            o.AddPage(
-                "RETROMESH // FIELD MANUAL",
-                "GAMEPLAY TIPS & TRICKS",
-                "NAVIGATION & OBJECTIVES:\n" +
-                "  - The green arrow below the HUD points to the closest Seeder\n" +
-                "  - Keep the arrow ahead of you to reach the next target quickly\n" +
-                "  - Destroy Seeders fast to stop their infection cascades\n" +
-                "  - Watch the infection meter - reaching the limit loses the planet\n" +
-                "  - Clear the enemy wave to bring in the MotherShip",
-                InfoFooter);
-
-            o.AddPage(
-                "RETROMESH // FIELD MANUAL",
-                "WEAPONS & POWERUPS",
-                "COMBAT SYSTEMS:\n" +
-                "  - Keyboard 1: Bullet | 2: Decoy | 3: Laser\n" +
-                "  - Xbox defaults: [X] Bullet | [Y] Decoy | [B] Laser\n" +
-                "  - Select a system, then use your configured FIRE control\n" +
-                "  - DECOY is the best way to fight Kamikaze Drones\n" +
-                "  - Seeder kills can drop PowerUps - fly into them to collect\n" +
-                "  - Some PowerUps permanently improve travel speed",
-                InfoFooter);
-
-            o.AddPage(
-                "RETROMESH // FIELD MANUAL",
-                "SHIELDS & DRONE DEFENCE",
-                "DEFENSIVE SYSTEMS:\n" +
-                "  - SpaceSwans can drop Shield pickups when destroyed\n" +
-                "  - Fly into a Shield pickup to activate it immediately\n" +
-                "  - Shield lasts 30 seconds and reduces normal damage to 20%\n" +
-                "  - The Shield icon shrinks in the HUD as protection runs out\n" +
-                "  - Your ship glows while Shield protection is active\n" +
-                "  - DECOY remains the best way to defeat Kamikaze Drones",
-                InfoFooter);
-
-            o.AddPage(
-                "RETROMESH // FIELD MANUAL",
-                "FLIGHT & SURVIVAL",
-                "PILOT NOTES:\n" +
-                "  - Thrust, steering, fire and Xbox buttons are editable in Settings\n" +
-                "  - Flight Settings tune coasting, thrust and gravity response\n" +
-                "  - Releasing thrust preserves momentum; plan turns before the target\n" +
-                "  - Hard surface impacts damage the ship - control your descent\n" +
-                "  - Use Training from the main menu to practise safely\n" +
-                "  - ESC opens the menu; on its first page hold [VIEW] 2 seconds to quit",
-                InfoFooter);
-
-            o.AddPage(
-                "RETROMESH // FIELD MANUAL",
-                "READING THE HUD",
-                "SHIPBOARD DISPLAY:\n" +
-                "  - Minimap: your ship stays centered; blinking marks show threats and pickups\n" +
-                "  - POWER is hull health | ALT is altitude | THR is current thrust\n" +
-                "  - BIO shows infection progress toward the planet's critical limit\n" +
-                "  - Drone and Seeder bars show how much of each enemy wave remains\n" +
-                "  - Bright weapon icon = selected; very faint icon = not yet unlocked\n" +
-                "  - Speed icon shows your permanent travel upgrade level\n" +
-                "  - MotherShip health appears during its battle; FPS/TRI are performance data",
-                InfoFooter);
-
-            // Final page: Highscores
-            o.AddPage(
-                "RETROMESH // HALL OF FAME",
-                "TOP PILOTS",
-                HighscoreOverlayFormatter.BuildBody(),
-                InfoFooter);
-
+            PopulatePages(o);
             o.CurrentPage = 0;
             o.ApplyPageContent();
             o.AutoPageSeconds = 0f;
@@ -232,6 +162,63 @@ namespace TheOmegaStrain.Game.Scenes.Intro
             o.PanelYOffsetRatio = 0.00f;
             //Hide Debug overlay
             o.ShowDebugOverlay = false;
+        }
+
+        private static void PopulatePages(ScreenOverlayState o)
+        {
+
+            // Page 1: Main menu
+            o.AddPage(
+                "RETROMESH COMMAND CONSOLE",
+                MainMenuPageTitle,
+                "",
+                BuildMainMenuFooter());
+
+            // Page 2: Story
+            o.AddPage(
+                Text("intro.story.header"),
+                Text("intro.story.title"),
+                Text("intro.story.body"),
+                InfoFooter);
+
+            // Pages 3-7: Gameplay tips. Keep each page short enough to remain
+            // readable on the centered menu panel at every supported resolution.
+            o.AddPage(
+                Text("intro.manual.header"),
+                Text("intro.tips.title"),
+                Text("intro.tips.body"),
+                InfoFooter);
+
+            o.AddPage(
+                Text("intro.manual.header"),
+                Text("intro.weapons.title"),
+                Text("intro.weapons.body"),
+                InfoFooter);
+
+            o.AddPage(
+                Text("intro.manual.header"),
+                Text("intro.shields.title"),
+                Text("intro.shields.body"),
+                InfoFooter);
+
+            o.AddPage(
+                Text("intro.manual.header"),
+                Text("intro.flight.title"),
+                Text("intro.flight.body"),
+                InfoFooter);
+
+            o.AddPage(
+                Text("intro.manual.header"),
+                Text("intro.hud.title"),
+                Text("intro.hud.body"),
+                InfoFooter);
+
+            // Final page: Highscores
+            o.AddPage(
+                Text("highscore.header"),
+                Text("highscore.introTitle"),
+                HighscoreOverlayFormatter.BuildBody(),
+                InfoFooter);
         }
 
         public void SetupVideoOverlay(string fileName)

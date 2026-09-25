@@ -18,6 +18,9 @@ namespace TheOmegaStrain.Game.Scenes.Scene3
     public class Scene3 : IScene
     {
         Surface Surface = new();
+        private const int SeederCount = 12;
+        private const int DroneCount = 8;
+        private const int BomberCount = 2;
 
         public string SceneMusic { get; } = "music_kanpai";
         public SceneTypes SceneType { get; } = SceneTypes.Game;
@@ -73,7 +76,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene3
             SpawnJumpingFish(world);
 
             // ZeppelinBombers — 2 bombers introduced this scene
-            for (int b = 0; b < 2; b++)
+            for (int b = 0; b < BomberCount; b++)
             {
                 var rmdBomber = new Random();
                 var bomber = ZeppelinBomber.CreateZeppelinBomber(Surface);
@@ -90,7 +93,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene3
             }
 
             // Drones — waiting until the player has a Decoy powerup
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < DroneCount; i++)
             {
                 var rmd = new Random();
 
@@ -112,7 +115,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene3
                 world,
                 Surface,
                 GameState.SurfaceState.GlobalMapPosition,
-                totalSeederCount: 12,
+                totalSeederCount: SeederCount,
                 regularSeed: 3031,
                 nearSeederCount: 6);
 
@@ -283,19 +286,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene3
             o.Type = ScreenOverlayType.Intro;
             o.Anchor = ScreenOverlayAnchor.Top;
 
-            o.Header = "RETROMESH // SECTOR BRIEFING";
-            o.Title = "PLANET CYGNUS-9 - PHASE III";
-
-            o.Body =
-                "Dense jungle world CYGNUS-9 is under siege.\n\n" +
-                "Omega Strain spreads through root systems at extreme speed.\n" +
-                "Twelve seeders confirmed. Escort drones: EIGHT.\n" +
-                "New threat: ZEPPELIN BOMBERS - two patrolling upper canopy.\n" +
-                "Infection spread delay: 4.5 seconds. Tolerance: 13.0%.\n\n" +
-                "DIRECTIVE:\n" +
-                "Neutralize all threats. Watch the skies and the roots.";
-
-            o.Footer = "PRESS ANY KEY TO BEGIN DESCENT";
+            SceneBriefingText.Apply(o, 3, GameState.SettingsState.LanguageCode,
+                SeederCount, DroneCount, BomberCount, 0, InfectionThresholdPercent, LocalInfectionSpreadDelaySec);
 
             o.ShowOverlay = true;
             o.AutoHide = false;

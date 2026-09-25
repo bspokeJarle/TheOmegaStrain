@@ -2,6 +2,8 @@ using TheOmegaStrain.Game.Scenes.Intro;
 using TheOmegaStrain.Wpf.MainWindowClasses;
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Domain;
+using TheOmegaStrain.Common.CommonGlobalState.States;
+using TheOmegaStrain.Common.Localization;
 
 namespace TheOmegaStrain.Tests.SceneManagement;
 
@@ -12,6 +14,7 @@ public class OverlayAutoPagingTests
     public void Setup()
     {
         GameState.ScreenOverlayState = new ScreenOverlayState();
+        GameState.SettingsState = new GameSettingsState();
     }
 
     [TestMethod]
@@ -123,5 +126,18 @@ public class OverlayAutoPagingTests
 
         Assert.AreEqual(1, overlay.SelectedChoiceIndex);
         Assert.AreEqual("TRAINING", overlay.SelectedChoice);
+    }
+
+    [TestMethod]
+    public void IntroOverlay_UsesSelectedLanguageAndEnglishFallback()
+    {
+        GameState.SettingsState.LanguageCode = "pl";
+        new Intro().SetupSceneOverlay();
+
+        var overlay = GameState.ScreenOverlayState;
+        Assert.AreEqual("ROZPOCZNIJ GRĘ", overlay.ChoiceOptions[0]);
+        StringAssert.Contains(overlay.ChoiceBodyPrefix, "JĘZYK");
+        Assert.AreEqual("missing.key", GameText.Get("missing.key", "pl"));
+        Assert.AreEqual("START GAME", GameText.Get("menu.start", "unsupported"));
     }
 }

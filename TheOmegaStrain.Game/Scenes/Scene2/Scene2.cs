@@ -21,6 +21,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene2
         private const int LeafTreePlacementMax = 15000;
         private const int NearPlatformLeafTreeTarget = 20;
         private const int NearPlatformLeafTreeSearchRadius = 26;
+        private const int SeederCount = 10;
+        private const int DroneCount = 6;
 
         public string SceneMusic { get; } = "music_battle";
         public SceneTypes SceneType { get; } = SceneTypes.Game;
@@ -67,7 +69,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene2
             SpawnJumpingFish(world);
 
             // Drones — waiting until the player has a Decoy powerup
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < DroneCount; i++)
             {
                 var rmd = new Random();
 
@@ -90,7 +92,7 @@ namespace TheOmegaStrain.Game.Scenes.Scene2
                 world,
                 Surface,
                 GameState.SurfaceState.GlobalMapPosition,
-                totalSeederCount: 10,
+                totalSeederCount: SeederCount,
                 regularSeed: 2021,
                 nearSeederCount: 5,
                 firstRingRadius: 6500f,
@@ -253,19 +255,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene2
             o.Type = ScreenOverlayType.Intro;
             o.Anchor = ScreenOverlayAnchor.Top;
 
-            o.Header = "RETROMESH // SECTOR BRIEFING";
-            o.Title = "PLANET TRITON-7 - PHASE II";
-
-            o.Body =
-                "TRITON-7 rainforest colony has gone dark.\n\n" +
-                "Long-range telemetry: Omega Strain has breached the perimeter.\n" +
-                "Ten seeders confirmed across the jungle perimeter. Escort drones: SIX.\n" +
-                "Infection spreading through rainforest root networks - tolerance: 13.5%.\n" +
-                "Spread delay: 6 seconds. Window is closing.\n\n" +
-                "REVISED DIRECTIVE:\n" +
-                "Sterilize TRITON-7. Leave nothing behind.";
-
-            o.Footer = "PRESS ANY KEY TO BEGIN DESCENT";
+            SceneBriefingText.Apply(o, 2, GameState.SettingsState.LanguageCode,
+                SeederCount, DroneCount, 0, 0, InfectionThresholdPercent, LocalInfectionSpreadDelaySec);
 
             o.ShowOverlay = true;
             o.AutoHide = false;

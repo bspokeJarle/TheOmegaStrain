@@ -4,6 +4,7 @@ using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Common.Localization;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
 using TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls;
@@ -561,38 +562,36 @@ namespace TheOmegaStrain.Game.Scenes.SceneSimulation
             o.Anchor = ScreenOverlayAnchor.Top;
 
             int round = _simulationRound;
-            string roundLabel = round == 0 ? "INITIAL" : $"ROUND {round + 1}";
+              string language = GameState.SettingsState.LanguageCode;
+              string roundLabel = round == 0
+                  ? GameText.Get("simulation.initial", language)
+                  : GameText.Format("simulation.round", language, ("round", (round + 1).ToString(CultureInfo.InvariantCulture)));
             int simulationPowerUps = SeederPlacementHelpers.GetPowerUpCountForSeeders(_seeders);
             int totalEnemies = _seeders + _drones + _bombers + 1;
-            string motherShipClass = _useLargeMotherShip ? "LARGE-CLASS WAR CARRIER" : "MEDIUM-CLASS CARRIER";
+              string motherShipClass = GameText.Get(_useLargeMotherShip ? "simulation.largeCarrier" : "simulation.mediumCarrier", language);
             string infectionThresholdText = _infectionThreshold.ToString("0.0", CultureInfo.InvariantCulture);
             string spreadDelayText = _spreadDelaySec.ToString("0.0", CultureInfo.InvariantCulture);
             string biomeName = _biome switch
             {
-                SceneBiomeTypes.Rainforrest => "JUNGLE WORLD",
-                SceneBiomeTypes.Desert      => "DESERT WORLD",
-                SceneBiomeTypes.Winter      => "FROZEN WORLD",
-                _                           => "TEMPERATE WORLD"
-            };
+                  SceneBiomeTypes.Rainforrest => GameText.Get("simulation.jungle", language),
+                  SceneBiomeTypes.Desert      => GameText.Get("simulation.desert", language),
+                  SceneBiomeTypes.Winter      => GameText.Get("simulation.frozen", language),
+                  _                           => GameText.Get("simulation.temperate", language)
+              };
 
-            o.Header = "RETROMESH // SIMULATION";
-            o.Title = $"COMBAT SIMULATOR - {roundLabel}";
-
-            o.Body =
-                $"The galaxy has been cleared - but the war is not over.\n\n" +
-                $"A new infection wave is imminent. Train now.\n" +
-                $"Simulation type: {biomeName}\n\n" +
-                $"ENEMY COUNT: {totalEnemies} units total\n" +
-                $"  Seeders:          {_seeders} (incl. {simulationPowerUps} power-up carriers)\n" +
-                $"  Kamikaze Drones:  {_drones}\n" +
-                $"  Zeppelin Bombers: {_bombers}\n" +
-                $"  MotherShip:       1 x {motherShipClass}\n\n" +
-                $"Infection tolerance: {infectionThresholdText}%  |  Spread delay: {spreadDelayText}s\n" +
-                "Kill Seeders first; every Seeder destroyed slows the infection cascade.\n\n" +
-                "DIRECTIVE:\n" +
-                "Survive. Score high. Defend your rank on the leaderboard.";
-
-            o.Footer = "PRESS ANY KEY TO ENTER THE SIMULATION";
+              o.Header = GameText.Get("simulation.header", language);
+              o.Title = GameText.Format("simulation.title", language, ("round", roundLabel));
+              o.Body = GameText.Format("simulation.body", language,
+                  ("biome", biomeName),
+                  ("total", totalEnemies.ToString(CultureInfo.InvariantCulture)),
+                  ("seeders", _seeders.ToString(CultureInfo.InvariantCulture)),
+                  ("powerups", simulationPowerUps.ToString(CultureInfo.InvariantCulture)),
+                  ("drones", _drones.ToString(CultureInfo.InvariantCulture)),
+                  ("bombers", _bombers.ToString(CultureInfo.InvariantCulture)),
+                  ("carrier", motherShipClass),
+                  ("threshold", infectionThresholdText),
+                  ("delay", spreadDelayText));
+              o.Footer = GameText.Get("simulation.footer", language);
 
             o.ShowOverlay = true;
             o.AutoHide = false;

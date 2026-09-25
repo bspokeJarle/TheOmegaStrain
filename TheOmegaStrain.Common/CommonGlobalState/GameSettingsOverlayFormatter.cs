@@ -2,24 +2,28 @@ using RetroMesh.Engine;
 using TheOmegaStrain.Common.CommonGlobalState.States;
 using System;
 using System.Collections.Generic;
+using TheOmegaStrain.Common.Localization;
 
 namespace TheOmegaStrain.Common.CommonGlobalState
 {
     public static class GameSettingsOverlayFormatter
     {
+        private static string T(GameSettingsState settings, string key) =>
+            GameText.Get("settings." + key, settings.LanguageCode);
+
         public static string BuildFooter(GameSettingsState settings, bool pageNavigationSelected = false)
         {
             settings.Normalize();
             if (pageNavigationSelected)
             {
                 return settings.EffectiveControlScheme == ControlInputMode.XboxController
-                    ? "D-PAD LEFT/RIGHT CHANGE PAGE | DOWN EDIT SETTINGS | [B] BACK"
-                    : "LEFT/RIGHT CHANGE PAGE | DOWN EDIT SETTINGS | ESC BACK";
+                    ? T(settings, "footerPageController")
+                    : T(settings, "footerPageKeyboard");
             }
 
             return settings.EffectiveControlScheme == ControlInputMode.XboxController
-                ? "D-PAD UP/DOWN SELECT | LEFT/RIGHT ADJUST | [LB]/[RB] CHANGE PAGE | [B] BACK"
-                : "UP/DOWN SELECT | LEFT/RIGHT ADJUST | PAGE UP/DOWN CHANGE PAGE | ESC BACK";
+                ? T(settings, "footerEditController")
+                : T(settings, "footerEditKeyboard");
         }
 
         public static string BuildAudioBody(GameSettingsState settings, int selectedIndex)
@@ -28,14 +32,14 @@ namespace TheOmegaStrain.Common.CommonGlobalState
 
             var lines = new List<string>
             {
-                "Adjust the shipboard audio mix. Changes are saved locally.",
+                T(settings, "audioDescription"),
                 ""
             };
 
-            AddPercentLine(lines, selectedIndex, (int)AudioSettingsField.MasterVolume, "MASTER", settings.MasterVolumePercent);
-            AddPercentLine(lines, selectedIndex, (int)AudioSettingsField.MusicVolume, "MUSIC", settings.MusicVolumePercent);
-            AddPercentLine(lines, selectedIndex, (int)AudioSettingsField.EffectsVolume, "EFFECTS", settings.EffectsVolumePercent);
-            AddPercentLine(lines, selectedIndex, (int)AudioSettingsField.VoiceVolume, "HAL-E / VOICE", settings.VoiceVolumePercent);
+            AddPercentLine(lines, selectedIndex, (int)AudioSettingsField.MasterVolume, T(settings, "master"), settings.MasterVolumePercent);
+            AddPercentLine(lines, selectedIndex, (int)AudioSettingsField.MusicVolume, T(settings, "music"), settings.MusicVolumePercent);
+            AddPercentLine(lines, selectedIndex, (int)AudioSettingsField.EffectsVolume, T(settings, "effects"), settings.EffectsVolumePercent);
+            AddPercentLine(lines, selectedIndex, (int)AudioSettingsField.VoiceVolume, T(settings, "voice"), settings.VoiceVolumePercent);
 
             return string.Join("\n", lines);
         }
@@ -46,18 +50,18 @@ namespace TheOmegaStrain.Common.CommonGlobalState
 
             var lines = new List<string>
             {
-                "Tune visual detail for this machine. Changes are saved locally.",
+                T(settings, "graphicsDescription"),
                 ""
             };
 
-            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.QualityPreset, "QUALITY", settings.GraphicsQuality.ToString().ToUpperInvariant());
-            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.CameraAngle, "CAMERA ANGLE", settings.CameraAngle.ToString().ToUpperInvariant());
-            AddPercentLine(lines, selectedIndex, (int)GraphicsSettingsField.ParticleDensity, "PARTICLES", settings.ParticleDensityPercent);
-            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.GlowEffects, "GLOW", OnOff(settings.GlowEffectsEnabled));
-            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.EnhancedWeather, "WEATHER FX", OnOff(settings.EnhancedWeatherEnabled));
-            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.EnhancedShadows, "SHADOWS", OnOff(settings.EnhancedShadowsEnabled));
-            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.SceneRasterBackground, "SKY RASTER", OnOff(settings.SceneRasterBackgroundEnabled));
-            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.Clouds, "CLOUDS", OnOff(settings.CloudsEnabled));
+            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.QualityPreset, T(settings, "quality"), T(settings, settings.GraphicsQuality.ToString().ToLowerInvariant()));
+            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.CameraAngle, T(settings, "cameraAngle"), T(settings, settings.CameraAngle.ToString().ToLowerInvariant()));
+            AddPercentLine(lines, selectedIndex, (int)GraphicsSettingsField.ParticleDensity, T(settings, "particles"), settings.ParticleDensityPercent);
+            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.GlowEffects, T(settings, "glow"), OnOff(settings, settings.GlowEffectsEnabled));
+            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.EnhancedWeather, T(settings, "weather"), OnOff(settings, settings.EnhancedWeatherEnabled));
+            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.EnhancedShadows, T(settings, "shadows"), OnOff(settings, settings.EnhancedShadowsEnabled));
+            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.SceneRasterBackground, T(settings, "skyRaster"), OnOff(settings, settings.SceneRasterBackgroundEnabled));
+            AddValueLine(lines, selectedIndex, (int)GraphicsSettingsField.Clouds, T(settings, "clouds"), OnOff(settings, settings.CloudsEnabled));
 
             return string.Join("\n", lines);
         }
@@ -68,42 +72,42 @@ namespace TheOmegaStrain.Common.CommonGlobalState
 
             var lines = new List<string>
             {
-                "Choose how to play, then which device bindings to configure.",
-                "Keyboard weapon keys 1/2/3 stay live for quick weapon select.",
+                T(settings, "controlsDescription"),
+                T(settings, "weaponKeysHint"),
                 ""
             };
 
-            AddValueLine(lines, selectedIndex, 0, "PLAY USING", FormatControlMode(settings.ActiveControlScheme));
-            AddValueLine(lines, selectedIndex, 1, "CONFIGURE", FormatControlMode(settings.ControlsEditorScheme));
+            AddValueLine(lines, selectedIndex, 0, T(settings, "playUsing"), FormatControlMode(settings, settings.ActiveControlScheme));
+            AddValueLine(lines, selectedIndex, 1, T(settings, "configure"), FormatControlMode(settings, settings.ControlsEditorScheme));
             lines.Add("");
-            lines.Add($"{FormatControlMode(settings.ControlsEditorScheme)} MAPPINGS");
+            lines.Add(GameText.Format("settings.mappings", settings.LanguageCode, ("device", FormatControlMode(settings, settings.ControlsEditorScheme))));
 
             switch (settings.ControlsEditorScheme)
             {
                 case ControlInputMode.Mouse:
-                    AddValueLine(lines, selectedIndex, 2, "THRUST", FormatMouseButton(settings.MouseThrustButton));
-                    AddValueLine(lines, selectedIndex, 3, "FIRE", FormatMouseButton(settings.MouseFireButton));
-                    AddValueLine(lines, selectedIndex, -1, "STEER", "MOUSE MOVE");
+                    AddValueLine(lines, selectedIndex, 2, T(settings, "thrust"), FormatMouseButton(settings.MouseThrustButton));
+                    AddValueLine(lines, selectedIndex, 3, T(settings, "fire"), FormatMouseButton(settings.MouseFireButton));
+                    AddValueLine(lines, selectedIndex, -1, T(settings, "steer"), T(settings, "mouseMove"));
                     break;
                 case ControlInputMode.XboxController:
-                    AddValueLine(lines, selectedIndex, 2, "THRUST", FormatXboxButton(settings.XboxThrustButton));
-                    AddValueLine(lines, selectedIndex, 3, "FIRE", FormatXboxButton(settings.XboxFireButton));
-                    AddValueLine(lines, selectedIndex, 4, "PITCH UP", FormatXboxButton(settings.XboxPitchUpButton));
-                    AddValueLine(lines, selectedIndex, 5, "PITCH DOWN", FormatXboxButton(settings.XboxPitchDownButton));
-                    AddValueLine(lines, selectedIndex, 6, "TURN LEFT", FormatXboxButton(settings.XboxTurnLeftButton));
-                    AddValueLine(lines, selectedIndex, 7, "TURN RIGHT", FormatXboxButton(settings.XboxTurnRightButton));
-                    AddValueLine(lines, selectedIndex, 8, "BULLET POWERUP", FormatXboxButton(settings.XboxBulletButton));
-                    AddValueLine(lines, selectedIndex, 9, "DECOY", FormatXboxButton(settings.XboxDecoyButton));
-                    AddValueLine(lines, selectedIndex, 10, "LASER POWERUP", FormatXboxButton(settings.XboxLazerButton));
-                    AddValueLine(lines, selectedIndex, 11, "SPECIAL POWERUP", FormatXboxButton(settings.XboxPowerup4Button));
+                    AddValueLine(lines, selectedIndex, 2, T(settings, "thrust"), FormatXboxButton(settings.XboxThrustButton));
+                    AddValueLine(lines, selectedIndex, 3, T(settings, "fire"), FormatXboxButton(settings.XboxFireButton));
+                    AddValueLine(lines, selectedIndex, 4, T(settings, "pitchUp"), FormatXboxButton(settings.XboxPitchUpButton));
+                    AddValueLine(lines, selectedIndex, 5, T(settings, "pitchDown"), FormatXboxButton(settings.XboxPitchDownButton));
+                    AddValueLine(lines, selectedIndex, 6, T(settings, "turnLeft"), FormatXboxButton(settings.XboxTurnLeftButton));
+                    AddValueLine(lines, selectedIndex, 7, T(settings, "turnRight"), FormatXboxButton(settings.XboxTurnRightButton));
+                    AddValueLine(lines, selectedIndex, 8, T(settings, "bulletPowerup"), FormatXboxButton(settings.XboxBulletButton));
+                    AddValueLine(lines, selectedIndex, 9, T(settings, "decoy"), FormatXboxButton(settings.XboxDecoyButton));
+                    AddValueLine(lines, selectedIndex, 10, T(settings, "laserPowerup"), FormatXboxButton(settings.XboxLazerButton));
+                    AddValueLine(lines, selectedIndex, 11, T(settings, "specialPowerup"), FormatXboxButton(settings.XboxPowerup4Button));
                     break;
                 default:
-                    AddValueLine(lines, selectedIndex, 2, "THRUST", FormatKeyboardKey(settings.KeyboardThrustKey));
-                    AddValueLine(lines, selectedIndex, 3, "FIRE", FormatKeyboardKey(settings.KeyboardFireKey));
-                    AddValueLine(lines, selectedIndex, 4, "PITCH UP", FormatKeyboardKey(settings.KeyboardPitchUpKey));
-                    AddValueLine(lines, selectedIndex, 5, "PITCH DOWN", FormatKeyboardKey(settings.KeyboardPitchDownKey));
-                    AddValueLine(lines, selectedIndex, 6, "TURN LEFT", FormatKeyboardKey(settings.KeyboardTurnLeftKey));
-                    AddValueLine(lines, selectedIndex, 7, "TURN RIGHT", FormatKeyboardKey(settings.KeyboardTurnRightKey));
+                    AddValueLine(lines, selectedIndex, 2, T(settings, "thrust"), FormatKeyboardKey(settings.KeyboardThrustKey));
+                    AddValueLine(lines, selectedIndex, 3, T(settings, "fire"), FormatKeyboardKey(settings.KeyboardFireKey));
+                    AddValueLine(lines, selectedIndex, 4, T(settings, "pitchUp"), FormatKeyboardKey(settings.KeyboardPitchUpKey));
+                    AddValueLine(lines, selectedIndex, 5, T(settings, "pitchDown"), FormatKeyboardKey(settings.KeyboardPitchDownKey));
+                    AddValueLine(lines, selectedIndex, 6, T(settings, "turnLeft"), FormatKeyboardKey(settings.KeyboardTurnLeftKey));
+                    AddValueLine(lines, selectedIndex, 7, T(settings, "turnRight"), FormatKeyboardKey(settings.KeyboardTurnRightKey));
                     break;
             }
 
@@ -115,16 +119,16 @@ namespace TheOmegaStrain.Common.CommonGlobalState
             settings.Normalize();
             var lines = new List<string>
             {
-                "Tune player ship handling. Enemies, weapons and biome physics remain unchanged.",
+                T(settings, "flightDescription"),
                 ""
             };
 
-            AddValueLine(lines, selectedIndex, (int)FlightSettingsField.Preset, "FLIGHT FEEL", settings.FlightPreset.ToString().ToUpperInvariant());
-            AddValueLine(lines, selectedIndex, (int)FlightSettingsField.FlightInertia, "FLIGHT INERTIA", FormatFlightInertia(settings.FlightCoastingSetting));
-            AddValueLine(lines, selectedIndex, (int)FlightSettingsField.RotationInertia, "ROTATION INERTIA", settings.FlightRotationInertiaSetting.ToString().ToUpperInvariant());
-            AddValueLine(lines, selectedIndex, (int)FlightSettingsField.ThrustResponse, "THRUST ACCEL.", FormatThrustAcceleration(settings.FlightThrustResponseSetting));
-            AddValueLine(lines, selectedIndex, (int)FlightSettingsField.GravityResponse, "GRAVITY PULL", FormatGravityPull(settings.FlightGravityResponseSetting));
-            AddValueLine(lines, selectedIndex, (int)FlightSettingsField.ResetDefaults, "RESET", "BALANCED DEFAULTS");
+            AddValueLine(lines, selectedIndex, (int)FlightSettingsField.Preset, T(settings, "flightFeel"), T(settings, settings.FlightPreset.ToString().ToLowerInvariant()));
+            AddValueLine(lines, selectedIndex, (int)FlightSettingsField.FlightInertia, T(settings, "flightInertia"), T(settings, FormatFlightInertia(settings.FlightCoastingSetting).ToLowerInvariant()));
+            AddValueLine(lines, selectedIndex, (int)FlightSettingsField.RotationInertia, T(settings, "rotationInertia"), T(settings, settings.FlightRotationInertiaSetting.ToString().ToLowerInvariant()));
+            AddValueLine(lines, selectedIndex, (int)FlightSettingsField.ThrustResponse, T(settings, "thrustAccel"), T(settings, FormatThrustAcceleration(settings.FlightThrustResponseSetting).ToLowerInvariant()));
+            AddValueLine(lines, selectedIndex, (int)FlightSettingsField.GravityResponse, T(settings, "gravityPull"), T(settings, FormatGravityPull(settings.FlightGravityResponseSetting).ToLowerInvariant()));
+            AddValueLine(lines, selectedIndex, (int)FlightSettingsField.ResetDefaults, T(settings, "reset"), T(settings, "balancedDefaults"));
             return string.Join("\n", lines);
         }
 
@@ -145,7 +149,7 @@ namespace TheOmegaStrain.Common.CommonGlobalState
             return "[" + new string('#', blocks) + new string('-', 10 - blocks) + "]";
         }
 
-        private static string OnOff(bool value) => value ? "ON" : "OFF";
+        private static string OnOff(GameSettingsState settings, bool value) => T(settings, value ? "on" : "off");
 
         private static string FormatThrustAcceleration(FlightThrustResponse value) => value switch
         {
@@ -168,12 +172,12 @@ namespace TheOmegaStrain.Common.CommonGlobalState
             _ => "NORMAL"
         };
 
-        private static string FormatControlMode(ControlInputMode mode) =>
+        private static string FormatControlMode(GameSettingsState settings, ControlInputMode mode) =>
             mode switch
             {
-                ControlInputMode.Mouse => "MOUSE",
-                ControlInputMode.XboxController => "XBOX CONTROLLER",
-                _ => "KEYBOARD"
+                ControlInputMode.Mouse => T(settings, "mouse"),
+                ControlInputMode.XboxController => T(settings, "xboxController"),
+                _ => T(settings, "keyboard")
             };
 
         private static string FormatKeyboardKey(string key) =>

@@ -12,6 +12,7 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Common.Diagnostics;
 using TheOmegaStrain.Common.GamePlayHelpers;
+using TheOmegaStrain.Common.Localization;
 using TheOmegaStrain.Common.Persistence;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Gameplay.Controls;
@@ -1705,8 +1706,8 @@ namespace TheOmegaStrain.Wpf
             if (overlay.ShowOverlay && overlay.Type == ScreenOverlayType.Tutorial)
             {
                 overlay.Footer = GameState.TutorialState.CanCloseInstructionOverlay(now)
-                    ? "PRESS ANY KEY OR ESC TO CONTINUE"
-                    : "HAL-E SPEAKING - ESC TO SKIP";
+                    ? GameText.Get("training.prompt.continue", GameState.SettingsState.LanguageCode)
+                    : GameText.Get("training.prompt.footer", GameState.SettingsState.LanguageCode);
             }
 
             if (!world.IsPaused)

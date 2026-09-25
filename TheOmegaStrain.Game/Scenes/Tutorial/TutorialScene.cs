@@ -1,4 +1,5 @@
 using TheOmegaStrain.Common.CommonGlobalState;
+using TheOmegaStrain.Common.Localization;
 using TheOmegaStrain.Common.CommonSetup;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Game.Helpers;
@@ -48,13 +49,11 @@ namespace TheOmegaStrain.Game.Scenes.Tutorial
 
             o.Type = ScreenOverlayType.Game;
             o.Anchor = ScreenOverlayAnchor.Top;
-            o.Header = "ASTERION TRAINING PROTOCOL";
-            o.Title = "HAL-E ONLINE";
-            o.Body =
-                "Welcome pilot.\n\n" +
-                "This training run will walk you through thrust, weapons, powerups and decoy use.\n\n" +
-                "Press ESC on training overlays to continue. Press ESC again outside an overlay to return to the menu.";
-            o.Footer = "PRESS ANY KEY OR [ESC] TO CONTINUE - [X] SKIPS TRAINING";
+            string language = GameState.SettingsState.LanguageCode;
+            o.Header = GameText.Get("training.intro.header", language);
+            o.Title = GameText.Get("training.intro.title", language);
+            o.Body = GameText.Get("training.intro.body", language);
+            o.Footer = GameText.Get("training.intro.footer", language);
             o.ShowOverlay = true;
             o.AutoHide = false;
             o.DimStrength = 0.45f;
