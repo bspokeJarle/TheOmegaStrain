@@ -452,6 +452,8 @@ namespace TheOmegaStrain.Common.CommonGlobalState.States
                 ? Math.Min(first + 6, ChoiceOptions.Count) : ChoiceOptions.Count;
             for (int i = first; i < end; i++)
             {
+                if (ChoiceAction == ScreenOverlayChoiceAction.IntroMainMenu && i == end - 1)
+                    lines.Add("");
                 lines.Add($"{(i == SelectedChoiceIndex ? ">" : " ")} {ChoiceOptions[i]}");
             }
             if (end - first < ChoiceOptions.Count)

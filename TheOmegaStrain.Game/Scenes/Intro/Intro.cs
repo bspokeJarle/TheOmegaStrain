@@ -13,8 +13,9 @@ namespace TheOmegaStrain.Game.Scenes.Intro
 {
     public class Intro : IScene
     {
-        public const int LanguageChoiceIndex = 4;
-        public const int InfoChoiceIndex = 5;
+        public const int LanguageChoiceIndex = 3;
+        public const int InfoChoiceIndex = 4;
+        public const int QuitChoiceIndex = 5;
 
         private static string BuildMainMenuFooter()
         {
@@ -84,10 +85,10 @@ namespace TheOmegaStrain.Game.Scenes.Intro
                 Text("menu.start"),
                 Text("menu.training"),
                 Text("menu.settings"),
-                Text("menu.quit"),
                 GameText.Format("menu.languageChoice", GameState.SettingsState.LanguageCode,
                     ("language", GameState.SettingsState.LanguageCode.ToUpperInvariant())),
-                Text("menu.info"));
+                Text("menu.info"),
+                Text("menu.quit"));
             overlay.Footer = BuildMainMenuFooter();
         }
 

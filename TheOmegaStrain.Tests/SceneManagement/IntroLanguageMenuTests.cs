@@ -44,13 +44,13 @@ public class IntroLanguageMenuTests
         handler.GetActiveScene().SetupSceneOverlay();
         var overlay = GameState.ScreenOverlayState;
         overlay.ShowOverlay = true;
-        overlay.MoveChoiceSelection(4);
+        overlay.MoveChoiceSelection(Intro.LanguageChoiceIndex);
 
         handler.HandleKeyPress(GameInputKey.Enter, world);
 
         Assert.AreEqual("no", GameState.SettingsState.LanguageCode);
         Assert.AreEqual("no", GameSettingsPersistence.LoadSettings().LanguageCode);
-        Assert.AreEqual(4, overlay.SelectedChoiceIndex);
+        Assert.AreEqual(Intro.LanguageChoiceIndex, overlay.SelectedChoiceIndex);
         Assert.AreEqual("START SPILLET", overlay.ChoiceOptions[0]);
         Assert.AreEqual("THE OMEGA STRAIN // ORIENTERING", overlay.Pages[1][1]);
         Assert.AreEqual("TIPS OG TRIKS", overlay.Pages[2][1]);
@@ -96,7 +96,7 @@ public class IntroLanguageMenuTests
     }
 
     [TestMethod]
-    public void InfoPages_OpenOnlyFromBottomMenuChoice()
+    public void InfoPages_OpenOnlyFromInfoMenuChoice()
     {
         var handler = new SceneHandler();
         var world = new GameWorld { SceneHandler = handler };
@@ -116,5 +116,24 @@ public class IntroLanguageMenuTests
         handler.HandleKeyPress(GameInputKey.Left, world);
         Assert.AreEqual(0, overlay.CurrentPage);
         Assert.AreEqual(ScreenOverlayChoiceAction.IntroMainMenu, overlay.ChoiceAction);
+    }
+
+    [TestMethod]
+    public void Quit_IsLastChoiceWithVisualSeparationAndOpensConfirmation()
+    {
+        var handler = new SceneHandler();
+        var world = new GameWorld { SceneHandler = handler };
+        handler.GetActiveScene().SetupSceneOverlay();
+        var overlay = GameState.ScreenOverlayState;
+        overlay.ShowOverlay = true;
+
+        Assert.AreEqual(overlay.ChoiceOptions.Count - 1, Intro.QuitChoiceIndex);
+        Assert.AreEqual("QUIT", overlay.ChoiceOptions[Intro.QuitChoiceIndex]);
+        Assert.IsTrue(overlay.Body.Contains("  VIEW INFO PAGES\n\n  QUIT"));
+
+        overlay.MoveChoiceSelection(Intro.QuitChoiceIndex);
+        handler.HandleKeyPress(GameInputKey.Enter, world);
+
+        Assert.AreEqual(ScreenOverlayChoiceAction.QuitGameConfirmation, overlay.ChoiceAction);
     }
 }

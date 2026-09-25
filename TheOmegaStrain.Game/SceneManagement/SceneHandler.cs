@@ -1414,9 +1414,6 @@ namespace TheOmegaStrain.Game.SceneManagement
                 case 2:
                     ShowSettingsOverlay(scene, overlay, ScreenOverlaySettingsPanel.Audio);
                     break;
-                case 3:
-                    ShowQuitGameConfirmationOverlay(overlay);
-                    break;
                 case Intro.LanguageChoiceIndex:
                     ChangeIntroLanguage(overlay, 1);
                     break;
@@ -1425,6 +1422,9 @@ namespace TheOmegaStrain.Game.SceneManagement
                     overlay.NextPage();
                     RefreshCurrentHighscorePage(overlay);
                     Intro.ConfigurePageMode(overlay);
+                    break;
+                case Intro.QuitChoiceIndex:
+                    ShowQuitGameConfirmationOverlay(overlay);
                     break;
             }
         }
