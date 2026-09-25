@@ -8,6 +8,9 @@ namespace TheOmegaStrain.Game.Helpers;
 
 public static class DroneActivationHelpers
 {
+    private const double HuntDelayJitterSeconds = 0.5d;
+    private const double AdditionalHuntSpacingSeconds = 20d;
+
     public static int ActivateWithStaggeredHuntDelays(
         IReadOnlyList<OmegaObject3D> aiObjects,
         Random? random = null,
@@ -26,22 +29,24 @@ public static class DroneActivationHelpers
         if (drones.Count == 0)
             return 0;
 
-        // Inactive drones may outlive the delays assigned during scene setup. Restart the
-        // countdown on activation and use the entire configured range to prevent crowding.
+        // Inactive drones may outlive their constructor delays. Restart the countdown
+        // on activation and spread launch times without predicting where Ship will be.
         var startTime = activationTime ?? DateTime.Now;
-        float delayRange = GameSetup.KamikazeDroneMaxHuntDelay - GameSetup.KamikazeDroneMinHuntDelay;
-        float delaySlot = delayRange / drones.Count;
+        double delaySeconds = GameSetup.KamikazeDroneMinHuntDelay +
+            random.NextDouble() * HuntDelayJitterSeconds;
 
         for (int i = 0; i < drones.Count; i++)
         {
+            if (i > 0)
+                delaySeconds += GameSetup.KamikazeDroneMinimumHuntSpacingSeconds +
+                    random.NextDouble() * AdditionalHuntSpacingSeconds;
+
             var drone = drones[i];
             drone.IsActive = true;
 
             if (drone.Movement is KamikazeDroneControls controls)
             {
-                double delaySeconds = GameSetup.KamikazeDroneMinHuntDelay +
-                    ((i + random.NextDouble()) * delaySlot);
-                controls.StartHuntDateTime = startTime.AddSeconds(delaySeconds);
+                controls.ScheduleHunt(startTime.AddSeconds(delaySeconds), honorDelay: drones.Count > 1);
             }
         }
 

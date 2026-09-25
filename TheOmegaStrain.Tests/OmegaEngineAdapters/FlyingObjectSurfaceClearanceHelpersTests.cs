@@ -14,13 +14,25 @@ public class FlyingObjectSurfaceClearanceHelpersTests
     {
         var state = new FlyingObjectSurfaceClearanceState();
         var other = new FlyingObjectSurfaceClearanceState();
-        Assert.AreEqual(100f, state.Update(100f, 0.01f));
+        Assert.AreEqual(4.5f, state.Update(100f, 0.01f), 0.001f);
+        for (int i = 0; i < 3; i++) state.Update(100f, 0.1f);
+        Assert.AreEqual(100f, state.RetainedLift);
         for (int i = 0; i < 19; i++)
             Assert.AreEqual(100f, state.Update(0f, 0.1f));
         Assert.AreEqual(0f, other.Update(0f, 0.1f));
         for (int i = 0; i < 4; i++) state.Update(0f, 0.1f);
         Assert.IsTrue(state.RetainedLift > 0f && state.RetainedLift < 100f);
-        Assert.AreEqual(150f, state.Update(150f, 0.01f), "Higher terrain must lift immediately.");
+        float beforeRise = state.RetainedLift;
+        Assert.AreEqual(beforeRise + 4.5f, state.Update(150f, 0.01f), 0.001f,
+            "Higher terrain should lift over multiple frames.");
+    }
+
+    [TestMethod]
+    public void ClearanceState_UsesImmediateSafetyLiftOnlyWhenNeeded()
+    {
+        var state = new FlyingObjectSurfaceClearanceState();
+        Assert.AreEqual(30f, state.Update(200f, 0.01f, 30f));
+        Assert.AreEqual(75f, state.Update(200f, 0.1f, 30f));
     }
 
     [TestInitialize]

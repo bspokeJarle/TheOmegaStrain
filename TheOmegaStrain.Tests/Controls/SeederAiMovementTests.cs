@@ -70,6 +70,31 @@ public class SeederAiMovementTests
     }
 
     [TestMethod]
+    public void MoveTowardTarget_StopsBeforeEnteringTheWiderSeederSeparation()
+    {
+        var other = new OmegaObject3D
+        {
+            ObjectId = 88,
+            ObjectName = "Seeder",
+            WorldPosition = new Vector3 { x = 400f }
+        };
+        GameState.SurfaceState.AiObjects.Add(other);
+        var state = CreateState();
+        var current = new Vector3();
+        PrepareTarget(state, current, new Vector3 { x = 1000f }, false, 100);
+
+        var blocked = InvokeMove(true, state, current, step: 1f, offscreenStepFactor: 1);
+        Assert.AreEqual(0f, blocked.x, 0.001f);
+        Assert.IsFalse((bool)GetField(state, "HasMovementTarget")!);
+
+        other.WorldPosition = new Vector3 { x = 406f };
+        state = CreateState();
+        PrepareTarget(state, current, new Vector3 { x = 1000f }, false, 100);
+        var allowed = InvokeMove(true, state, current, step: 1f, offscreenStepFactor: 1);
+        Assert.AreEqual(1f, allowed.x, 0.001f);
+    }
+
+    [TestMethod]
     public void MoveTowardTarget_WhenGlobalTargetReached_SwitchesToLocalHuntWithoutPause()
     {
         var state = CreateState();

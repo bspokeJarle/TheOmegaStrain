@@ -201,6 +201,25 @@ public class Scene3CloudTests
     }
 
     [TestMethod]
+    public void Scene3_CloudPoolRestoresMissingWorldPositionDuringRecycle()
+    {
+        var world = new TestWorld();
+        new Scene3().SetupScene(world);
+        var pool = AddSceneClouds(world, SceneBiomeTypes.Rainforrest);
+        var cloud = world.WorldInhabitants.OfType<OmegaObject3D>()
+            .First(o => o.ObjectName == "Cloud");
+
+        cloud.WorldPosition = null!;
+        GameState.SurfaceState.GlobalMapPosition.x +=
+            SceneCloudPool.ForestSpacingXTiles * SurfaceSetup.tileSize;
+
+        pool.Update(GameState.SurfaceState.GlobalMapPosition);
+
+        Assert.IsNotNull(cloud.WorldPosition);
+        Assert.AreNotEqual(0f, cloud.WorldPosition.x);
+    }
+
+    [TestMethod]
     public void CloudControls_SyncRenderHeightWithoutMovingWorldAnchor()
     {
         GameState.SurfaceState.GlobalMapPosition = new Vector3(1000f, 0f, 2000f);

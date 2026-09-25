@@ -13,6 +13,7 @@ namespace TheOmegaStrain.Common.CommonSetup
         // Kamikaze drone hunt timing
         public static int KamikazeDroneMinHuntDelay { get; set; } = 5;
         public static int KamikazeDroneMaxHuntDelay { get; set; } = 45;
+        public const float KamikazeDroneMinimumHuntSpacingSeconds = 20f;
         public static float KamikazeDroneProximityHuntDistance { get; set; } = 10_000f;
         public static int KamikazeDroneSurpriseDelayPercent { get; set; } = 10;
         public static int KamikazeDroneSurpriseHuntDelaySeconds { get; set; } = 12;
@@ -24,6 +25,8 @@ namespace TheOmegaStrain.Common.CommonSetup
         // BomberBomb blast radius: exploding bombs damage the ship within this distance.
         public static float BomberBombBlastRadius { get; set; } = 600f;
         public static float BomberBombBlastDamage { get; set; } = 35f;
+        public static float BomberBombBlastMiddleDamage { get; set; } = 20f;
+        public static float BomberBombBlastOuterDamage { get; set; } = 10f;
 
         // Scoring: base points awarded per enemy kill
         public static int SeederKillScore { get; set; } = 100;

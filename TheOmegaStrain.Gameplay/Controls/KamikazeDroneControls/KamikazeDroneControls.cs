@@ -64,6 +64,7 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
         private float _overshootSecondsRemaining = 0f;
         private Vector3 _overshootDirection = new Vector3();
         private DateTime? _pursuitPausedAt;
+        private bool _honorScheduledHuntTime;
 
         public KamikazeDroneControls(float speedMultiplier = 1f)
         {
@@ -73,6 +74,12 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
                 rd.Next(0, GameSetup.KamikazeDroneMaxHuntDelay - GameSetup.KamikazeDroneMinHuntDelay);
             // Delay the start of the hunt to give the player some time to react before the drone starts moving, and to help desync multiple drones if they spawn at similar times.
             StartHuntDateTime = DateTime.Now.AddSeconds(TimeDelay);
+        }
+
+        public void ScheduleHunt(DateTime startTime, bool honorDelay)
+        {
+            StartHuntDateTime = startTime;
+            _honorScheduledHuntTime = honorDelay;
         }
 
         private void UpdateRotationTowardsTarget(Vector3 directionToTarget)
@@ -191,11 +198,12 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
                 _pursuitPausedAt = null;
             }
 
-            // Skip hunt until the delay expires, unless the ship is already close
+            // Keep the stagger while multiple drones are active. The lone-drone
+            // shortcut remains so the last enemy does not make the player wait.
             if (StartHuntDateTime != null &&
                 now < StartHuntDateTime &&
-                HasLiveNonDroneEnemies() &&
-                IsShipOutsideImmediateHuntRange(theObject))
+                (_honorScheduledHuntTime || HasOtherActiveDrones(theObject) ||
+                    (HasLiveNonDroneEnemies() && IsShipOutsideImmediateHuntRange(theObject))))
             {
                 ApplyWaitingSurfaceClearance(theObject);
                 return theObject;
@@ -548,6 +556,24 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
             return false;
         }
 
+        private static bool HasOtherActiveDrones(I3dObject currentDrone)
+        {
+            var aiObjects = GameState.SurfaceState?.AiObjects;
+            if (aiObjects == null)
+                return false;
+
+            for (int i = 0; i < aiObjects.Count; i++)
+            {
+                var other = aiObjects[i];
+                if (other.ObjectId != currentDrone.ObjectId &&
+                    other.ObjectName == "KamikazeDrone" && other.IsActive &&
+                    other.ImpactStatus?.HasExploded != true)
+                    return true;
+            }
+
+            return false;
+        }
+
         private static bool IsEssentialNonDroneEnemy(string objectName)
         {
             return objectName == "Seeder"
@@ -697,6 +723,7 @@ namespace TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls
             _isSurpriseDrone = false;
             _surpriseDelayInitialized = false;
             _surpriseStartHuntDateTime = null;
+            _honorScheduledHuntTime = false;
             _overshootSecondsRemaining = 0f;
             _overshootDirection = new Vector3();
             _explosionWorldPosition = null;

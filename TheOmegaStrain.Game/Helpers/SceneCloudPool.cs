@@ -96,7 +96,8 @@ public sealed class SceneCloudPool
                     + CellJitter(cellX, cellZ, 0)) * tileSize;
                 float z = _platformZ + ((cellZ - 0.25f) * _spacingZTiles
                     + CellJitter(cellX, cellZ, 1)) * tileSize;
-                if (cloud.WorldPosition.x != x || cloud.WorldPosition.z != z)
+                var worldPosition = cloud.WorldPosition;
+                if (worldPosition == null || worldPosition.x != x || worldPosition.z != z)
                     cloud.WorldPosition = new Vector3(x, 0f, z);
 
                 float dx = x - _platformX;

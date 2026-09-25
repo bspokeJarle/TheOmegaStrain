@@ -274,13 +274,12 @@ namespace TheOmegaStrain.Runtime.Collision
         private static void HandleBomberBombBlastDamage(List<OmegaObject3D> activeWorld)
         {
             float blastRadius = TheOmegaStrain.Common.CommonSetup.GameSetup.BomberBombBlastRadius;
-            float blastDamage = TheOmegaStrain.Common.CommonSetup.GameSetup.BomberBombBlastDamage;
 
             RadialObjectScanner.Scan(
                 activeWorld,
                 blastRadius,
                 IsBombBlastSource,
-                GetObjectWorldPosition,
+                GetBombBlastWorldPosition,
                 IsBombBlastTarget,
                 GetShipCrashCenterWorldPosition,
                 HandleBombBlastHit);
@@ -289,6 +288,7 @@ namespace TheOmegaStrain.Runtime.Collision
             {
                 if (bomb.ObjectName != "BomberBomb") return false;
                 if (bomb.ImpactStatus?.HasExploded == true) return false;
+                if (bomb.WorldPosition == null) return false;
                 // Bomb is exploding when its crashboxes have been cleared
                 if (bomb.CrashBoxes != null && bomb.CrashBoxes.Count > 0) return false;
                 if (bomb.ObjectParts == null || bomb.ObjectParts.Count == 0) return false;
@@ -303,6 +303,11 @@ namespace TheOmegaStrain.Runtime.Collision
 
             void HandleBombBlastHit(in RadialHitContext<OmegaObject3D, Vector3> context)
             {
+                float blastDamage = context.Distance <= blastRadius / 3f
+                    ? GameSetup.BomberBombBlastDamage
+                    : context.Distance <= blastRadius * 2f / 3f
+                        ? GameSetup.BomberBombBlastMiddleDamage
+                        : GameSetup.BomberBombBlastOuterDamage;
                 TheOmegaStrain.Common.CommonGlobalState.GameState.GamePlayState?.ApplyDamage(blastDamage);
 
                 LogCollision(context.Source, context.Target,
@@ -313,6 +318,14 @@ namespace TheOmegaStrain.Runtime.Collision
         private static Vector3? GetObjectWorldPosition(OmegaObject3D obj)
         {
             return obj.WorldPosition as Vector3;
+        }
+
+        private static Vector3? GetBombBlastWorldPosition(OmegaObject3D bomb)
+        {
+            return bomb.WorldPosition == null
+                ? null
+                : TheOmegaStrain.Common.OmegaEngineAdapters.SurfacePositionSyncHelpers
+                    .GetSurfaceFootprintWorldPosition(bomb);
         }
 
         private static Vector3? GetShipCrashCenterWorldPosition(OmegaObject3D obj)

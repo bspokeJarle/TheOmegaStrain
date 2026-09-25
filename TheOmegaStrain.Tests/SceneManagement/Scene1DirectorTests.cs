@@ -3,6 +3,7 @@ using TheOmegaStrain.Common.CommonGlobalState.States;
 using TheOmegaStrain.Common.Events;
 using TheOmegaStrain.Domain;
 using TheOmegaStrain.Game.Scenes.Scene1;
+using TheOmegaStrain.Gameplay.Controls.KamikazeDroneControls;
 
 namespace TheOmegaStrain.Tests.SceneManagement;
 
@@ -67,6 +68,26 @@ public class Scene1DirectorTests
 
         Assert.IsTrue(drone1.IsActive, "Drone 1 should be activated.");
         Assert.IsTrue(drone2.IsActive, "Drone 2 should be activated.");
+    }
+
+    [TestMethod]
+    public void Update_ActivationAssignsDistinctDroneHuntTimes()
+    {
+        var first = CreateAiObject("KamikazeDrone", isActive: false);
+        var second = CreateAiObject("KamikazeDrone", isActive: false);
+        first.Movement = new KamikazeDroneControls();
+        second.Movement = new KamikazeDroneControls();
+        GameState.SurfaceState.AiObjects.Add(first);
+        GameState.SurfaceState.AiObjects.Add(second);
+        GameState.GamePlayState.PowerUpsCollected = 1;
+
+        _director.Update();
+
+        var firstStart = ((KamikazeDroneControls)first.Movement).StartHuntDateTime;
+        var secondStart = ((KamikazeDroneControls)second.Movement).StartHuntDateTime;
+        Assert.IsTrue(firstStart.HasValue && secondStart.HasValue);
+        Assert.IsTrue(secondStart.Value - firstStart.Value >= TimeSpan.FromSeconds(6),
+            "Opening-scene drones should use the shared staggered activation schedule.");
     }
 
     [TestMethod]

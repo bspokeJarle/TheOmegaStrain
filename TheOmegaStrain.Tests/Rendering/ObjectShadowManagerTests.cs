@@ -110,6 +110,28 @@ public class ObjectShadowManagerTests
     }
 
     [TestMethod]
+    public void SurfaceBoundShadow_DisappearsWhenItsTileLeavesViewport()
+    {
+        var surface = CreateTiltedFlatSurface(WorldViewSetup.SurfacePitchDegrees);
+        var caster = CreateFreeFlyingShadowCaster(surface, 0f, 400f, 0f);
+        caster.ObjectName = "Tree";
+        caster.SurfaceBasedId = 42;
+        var shadows = new List<OmegaObject3D>();
+        var manager = new ObjectShadowManager();
+
+        // Another visible tile must never become this tree's shadow anchor.
+        surface.RotatedSurfaceTriangles[0].landBasedPosition = 43;
+        Assert.IsFalse(ObjectPlacementHelpers.TryGetRenderPosition(caster, 0, 0, out _, out _, out _));
+        manager.HandleObjectShadow(caster, shadows);
+        Assert.AreEqual(0, shadows.Count);
+
+        surface.RotatedSurfaceTriangles[0].landBasedPosition = 42;
+        Assert.IsTrue(ObjectPlacementHelpers.TryGetRenderPosition(caster, 0, 0, out _, out _, out _));
+        manager.HandleObjectShadow(caster, shadows);
+        Assert.AreEqual(1, shadows.Count);
+    }
+
+    [TestMethod]
     public void FreeFlyingShadow_InterpolatesGroundYInsideSurfaceTriangle()
     {
         ObjectShadowManager.TerrainShadowInwardOffset = 0f;

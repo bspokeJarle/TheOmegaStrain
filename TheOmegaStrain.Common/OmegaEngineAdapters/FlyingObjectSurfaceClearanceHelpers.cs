@@ -8,6 +8,7 @@ namespace TheOmegaStrain.Common.OmegaEngineAdapters;
 public static class FlyingObjectSurfaceClearanceHelpers
 {
     public const float ClearanceHoldSeconds = 2f;
+    public const float ClearanceRiseUnitsPerSecond = 450f;
     public const float ClearanceReleaseUnitsPerSecond = 120f;
 
     public static bool ApplyMinimumClearance(I3dObject obj)
@@ -36,7 +37,9 @@ public static class FlyingObjectSurfaceClearanceHelpers
             TerrainAvoidanceSetup.GetMinimumSurfaceClearance(obj.ObjectName));
         // Missing terrain is unknown, not evidence that it is safe to descend.
         float appliedLift = requiredLift.HasValue
-            ? state.Update(requiredLift.Value, deltaSeconds)
+            ? state.Update(requiredLift.Value, deltaSeconds,
+                MathF.Max(0f, requiredLift.Value -
+                    TerrainAvoidanceSetup.GetMinimumSurfaceClearance(obj.ObjectName) + 20f))
             : state.RetainedLift;
         if (appliedLift <= 0f || obj.ObjectOffsets == null)
             return false;
@@ -152,14 +155,18 @@ public sealed class FlyingObjectSurfaceClearanceState
     public float RetainedLift { get; private set; }
     public float HoldSecondsRemaining { get; private set; }
 
-    public float Update(float requiredLift, float deltaSeconds)
+    public float Update(float requiredLift, float deltaSeconds, float safetyLift = 0f)
     {
         float dt = Math.Clamp(deltaSeconds, 0f, 0.1f);
         requiredLift = MathF.Max(0f, requiredLift);
 
         if (requiredLift >= RetainedLift)
         {
-            RetainedLift = requiredLift;
+            // Rise smoothly as terrain changes, but never leave the object buried
+            // in the sampled ground while the correction catches up.
+            RetainedLift = MathF.Max(safetyLift,
+                MathF.Min(requiredLift, RetainedLift +
+                    FlyingObjectSurfaceClearanceHelpers.ClearanceRiseUnitsPerSecond * dt));
             HoldSecondsRemaining = FlyingObjectSurfaceClearanceHelpers.ClearanceHoldSeconds;
             return RetainedLift;
         }

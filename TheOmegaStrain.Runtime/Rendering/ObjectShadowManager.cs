@@ -241,54 +241,37 @@ namespace TheOmegaStrain.Runtime.Rendering
 
             if (isTowerLike)
             {
-                // Direct tile lookup by SurfaceBasedId (O(N) scan, single pass, no closure)
+                // A surface-bound caster without its tile is not rendered. Its
+                // shadow must disappear too, rather than fall back to depth zero.
                 ITriangleMeshWithColorAndTexture matchedTile = null;
                 if (inhabitant.SurfaceBasedId != null)
                 {
                     long sid = (long)inhabitant.SurfaceBasedId;
-                    for (int i = 0; i < rotatedTiles.Count; i++)
+                    if (!inhabitant.ParentSurface.RotatedSurfaceTriangleByLandId.TryGetValue(sid, out matchedTile))
                     {
-                        var t = rotatedTiles[i];
-                        if (t.landBasedPosition.HasValue && t.landBasedPosition.Value == sid)
+                        for (int i = 0; i < rotatedTiles.Count; i++)
                         {
-                            matchedTile = t;
-                            break;
+                            var t = rotatedTiles[i];
+                            if (t.landBasedPosition.HasValue && t.landBasedPosition.Value == sid)
+                            {
+                                matchedTile = t;
+                                break;
+                            }
                         }
                     }
                 }
 
-                if (matchedTile != null)
-                {
-                    // Learn from the ship branch: tile provides ground Y and Z
-                    // (so the shadow sits on the surface), but X is shifted by
-                    // the OO.x delta between the tower and the surface so the
-                    // shadow lines up under the tower's visible trunk. Same
-                    // trick the ship uses via targetX.
-                    float tileCenterX = (matchedTile.vert1.x + matchedTile.vert2.x + matchedTile.vert3.x) / 3f;
-                    shadowBaseX = tileCenterX + targetX + TowerShadowNudgeX;
-                    shadowBaseY = (matchedTile.vert1.y + matchedTile.vert2.y + matchedTile.vert3.y) / 3f
-                                  - TowerShadowSurfaceLift + TowerShadowNudgeY;
-                    shadowBaseZ = (matchedTile.vert1.z + matchedTile.vert2.z + matchedTile.vert3.z) / 3f
-                                  + TowerShadowNudgeZ;
-                }
-                else
-                {
-                    // Fallback: tile with center X closest to object's X
-                    float nearestTileY = 0f;
-                    float minDistX = float.MaxValue;
-                    for (int i = 0; i < rotatedTiles.Count; i++)
-                    {
-                        var tile = rotatedTiles[i];
-                        float tileCenterX = (tile.vert1.x + tile.vert2.x + tile.vert3.x) / 3f;
-                        float dx = MathF.Abs(tileCenterX - targetX);
-                        if (dx < minDistX)
-                        {
-                            minDistX = dx;
-                            nearestTileY = (tile.vert1.y + tile.vert2.y + tile.vert3.y) / 3f;
-                        }
-                    }
-                    shadowBaseY = nearestTileY;
-                }
+                if (matchedTile == null)
+                    return;
+
+                // Use the same tile anchor as the visible object. Never invent
+                // a shadow position when the caster's tile has left the viewport.
+                float tileCenterX = (matchedTile.vert1.x + matchedTile.vert2.x + matchedTile.vert3.x) / 3f;
+                shadowBaseX = tileCenterX + targetX + TowerShadowNudgeX;
+                shadowBaseY = (matchedTile.vert1.y + matchedTile.vert2.y + matchedTile.vert3.y) / 3f
+                              - TowerShadowSurfaceLift + TowerShadowNudgeY;
+                shadowBaseZ = (matchedTile.vert1.z + matchedTile.vert2.z + matchedTile.vert3.z) / 3f
+                              + TowerShadowNudgeZ;
             }
             else
             {

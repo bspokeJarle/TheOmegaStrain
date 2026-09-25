@@ -1,6 +1,7 @@
 using TheOmegaStrain.Common.CommonGlobalState;
 using TheOmegaStrain.Common.Persistence;
 using TheOmegaStrain.Domain;
+using TheOmegaStrain.Game.Helpers;
 using TheOmegaStrain.Gameplay.Audio.Services;
 using System.Collections.Generic;
 
@@ -41,12 +42,8 @@ namespace TheOmegaStrain.Game.Scenes.Scene3
             if (_dronesActivated) return;
             if (!GameState.GamePlayState.IsDecoyUnlocked) return;
 
-            var aiObjs = GameState.SurfaceState.AiObjects;
-            for (int i = 0; i < aiObjs.Count; i++)
-            {
-                if (aiObjs[i].ObjectName == "KamikazeDrone" && !aiObjs[i].IsActive)
-                    aiObjs[i].IsActive = true;
-            }
+            DroneActivationHelpers.ActivateWithStaggeredHuntDelays(
+                GameState.SurfaceState.AiObjects);
             _dronesActivated = true;
         }
 

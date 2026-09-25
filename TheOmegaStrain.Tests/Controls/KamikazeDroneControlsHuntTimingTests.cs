@@ -51,7 +51,7 @@ public class KamikazeDroneControlsHuntTimingTests
     }
 
     [TestMethod]
-    public void MoveObject_BeforeStartHuntDate_WithOnlyDrones_StartsHuntImmediately()
+    public void MoveObject_BeforeStartHuntDate_WithOtherActiveDrone_WaitsForStagger()
     {
         var control = new KamikazeDroneControls
         {
@@ -72,8 +72,46 @@ public class KamikazeDroneControlsHuntTimingTests
         control.MoveObject(drone, null, null);
         var after = (Vector3)drone.WorldPosition;
 
+        Assert.AreEqual(before.x, after.x, 0.001f);
+        Assert.AreEqual(before.y, after.y, 0.001f);
+        Assert.AreEqual(before.z, after.z, 0.001f,
+            "Multiple drones should honor their separate hunt times even when no other enemies remain.");
+    }
+
+    [TestMethod]
+    public void MoveObject_BeforeStartHuntDate_WithOnlyOneDrone_StartsHuntImmediately()
+    {
+        var control = new KamikazeDroneControls { StartHuntDateTime = DateTime.Now.AddMinutes(5) };
+        var drone = CreateDrone(101, 0, 0);
+        GameState.SurfaceState.AiObjects.Add(drone);
+
+        control.MoveObject(drone, null, null);
+        var before = (Vector3)drone.WorldPosition;
+        Thread.Sleep(20);
+        control.MoveObject(drone, null, null);
+        var after = (Vector3)drone.WorldPosition;
+
         Assert.IsTrue(after.x != before.x || after.y != before.y || after.z != before.z,
-            "Drone should start hunting immediately when no non-drone enemies are alive.");
+            "A lone drone should not keep the player waiting.");
+    }
+
+    [TestMethod]
+    public void MoveObject_LastDroneFromScheduledGroup_KeepsItsHuntDelay()
+    {
+        var control = new KamikazeDroneControls();
+        control.ScheduleHunt(DateTime.Now.AddMinutes(5), honorDelay: true);
+        var drone = CreateDrone(102, 0, 0);
+        GameState.SurfaceState.AiObjects.Add(drone);
+
+        control.MoveObject(drone, null, null);
+        var before = (Vector3)drone.WorldPosition;
+        Thread.Sleep(20);
+        control.MoveObject(drone, null, null);
+        var after = (Vector3)drone.WorldPosition;
+
+        Assert.AreEqual(before.x, after.x, 0.001f);
+        Assert.AreEqual(before.z, after.z, 0.001f,
+            "The last surviving drone in a scheduled wave must not start early.");
     }
 
     [TestMethod]

@@ -49,6 +49,7 @@ namespace TheOmegaStrain.Gameplay.Controls.SeederControls
         private const int SmellRadiusScreens = 5;
         private static int RoamTiles => SurfaceSetup.ScaleTileCount(10);
         private const float TargetArrivalDistance = 0.25f;
+        private const float MinimumSeederSeparation = 405f; // 35% above the former 300-unit gap.
         private const double InitialGlobalDecisionDesyncSeconds = 0.45;
         private const double GlobalDecisionDesyncSeconds = 0.30;
         private const double LocalRetargetDesyncSeconds = 0.22;
@@ -536,7 +537,7 @@ namespace TheOmegaStrain.Gameplay.Controls.SeederControls
                 var otherPosition = _aiStates.TryGetValue(other.ObjectId, out var otherState) && otherState.AuthPosInitialized
                     ? otherState.AuthWorldPos
                     : new Vector3(other.WorldPosition.x, other.WorldPosition.y, other.WorldPosition.z);
-                if (DistanceXZ(next, otherPosition) < 300f &&
+                if (DistanceXZ(next, otherPosition) < MinimumSeederSeparation &&
                     DistanceXZ(next, otherPosition) <= DistanceXZ(current, otherPosition))
                 {
                     s.HasMovementTarget = false;
